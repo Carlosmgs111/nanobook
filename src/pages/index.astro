@@ -1,17 +1,45 @@
 ---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
 
+const posts = await getCollection("book");
+
+const sortedPosts = posts
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => {
+    if (a.id === "overview") return -1;
+    if (b.id === "overview") return 1;
+    return a.id.localeCompare(b.id);
+  });
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Architecture Book" label="Book">
+  <div class="mb-12 border-b border-[var(--grid-line-strong)] pb-8">
+    <span class="tech-label mb-3 block">Index</span>
+    <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
+      Architecture Book
+    </h1>
+  </div>
+
+  <div class="space-y-4">
+    {
+      sortedPosts.map((post, index) => (
+        <a
+          href={`/book/${post.id}/`}
+          class="group flex items-center gap-4 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] p-5 transition-colors hover:border-[var(--accent)] hover:bg-white/5"
+        >
+          <span class="font-mono text-xs text-[var(--muted)]">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div class="flex-1">
+            <h2 class="text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]">
+              {post.data.title}
+            </h2>
+            <p class="mt-1 text-sm text-[var(--muted)]">{post.data.description}</p>
+          </div>
+          <span class="font-mono text-xs text-[var(--muted)]">/{post.id}/</span>
+        </a>
+      ))
+    }
+  </div>
+</Layout>

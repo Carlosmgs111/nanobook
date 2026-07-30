@@ -1,0 +1,62 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  label?: string;
+}
+
+const { title = "Astro", description, label = "Document" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href="/favicon.ico" />
+    <title>{title}</title>
+  </head>
+  <body class="relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]">
+    <!-- Grid overlay -->
+    <div class="grid-overlay" aria-hidden="true"></div>
+
+    <!-- Top and bottom subtle rules -->
+    <div class="fixed top-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]" aria-hidden="true"></div>
+    <div class="fixed bottom-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <header class="relative z-10">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+        <div class="flex items-center gap-4">
+          <span class="tech-label">{label}</span>
+          <span class="h-3 w-px bg-[var(--grid-line-strong)]"></span>
+          <span class="font-mono text-xs text-[var(--muted)]">{title}</span>
+        </div>
+        <a href="/" class="font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]">
+          /index
+        </a>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="relative z-10 mx-auto max-w-5xl border-x border-[var(--grid-line)] px-6 py-12">
+      <div class="glass-panel corner-hatch">
+        <div class="prose prose-invert max-w-none">
+          <slot />
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 py-8 text-center">
+      <div class="mx-auto max-w-4xl px-6">
+        <div class="rule mb-4"></div>
+        <p class="tech-label">Rendered with Astro + Tailwind</p>
+      </div>
+    </footer>
+  </body>
+</html>
