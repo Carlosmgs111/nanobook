@@ -23,6 +23,8 @@ Este documento formaliza una estrategia de desarrollo adaptable basada en la evo
 
 La filosofía de este método se basa en el **monolito modular**, buscando un equilibrio entre simplicidad y velocidad de desarrollo por un lado, y alta cohesión y bajo acoplamiento por otro. Los módulos son autosuficientes y autocontenidos; si la complejidad del proyecto lo exige, un módulo puede migrar fuera de la base de código principal hacia su propio servicio con un cambio mínimo: basta mover su carpeta y reemplazar su adaptador de comunicación.
 
+---
+
 ## Aspectos Claves
 
 La metodología prioriza un enfoque pragmático. Se deliberadamente se deja de lado el rigor académico o las implementaciones mecánicas que, en etapas tempranas, entorpecen la entrega de valor tangible. Esto no significa sacrificar calidad: la arquitectura está diseñada para permitir la incorporación de capas de complejidad sin necesidad de reescribir, reorganizar o mover código existente.
@@ -33,7 +35,9 @@ La metodología contempla la existencia de **3 capas**, presentes en toda arquit
 - **Capa de Aplicación** — casos de uso que orquestan el flujo de datos
 - **Capa de Dominio** — entidades y reglas de negocio puras
 
-Solo la capa de **Infraestructura** está presente desde el inicio. Esta capa alberga el punto de entrada de la aplicación (servidor, CLI, etc.) y, conforme el proyecto crece y se añaden capas internas, se convierte en la puerta de comunicación con el exterior. Esta progresión se fundamenta en el **Principio de Inversión de Dependencia**: las capas internas no conocen a las externas, pero las externas dependen de abstracciones definidas internamente.
+Solo la capa de **Infraestructura** está presente desde el inicio. Esta capa alberga el punto de entrada de la aplicación (servidor, CLI, etc.) y, conforme el proyecto crece y se añaden capas internas, se convierte en la puerta de comunicación con el exterior. Esta progresión se fundamenta en el **Principio de Inversión de Dependencia**: las capas internas no conocen a las externas, pero las externas dependen de abstracciones definidas internamente. 
+
+--- 
 
 ## Terminos Claves
 
@@ -49,11 +53,13 @@ Solo la capa de **Infraestructura** está presente desde el inicio. Esta capa al
 - YAGNI
 - KISS
 
+---
+
 ## Escenarios
 
 Los siguientes son escenarios que muestran las etapas de complejización de la arquitectura de un proyecto. Cada escenario incluye un **trigger** (qué necesidad obliga a añadir complejidad), las **capas activas**, el **flujo** de ejecución y el **trade-off** (qué se gana vs qué se añade).
 
----
+
 
 ### Escenario 1: "¡Hola Mundo!"
 
