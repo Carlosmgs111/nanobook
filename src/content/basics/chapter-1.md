@@ -141,6 +141,10 @@ Algunos renderizadores permiten HTML inline:
 <details>
   <summary>Haz clic para expandir</summary>
   Este contenido está oculto hasta que se expande.
+  
+  | Indice 1 | Indice 2 |
+  | -------- | -------- |
+  | Contenido 1 | Contenido 2 |
 </details>
 
 <div class="hatch-section">

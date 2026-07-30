@@ -240,6 +240,11 @@ html {
     bottom 0 right 0, bottom 0 right 0;
 }
 
+/* Suppress corner accents on nested blockquotes */
+.prose blockquote blockquote::after {
+  content: none;
+}
+
 /* ─────────────────────────────────────────────
    Prose container
    ───────────────────────────────────────────── */
@@ -328,7 +333,8 @@ html {
   border: 1px solid var(--inline-code-border);
   color: var(--inline-code-fg);
   background: var(--inline-code-bg);
-  box-shadow: 0 0 12px var(--inline-code-glow);
+  box-shadow: 0 0 16px var(--inline-code-glow), 0 0 32px var(--inline-code-glow);
+  text-shadow: 0 0 8px var(--inline-code-glow);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.9em;
 }
@@ -373,21 +379,43 @@ html {
   border-bottom: 1px solid var(--grid-line-strong);
   background:
     linear-gradient(180deg, rgba(var(--surface-rgb), 0.03) 0%, transparent 50%, rgba(var(--surface-rgb), 0.03) 100%),
-    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.12) 0, rgba(var(--surface-rgb), 0.12) 1px, transparent 1px, transparent 6px);
-  overflow: hidden;
+    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.12) 0, rgba(var(--surface-rgb), 0.12) 1px, transparent 1px, transparent 6px),
+    linear-gradient(180deg, transparent calc(50% - 0.5px), var(--grid-line-strong) calc(50% - 0.5px), var(--grid-line-strong) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  overflow: visible;
 }
 
+/* Small plus-shaped corner marks on horizontal rules */
 .prose hr::before,
 .hatch-divider::before {
   content: "";
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--grid-line-strong);
-  transform: translateY(-50%);
-  z-index: 1;
+  inset: -7px;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    /* top-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position:
+    0 0, 0 0,
+    top 0 right 0, top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0, bottom 0 right 0;
 }
 
 .prose hr::after,
@@ -403,7 +431,7 @@ html {
   color: var(--grid-line-strong);
   background: var(--bg);
   padding: 0 1rem;
-  z-index: 2;
+  z-index: 3;
 }
 
 /* ─────────────────────────────────────────────
@@ -424,24 +452,70 @@ html {
   background-color: var(--layer-3);
 }
 
+/* Corner accents on non-nested lists only */
+.prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol)) {
+  position: relative;
+}
+
+.prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol))::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    /* top-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position:
+    0 0, 0 0,
+    top 0 right 0, top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0, bottom 0 right 0;
+}
+
 .prose ul li::marker {
   color: var(--accent);
   font-size: 1.1em;
+  text-shadow: 0 0 8px var(--glow-color);
 }
 
 .prose ol li::marker {
   color: var(--accent);
   font-weight: 600;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-shadow: 0 0 8px var(--glow-color);
 }
 
 .prose :is(ul, ol) :is(ul, ol) li::marker {
   color: var(--accent);
   opacity: 0.8;
+  text-shadow: 0 0 6px var(--glow-color);
 }
 
 .prose :is(ul, ol) :is(ul, ol) :is(ul, ol) li::marker {
   opacity: 0.65;
+  text-shadow: 0 0 4px var(--glow-color);
+}
+
+/* Task list items: hide the default marker */
+.prose li.task-list-item {
+  list-style: none;
 }
 
 /* Task list checkboxes */
@@ -452,6 +526,7 @@ html {
   border: 1.5px solid var(--accent);
   border-radius: 0.15rem;
   background: transparent;
+  box-shadow: 0 0 8px var(--glow-color);
   vertical-align: middle;
   margin-right: 0.35rem;
   margin-top: -0.15em;
@@ -462,6 +537,7 @@ html {
 .prose input[type="checkbox"]:checked {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: 0 0 10px var(--glow-color);
 }
 
 .prose input[type="checkbox"]:checked::after {
