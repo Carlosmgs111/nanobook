@@ -1,20 +1,90 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ─────────────────────────────────────────────
+   Theme variables
+   ───────────────────────────────────────────── */
 :root {
   --bg: #050505;
-  --bg-elevated: rgba(255, 255, 255, 0.04);
-  --grid-line: rgba(255, 255, 255, 0.05);
-  --grid-line-strong: rgba(255, 255, 255, 0.12);
-  --grid-line-subtle: rgba(255, 255, 255, 0.03);
   --text: #e5e5e5;
   --muted: #737373;
   --accent: #ffffff;
-  --glow: rgba(255, 255, 255, 0.35);
+
+  --surface-rgb: 255, 255, 255;
+  --shadow-rgb: 0, 0, 0;
+
+  --grid-line: rgba(var(--surface-rgb), 0.05);
+  --grid-line-strong: rgba(var(--surface-rgb), 0.12);
+  --grid-line-subtle: rgba(var(--surface-rgb), 0.03);
+
+  --glow-color: rgba(var(--surface-rgb), 0.35);
 
   --grid-step: 32px;
-  --hatch-gap: 8px;
   --line-thickness: 1px;
+  --hatch-gap: 8px;
+
+  --inline-code-bg: rgba(255, 255, 255, 0.92);
+  --inline-code-fg: #000;
+  --inline-code-grid: rgba(0, 0, 0, 0.04);
+  --inline-code-border: rgba(255, 255, 255, 0.6);
+  --inline-code-glow: rgba(255, 255, 255, 0.25);
+
+  --pre-bg: rgba(0, 0, 0, 0.3);
+  --pre-grid: rgba(255, 255, 255, 0.03);
+
+  --layer-1: rgba(var(--surface-rgb), 0.03);
+  --layer-2: rgba(var(--surface-rgb), 0.06);
+  --layer-3: rgba(var(--surface-rgb), 0.09);
+  --layer-4: rgba(var(--surface-rgb), 0.12);
+
+  --border-soft: rgba(var(--surface-rgb), 0.15);
+  --border-medium: rgba(var(--surface-rgb), 0.25);
+  --border-strong: rgba(var(--surface-rgb), 0.45);
+}
+
+.light,
+:root:has(.light) {
+  --bg: #f5f5f7;
+  --text: #1a1a1a;
+  --muted: #777777;
+  --accent: #000000;
+
+  --surface-rgb: 0, 0, 0;
+  --shadow-rgb: 0, 0, 0;
+
+  --glow-color: rgba(var(--surface-rgb), 0.12);
+
+  --inline-code-bg: rgba(35, 35, 40, 0.92);
+  --inline-code-fg: #ffffff;
+  --inline-code-grid: rgba(255, 255, 255, 0.08);
+  --inline-code-border: rgba(0, 0, 0, 0.25);
+  --inline-code-glow: rgba(0, 0, 0, 0.12);
+
+  --pre-bg: rgba(255, 255, 255, 0.6);
+  --pre-grid: rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    --bg: #f5f5f7;
+    --text: #1a1a1a;
+    --muted: #777777;
+    --accent: #000000;
+
+    --surface-rgb: 0, 0, 0;
+    --shadow-rgb: 0, 0, 0;
+
+    --glow-color: rgba(var(--surface-rgb), 0.12);
+
+    --inline-code-bg: rgba(35, 35, 40, 0.92);
+    --inline-code-fg: #ffffff;
+    --inline-code-grid: rgba(255, 255, 255, 0.08);
+    --inline-code-border: rgba(0, 0, 0, 0.25);
+    --inline-code-glow: rgba(0, 0, 0, 0.12);
+
+    --pre-bg: rgba(255, 255, 255, 0.6);
+    --pre-grid: rgba(0, 0, 0, 0.04);
+  }
 }
 
 html {
@@ -22,7 +92,9 @@ html {
   color: var(--text);
 }
 
-/* Continuous technical grid behind everything */
+/* ─────────────────────────────────────────────
+   Layout utilities
+   ───────────────────────────────────────────── */
 .grid-overlay {
   position: fixed;
   inset: 0;
@@ -34,42 +106,25 @@ html {
   background-size: var(--grid-step) var(--grid-step);
 }
 
-/* Diagonal hatch pattern */
-.hatch {
-  background-image: repeating-linear-gradient(
-    45deg,
-    var(--grid-line-strong) 0,
-    var(--grid-line-strong) 1px,
-    transparent 1px,
-    transparent var(--hatch-gap)
-  );
-}
-
-/* Content container: the padding itself is made of lines */
 .glass-panel {
   position: relative;
   padding: 0;
   background:
     repeating-linear-gradient(
       45deg,
-      rgba(255, 255, 255, 0.025) 0,
-      rgba(255, 255, 255, 0.025) 1px,
+      rgba(var(--surface-rgb), 0.08) 0,
+      rgba(var(--surface-rgb), 0.08) 1px,
       transparent 1px,
       transparent var(--hatch-gap)
     ),
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.01) 100%
-    );
+    linear-gradient(180deg, rgba(var(--surface-rgb), 0.03) 0%, rgba(var(--surface-rgb), 0.01) 100%);
   border: 1px solid var(--grid-line-strong);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 24px 80px -24px rgba(0, 0, 0, 0.8);
+    0 0 0 1px rgba(var(--surface-rgb), 0.04) inset,
+    0 24px 80px -24px rgba(var(--shadow-rgb), 0.2);
   overflow: hidden;
 }
 
-/* Inner fine grid inside the panel padding */
 .glass-panel::before {
   content: "";
   position: absolute;
@@ -83,16 +138,14 @@ html {
   opacity: 0.6;
 }
 
-/* Glow for emphasized elements */
 .glow {
-  box-shadow: 0 0 60px 0 var(--glow);
+  box-shadow: 0 0 60px 0 var(--glow-color);
 }
 
 .glow-text {
-  text-shadow: 0 0 40px var(--glow);
+  text-shadow: 0 0 40px var(--glow-color);
 }
 
-/* Monospace technical label */
 .tech-label {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.7rem;
@@ -101,7 +154,6 @@ html {
   color: var(--muted);
 }
 
-/* Thin rule */
 .rule {
   height: 1px;
   background: linear-gradient(
@@ -113,7 +165,6 @@ html {
   );
 }
 
-/* Corner decorations */
 .corner-hatch {
   position: relative;
 }
@@ -126,28 +177,36 @@ html {
   height: 48px;
   pointer-events: none;
   z-index: 2;
+  border: 1px solid var(--grid-line-strong);
 }
 
 .corner-hatch::before {
   top: -1px;
   left: -1px;
-  border-top: 1px solid var(--grid-line-strong);
-  border-left: 1px solid var(--grid-line-strong);
+  border-bottom: none;
+  border-right: none;
 }
 
 .corner-hatch::after {
   bottom: -1px;
   right: -1px;
-  border-bottom: 1px solid var(--grid-line-strong);
-  border-right: 1px solid var(--grid-line-strong);
+  border-top: none;
+  border-left: none;
 }
 
-/* Prose: content has side padding, separators bleed into the container padding */
+/* ─────────────────────────────────────────────
+   Prose container
+   ───────────────────────────────────────────── */
 .prose {
   position: relative;
   z-index: 1;
   --content-pad: 2rem;
   padding: var(--content-pad);
+  color: var(--text);
+}
+
+.prose :is(p, li, td, dd, figcaption, summary) {
+  color: var(--text);
 }
 
 @media (min-width: 768px) {
@@ -156,7 +215,111 @@ html {
   }
 }
 
-/* Horizontal rule: spans full container width and intersects with padding lines */
+/* ─────────────────────────────────────────────
+   Headings
+   ───────────────────────────────────────────── */
+.prose h1 {
+  color: var(--accent);
+  text-shadow: 0 0 32px var(--glow-color), 0 0 64px var(--glow-color);
+}
+
+.prose h2 {
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--glow-color), 0 0 48px var(--glow-color);
+}
+
+.prose h3 {
+  color: var(--accent);
+  text-shadow: 0 0 18px var(--glow-color), 0 0 36px var(--glow-color);
+}
+
+.prose h4 {
+  color: var(--text);
+  text-shadow: 0 0 14px var(--glow-color), 0 0 28px var(--glow-color);
+}
+
+.prose h5 {
+  color: var(--text);
+  text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+}
+
+.prose h6 {
+  color: var(--muted);
+  text-shadow: 0 0 6px var(--glow-color), 0 0 12px var(--glow-color);
+}
+
+/* ─────────────────────────────────────────────
+   Links
+   ───────────────────────────────────────────── */
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--border-soft);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 150ms ease;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────
+   Inline text emphasis
+   ───────────────────────────────────────────── */
+.prose strong,
+.prose b {
+  color: var(--accent);
+  text-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────
+   Code
+   ───────────────────────────────────────────── */
+.prose code {
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--inline-code-border);
+  color: var(--inline-code-fg);
+  background:
+    linear-gradient(var(--inline-code-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--inline-code-grid) 1px, transparent 1px),
+    var(--inline-code-bg);
+  background-size: 6px 6px, 6px 6px, 100% 100%;
+  box-shadow: 0 0 12px var(--inline-code-glow);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.prose code::before,
+.prose code::after {
+  content: none;
+}
+
+.prose pre {
+  padding: 1.25rem;
+  border: 1px solid var(--grid-line-strong);
+  border-radius: 0.25rem;
+  background:
+    linear-gradient(var(--pre-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pre-grid) 1px, transparent 1px),
+    var(--pre-bg);
+  background-size: 8px 8px, 8px 8px, 100% 100%;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  padding: 0;
+  border: none;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.85em;
+}
+
+/* ─────────────────────────────────────────────
+   Horizontal rules
+   ───────────────────────────────────────────── */
 .prose hr,
 .hatch-divider {
   position: relative;
@@ -167,19 +330,8 @@ html {
   border-top: 1px solid var(--grid-line-strong);
   border-bottom: 1px solid var(--grid-line-strong);
   background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.04) 0%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.04) 100%
-    ),
-    repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.07) 0,
-      rgba(255, 255, 255, 0.07) 1px,
-      transparent 1px,
-      transparent 6px
-    );
+    linear-gradient(180deg, rgba(var(--surface-rgb), 0.03) 0%, transparent 50%, rgba(var(--surface-rgb), 0.03) 100%),
+    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.12) 0, rgba(var(--surface-rgb), 0.12) 1px, transparent 1px, transparent 6px);
   overflow: hidden;
 }
 
@@ -212,180 +364,78 @@ html {
   z-index: 2;
 }
 
-/* Inline code: light background with semi-transparent glow and black text */
-.prose code {
-  padding: 0.15rem 0.35rem;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  color: #000;
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    rgba(255, 255, 255, 0.92);
-  background-size: 6px 6px, 6px 6px, 100% 100%;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.9em;
-}
-
-/* Remove default typography plugin backticks around inline code */
-.prose code::before,
-.prose code::after {
-  content: none;
-}
-
-.prose pre {
-  padding: 1.25rem;
-  border: 1px solid var(--grid-line-strong);
-  border-radius: 0.25rem;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    rgba(0, 0, 0, 0.3);
-  background-size: 8px 8px, 8px 8px, 100% 100%;
-  overflow-x: auto;
-}
-
-.prose pre code {
-  padding: 0;
-  border: none;
-  color: inherit;
-  background: transparent;
-  box-shadow: none;
-  font-size: 0.85em;
-}
-
-/* Bold text with a subtle glow */
-.prose strong,
-.prose b {
-  color: var(--accent);
-  text-shadow: 0 0 16px rgba(255, 255, 255, 0.4), 0 0 32px rgba(255, 255, 255, 0.15);
-  font-weight: 600;
-}
-
-/* Headings with graded glow based on importance */
-.prose h1 {
-  color: var(--accent);
-  text-shadow:
-    0 0 32px rgba(255, 255, 255, 0.5),
-    0 0 64px rgba(255, 255, 255, 0.2);
-}
-
-.prose h2 {
-  color: var(--accent);
-  text-shadow:
-    0 0 24px rgba(255, 255, 255, 0.42),
-    0 0 48px rgba(255, 255, 255, 0.16);
-}
-
-.prose h3 {
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow:
-    0 0 18px rgba(255, 255, 255, 0.35),
-    0 0 36px rgba(255, 255, 255, 0.12);
-}
-
-.prose h4 {
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow:
-    0 0 14px rgba(255, 255, 255, 0.28),
-    0 0 28px rgba(255, 255, 255, 0.1);
-}
-
-.prose h5 {
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow:
-    0 0 10px rgba(255, 255, 255, 0.22),
-    0 0 20px rgba(255, 255, 255, 0.07);
-}
-
-.prose h6 {
-  color: rgba(255, 255, 255, 0.75);
-  text-shadow:
-    0 0 6px rgba(255, 255, 255, 0.15),
-    0 0 12px rgba(255, 255, 255, 0.04);
-}
-
-/* Nested elements: semi-transparent backgrounds that layer over the parent */
-.prose ul,
-.prose ol {
+/* ─────────────────────────────────────────────
+   Nested lists
+   ───────────────────────────────────────────── */
+.prose :is(ul, ol) {
   padding: 0.5rem 0 0.5rem 1.5rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
-  background-color: rgba(255, 255, 255, 0.03);
+  border-left: 1px solid var(--border-soft);
+  background-color: var(--layer-1);
 }
 
-.prose ul ul,
-.prose ul ol,
-.prose ol ul,
-.prose ol ol {
-  background-color: rgba(255, 255, 255, 0.06);
-  border-left: 1px solid rgba(255, 255, 255, 0.22);
+.prose :is(ul, ol) :is(ul, ol) {
+  background-color: var(--layer-2);
+  border-left-color: rgba(var(--surface-rgb), 0.22);
 }
 
-.prose ul ul ul,
-.prose ul ul ol,
-.prose ul ol ul,
-.prose ul ol ol,
-.prose ol ul ul,
-.prose ol ul ol,
-.prose ol ol ul,
-.prose ol ol ol {
-  background-color: rgba(255, 255, 255, 0.09);
+.prose :is(ul, ol) :is(ul, ol) :is(ul, ol) {
+  background-color: var(--layer-3);
 }
 
+/* ─────────────────────────────────────────────
+   Nested blockquotes
+   ───────────────────────────────────────────── */
 .prose blockquote {
   padding: 0.75rem 1.25rem;
-  border-left: 2px solid rgba(255, 255, 255, 0.18);
-  background-color: rgba(255, 255, 255, 0.04);
+  border-left: 2px solid rgba(var(--surface-rgb), 0.18);
+  background-color: var(--layer-2);
 }
 
 .prose blockquote blockquote {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-left: 2px solid rgba(255, 255, 255, 0.45);
+  background-color: var(--layer-3);
+  border-left-color: var(--border-strong);
 }
 
 .prose blockquote blockquote blockquote {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--layer-4);
 }
 
-/* Tables: semi-transparent layered background with glowing headers */
+/* ─────────────────────────────────────────────
+   Tables
+   ───────────────────────────────────────────── */
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-medium);
+  background-color: var(--layer-1);
 }
 
 .prose tbody tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--layer-1);
 }
 
 .prose th,
 .prose td {
   padding: 0.5rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-soft);
 }
 
 .prose th {
   color: var(--accent);
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+  text-shadow: 0 0 12px var(--glow-color);
   background:
-    repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.025) 0,
-      rgba(255, 255, 255, 0.025) 1px,
-      transparent 1px,
-      transparent 10px
-    ),
-    rgba(255, 255, 255, 0.08);
+    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
+    var(--layer-2);
 }
 
-/* Expandable details: background on the revealed content */
+/* ─────────────────────────────────────────────
+   Expandable details
+   ───────────────────────────────────────────── */
 .prose details {
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-soft);
   border-radius: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--layer-1);
 }
 
 .prose details summary {
@@ -398,10 +448,12 @@ html {
   padding: 0.75rem 1rem;
   margin-top: 0.5rem;
   border-radius: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--layer-2);
 }
 
-/* Section marker with diagonal hatch inside content width */
+/* ─────────────────────────────────────────────
+   Components
+   ───────────────────────────────────────────── */
 .hatch-section {
   position: relative;
   margin: 2rem 0;
@@ -410,8 +462,8 @@ html {
   border-bottom: 1px solid var(--grid-line-strong);
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(255, 255, 255, 0.05) 0,
-    rgba(255, 255, 255, 0.05) 1px,
+    rgba(var(--surface-rgb), 0.10) 0,
+    rgba(var(--surface-rgb), 0.10) 1px,
     transparent 1px,
     transparent var(--hatch-gap)
   );
@@ -424,7 +476,6 @@ html {
   padding-right: 1.5rem;
 }
 
-/* Small hatch badge */
 .hatch-badge {
   display: inline-flex;
   align-items: center;
@@ -438,10 +489,20 @@ html {
   color: var(--muted);
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(255, 255, 255, 0.06) 0,
-    rgba(255, 255, 255, 0.06) 1px,
+    rgba(var(--surface-rgb), 0.10) 0,
+    rgba(var(--surface-rgb), 0.10) 1px,
     transparent 1px,
     transparent 5px
   );
   background-size: 8px 8px;
+}
+
+.hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(var(--surface-rgb), 0.18) 0,
+    rgba(var(--surface-rgb), 0.18) 1px,
+    transparent 1px,
+    transparent var(--hatch-gap)
+  );
 }

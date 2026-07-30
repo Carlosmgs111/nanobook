@@ -19,6 +19,16 @@ const { title = "Astro", description, label = "Document" } = Astro.props;
     {description && <meta name="description" content={description} />}
     <link rel="icon" href="/favicon.ico" />
     <title>{title}</title>
+    <script is:inline>
+      (function () {
+        const stored = typeof localStorage !== "undefined" ? localStorage.getItem("theme") : null;
+        const prefersLight =
+          typeof window !== "undefined" &&
+          window.matchMedia("(prefers-color-scheme: light)").matches;
+        const isLight = stored ? stored === "light" : prefersLight;
+        document.documentElement.classList.toggle("light", isLight);
+      })();
+    </script>
   </head>
   <body class="relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]">
     <!-- Grid overlay -->
@@ -36,16 +46,27 @@ const { title = "Astro", description, label = "Document" } = Astro.props;
           <span class="h-3 w-px bg-[var(--grid-line-strong)]"></span>
           <span class="font-mono text-xs text-[var(--muted)]">{title}</span>
         </div>
-        <a href="/" class="font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]">
-          /index
-        </a>
+        <div class="flex items-center gap-4">
+          <button
+            id="theme-toggle"
+            type="button"
+            class="group flex items-center gap-2 font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+            aria-label="Toggle theme"
+          >
+            <span id="theme-icon" class="transition-transform group-hover:scale-110">☀️</span>
+            <span id="theme-label">Light</span>
+          </button>
+          <a href="/" class="font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]">
+            /index
+          </a>
+        </div>
       </div>
     </header>
 
     <!-- Main content -->
     <main class="relative z-10 mx-auto max-w-5xl border-x border-[var(--grid-line)] px-6 py-12">
       <div class="glass-panel corner-hatch">
-        <div class="prose prose-invert max-w-none">
+        <div class="prose max-w-none">
           <slot />
         </div>
       </div>
@@ -58,5 +79,27 @@ const { title = "Astro", description, label = "Document" } = Astro.props;
         <p class="tech-label">Rendered with Astro + Tailwind</p>
       </div>
     </footer>
+    <script is:inline>
+      (function () {
+        const root = document.documentElement;
+        const toggle = document.getElementById("theme-toggle");
+        const icon = document.getElementById("theme-icon");
+        const label = document.getElementById("theme-label");
+
+        function updateUI() {
+          const isLight = root.classList.contains("light");
+          icon.textContent = isLight ? "🌙" : "☀️";
+          label.textContent = isLight ? "Dark" : "Light";
+        }
+
+        toggle.addEventListener("click", function () {
+          const isLight = root.classList.toggle("light");
+          localStorage.setItem("theme", isLight ? "light" : "dark");
+          updateUI();
+        });
+
+        updateUI();
+      })();
+    </script>
   </body>
 </html>
