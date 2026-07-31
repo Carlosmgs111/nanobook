@@ -1,25 +1,33 @@
 import { visit } from 'unist-util-visit';
 
 /**
- * Transform remark-directive container nodes into HTML elements.
+ * Transform remark-directive nodes into HTML elements.
  *
- * Supported directives:
+ * Supported container directives:
  *   :::details[Summary title]
  *   :::note[Title]
  *   :::warning[Title]
  *   :::tip[Title]
  *   :::info[Title]
+ *   :::section
+ *
+ * Supported leaf directives:
+ *   ::badge[Label text]
  */
 export default function remarkDirectives() {
   return (tree) => {
     visit(tree, (node) => {
-      if (node.type !== 'containerDirective') return;
-
-      const name = node.name;
-      if (name === 'details') {
-        transformDetails(node);
-      } else if (['note', 'warning', 'tip', 'info'].includes(name)) {
-        transformCallout(node, name);
+      if (node.type === 'containerDirective') {
+        const name = node.name;
+        if (name === 'details') {
+          transformDetails(node);
+        } else if (['note', 'warning', 'tip', 'info'].includes(name)) {
+          transformCallout(node, name);
+        } else if (name === 'section') {
+          transformSection(node);
+        }
+      } else if (node.type === 'leafDirective' && node.name === 'badge') {
+        transformBadge(node);
       }
     });
   };
@@ -73,6 +81,22 @@ function transformCallout(node, type) {
     'data-callout': type,
   };
   node.children = [title, contentWrapper];
+}
+
+function transformSection(node) {
+  const data = node.data || (node.data = {});
+  data.hName = 'div';
+  data.hProperties = { class: 'hatch-section' };
+}
+
+function transformBadge(node) {
+  const data = node.data || (node.data = {});
+  const labelNode = node.children && node.children[0];
+  const labelText = extractText(labelNode) || 'Badge';
+
+  data.hName = 'span';
+  data.hProperties = { class: 'hatch-badge' };
+  node.children = [{ type: 'text', value: labelText }];
 }
 
 function extractText(node) {

@@ -122,7 +122,7 @@ Tabla con alineación:
 
 ## Línea horizontal
 
-<div class="hatch-badge">Separador decorativo</div>
+::badge[Separador decorativo]
 
 ---
 
@@ -174,13 +174,13 @@ Información adicional o contextual para complementar la lectura.
 
 :::
 
-<div class="hatch-section">
+:::section
 
 ### Sección con relleno diagonal
 
 Este bloque está envuelto en un `hatch-section`. El relleno de líneas diagonales aparece a la izquierda, marcando visualmente una sección técnica del contenido.
 
-</div>
+:::
 
 ---
 
