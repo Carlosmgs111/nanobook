@@ -3,10 +3,10 @@ import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import "../styles/components/index-card.css";
 
-const posts = await getCollection("book");
+const book = await getCollection("book");
 
-const sortedPosts = posts
-  .filter((post) => !post.data.draft)
+const sortedBook = book
+  .filter((page) => !page.data.draft)
   .sort((a, b) => {
     if (a.id === "overview") return -1;
     if (b.id === "overview") return 1;
@@ -24,22 +24,22 @@ const sortedPosts = posts
 
   <div class="space-y-4">
     {
-      sortedPosts.map((post, index) => (
+      sortedBook.map((page, index) => (
         <a
-          href={`/book/${post.id}/`}
+          href={`/book/${page.id}/`}
           class="index-card corner-plus-sm group flex items-center gap-4 border border-[var(--grid-line-strong)] p-5 transition-colors hover:border-[var(--accent)] hover:bg-white/5"
-          data-title={post.data.title}
-          data-description={post.data.description}
-          data-draft={String(post.data.draft)}
+          data-title={page.data.title}
+          data-description={page.data.description}
+          data-draft={String(page.data.draft)}
         >
           <span class="font-mono text-xs text-[var(--muted)]">
             {String(index + 1).padStart(2, "0")}
           </span>
           <div class="index-card-body flex-1">
-            <span class="index-card-title block text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]" data-title={post.data.title} />
-            <span class="index-card-desc mt-1 block text-sm text-[var(--muted)]" data-description={post.data.description} />
+            <span class="index-card-title block text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]" data-title={page.data.title} />
+            <span class="index-card-desc mt-1 block text-sm text-[var(--muted)]" data-description={page.data.description} />
           </div>
-          <span class="font-mono text-xs text-[var(--muted)]">/{post.id}/</span>
+          <span class="font-mono text-xs text-[var(--muted)]">/{page.id}/</span>
         </a>
       ))
     }

@@ -134,18 +134,45 @@ Imagen con enlace:
 
 [![Imagen dentro de enlace](https://placehold.co/300x100/444/fff?text=Click+me)](https://astro.build)
 
+---
+
 ## HTML inline
 
 Algunos renderizadores permiten HTML inline:
 
-<details>
-  <summary>Haz clic para expandir</summary>
-  Este contenido está oculto hasta que se expande.
-  
-  | Indice 1 | Indice 2 |
-  | -------- | -------- |
-  | Contenido 1 | Contenido 2 |
-</details>
+:::details[Haz clic para expandir]
+
+Este contenido está oculto hasta que se expande.
+
+| Indice 1 | Indice 2 |
+| -------- | -------- |
+| Contenido 1 | Contenido 2 |
+
+:::
+
+:::note[Nota importante]
+
+Este es un callout de tipo nota. Se puede usar para resaltar información relevante.
+
+:::
+
+:::warning[Atención]
+
+Este es un callout de advertencia. Úsalo para llamar la atención sobre posibles problemas.
+
+:::
+
+:::tip[Consejo]
+
+Este es un consejo práctico para mejorar el flujo de trabajo.
+
+:::
+
+:::info[Sobre esto]
+
+Información adicional o contextual para complementar la lectura.
+
+:::
 
 <div class="hatch-section">
 
