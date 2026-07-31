@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import "../styles/components/index-card.css";
 
 const posts = await getCollection("book");
 
@@ -26,16 +27,17 @@ const sortedPosts = posts
       sortedPosts.map((post, index) => (
         <a
           href={`/book/${post.id}/`}
-          class="corner-plus-sm group flex items-center gap-4 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] p-5 transition-colors hover:border-[var(--accent)] hover:bg-white/5"
+          class="index-card corner-plus-sm group flex items-center gap-4 border border-[var(--grid-line-strong)] p-5 transition-colors hover:border-[var(--accent)] hover:bg-white/5"
+          data-title={post.data.title}
+          data-description={post.data.description}
+          data-draft={String(post.data.draft)}
         >
           <span class="font-mono text-xs text-[var(--muted)]">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <div class="flex-1">
-            <h2 class="text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]">
-              {post.data.title}
-            </h2>
-            <p class="mt-1 text-sm text-[var(--muted)]">{post.data.description}</p>
+          <div class="index-card-body flex-1">
+            <span class="index-card-title block text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]" data-title={post.data.title} />
+            <span class="index-card-desc mt-1 block text-sm text-[var(--muted)]" data-description={post.data.description} />
           </div>
           <span class="font-mono text-xs text-[var(--muted)]">/{post.id}/</span>
         </a>

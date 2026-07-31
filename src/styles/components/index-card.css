@@ -1,0 +1,29 @@
+/* ─────────────────────────────────────────────
+   Navigation index cards
+   ───────────────────────────────────────────── */
+.index-card {
+  background:
+    linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%),
+    repeating-linear-gradient(135deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
+    var(--layer-1);
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* Render card content from data-* attributes */
+.index-card-title::before {
+  content: attr(data-title);
+}
+
+.index-card-desc::before {
+  content: attr(data-description);
+}
+
+/* Discriminate drafts via dataset */
+.index-card[data-draft="true"] {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.index-card[data-draft="true"] .index-card-title::before {
+  content: attr(data-title) " [DRAFT]";
+}

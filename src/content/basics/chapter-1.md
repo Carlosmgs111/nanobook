@@ -39,7 +39,7 @@ Puedes escapar caracteres especiales: \*asteriscos\*, \`backticks\`, \[corchetes
 - [Enlace externo](https://astro.build)
 - [Enlace con título](https://docs.astro.build "Documentación de Astro")
 
-<hr>
+---
 
 ## Listas
 
@@ -63,8 +63,8 @@ Puedes escapar caracteres especiales: \*asteriscos\*, \`backticks\`, \[corchetes
 ### Lista de tareas
 
 - [x] Tarea completada
-    - [x] Subtarea A
-    - [x] Subtarea B
+  - [x] Subtarea A
+  - [x] Subtarea B
 - [ ] Tarea pendiente
 - [ ] Otra tarea pendiente
 
@@ -74,7 +74,7 @@ Puedes escapar caracteres especiales: \*asteriscos\*, \`backticks\`, \[corchetes
 >
 > > También puedes anidar citas dentro de otras citas.
 
-<hr>
+---
 
 ## Código
 
@@ -118,13 +118,13 @@ Tabla con alineación:
 | A         |   B    |       C |
 | D         |   E    |       F |
 
-<hr>
+---
 
 ## Línea horizontal
 
----
-
 <div class="hatch-badge">Separador decorativo</div>
+
+---
 
 ## Imágenes
 
@@ -155,7 +155,7 @@ Este bloque está envuelto en un `hatch-section`. El relleno de líneas diagonal
 
 </div>
 
-<hr>
+---
 
 ## Notas al pie
 

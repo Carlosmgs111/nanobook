@@ -1,0 +1,18 @@
+/* ─────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────── */
+html {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--grid-line) var(--line-thickness), transparent var(--line-thickness)),
+    linear-gradient(90deg, var(--grid-line) var(--line-thickness), transparent var(--line-thickness));
+  background-size: var(--grid-step) var(--grid-step);
+}

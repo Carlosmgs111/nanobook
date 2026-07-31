@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ─────────────────────────────────────────────
+   Theme variables
+   ───────────────────────────────────────────── */
+:root {
+  --bg: #050505;
+  --text: #e5e5e5;
+  --muted: #737373;
+  --accent: #ffffff;
+
+  --surface-rgb: 255, 255, 255;
+  --shadow-rgb: 0, 0, 0;
+
+  --grid-line: rgba(var(--surface-rgb), 0.05);
+  --grid-line-strong: rgba(var(--surface-rgb), 0.12);
+  --grid-line-subtle: rgba(var(--surface-rgb), 0.03);
+
+  --glow-color: rgba(var(--surface-rgb), 0.35);
+
+  --grid-step: 32px;
+  --line-thickness: 1px;
+  --hatch-gap: 8px;
+
+  --inline-code-bg: rgba(255, 255, 255, 0.92);
+  --inline-code-fg: #000;
+  --inline-code-grid: rgba(0, 0, 0, 0.04);
+  --inline-code-border: rgba(255, 255, 255, 0.6);
+  --inline-code-glow: rgba(255, 255, 255, 0.25);
+
+  --pre-bg: rgba(0, 0, 0, 0.3);
+  --pre-grid: rgba(255, 255, 255, 0.03);
+
+  --layer-1: rgba(var(--surface-rgb), 0.03);
+  --layer-2: rgba(var(--surface-rgb), 0.06);
+  --layer-3: rgba(var(--surface-rgb), 0.09);
+  --layer-4: rgba(var(--surface-rgb), 0.12);
+
+  --border-soft: rgba(var(--surface-rgb), 0.15);
+  --border-medium: rgba(var(--surface-rgb), 0.25);
+  --border-strong: rgba(var(--surface-rgb), 0.45);
+}
+
+.light,
+:root:has(.light) {
+  --bg: #f5f5f7;
+  --text: #1a1a1a;
+  --muted: #777777;
+  --accent: #000000;
+
+  --surface-rgb: 0, 0, 0;
+  --shadow-rgb: 0, 0, 0;
+
+  --glow-color: rgba(var(--surface-rgb), 0.12);
+
+  --inline-code-bg: rgba(35, 35, 40, 0.92);
+  --inline-code-fg: #ffffff;
+  --inline-code-grid: rgba(255, 255, 255, 0.08);
+  --inline-code-border: rgba(0, 0, 0, 0.25);
+  --inline-code-glow: rgba(0, 0, 0, 0.12);
+
+  --pre-bg: rgba(0, 0, 0, 0.06);
+  --pre-grid: rgba(0, 0, 0, 0.07);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    --bg: #f5f5f7;
+    --text: #1a1a1a;
+    --muted: #777777;
+    --accent: #000000;
+
+    --surface-rgb: 0, 0, 0;
+    --shadow-rgb: 0, 0, 0;
+
+    --glow-color: rgba(var(--surface-rgb), 0.12);
+
+    --inline-code-bg: rgba(35, 35, 40, 0.92);
+    --inline-code-fg: #ffffff;
+    --inline-code-grid: rgba(255, 255, 255, 0.08);
+    --inline-code-border: rgba(0, 0, 0, 0.25);
+    --inline-code-glow: rgba(0, 0, 0, 0.12);
+
+    --pre-bg: rgba(0, 0, 0, 0.06);
+    --pre-grid: rgba(0, 0, 0, 0.07);
+  }
+}

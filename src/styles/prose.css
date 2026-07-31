@@ -1,0 +1,375 @@
+/* ─────────────────────────────────────────────
+   Prose container
+   ───────────────────────────────────────────── */
+.prose {
+  position: relative;
+  z-index: 1;
+  --content-pad: 2rem;
+  padding: var(--content-pad);
+  color: var(--text);
+}
+
+.prose :is(p, li, td, dd, figcaption, summary) {
+  color: var(--text);
+}
+
+@media (min-width: 768px) {
+  .prose {
+    --content-pad: 3.5rem;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Headings
+   ───────────────────────────────────────────── */
+.prose h1 {
+  color: var(--accent);
+  text-shadow: 0 0 32px var(--glow-color), 0 0 64px var(--glow-color);
+}
+
+.prose h2 {
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--glow-color), 0 0 48px var(--glow-color);
+}
+
+.prose h3 {
+  color: var(--accent);
+  text-shadow: 0 0 18px var(--glow-color), 0 0 36px var(--glow-color);
+}
+
+.prose h4 {
+  color: var(--text);
+  text-shadow: 0 0 14px var(--glow-color), 0 0 28px var(--glow-color);
+}
+
+.prose h5 {
+  color: var(--text);
+  text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+}
+
+.prose h6 {
+  color: var(--muted);
+  text-shadow: 0 0 6px var(--glow-color), 0 0 12px var(--glow-color);
+}
+
+/* ─────────────────────────────────────────────
+   Links
+   ───────────────────────────────────────────── */
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--border-soft);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 150ms ease;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────
+   Inline text emphasis
+   ───────────────────────────────────────────── */
+.prose strong,
+.prose b {
+  color: var(--accent);
+  text-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────
+   Code
+   ───────────────────────────────────────────── */
+.prose code {
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--inline-code-border);
+  color: var(--inline-code-fg);
+  background: var(--inline-code-bg);
+  box-shadow: 0 0 16px var(--inline-code-glow), 0 0 32px var(--inline-code-glow);
+  text-shadow: 0 0 8px var(--inline-code-glow);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.prose code::before,
+.prose code::after {
+  content: none;
+}
+
+.prose pre {
+  padding: 1.25rem;
+  border: 1px solid var(--grid-line-strong);
+  border-radius: 0.25rem;
+  background:
+    linear-gradient(var(--pre-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pre-grid) 1px, transparent 1px),
+    var(--pre-bg);
+  background-size: 8px 8px, 8px 8px, 100% 100%;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  padding: 0;
+  border: none;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.85em;
+}
+
+/* ─────────────────────────────────────────────
+   Horizontal rules
+   ───────────────────────────────────────────── */
+.prose hr,
+.hatch-divider {
+  position: relative;
+  width: calc(100% + (var(--content-pad) * 2));
+  margin: 2.5rem calc(var(--content-pad) * -1);
+  height: var(--grid-step);
+  border: none;
+  border-top: 1px solid var(--grid-line-strong);
+  border-bottom: 1px solid var(--grid-line-strong);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-rgb), 0.03) 0%, transparent 50%, rgba(var(--surface-rgb), 0.03) 100%),
+    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.12) 0, rgba(var(--surface-rgb), 0.12) 1px, transparent 1px, transparent 6px),
+    linear-gradient(180deg, transparent calc(50% - 0.5px), var(--grid-line-strong) calc(50% - 0.5px), var(--grid-line-strong) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  overflow: visible;
+}
+
+/* Small plus-shaped corner marks on horizontal rules */
+.prose hr::before,
+.hatch-divider::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    /* top-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position:
+    0 0, 0 0,
+    top 0 right 0, top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0, bottom 0 right 0;
+}
+
+.prose hr::after,
+.hatch-divider::after {
+  content: "//";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--grid-line-strong);
+  background: var(--bg);
+  padding: 0 1rem;
+  z-index: 3;
+}
+
+/* ─────────────────────────────────────────────
+   Nested lists
+   ───────────────────────────────────────────── */
+.prose :is(ul, ol) {
+  padding: 0.5rem 0 0.5rem 2.5rem;
+  border-left: 1px solid var(--border-soft);
+  background-color: var(--layer-1);
+}
+
+.prose :is(ul, ol) :is(ul, ol) {
+  background-color: var(--layer-2);
+  border-left-color: rgba(var(--surface-rgb), 0.22);
+}
+
+.prose :is(ul, ol) :is(ul, ol) :is(ul, ol) {
+  background-color: var(--layer-3);
+}
+
+/* Corner accents on non-nested lists only */
+.prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol)) {
+  position: relative;
+}
+
+.prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol))::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    /* top-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position:
+    0 0, 0 0,
+    top 0 right 0, top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0, bottom 0 right 0;
+}
+
+.prose ul li::marker {
+  color: var(--accent);
+  font-size: 1.1em;
+  text-shadow: 0 0 8px var(--glow-color);
+}
+
+.prose ol li::marker {
+  color: var(--accent);
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-shadow: 0 0 8px var(--glow-color);
+}
+
+.prose :is(ul, ol) :is(ul, ol) li::marker {
+  color: var(--accent);
+  opacity: 0.8;
+  text-shadow: 0 0 6px var(--glow-color);
+}
+
+.prose :is(ul, ol) :is(ul, ol) :is(ul, ol) li::marker {
+  opacity: 0.65;
+  text-shadow: 0 0 4px var(--glow-color);
+}
+
+/* Task list items: hide the default marker */
+.prose li.task-list-item {
+  list-style: none;
+}
+
+/* Task list checkboxes */
+.prose input[type="checkbox"] {
+  appearance: none;
+  width: 1em;
+  height: 1em;
+  border: 1.5px solid var(--accent);
+  border-radius: 0.15rem;
+  background: transparent;
+  box-shadow: 0 0 8px var(--glow-color);
+  vertical-align: middle;
+  margin-right: 0.35rem;
+  margin-top: -0.15em;
+  cursor: default;
+  position: relative;
+}
+
+.prose input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--glow-color);
+}
+
+.prose input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.25em;
+  height: 0.45em;
+  border: solid var(--bg);
+  border-width: 0 0.15em 0.15em 0;
+  transform: translate(-50%, -55%) rotate(45deg);
+}
+
+/* ─────────────────────────────────────────────
+   Nested blockquotes
+   ───────────────────────────────────────────── */
+.prose blockquote {
+  padding: 0.75rem 1.25rem;
+  border-left: 2px solid rgba(var(--surface-rgb), 0.18);
+  background-color: var(--layer-2);
+}
+
+.prose blockquote blockquote {
+  background-color: var(--layer-3);
+  border-left-color: var(--border-strong);
+}
+
+.prose blockquote blockquote blockquote {
+  background-color: var(--layer-4);
+}
+
+/* ─────────────────────────────────────────────
+   Tables
+   ───────────────────────────────────────────── */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border-medium);
+  background-color: var(--layer-1);
+}
+
+.prose tbody tr:nth-child(even) {
+  background-color: var(--layer-1);
+}
+
+.prose th,
+.prose td {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-soft);
+}
+
+.prose th {
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--glow-color);
+  background:
+    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
+    var(--layer-2);
+}
+
+/* ─────────────────────────────────────────────
+   Expandable details
+   ───────────────────────────────────────────── */
+.prose details {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.25rem;
+  background-color: var(--layer-1);
+}
+
+.prose details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.prose details > *:not(summary) {
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--layer-2);
+}

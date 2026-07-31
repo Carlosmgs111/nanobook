@@ -1,0 +1,145 @@
+/* ─────────────────────────────────────────────
+   Layout utilities
+   ───────────────────────────────────────────── */
+.glass-panel {
+  position: relative;
+  padding: 0;
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%);
+  border: 1px solid var(--grid-line-strong);
+  box-shadow:
+    0 0 0 1px rgba(var(--surface-rgb), 0.04) inset,
+    0 24px 80px -24px rgba(var(--shadow-rgb), 0.2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--grid-line-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-subtle) 1px, transparent 1px);
+  background-size: 16px 16px;
+  opacity: 0.6;
+}
+
+.glow {
+  box-shadow: 0 0 60px 0 var(--glow-color);
+}
+
+.glow-text {
+  text-shadow: 0 0 40px var(--glow-color);
+}
+
+.tech-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--grid-line-strong) 20%,
+    var(--grid-line-strong) 80%,
+    transparent 100%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Corner accents
+   ───────────────────────────────────────────── */
+
+/* Large plus-shaped corner marks for main containers */
+.corner-plus {
+  position: relative;
+}
+
+.corner-plus::after {
+  content: "";
+  position: absolute;
+  inset: -13px;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    /* top-left vertical stroke */
+    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* top-left horizontal stroke */
+    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* top-right vertical stroke */
+    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* top-right horizontal stroke */
+    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* bottom-left vertical stroke */
+    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* bottom-left horizontal stroke */
+    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* bottom-right vertical stroke */
+    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
+    /* bottom-right horizontal stroke */
+    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px);
+  background-size: 26px 26px;
+  background-repeat: no-repeat;
+  background-position:
+    0 0, 0 0,
+    top 0 right 0, top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0, bottom 0 right 0;
+}
+
+/* Small plus-shaped corner marks for nested/inner elements */
+.corner-plus-sm,
+.hatch-section,
+.prose blockquote,
+.prose details,
+.prose table {
+  position: relative;
+}
+
+.corner-plus-sm::after,
+.hatch-section::after,
+.prose blockquote::after,
+.prose details::after,
+.prose table::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  pointer-events: none;
+  z-index: 2;
+  background-image:
+    /* top-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-left horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right vertical stroke */
+    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* bottom-right horizontal stroke */
+    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position:
+    0 0, 0 0,
+    top 0 right 0, top 0 right 0,
+    bottom 0 left 0, bottom 0 left 0,
+    bottom 0 right 0, bottom 0 right 0;
+}
+
+/* Suppress corner accents on nested blockquotes */
+.prose blockquote blockquote::after {
+  content: none;
+}

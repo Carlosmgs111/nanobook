@@ -1,0 +1,55 @@
+/* ─────────────────────────────────────────────
+   Hatch components
+   ───────────────────────────────────────────── */
+.hatch-section {
+  position: relative;
+  margin: 2rem 0;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--grid-line-strong);
+  border-bottom: 1px solid var(--grid-line-strong);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(var(--surface-rgb), 0.10) 0,
+    rgba(var(--surface-rgb), 0.10) 1px,
+    transparent 1px,
+    transparent var(--hatch-gap)
+  );
+}
+
+.hatch-section > * {
+  position: relative;
+  z-index: 1;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.hatch-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--grid-line-strong);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(var(--surface-rgb), 0.10) 0,
+    rgba(var(--surface-rgb), 0.10) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+  background-size: 8px 8px;
+}
+
+.hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(var(--surface-rgb), 0.18) 0,
+    rgba(var(--surface-rgb), 0.18) 1px,
+    transparent 1px,
+    transparent var(--hatch-gap)
+  );
+}
