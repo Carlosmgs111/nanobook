@@ -122,8 +122,6 @@ Tabla con alineación:
 
 ## Línea horizontal
 
-::badge[Separador decorativo]
-
 ---
 
 ## Imágenes
@@ -136,11 +134,11 @@ Imagen con enlace:
 
 ---
 
-## HTML inline
+## Bloques de contenido
 
 Algunos renderizadores permiten HTML inline:
 
-:::details[Haz clic para expandir]
+**Haz clic para expandir**
 
 Este contenido está oculto hasta que se expande.
 
@@ -148,39 +146,25 @@ Este contenido está oculto hasta que se expande.
 | -------- | -------- |
 | Contenido 1 | Contenido 2 |
 
-:::
-
-:::note[Nota importante]
+**Nota importante**
 
 Este es un callout de tipo nota. Se puede usar para resaltar información relevante.
 
-:::
-
-:::warning[Atención]
+**Atención**
 
 Este es un callout de advertencia. Úsalo para llamar la atención sobre posibles problemas.
 
-:::
-
-:::tip[Consejo]
+**Consejo**
 
 Este es un consejo práctico para mejorar el flujo de trabajo.
 
-:::
-
-:::info[Sobre esto]
+**Sobre esto**
 
 Información adicional o contextual para complementar la lectura.
 
-:::
-
-:::section
-
 ### Sección con relleno diagonal
 
-Este bloque está envuelto en un `hatch-section`. El relleno de líneas diagonales aparece a la izquierda, marcando visualmente una sección técnica del contenido.
-
-:::
+Este bloque se envolvía en un `hatch-section`. El relleno de líneas diagonales aparece a la izquierda, marcando visualmente una sección técnica del contenido.
 
 ---
 
