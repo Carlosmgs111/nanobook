@@ -422,7 +422,6 @@
   margin: 1.5rem 0;
   padding: 0.75rem 1rem;
   border-left: 2px solid var(--callout-border, var(--border-strong));
-  border-radius: 0.25rem;
   background-color: var(--callout-bg, var(--layer-1));
 }
 
@@ -454,18 +453,21 @@
   --callout-accent: #f59e0b;
   --callout-border: rgba(245, 158, 11, 0.5);
   --callout-bg: rgba(245, 158, 11, 0.08);
+  --corner-color: rgba(245, 158, 11, 0.22);
 }
 
 .callout-tip {
   --callout-accent: #10b981;
   --callout-border: rgba(16, 185, 129, 0.5);
   --callout-bg: rgba(16, 185, 129, 0.08);
+  --corner-color: rgba(16, 185, 129, 0.22);
 }
 
 .callout-info {
   --callout-accent: #3b82f6;
   --callout-border: rgba(59, 130, 246, 0.5);
   --callout-bg: rgba(59, 130, 246, 0.08);
+  --corner-color: rgba(59, 130, 246, 0.22);
 }
 
 .light .callout-warning,
