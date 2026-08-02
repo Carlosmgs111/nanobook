@@ -1,12 +1,31 @@
 /* ─────────────────────────────────────────────
    Navigation index cards
    ───────────────────────────────────────────── */
+
 .index-card {
   background:
     linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%),
     repeating-linear-gradient(135deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
     var(--layer-1);
   background-size: 100% 100%, 100% 100%, 100% 100%;
+}
+
+/* Type icons */
+.index-card-icon {
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.index-card-icon.folder {
+  color: var(--accent);
+}
+
+.index-card:hover .index-card-icon.folder {
+  color: var(--accent);
+}
+
+.index-card:hover .index-card-icon.file {
+  color: var(--text);
 }
 
 /* Render card content from data-* attributes */
