@@ -1,0 +1,110 @@
+---
+import Layout from "../layouts/Layout.astro";
+import IndexList from "../components/IndexList.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("content");
+
+  return entries
+    .filter((entry) => !entry.data.draft)
+    .map((entry) => {
+      const slug = entry.id === "index" ? undefined : entry.id.replace(/\/index$/, "");
+      return {
+        params: slug ? { slug } : { slug: undefined },
+        props: { entry, allEntries: entries },
+      };
+    });
+}
+
+function getImmediateChildren(entries: any[], currentId: string, folderPath: string) {
+  const prefix = folderPath ? `${folderPath}/` : "";
+  const seen = new Set<string>();
+  const children: any[] = [];
+
+  const isValidFolder = (id: string) => {
+    return entries.some((e) => e.id === id && e.data.index && !e.data.draft);
+  };
+
+  for (const entry of entries) {
+    if (entry.data.draft) continue;
+    if (entry.id === currentId) continue;
+    if (!entry.id.startsWith(prefix)) continue;
+
+    const relative = entry.id.slice(prefix.length);
+    if (!relative) continue;
+    if (entry.id === folderPath) continue;
+
+    const slashIndex = relative.indexOf("/");
+
+    if (slashIndex === -1) {
+      // Archivo directo en este nivel
+      if (!seen.has(entry.id)) {
+        seen.add(entry.id);
+        children.push(entry);
+      }
+    } else {
+      // Está dentro de una subcarpeta
+      const subfolder = relative.slice(0, slashIndex);
+      const subfolderId = folderPath ? `${folderPath}/${subfolder}` : subfolder;
+
+      if (isValidFolder(subfolderId) && !seen.has(subfolderId)) {
+        const folderEntry = entries.find((e) => e.id === subfolderId);
+        if (folderEntry) {
+          seen.add(subfolderId);
+          children.push(folderEntry);
+        }
+      }
+    }
+  }
+
+  return children;
+}
+
+const { entry, allEntries } = Astro.props;
+const { Content } = await render(entry);
+
+const folderPath = entry.id === "index" ? "" : entry.id;
+const children = entry.data.index ? getImmediateChildren(allEntries, entry.id, folderPath) : [];
+
+const childEntries = children.map((child) => ({
+  id: child.id,
+  data: child.data,
+}));
+---
+
+<Layout
+  title={entry.data.title}
+  description={entry.data.description}
+  label={entry.data.index ? "Index" : "Document"}
+>
+  {
+    entry.data.index ? (
+      <IndexList
+        title={entry.data.title}
+        description={entry.data.description}
+        label="Index"
+        entries={childEntries}
+      />
+    ) : (
+      <>
+        <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+          <span class="tech-label mb-3 block">Document</span>
+          <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
+            {entry.data.title}
+          </h1>
+        </div>
+
+        <div class="mb-12 flex flex-wrap items-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
+          <span>ID: {entry.id}</span>
+          <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+          <span>DATE: {entry.data.date.toISOString().slice(0, 10)}</span>
+          <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+          <span>AUTHOR: {entry.data.author}</span>
+        </div>
+
+        <Content />
+      </>
+    )
+  }
+</Layout>

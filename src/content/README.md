@@ -1,3 +1,13 @@
+---
+title: "README"
+description: "Documentación de Nanobook"
+date: 2026-07-30
+author: "Nanobook Team"
+tags: ["documentation"]
+draft: false
+index: false
+---
+
 # Nanobook
 
 Nanobook es un sitio estático construido con Astro para publicar contenido técnico organizado en libros, capítulos y artículos. Usa una estructura de carpetas y archivos Markdown con frontmatter para generar automáticamente índices de navegación.

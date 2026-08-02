@@ -1,0 +1,72 @@
+---
+import "../styles/components/index-card.css";
+
+interface Entry {
+  id: string;
+  data: {
+    title: string;
+    description: string;
+    draft: boolean;
+  };
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  label?: string;
+  entries: Entry[];
+}
+
+const { title, description, label = "Index", entries } = Astro.props;
+
+const sortedEntries = entries
+  .filter((page) => !page.data.draft)
+  .sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+
+<div class="mb-12 border-b border-[var(--grid-line-strong)] pb-8">
+  <span class="tech-label mb-3 block">{label}</span>
+  <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
+    {title}
+  </h1>
+  {description && (
+    <p class="mt-4 text-[var(--muted)]">{description}</p>
+  )}
+</div>
+
+<div class="space-y-4">
+  {
+    sortedEntries.map((page, index) => (
+      <a
+        href={`/${page.id.replace(/\/$/, "")}/`}
+        class="index-card corner-plus-sm group flex items-center gap-4 border border-[var(--grid-line-strong)] p-5 transition-colors hover:border-[var(--accent)] hover:bg-white/5"
+        data-title={page.data.title}
+        data-description={page.data.description}
+        data-draft={String(page.data.draft)}
+      >
+        <span class="font-mono text-xs text-[var(--muted)]">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <div class="index-card-body flex-1">
+          <span
+            class="index-card-title block text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]"
+            data-title={page.data.title}
+          />
+          <span
+            class="index-card-desc mt-1 block text-sm text-[var(--muted)]"
+            data-description={page.data.description}
+          />
+        </div>
+        <span class="font-mono text-xs text-[var(--muted)]">
+          /{page.id.replace(/\/$/, "")}/
+        </span>
+      </a>
+    ))
+  }
+</div>
+
+{sortedEntries.length === 0 && (
+  <div class="border border-[var(--grid-line-strong)] p-8 text-center text-[var(--muted)]">
+    <p>No entries found.</p>
+  </div>
+)}
