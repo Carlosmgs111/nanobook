@@ -51,7 +51,7 @@ function linkClasses(current?: boolean): string {
 <button
   id="sidebar-toggle"
   type="button"
-  class="fixed bottom-6 left-6 z-[60] flex h-12 w-12 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] shadow-lg hover:border-[var(--accent)] md:hidden"
+  class="fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] shadow-lg hover:border-[var(--accent)] md:hidden"
   aria-label="Abrir navegación"
   aria-expanded="false"
   aria-controls="sidebar"
@@ -62,14 +62,14 @@ function linkClasses(current?: boolean): string {
 <!-- Mobile overlay -->
 <div
   id="sidebar-backdrop"
-  class="fixed inset-0 z-[55] hidden bg-black/60 backdrop-blur-sm md:hidden"
+  class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm md:hidden"
   aria-hidden="true"
 ></div>
 
 <!-- Sidebar -->
 <aside
   id="sidebar"
-  class="fixed inset-y-0 left-0 z-[60] hidden w-64 -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:z-50 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
+  class="fixed inset-y-0 left-0 z-50 hidden w-64 -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
 >
   <div class="mb-6 md:block">
     {
