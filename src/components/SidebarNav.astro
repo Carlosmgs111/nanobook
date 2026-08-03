@@ -2,6 +2,7 @@
 import FileSVG from "../icons/file.svg";
 import FolderSVG from "../icons/folder.svg";
 import FolderUpSVG from "../icons/folder-up.svg";
+import HomeSVG from "../icons/home.svg";
 import MenuSVG from "../icons/menu.svg";
 
 interface Entry {
@@ -78,7 +79,7 @@ function linkClasses(current?: boolean): string {
           href={parentHref(parentEntry)}
           class="group mb-4 flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
         >
-          <FolderUpSVG />
+          {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
           <span class="truncate">{parentEntry.data.title}</span>
         </a>
       )
