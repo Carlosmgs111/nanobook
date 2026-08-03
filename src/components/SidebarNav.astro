@@ -26,7 +26,7 @@ const sortedEntries = entries
 
 function linkClasses(current?: boolean): string {
   const base =
-    "group flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors";
+    "group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
   const active = "border-[var(--accent)] bg-white/5 text-[var(--text)]";
   const inactive =
     "border-transparent text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:bg-white/5 hover:text-[var(--text)]";
@@ -34,115 +34,99 @@ function linkClasses(current?: boolean): string {
 }
 ---
 
-<aside class="sidebar-nav hidden md:block">
-  <div
-    class="sticky top-[theme(spacing.32)] max-h-[calc(100vh-9rem)] overflow-y-auto border border-[var(--grid-line-strong)] bg-[var(--layer-1)] p-4"
-  >
-    <span class="tech-label mb-4 block">En esta sección</span>
-    <ul class="space-y-2">
-      {
-        sortedEntries.map((page) => (
-          <li>
-            <a
-              href={`/${page.id}/`}
-              class={linkClasses(page.current)}
-              aria-current={page.current ? "page" : undefined}
-            >
-              {page.data.index ? <FolderSVG /> : <FileSVG />}
-              <span class="truncate">{page.data.title}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-
-    {
-      sortedEntries.length === 0 && (
-        <p class="text-sm text-[var(--muted)]">
-          No hay elementos en esta sección.
-        </p>
-      )
-    }
-  </div>
-</aside>
-
 <!-- Mobile toggle -->
-<div class="fixed bottom-6 right-6 z-40 md:hidden">
-  <button
-    id="sidebar-toggle"
-    type="button"
-    class="flex h-12 w-12 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] shadow-lg transition-colors hover:border-[var(--accent)]"
-    aria-label="Abrir navegación"
-    aria-expanded="false"
-    aria-controls="sidebar-overlay"
-  >
-    <MenuSVG />
-  </button>
-</div>
+<button
+  id="sidebar-toggle"
+  type="button"
+  class="fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] shadow-lg hover:border-[var(--accent)] md:hidden"
+  aria-label="Abrir navegación"
+  aria-expanded="false"
+  aria-controls="sidebar"
+>
+  <MenuSVG />
+</button>
 
 <!-- Mobile overlay -->
 <div
-  id="sidebar-overlay"
-  class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm md:hidden"
+  id="sidebar-backdrop"
+  class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm md:hidden"
   aria-hidden="true"
+></div>
+
+<!-- Sidebar -->
+<aside
+  id="sidebar"
+  class="fixed inset-y-0 left-0 z-50 hidden w-64 -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
 >
-  <div
-    class="absolute right-0 top-0 h-full w-72 border-l border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 shadow-xl"
-  >
-    <div class="mb-6 flex items-center justify-between">
-      <span class="tech-label">En esta sección</span>
-      <button
-        id="sidebar-close"
-        type="button"
-        class="font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-        aria-label="Cerrar navegación"
-      >
-        Cerrar
-      </button>
-    </div>
-    <ul class="space-y-2">
-      {
-        sortedEntries.map((page) => (
-          <li>
-            <a
-              href={`/${page.id}/`}
-              class={linkClasses(page.current)}
-              aria-current={page.current ? "page" : undefined}
-            >
-              {page.data.index ? <FolderSVG /> : <FileSVG />}
-              <span class="truncate">{page.data.title}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+  <div class="mb-6 flex items-center justify-between md:block">
+    <span class="tech-label mb-4 block">En esta sección</span>
+    <button
+      id="sidebar-close"
+      type="button"
+      class="font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
+      aria-label="Cerrar navegación"
+    >
+      Cerrar
+    </button>
   </div>
-</div>
+
+  <ul class="space-y-2">
+    {
+      sortedEntries.map((page) => (
+        <li>
+          <a
+            href={`/${page.id}/`}
+            class={linkClasses(page.current)}
+            aria-current={page.current ? "page" : undefined}
+          >
+            {page.data.index ? <FolderSVG /> : <FileSVG />}
+            <span class="truncate">{page.data.title}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    sortedEntries.length === 0 && (
+      <p class="text-sm text-[var(--muted)]">
+        No hay elementos en esta sección.
+      </p>
+    )
+  }
+</aside>
 
 <script is:inline>
   (function () {
     const toggle = document.getElementById("sidebar-toggle");
-    const overlay = document.getElementById("sidebar-overlay");
     const close = document.getElementById("sidebar-close");
+    const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+
+    if (!toggle || !close || !sidebar || !backdrop) return;
 
     function open() {
-      overlay.classList.remove("hidden");
+      sidebar.classList.remove("hidden", "-translate-x-full");
+      sidebar.classList.add("translate-x-0");
+      backdrop.classList.remove("hidden");
       toggle.setAttribute("aria-expanded", "true");
-      overlay.setAttribute("aria-hidden", "false");
+      backdrop.setAttribute("aria-hidden", "false");
     }
 
     function closeSidebar() {
-      overlay.classList.add("hidden");
+      sidebar.classList.add("hidden", "-translate-x-full");
+      sidebar.classList.remove("translate-x-0");
+      backdrop.classList.add("hidden");
       toggle.setAttribute("aria-expanded", "false");
-      overlay.setAttribute("aria-hidden", "true");
+      backdrop.setAttribute("aria-hidden", "true");
     }
 
-    if (toggle && overlay) {
-      toggle.addEventListener("click", open);
-      close.addEventListener("click", closeSidebar);
-      overlay.addEventListener("click", function (event) {
-        if (event.target === overlay) closeSidebar();
-      });
-    }
+    toggle.addEventListener("click", open);
+    close.addEventListener("click", closeSidebar);
+    backdrop.addEventListener("click", closeSidebar);
+
+    sidebar.querySelectorAll("a").forEach(function (link) {
+      link.addEventListener("click", closeSidebar);
+    });
   })();
 </script>
