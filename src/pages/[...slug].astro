@@ -7,6 +7,7 @@ import {
   getFolderPath,
   getImmediateChildren,
   getBreadcrumbs,
+  getSidebarEntries,
 } from "../lib/content";
 
 export async function getStaticPaths() {
@@ -25,7 +26,7 @@ const { Content } = await render(entry);
 
 const folderPath = getFolderPath(entry.id);
 const children = entry.data.index
-  ? getImmediateChildren(allEntries, entry.id, folderPath)
+  ? getImmediateChildren(allEntries, folderPath, entry.id)
   : [];
 
 const childEntries = children.map((child) => ({
@@ -34,6 +35,7 @@ const childEntries = children.map((child) => ({
 }));
 
 const breadcrumbs = getBreadcrumbs(entry.id, allEntries);
+const sidebarEntries = getSidebarEntries(allEntries, entry.id);
 ---
 
 <Layout
@@ -41,6 +43,7 @@ const breadcrumbs = getBreadcrumbs(entry.id, allEntries);
   description={entry.data.description}
   label={entry.data.index ? "Index" : "Document"}
   breadcrumbs={breadcrumbs}
+  sidebarEntries={sidebarEntries}
 >
   {
     entry.data.index ? (

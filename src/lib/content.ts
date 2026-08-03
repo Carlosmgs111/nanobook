@@ -40,10 +40,16 @@ export function getBreadcrumbs(
   return crumbs;
 }
 
+export function getParentPath(entryId: string): string | null {
+  if (entryId === "index") return null;
+  const lastSlash = entryId.lastIndexOf("/");
+  return lastSlash === -1 ? "" : entryId.slice(0, lastSlash);
+}
+
 export function getImmediateChildren(
   entries: any[],
-  currentId: string,
   folderPath: string,
+  excludeId?: string,
 ): any[] {
   const prefix = folderPath ? `${folderPath}/` : "";
   const seen = new Set<string>();
@@ -55,8 +61,9 @@ export function getImmediateChildren(
 
   for (const entry of entries) {
     if (entry.data.draft) continue;
-    if (entry.id === currentId) continue;
+    if (excludeId && entry.id === excludeId) continue;
     if (!entry.id.startsWith(prefix)) continue;
+    if (folderPath === "" && entry.id === "index") continue;
 
     const relative = entry.id.slice(prefix.length);
     if (!relative) continue;
@@ -86,4 +93,16 @@ export function getImmediateChildren(
   }
 
   return children;
+}
+
+export function getSidebarEntries(
+  entries: any[],
+  entryId: string,
+): any[] {
+  const parentPath = getParentPath(entryId);
+  if (parentPath === null) return [];
+
+  return getImmediateChildren(entries, parentPath)
+    .map((child) => ({ ...child, current: child.id === entryId }))
+    .sort((a, b) => a.data.title.localeCompare(b.data.title));
 }
