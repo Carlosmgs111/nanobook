@@ -65,10 +65,10 @@ const parentEntry = getParentEntry(entry.id, allEntries);
           </h1>
         </div>
 
-        <div class="mb-12 flex flex-wrap items-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
+        <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
           <span>ID: {entry.id}</span>
           <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
-          <span>DATE: {entry.data.date.toISOString().slice(0, 10)}</span>
+          <span class="text-sm">DATE: {entry.data.date.toISOString().slice(0, 10)}</span>
           <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
           <span>AUTHOR: {entry.data.author}</span>
         </div>
