@@ -2,70 +2,30 @@
 import Layout from "../layouts/Layout.astro";
 import IndexList from "../components/IndexList.astro";
 import { getCollection, render } from "astro:content";
+import {
+  getStaticSlug,
+  getFolderPath,
+  getImmediateChildren,
+} from "../lib/content";
 
 export async function getStaticPaths() {
   const entries = await getCollection("content");
 
   return entries
     .filter((entry) => !entry.data.draft)
-    .map((entry) => {
-      const slug = entry.id === "index" ? undefined : entry.id.replace(/\/index$/, "");
-      return {
-        params: slug ? { slug } : { slug: undefined },
-        props: { entry, allEntries: entries },
-      };
-    });
-}
-
-function getImmediateChildren(entries: any[], currentId: string, folderPath: string) {
-  const prefix = folderPath ? `${folderPath}/` : "";
-  const seen = new Set<string>();
-  const children: any[] = [];
-
-  const isValidFolder = (id: string) => {
-    return entries.some((e) => e.id === id && e.data.index && !e.data.draft);
-  };
-
-  for (const entry of entries) {
-    if (entry.data.draft) continue;
-    if (entry.id === currentId) continue;
-    if (!entry.id.startsWith(prefix)) continue;
-
-    const relative = entry.id.slice(prefix.length);
-    if (!relative) continue;
-    if (entry.id === folderPath) continue;
-
-    const slashIndex = relative.indexOf("/");
-
-    if (slashIndex === -1) {
-      // Archivo directo en este nivel
-      if (!seen.has(entry.id)) {
-        seen.add(entry.id);
-        children.push(entry);
-      }
-    } else {
-      // Está dentro de una subcarpeta
-      const subfolder = relative.slice(0, slashIndex);
-      const subfolderId = folderPath ? `${folderPath}/${subfolder}` : subfolder;
-
-      if (isValidFolder(subfolderId) && !seen.has(subfolderId)) {
-        const folderEntry = entries.find((e) => e.id === subfolderId);
-        if (folderEntry) {
-          seen.add(subfolderId);
-          children.push(folderEntry);
-        }
-      }
-    }
-  }
-
-  return children;
+    .map((entry) => ({
+      params: { slug: getStaticSlug(entry.id) },
+      props: { entry, allEntries: entries },
+    }));
 }
 
 const { entry, allEntries } = Astro.props;
 const { Content } = await render(entry);
 
-const folderPath = entry.id === "index" ? "" : entry.id;
-const children = entry.data.index ? getImmediateChildren(allEntries, entry.id, folderPath) : [];
+const folderPath = getFolderPath(entry.id);
+const children = entry.data.index
+  ? getImmediateChildren(allEntries, entry.id, folderPath)
+  : [];
 
 const childEntries = children.map((child) => ({
   id: child.id,

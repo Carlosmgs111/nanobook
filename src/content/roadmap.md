@@ -35,5 +35,7 @@ El siguiente es un roadmap para el desarrollo de Nanobook.
     
         <!-- Este bloque deberia indicar visualmente que pertence al bloque 2 -->
     ```
+- [ ] Agregar componente de navegacion intrapagina
+- [ ] Iniciar integracion para soporte de insercion de componentes con 'remark'
 
 ## Modelo de negocio
