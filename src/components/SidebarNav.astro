@@ -1,8 +1,8 @@
 ---
 import FileSVG from "../icons/file.svg";
 import FolderSVG from "../icons/folder.svg";
+import FolderUpSVG from "../icons/folder-up.svg";
 import MenuSVG from "../icons/menu.svg";
-import ArrowUpLeftSVG from "../icons/arrow-up-left.svg";
 
 interface Entry {
   id: string;
@@ -78,7 +78,7 @@ function linkClasses(current?: boolean): string {
           href={parentHref(parentEntry)}
           class="group mb-4 flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
         >
-          <ArrowUpLeftSVG class="h-4 w-4 shrink-0" />
+          <FolderUpSVG />
           <span class="truncate">{parentEntry.data.title}</span>
         </a>
       )
