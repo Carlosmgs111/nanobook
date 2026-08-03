@@ -4,6 +4,7 @@ import FolderSVG from "../icons/folder.svg";
 import FolderUpSVG from "../icons/folder-up.svg";
 import HomeSVG from "../icons/home.svg";
 import MenuSVG from "../icons/menu.svg";
+import CloseSVG from "../icons/x.svg";
 
 interface Entry {
   id: string;
@@ -39,8 +40,7 @@ const sortedEntries = entries
   .sort((a, b) => a.data.title.localeCompare(b.data.title));
 
 function linkClasses(current?: boolean): string {
-  const base =
-    "group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
+  const base = "group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
   const active = "border-[var(--accent)] bg-white/5 text-[var(--text)]";
   const inactive =
     "border-transparent text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:bg-white/5 hover:text-[var(--text)]";
@@ -65,36 +65,38 @@ function linkClasses(current?: boolean): string {
   id="sidebar-backdrop"
   class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm md:hidden"
   aria-hidden="true"
-></div>
+>
+</div>
 
 <!-- Sidebar -->
 <aside
   id="sidebar"
   class="fixed inset-y-0 left-0 z-50 hidden w-64 -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
 >
-  <div class="mb-6 md:block">
+  <div
+    class="mb-6 flex items-end justify-between md:block border-b border-[var(--grid-line-strong)] pb-2"
+  >
     {
       parentEntry && (
         <a
           href={parentHref(parentEntry)}
-          class="group mb-4 flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+          class="group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
         >
-          {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
+          <i class="w-5">
+            {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
+          </i>
           <span class="truncate">{parentEntry.data.title}</span>
         </a>
       )
     }
-    <div class="flex items-center justify-between">
-      <span class="tech-label block">En esta sección</span>
-      <button
-        id="sidebar-close"
-        type="button"
-        class="font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
-        aria-label="Cerrar navegación"
-      >
-        Cerrar
-      </button>
-    </div>
+    <button
+      id="sidebar-close"
+      type="button"
+      class="font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden w-10 aspect-square border border-[var(--grid-line-strong)]"
+      aria-label="Cerrar navegación"
+    >
+      <CloseSVG />
+    </button>
   </div>
 
   <ul class="space-y-2">
@@ -147,7 +149,7 @@ function linkClasses(current?: boolean): string {
       toggle.setAttribute("aria-expanded", "false");
       backdrop.setAttribute("aria-hidden", "true");
     }
-
+    
     toggle.addEventListener("click", open);
     close.addEventListener("click", closeSidebar);
     backdrop.addEventListener("click", closeSidebar);
