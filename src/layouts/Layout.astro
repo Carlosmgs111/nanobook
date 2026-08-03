@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Breadcrumb from "../components/Breadcrumb.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import SidebarNav from "../components/SidebarNav.astro";
+import TableOfContents from "../components/TableOfContents.astro";
 
 interface Crumb {
   id: string;
@@ -29,6 +30,12 @@ interface ParentEntry {
   };
 }
 
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
 interface Props {
   title?: string;
   description?: string;
@@ -36,6 +43,7 @@ interface Props {
   breadcrumbs?: Crumb[];
   sidebarEntries?: SidebarEntry[];
   parentEntry?: ParentEntry | null;
+  headings?: Heading[];
 }
 
 const {
@@ -45,6 +53,7 @@ const {
   breadcrumbs,
   sidebarEntries,
   parentEntry,
+  headings,
 } = Astro.props;
 ---
 
@@ -103,7 +112,7 @@ const {
 
     <!-- Main content -->
     <div
-      class="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-12 md:grid-cols-[16rem_1fr]"
+      class="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-12 md:grid-cols-[16rem_1fr_16rem]"
     >
       {
         sidebarEntries && (
@@ -117,6 +126,7 @@ const {
           </div>
         </div>
       </main>
+      {headings && <TableOfContents headings={headings} />}
     </div>
 
     <!-- Footer -->

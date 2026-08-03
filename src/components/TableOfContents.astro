@@ -1,0 +1,140 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+---
+
+{
+  headings.length > 0 && (
+    <nav class="toc-nav hidden md:block" aria-label="En esta página">
+      <div class="sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto border border-[var(--grid-line-strong)] bg-[var(--layer-1)] p-4">
+        <span class="tech-label mb-3 block">En esta página</span>
+        <ul class="space-y-1 border-l border-[var(--grid-line-strong)]">
+          {headings.map((heading) => (
+            <li
+              class="toc-item"
+              data-depth={heading.depth}
+              data-slug={heading.slug}
+              style={`padding-left: ${(heading.depth - 2) * 0.75}rem`}
+            >
+              <a
+                href={`#${heading.slug}`}
+                class="block border-l-2 border-transparent py-1 pl-3 text-sm text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:text-[var(--text)]"
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  )
+}
+
+<script is:inline>
+  (function () {
+    const tocNav = document.querySelector(".toc-nav");
+    if (!tocNav || tocNav.offsetParent === null) return;
+
+    const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]');
+    if (tocLinks.length === 0) return;
+
+    const headings = [];
+    tocLinks.forEach((link) => {
+      const heading = document.getElementById(
+        link.getAttribute("href").slice(1),
+      );
+      if (heading) {
+        headings.push({ id: heading.id, element: heading });
+      }
+    });
+
+    if (headings.length === 0) return;
+
+    const offset = 120;
+    let offsets = [];
+    let activeIndex = -1;
+
+    function measure() {
+      offsets = headings.map((heading) => heading.element.offsetTop);
+      updateActive();
+    }
+
+    function findActiveIndex(scrollY) {
+      const target = scrollY + offset;
+      let left = 0;
+      let right = offsets.length - 1;
+      let result = 0;
+
+      while (left <= right) {
+        const mid = (left + right) >>> 1;
+        if (offsets[mid] <= target) {
+          result = mid;
+          left = mid + 1;
+        } else {
+          right = mid - 1;
+        }
+      }
+
+      return result;
+    }
+
+    function updateActive() {
+      const newIndex = findActiveIndex(window.scrollY);
+      if (newIndex === activeIndex) return;
+      activeIndex = newIndex;
+
+      const activeId = headings[activeIndex].id;
+
+      tocLinks.forEach((link) => {
+        const isActive = link.getAttribute("href") === "#" + activeId;
+        if (isActive) {
+          link.classList.remove(
+            "border-transparent",
+            "text-[var(--muted)]",
+          );
+          link.classList.add(
+            "border-[var(--accent)]",
+            "text-[var(--text)]",
+            "bg-white/5",
+          );
+        } else {
+          link.classList.add("border-transparent", "text-[var(--muted)]");
+          link.classList.remove(
+            "border-[var(--accent)]",
+            "text-[var(--text)]",
+            "bg-white/5",
+          );
+        }
+      });
+    }
+
+    let ticking = false;
+    window.addEventListener("scroll", function () {
+      if (!ticking) {
+        window.requestAnimationFrame(function () {
+          updateActive();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+
+    if (document.readyState === "complete") {
+      measure();
+    } else {
+      window.addEventListener("load", measure);
+    }
+  })();
+</script>
