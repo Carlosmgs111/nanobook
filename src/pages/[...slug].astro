@@ -8,6 +8,7 @@ import {
   getImmediateChildren,
   getBreadcrumbs,
   getSidebarEntries,
+  getParentEntry,
 } from "../lib/content";
 
 export async function getStaticPaths() {
@@ -36,6 +37,7 @@ const childEntries = children.map((child) => ({
 
 const breadcrumbs = getBreadcrumbs(entry.id, allEntries);
 const sidebarEntries = getSidebarEntries(allEntries, entry.id);
+const parentEntry = getParentEntry(entry.id, allEntries);
 ---
 
 <Layout
@@ -44,6 +46,7 @@ const sidebarEntries = getSidebarEntries(allEntries, entry.id);
   label={entry.data.index ? "Index" : "Document"}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
+  parentEntry={parentEntry}
 >
   {
     entry.data.index ? (

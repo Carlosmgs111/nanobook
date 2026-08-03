@@ -14,11 +14,11 @@ index: false
 
 ## Características
 
-El siguiente es un roadmap para el desarrollo de Nanobook.
+Caracteristicas minimas de la primera version alpha de Nanobook.
 
 - [ ] Navegación:
     - [x] Navegacion transversal - Breadcrumb
-    - [ ] Navegacion lateral / por directorio - Sidebar
+    - [x] Navegacion lateral contextual, elementos adyacentes - Sidebar
     - [ ] Navegacion intra-pagina
 - [ ] Añadir opcion para varios idiomas:
     - [x] Español (por defecto)

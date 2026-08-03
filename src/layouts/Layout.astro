@@ -22,12 +22,20 @@ interface SidebarEntry {
   current?: boolean;
 }
 
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
+}
+
 interface Props {
   title?: string;
   description?: string;
   label?: string;
   breadcrumbs?: Crumb[];
   sidebarEntries?: SidebarEntry[];
+  parentEntry?: ParentEntry | null;
 }
 
 const {
@@ -36,6 +44,7 @@ const {
   label = "Document",
   breadcrumbs,
   sidebarEntries,
+  parentEntry,
 } = Astro.props;
 ---
 
@@ -96,7 +105,9 @@ const {
     <div
       class="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-12 md:grid-cols-[16rem_1fr]"
     >
-      {sidebarEntries && <SidebarNav entries={sidebarEntries} />}
+      {sidebarEntries && (
+        <SidebarNav entries={sidebarEntries} parentEntry={parentEntry} />
+      )}
       <main class="border-x border-[var(--grid-line)] px-6">
         <div class="glass-panel corner-plus">
           <div class="prose max-w-none">

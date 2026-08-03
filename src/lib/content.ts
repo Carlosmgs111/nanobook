@@ -46,6 +46,15 @@ export function getParentPath(entryId: string): string | null {
   return lastSlash === -1 ? "" : entryId.slice(0, lastSlash);
 }
 
+export function getParentEntry(entryId: string, entries: any[]): any | null {
+  const parentPath = getParentPath(entryId);
+  if (parentPath === null) return null;
+  if (parentPath === "") {
+    return entries.find((e) => e.id === "index") ?? null;
+  }
+  return entries.find((e) => getStaticSlug(e.id) === parentPath) ?? null;
+}
+
 export function getImmediateChildren(
   entries: any[],
   folderPath: string,

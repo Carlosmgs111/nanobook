@@ -2,6 +2,7 @@
 import FileSVG from "../icons/file.svg";
 import FolderSVG from "../icons/folder.svg";
 import MenuSVG from "../icons/menu.svg";
+import ArrowUpLeftSVG from "../icons/arrow-up-left.svg";
 
 interface Entry {
   id: string;
@@ -14,11 +15,23 @@ interface Entry {
   current?: boolean;
 }
 
-interface Props {
-  entries: Entry[];
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
 }
 
-const { entries } = Astro.props;
+interface Props {
+  entries: Entry[];
+  parentEntry?: ParentEntry | null;
+}
+
+const { entries, parentEntry } = Astro.props;
+
+function parentHref(parent: ParentEntry): string {
+  return parent.id === "index" ? "/" : `/${parent.id}/`;
+}
 
 const sortedEntries = entries
   .filter((page) => !page.data.draft)
@@ -58,16 +71,29 @@ function linkClasses(current?: boolean): string {
   id="sidebar"
   class="fixed inset-y-0 left-0 z-50 hidden w-64 -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
 >
-  <div class="mb-6 flex items-center justify-between md:block">
-    <span class="tech-label mb-4 block">En esta sección</span>
-    <button
-      id="sidebar-close"
-      type="button"
-      class="font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
-      aria-label="Cerrar navegación"
-    >
-      Cerrar
-    </button>
+  <div class="mb-6 md:block">
+    {
+      parentEntry && (
+        <a
+          href={parentHref(parentEntry)}
+          class="group mb-4 flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+        >
+          <ArrowUpLeftSVG class="h-4 w-4 shrink-0" />
+          <span class="truncate">{parentEntry.data.title}</span>
+        </a>
+      )
+    }
+    <div class="flex items-center justify-between">
+      <span class="tech-label block">En esta sección</span>
+      <button
+        id="sidebar-close"
+        type="button"
+        class="font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
+        aria-label="Cerrar navegación"
+      >
+        Cerrar
+      </button>
+    </div>
   </div>
 
   <ul class="space-y-2">
