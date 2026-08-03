@@ -6,6 +6,40 @@ export function getFolderPath(entryId: string): string {
   return entryId === "index" ? "" : entryId;
 }
 
+export function getBreadcrumbs(
+  entryId: string,
+  entries: any[],
+  homeTitle: string = "Inicio",
+): { id: string; title: string; href: string; current: boolean }[] {
+  const crumbs = [{ id: "index", title: homeTitle, href: "/", current: false }];
+
+  if (entryId === "index") {
+    crumbs[0].current = true;
+    return crumbs;
+  }
+
+  const segments = entryId.split("/");
+  let path = "";
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    path = path ? `${path}/${segment}` : segment;
+
+    const entry = entries.find((e) => e.id === path);
+    const title = entry?.data?.title ?? segment;
+    const isCurrent = i === segments.length - 1;
+
+    crumbs.push({
+      id: path,
+      title,
+      href: `/${path}/`,
+      current: isCurrent,
+    });
+  }
+
+  return crumbs;
+}
+
 export function getImmediateChildren(
   entries: any[],
   currentId: string,

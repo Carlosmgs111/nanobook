@@ -1,7 +1,5 @@
 ---
-import "../styles/components/index-card.css";
-import FolderSvg from "../icons/folder.svg";
-import FileSvg from "../icons/file.svg";
+import Index from "./Index.astro";
 
 interface Entry {
   id: string;
@@ -38,40 +36,7 @@ const sortedEntries = entries
 </div>
 
 <div class="index-panel relative space-y-4">
-  {
-    sortedEntries.map((page, index) => (
-      <div
-        class="index-card-wrapper relative"
-        data-folder={String(page.data.index)}
-      >
-        <a
-          href={`/${page.id}`}
-          class={`index-card group flex items-center gap-4 border border-[var(--grid-line-strong)] p-5 transition-colors hover:border-[var(--accent)] hover:bg-white/5 ${page.data.index ? "corner-L-sm border-r-2 border-r-[var(--accent)]" : "corner-plus-sm"}`}
-          data-title={page.data.title}
-          data-description={page.data.description}
-          data-draft={String(page.data.draft)}
-        >
-          <span class="font-mono text-xs text-[var(--muted)]">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          {page.data.index ? <FolderSvg /> : <FileSvg />}
-          <div class="index-card-body flex-1">
-            <span
-              class="index-card-title block text-lg font-medium text-[var(--text)] transition-colors group-hover:text-[var(--accent)]"
-              data-title={page.data.title}
-            />
-            <span
-              class="index-card-desc mt-1 block text-sm text-[var(--muted)]"
-              data-description={page.data.description}
-            />
-          </div>
-          <span class="font-mono text-xs text-[var(--muted)]">
-            /{page.id + (page.data.index ? "/" : ".md")}
-          </span>
-        </a>
-      </div>
-    ))
-  }
+  {sortedEntries.map((page, index) => <Index page={page} index={index} />)}
 </div>
 
 {

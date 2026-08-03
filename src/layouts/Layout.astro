@@ -1,16 +1,31 @@
 ---
 import "../styles/global.css";
+import Breadcrumb from "../components/Breadcrumb.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
+
+interface Crumb {
+  id: string;
+  title: string;
+  href: string;
+  current: boolean;
+}
 
 interface Props {
   title?: string;
   description?: string;
   label?: string;
+  breadcrumbs?: Crumb[];
 }
 
-const { title = "Astro", description, label = "Document" } = Astro.props;
+const {
+  title = "Astro",
+  description,
+  label = "Document",
+  breadcrumbs,
+} = Astro.props;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,7 +36,10 @@ const { title = "Astro", description, label = "Document" } = Astro.props;
     <title>{title}</title>
     <script is:inline>
       (function () {
-        const stored = typeof localStorage !== "undefined" ? localStorage.getItem("theme") : null;
+        const stored =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem("theme")
+            : null;
         const prefersLight =
           typeof window !== "undefined" &&
           window.matchMedia("(prefers-color-scheme: light)").matches;
@@ -30,41 +48,40 @@ const { title = "Astro", description, label = "Document" } = Astro.props;
       })();
     </script>
   </head>
-  <body class="relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]">
+  <body
+    class="relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]"
+  >
     <!-- Grid overlay -->
     <div class="grid-overlay" aria-hidden="true"></div>
 
     <!-- Top and bottom subtle rules -->
-    <div class="fixed top-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]" aria-hidden="true"></div>
-    <div class="fixed bottom-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]" aria-hidden="true"></div>
+    <div
+      class="fixed top-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]"
+      aria-hidden="true"
+    >
+    </div>
+    <div
+      class="fixed bottom-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]"
+      aria-hidden="true"
+    >
+    </div>
 
     <!-- Header -->
-    <header class="relative z-10">
-      <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <div class="flex items-center gap-4">
-          <span class="tech-label">{label}</span>
-          <span class="h-3 w-px bg-[var(--grid-line-strong)]"></span>
-          <span class="font-mono text-xs text-[var(--muted)]">{title}</span>
-        </div>
-        <div class="flex items-center gap-4">
-          <button
-            id="theme-toggle"
-            type="button"
-            class="group flex items-center gap-2 font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-            aria-label="Toggle theme"
-          >
-            <span id="theme-icon" class="transition-transform group-hover:scale-110">☀️</span>
-            <span id="theme-label">Light</span>
-          </button>
-          <a href="/" class="font-mono text-xs text-[var(--muted)] transition-colors hover:text-[var(--accent)]">
-            /index
-          </a>
-        </div>
+    <header
+      class="sticky top-0 z-50 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 backdrop-blur-sm flex"
+    >
+      <div class="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-5">
+        {breadcrumbs && <Breadcrumb crumbs={breadcrumbs} />}
+      </div>
+      <div class="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-5">
+        <ThemeToggle />
       </div>
     </header>
 
     <!-- Main content -->
-    <main class="relative z-10 mx-auto max-w-5xl border-x border-[var(--grid-line)] px-6 py-12">
+    <main
+      class="relative z-10 mx-auto max-w-5xl border-x border-[var(--grid-line)] px-6 py-12"
+    >
       <div class="glass-panel corner-plus">
         <div class="prose max-w-none">
           <slot />
@@ -79,27 +96,5 @@ const { title = "Astro", description, label = "Document" } = Astro.props;
         <p class="tech-label">Rendered with Astro + Tailwind</p>
       </div>
     </footer>
-    <script is:inline>
-      (function () {
-        const root = document.documentElement;
-        const toggle = document.getElementById("theme-toggle");
-        const icon = document.getElementById("theme-icon");
-        const label = document.getElementById("theme-label");
-
-        function updateUI() {
-          const isLight = root.classList.contains("light");
-          icon.textContent = isLight ? "🌙" : "☀️";
-          label.textContent = isLight ? "Dark" : "Light";
-        }
-
-        toggle.addEventListener("click", function () {
-          const isLight = root.classList.toggle("light");
-          localStorage.setItem("theme", isLight ? "light" : "dark");
-          updateUI();
-        });
-
-        updateUI();
-      })();
-    </script>
   </body>
 </html>

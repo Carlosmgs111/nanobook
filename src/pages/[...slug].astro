@@ -6,6 +6,7 @@ import {
   getStaticSlug,
   getFolderPath,
   getImmediateChildren,
+  getBreadcrumbs,
 } from "../lib/content";
 
 export async function getStaticPaths() {
@@ -31,12 +32,15 @@ const childEntries = children.map((child) => ({
   id: child.id,
   data: child.data,
 }));
+
+const breadcrumbs = getBreadcrumbs(entry.id, allEntries);
 ---
 
 <Layout
   title={entry.data.title}
   description={entry.data.description}
   label={entry.data.index ? "Index" : "Document"}
+  breadcrumbs={breadcrumbs}
 >
   {
     entry.data.index ? (
