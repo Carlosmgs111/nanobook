@@ -106,20 +106,45 @@ const {
         {breadcrumbs && <Breadcrumb crumbs={breadcrumbs} />}
       </div>
       <div class="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-5">
-        <ThemeToggle />
+        <div class="flex items-center gap-2">
+          <button
+            id="toc-toggle"
+            type="button"
+            class="hidden h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:flex"
+            aria-label="Cambiar modo del índice"
+            aria-pressed="false"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
 
     <!-- Main content -->
-    <div
-      class="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-12 md:grid-cols-[16rem_1fr_16rem]"
-    >
+    <div class="z-10 mx-auto flex max-w-6xl gap-6 px-6 py-12">
       {
         sidebarEntries && (
           <SidebarNav entries={sidebarEntries} parentEntry={parentEntry} />
         )
       }
-      <main class="border-x border-[var(--grid-line)] px-6">
+      <main class="border-x border-[var(--grid-line)] px-6 flex-1 min-w-0">
         <div class="glass-panel corner-plus">
           <div class="prose max-w-none">
             <slot />
@@ -127,7 +152,34 @@ const {
         </div>
       </main>
       {headings && <TableOfContents headings={headings} />}
+      <!--  -->
     </div>
+
+    <script is:inline>
+      (function () {
+        const root = document.querySelector(".toc-root");
+        const toggle = document.getElementById("toc-toggle");
+        if (!root || !toggle) return;
+
+        const saved =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem("toc-mode")
+            : null;
+        const mode = saved === "compact" ? "compact" : "standard";
+        root.setAttribute("data-toc-mode", mode);
+        toggle.setAttribute("aria-pressed", mode === "compact");
+
+        toggle.addEventListener("click", function () {
+          const current = root.getAttribute("data-toc-mode") || "standard";
+          const next = current === "standard" ? "compact" : "standard";
+          root.setAttribute("data-toc-mode", next);
+          toggle.setAttribute("aria-pressed", next === "compact");
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("toc-mode", next);
+          }
+        });
+      })();
+    </script>
 
     <!-- Footer -->
     <footer class="z-10 py-8 text-center">

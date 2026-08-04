@@ -71,7 +71,7 @@ function linkClasses(current?: boolean): string {
 <!-- Sidebar -->
 <aside
   id="sidebar"
-  class="fixed inset-y-0 left-0 z-50 hidden w-64 -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
+  class="sticky flex-shrink-0 max-w-64 inset-y-0 left-0 z-40 hidden -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
 >
   <div
     class="mb-6 flex items-end justify-between md:block border-b border-[var(--grid-line-strong)] pb-2"
@@ -149,7 +149,7 @@ function linkClasses(current?: boolean): string {
       toggle.setAttribute("aria-expanded", "false");
       backdrop.setAttribute("aria-hidden", "true");
     }
-    
+
     toggle.addEventListener("click", open);
     close.addEventListener("click", closeSidebar);
     backdrop.addEventListener("click", closeSidebar);

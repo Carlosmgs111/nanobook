@@ -5,6 +5,7 @@ date: 2026-08-03
 author: "Nanobook"
 tags: ["rendimiento", "table-of-contents", "scroll-spy", "astro", "frontend"]
 draft: false
+index: false
 ---
 
 # Evolución del componente TableOfContents: rendimiento y escalabilidad

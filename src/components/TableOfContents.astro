@@ -12,45 +12,121 @@ interface Props {
 const { headings } = Astro.props;
 ---
 
-{
-  headings.length > 0 && (
-    <nav class="toc-nav hidden md:block" aria-label="En esta página">
-      <div class="sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto border border-[var(--grid-line-strong)] bg-[var(--layer-1)] p-4">
-        <span class="tech-label mb-3 block">En esta página</span>
-        <ul class="space-y-1 border-l border-[var(--grid-line-strong)]">
-          {headings.map((heading) => (
-            <li
-              class="toc-item"
-              data-depth={heading.depth}
-              data-slug={heading.slug}
-              style={`padding-left: ${(heading.depth - 2) * 0.75}rem`}
-            >
-              <a
-                href={`#${heading.slug}`}
-                class="block border-l-2 border-transparent py-1 pl-3 text-sm text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:text-[var(--text)]"
+<div class="h-[calc(100vh-10rem)] sticky top-32 flex-shrink-0">
+  {
+    headings.length > 0 && (
+      <div class="toc-root md:block" data-toc-mode="standard">
+        <div class="toc-indicator" aria-hidden="true">
+          {headings.map((heading, index) => {
+            return <div class="toc-indicator-line" data-slug={heading.slug} />;
+          })}
+        </div>
+
+        <nav class="toc-nav" aria-label="En esta página">
+          <span class="tech-label mb-3 block">En esta página</span>
+          <ul class="space-y-1 border-l border-[var(--grid-line-strong)]">
+            {headings.map((heading) => (
+              <li
+                class="toc-item"
+                data-depth={heading.depth}
+                data-slug={heading.slug}
+                style={`padding-left: ${(heading.depth - 2) * 0.75}rem`}
               >
-                {heading.text}
-              </a>
-            </li>
-          ))}
-        </ul>
+                <a
+                  href={`#${heading.slug}`}
+                  class="block border-l-2 border-transparent py-1 pl-3 text-sm text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:text-[var(--text)]"
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
-    </nav>
-  )
-}
+    )
+  }
+</div>
+
+<style>
+  .toc-root {
+    position: relative;
+  }
+
+  .toc-root[data-toc-mode="standard"] .toc-indicator {
+    display: none;
+  }
+
+  .toc-root[data-toc-mode="standard"] .toc-nav {
+    display: block;
+  }
+  .toc-nav {
+    padding: 1rem;
+    border: 1px solid var(--grid-line-strong);
+    background: var(--layer-1);
+    max-height: calc(100vh - 10rem);
+    overflow-y: auto;
+    width: 18rem;
+  }
+
+  .toc-root[data-toc-mode="compact"] {
+    height: inherit;
+    z-index: 40;
+  }
+
+  .toc-root[data-toc-mode="compact"] .toc-indicator {
+    position: relative;
+    height: 100%;
+    width: 18px;
+    border: 1px solid var(--grid-line-strong);
+  }
+
+  .toc-indicator-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 2px;
+    background: var(--muted);
+    transition:
+      width 0.15s,
+      background 0.15s;
+  }
+
+  .toc-indicator-line.active {
+    width: 24px;
+    background: var(--accent);
+  }
+
+  .toc-root[data-toc-mode="compact"] .toc-nav {
+    display: none;
+    position: absolute;
+    right: 100%;
+    width: 220px;
+    min-height: 100%;
+    padding: 0.75rem;
+  }
+
+  .toc-root[data-toc-mode="compact"]:hover .toc-nav,
+  .toc-root[data-toc-mode="compact"]:focus-within .toc-nav {
+    display: block;
+    top: 0;
+  }
+</style>
 
 <script is:inline>
   (function () {
-    const tocNav = document.querySelector(".toc-nav");
-    if (!tocNav || tocNav.offsetParent === null) return;
+    const tocRoot = document.querySelector(".toc-root");
+    if (!tocRoot || tocRoot.offsetParent === null) return;
 
     const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]');
+    const tocLines = document.querySelectorAll(".toc-indicator-line");
     if (tocLinks.length === 0) return;
 
     const headings = [];
     tocLinks.forEach((link) => {
       const heading = document.getElementById(
-        link.getAttribute("href").slice(1),
+        link.getAttribute("href").slice(1)
       );
       if (heading) {
         headings.push({ id: heading.id, element: heading });
@@ -65,7 +141,17 @@ const { headings } = Astro.props;
 
     function measure() {
       offsets = headings.map((heading) => heading.element.offsetTop);
+       positionIndicatorLines();
       updateActive();
+    }
+
+    function positionIndicatorLines() {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      tocLines.forEach((line, i) => {
+        const percent =
+          total > 0 ? (offsets[i] / total) * 100 : i === 0 ? 0 : 100;
+        line.style.top = `${Math.min(100, Math.max(0, percent))}%`;
+      });
     }
 
     function findActiveIndex(scrollY) {
@@ -97,23 +183,24 @@ const { headings } = Astro.props;
       tocLinks.forEach((link) => {
         const isActive = link.getAttribute("href") === "#" + activeId;
         if (isActive) {
-          link.classList.remove(
-            "border-transparent",
-            "text-[var(--muted)]",
-          );
+          link.classList.remove("border-transparent", "text-[var(--muted)]");
           link.classList.add(
             "border-[var(--accent)]",
             "text-[var(--text)]",
-            "bg-white/5",
+            "bg-white/5"
           );
         } else {
           link.classList.add("border-transparent", "text-[var(--muted)]");
           link.classList.remove(
             "border-[var(--accent)]",
             "text-[var(--text)]",
-            "bg-white/5",
+            "bg-white/5"
           );
         }
+      });
+
+      tocLines.forEach((line, i) => {
+        line.classList.toggle("active", i === activeIndex);
       });
     }
 

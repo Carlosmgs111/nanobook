@@ -101,10 +101,8 @@
   padding: 1.25rem;
   border: 1px solid var(--grid-line-strong);
   border-radius: 0.25rem;
-  background:
-    linear-gradient(var(--pre-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--pre-grid) 1px, transparent 1px),
-    var(--pre-bg);
+  background: linear-gradient(var(--pre-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pre-grid) 1px, transparent 1px), var(--pre-bg);
   background-size: 8px 8px, 8px 8px, 100% 100%;
   overflow-x: auto;
 }
@@ -130,10 +128,26 @@
   border: none;
   border-top: 1px solid var(--grid-line-strong);
   border-bottom: 1px solid var(--grid-line-strong);
-  background:
-    linear-gradient(180deg, rgba(var(--surface-rgb), 0.03) 0%, transparent 50%, rgba(var(--surface-rgb), 0.03) 100%),
-    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.12) 0, rgba(var(--surface-rgb), 0.12) 1px, transparent 1px, transparent 6px),
-    linear-gradient(180deg, transparent calc(50% - 0.5px), var(--grid-line-strong) calc(50% - 0.5px), var(--grid-line-strong) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  background: linear-gradient(
+      180deg,
+      rgba(var(--surface-rgb), 0.03) 0%,
+      transparent 50%,
+      rgba(var(--surface-rgb), 0.03) 100%
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgba(var(--surface-rgb), 0.12) 0,
+      rgba(var(--surface-rgb), 0.12) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    linear-gradient(
+      180deg,
+      transparent calc(50% - 0.5px),
+      var(--grid-line-strong) calc(50% - 0.5px),
+      var(--grid-line-strong) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    );
   overflow: visible;
 }
 
@@ -146,29 +160,69 @@
   pointer-events: none;
   z-index: 2;
   background-image:
-    /* top-left vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left vertical stroke */ linear-gradient(
+      transparent 6px,
+      rgba(var(--surface-rgb), 0.22) 6px,
+      rgba(var(--surface-rgb), 0.22) 8px,
+      transparent 8px
+    ),
     /* top-left horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* top-right vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* top-right horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-left vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-left horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-right vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-right horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      );
   background-size: 14px 14px;
   background-repeat: no-repeat;
-  background-position:
-    0 0, 0 0,
-    top 0 right 0, top 0 right 0,
-    bottom 0 left 0, bottom 0 left 0,
-    bottom 0 right 0, bottom 0 right 0;
+  background-position: 0 0, 0 0, top 0 right 0, top 0 right 0, bottom 0 left 0,
+    bottom 0 left 0, bottom 0 right 0, bottom 0 right 0;
 }
 
 .prose hr::after,
@@ -217,29 +271,69 @@
   pointer-events: none;
   z-index: 2;
   background-image:
-    /* top-left vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+    /* top-left vertical stroke */ linear-gradient(
+      transparent 6px,
+      rgba(var(--surface-rgb), 0.22) 6px,
+      rgba(var(--surface-rgb), 0.22) 8px,
+      transparent 8px
+    ),
     /* top-left horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* top-right vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* top-right horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-left vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-left horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-right vertical stroke */
-    linear-gradient(transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px),
+      linear-gradient(
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      ),
     /* bottom-right horizontal stroke */
-    linear-gradient(90deg, transparent 6px, rgba(var(--surface-rgb), 0.22) 6px, rgba(var(--surface-rgb), 0.22) 8px, transparent 8px);
+      linear-gradient(
+        90deg,
+        transparent 6px,
+        rgba(var(--surface-rgb), 0.22) 6px,
+        rgba(var(--surface-rgb), 0.22) 8px,
+        transparent 8px
+      );
   background-size: 14px 14px;
   background-repeat: no-repeat;
-  background-position:
-    0 0, 0 0,
-    top 0 right 0, top 0 right 0,
-    bottom 0 left 0, bottom 0 left 0,
-    bottom 0 right 0, bottom 0 right 0;
+  background-position: 0 0, 0 0, top 0 right 0, top 0 right 0, bottom 0 left 0,
+    bottom 0 left 0, bottom 0 right 0, bottom 0 right 0;
 }
 
 .prose ul li::marker {
@@ -346,8 +440,13 @@
 .prose th {
   color: var(--accent);
   text-shadow: 0 0 12px var(--glow-color);
-  background:
-    repeating-linear-gradient(45deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
+  background: repeating-linear-gradient(
+      45deg,
+      rgba(var(--surface-rgb), 0.06) 0,
+      rgba(var(--surface-rgb), 0.06) 1px,
+      transparent 1px,
+      transparent 10px
+    ),
     var(--layer-2);
 }
 
@@ -496,4 +595,3 @@
     --callout-bg: rgba(59, 130, 246, 0.1);
   }
 }
-
