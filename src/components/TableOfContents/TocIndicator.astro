@@ -1,0 +1,50 @@
+---
+interface Heading {
+  slug: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+---
+
+<div class="toc-indicator" aria-hidden="true">
+  {
+    headings.map((heading) => (
+      <div class="toc-indicator-line" data-slug={heading.slug} />
+    ))
+  }
+</div>
+
+<style>
+  .toc-indicator {
+    position: relative;
+    height: 100%;
+    width: 18px;
+    border: 1px solid var(--grid-line-strong);
+  }
+
+  :global(.toc-root[data-toc-mode="standard"]) .toc-indicator {
+    display: none;
+  }
+
+  .toc-indicator-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 2px;
+    background: var(--muted);
+    transition:
+      width 0.15s,
+      background 0.15s;
+  }
+
+  .toc-indicator-line[data-is-active="true"] {
+    width: 24px;
+    background: var(--accent);
+  }
+</style>

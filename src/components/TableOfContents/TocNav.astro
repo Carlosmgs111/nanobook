@@ -1,0 +1,85 @@
+---
+import TocToggle from "./TocToggle.astro";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+---
+
+<nav class="toc-nav" aria-label="En esta página">
+  <div class="flex items-end mb-3">
+    <span class="tech-label block w-full">En esta página</span>
+    <TocToggle />
+  </div>
+  <ul class="space-y-1 border-l border-[var(--grid-line-strong)]">
+    {
+      headings.map((heading) => (
+        <li
+          class="toc-item"
+          data-depth={heading.depth}
+          data-slug={heading.slug}
+          style={`padding-left: ${(heading.depth - 2) * 0.75}rem`}
+        >
+          <a href={`#${heading.slug}`} class="block py-1 pl-3 text-sm">
+            {heading.text}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .toc-nav {
+    padding: 1rem;
+    border: 1px solid var(--grid-line-strong);
+    background: var(--layer-1);
+    max-height: calc(100vh - 10rem);
+    overflow-y: auto;
+    width: 18rem;
+  }
+
+  :global(.toc-root[data-toc-mode="compact"]) .toc-nav {
+    display: none;
+    position: absolute;
+    right: 100%;
+    top: 0;
+    width: 220px;
+    min-height: 100%;
+    padding: 0.75rem;
+  }
+
+  :global(.toc-root[data-toc-mode="compact"]:hover) .toc-nav,
+  :global(.toc-root[data-toc-mode="compact"]:focus-within) .toc-nav {
+    display: block;
+  }
+
+  .toc-item a {
+    border-left: 2px solid transparent;
+    color: var(--muted);
+    background: unset;
+  }
+
+  .toc-item a:hover {
+    border-left-color: var(--grid-line-strong);
+    color: var(--text);
+  }
+
+  .toc-item a[data-is-active="true"] {
+    border-left: 2px solid var(--accent);
+    color: var(--text);
+    background: #ffffff0d;
+  }
+
+  .toc-item a[data-is-active="true"]:hover {
+    border-left-color: var(--accent);
+  }
+</style>

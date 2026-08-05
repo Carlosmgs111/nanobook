@@ -1,0 +1,183 @@
+---
+import TocIndicator from "./TocIndicator.astro";
+import TocNav from "./TocNav.astro";
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+---
+
+<div class="h-[calc(100vh-10rem)] sticky top-32 flex-shrink-0">
+  <div
+    class="toc-root md:block"
+    data-toc-mode="standard"
+    data-is-visible={headings.length > 0}
+  >
+    <TocIndicator headings={headings} />
+    <TocNav headings={headings} />
+  </div>
+</div>
+
+<style>
+  .toc-root {
+    position: relative;
+    display: none;
+  }
+
+  .toc-root[data-is-visible="true"] {
+    display: block;
+  }
+
+  .toc-root[data-toc-mode="compact"] {
+    height: inherit;
+    z-index: 40;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    const tocRoot = document.querySelector(".toc-root");
+    if (!tocRoot || tocRoot.offsetParent === null) return;
+
+    const toggle = document.getElementById("toc-toggle");
+    if (!toggle) return;
+
+    const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]');
+    const tocLines = document.querySelectorAll(".toc-indicator-line");
+
+    initTocMode(tocRoot, toggle);
+    initScrollSpy(tocRoot, tocLinks, tocLines);
+
+    function initTocMode(root, button) {
+      const saved =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("toc-mode")
+          : null;
+
+      const mode = saved === "compact" ? "compact" : "standard";
+      setTocMode(root, button, mode);
+
+      button.addEventListener("click", function () {
+        const current = root.getAttribute("data-toc-mode") || "standard";
+        const next = current === "standard" ? "compact" : "standard";
+        setTocMode(root, button, next);
+      });
+    }
+
+    function setTocMode(root, button, mode) {
+      root.setAttribute("data-toc-mode", mode);
+      button.setAttribute("data-toc-mode", mode);
+      button.setAttribute("aria-pressed", mode === "compact");
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("toc-mode", mode);
+      }
+    }
+
+    function initScrollSpy(root, links, lines) {
+      if (links.length === 0) return;
+
+      const headings = collectHeadings(links);
+      if (headings.length === 0) return;
+
+      const offset = 120;
+      let offsets = [];
+      let activeIndex = -1;
+
+      function measure() {
+        offsets = headings.map((heading) => heading.element.offsetTop);
+        positionIndicatorLines(lines, offsets);
+        updateActive(links, lines, headings, offsets);
+      }
+
+      function onScroll() {
+        updateActive(links, lines, headings, offsets);
+      }
+
+      function updateActive(links, lines, headings, offsets) {
+        const newIndex = findActiveIndex(window.scrollY, offsets);
+        if (newIndex === activeIndex) return;
+        activeIndex = newIndex;
+
+        const activeId = headings[activeIndex].id;
+
+        links.forEach((link) => {
+          link.dataset.isActive = link.getAttribute("href") === "#" + activeId;
+        });
+
+        lines.forEach((line, i) => {
+          line.dataset.isActive = i === activeIndex;
+        });
+      }
+
+      function findActiveIndex(scrollY, offsets) {
+        const target = scrollY + offset;
+        let left = 0;
+        let right = offsets.length - 1;
+        let result = 0;
+
+        while (left <= right) {
+          const mid = (left + right) >>> 1;
+          if (offsets[mid] <= target) {
+            result = mid;
+            left = mid + 1;
+          } else {
+            right = mid - 1;
+          }
+        }
+
+        return result;
+      }
+
+      let ticking = false;
+      window.addEventListener("scroll", function () {
+        if (!ticking) {
+          window.requestAnimationFrame(function () {
+            onScroll();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      });
+
+      window.addEventListener("resize", measure);
+      window.addEventListener("orientationchange", measure);
+
+      if (document.readyState === "complete") {
+        measure();
+      } else {
+        window.addEventListener("load", measure);
+      }
+    }
+
+    function collectHeadings(links) {
+      const headings = [];
+      links.forEach((link) => {
+        const heading = document.getElementById(
+          link.getAttribute("href").slice(1)
+        );
+        if (heading) {
+          headings.push({ id: heading.id, element: heading });
+        }
+      });
+      return headings;
+    }
+
+    function positionIndicatorLines(lines, offsets) {
+      const total =
+        document.documentElement.scrollHeight - window.innerHeight;
+      lines.forEach((line, i) => {
+        const percent =
+          total > 0 ? (offsets[i] / total) * 100 : i === 0 ? 0 : 100;
+        line.style.top = `${Math.min(100, Math.max(0, percent))}%`;
+      });
+    }
+  })();
+</script>

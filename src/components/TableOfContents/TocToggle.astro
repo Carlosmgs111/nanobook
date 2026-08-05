@@ -1,0 +1,31 @@
+---
+import ListSVG from "../../icons/list.svg";
+import ListCompactSVG from "../../icons/list-compact.svg";
+---
+
+<button
+  id="toc-toggle"
+  type="button"
+  class="hidden h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:flex"
+  aria-label="Cambiar modo del índice"
+  aria-pressed="false"
+  data-toc-mode="standard"
+>
+  <span class="toc-toggle-icon-standard" aria-hidden="true">
+    <ListSVG />
+  </span>
+  <span class="toc-toggle-icon-compact" aria-hidden="true">
+    <ListCompactSVG />
+  </span>
+</button>
+
+<style>
+  #toc-toggle {
+    position: relative;
+  }
+
+  #toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-standard,
+  #toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-compact {
+    display: none;
+  }
+</style>

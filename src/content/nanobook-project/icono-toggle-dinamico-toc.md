@@ -17,7 +17,7 @@ El componente `TableOfContents` (TOC) de `nanobook` tiene dos modos de visualiza
 - **Modo `standard`**: muestra la lista completa de encabezados.
 - **Modo `compact`**: muestra un indicador vertical con pequeñas líneas que representan la posición de cada encabezado en el documento.
 
-El usuario cambia de modo mediante un botón de toggle ubicado dentro del propio TOC. Ese botón necesita un icono que indique visualmente qué modo representa o a qué modo se va a cambiar.
+El usuario cambia de modo mediante un botón de toggle ubicado dentro del propio TOC. Ese botón debe mostrar un icono que indique visualmente a qué modo se va a cambiar al presionarlo.
 
 ## 2. El problema
 
@@ -61,11 +61,13 @@ import ListCompactSVG from "../icons/list-compact.svg";
   position: relative;
 }
 
-#toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-compact,
-#toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-standard {
+#toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-standard,
+#toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-compact {
   display: none;
 }
 ```
+
+**Nota sobre la semántica**: el icono visible representa el **modo destino**, no el modo actual. Si el TOC está en modo `standard`, el botón muestra el icono compacto para indicar que presionarlo cambiará a modo compacto. Si está en modo `compact`, muestra el icono de lista estándar para indicar que se volverá al modo estándar. Esto sigue la convención común de los botones de toggle.
 
 ### 3.3 JavaScript: solo actualiza el estado
 
