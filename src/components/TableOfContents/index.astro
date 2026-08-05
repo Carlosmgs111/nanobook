@@ -46,19 +46,19 @@ const { headings } = Astro.props;
   import { findActiveIndex } from "../../lib/scroll-spy.ts";
 
   (function () {
-    const tocRoot = document.querySelector(".toc-root");
+    const tocRoot = document.querySelector(".toc-root") as HTMLElement;
     if (!tocRoot || tocRoot.offsetParent === null) return;
 
-    const toggle = document.getElementById("toc-toggle");
+    const toggle = document.getElementById("toc-toggle") as HTMLElement;
     if (!toggle) return;
 
-    const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]');
-    const tocLines = document.querySelectorAll(".toc-indicator-line");
+    const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]') as NodeListOf<HTMLElement>;
+    const tocLines = document.querySelectorAll(".toc-indicator-line") as NodeListOf<HTMLElement>;
 
     initTocMode(tocRoot, toggle);
     initScrollSpy(tocRoot, tocLinks, tocLines);
 
-    function initTocMode(root, button) {
+    function initTocMode(root: HTMLElement, button: HTMLElement) {
       const saved =
         typeof localStorage !== "undefined"
           ? localStorage.getItem("toc-mode")
@@ -74,16 +74,20 @@ const { headings } = Astro.props;
       });
     }
 
-    function setTocMode(root, button, mode) {
+    function setTocMode(root: HTMLElement, button: HTMLElement, mode: string) {
       root.setAttribute("data-toc-mode", mode);
       button.setAttribute("data-toc-mode", mode);
-      button.setAttribute("aria-pressed", mode === "compact");
+      button.setAttribute("aria-pressed", String(mode === "compact"));
       if (typeof localStorage !== "undefined") {
         localStorage.setItem("toc-mode", mode);
       }
     }
 
-    function initScrollSpy(root, links, lines) {
+    function initScrollSpy(
+      root: HTMLElement,
+      links: NodeListOf<HTMLElement>,
+      lines: NodeListOf<HTMLElement>
+    ) {
       if (links.length === 0) return;
 
       const headings = collectHeadings(links);
@@ -103,7 +107,12 @@ const { headings } = Astro.props;
         updateActive(links, lines, headings, offsets);
       }
 
-      function updateActive(links, lines, headings, offsets) {
+      function updateActive(
+        links: NodeListOf<HTMLElement>,
+        lines: NodeListOf<HTMLElement>,
+        headings: { element: Element; id: string }[],
+        offsets: number[]
+      ) {
         const newIndex = findActiveIndex(window.scrollY, offsets, offset);
         if (newIndex === activeIndex) return;
         activeIndex = newIndex;
@@ -111,11 +120,11 @@ const { headings } = Astro.props;
         const activeId = headings[activeIndex].id;
 
         links.forEach((link) => {
-          link.dataset.isActive = link.getAttribute("href") === "#" + activeId;
+          link.dataset.isActive = String(link.getAttribute("href") === "#" + activeId);
         });
 
         lines.forEach((line, i) => {
-          line.dataset.isActive = i === activeIndex;
+          line.dataset.isActive = String(i === activeIndex);
         });
       }
 
@@ -140,11 +149,11 @@ const { headings } = Astro.props;
       }
     }
 
-    function collectHeadings(links) {
-      const headings = [];
+    function collectHeadings(links: NodeListOf<HTMLElement>): { id: string; element: HTMLElement }[] {
+      const headings: { id: string; element: HTMLElement }[] = [];
       links.forEach((link) => {
         const heading = document.getElementById(
-          link.getAttribute("href").slice(1)
+          link.getAttribute("href")!.slice(1)
         );
         if (heading) {
           headings.push({ id: heading.id, element: heading });
@@ -153,9 +162,8 @@ const { headings } = Astro.props;
       return headings;
     }
 
-    function positionIndicatorLines(lines, offsets) {
-      const total =
-        document.documentElement.scrollHeight - window.innerHeight;
+    function positionIndicatorLines(lines: NodeListOf<HTMLElement>, offsets: number[]) {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
       lines.forEach((line, i) => {
         const percent =
           total > 0 ? (offsets[i] / total) * 100 : i === 0 ? 0 : 100;
