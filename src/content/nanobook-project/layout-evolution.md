@@ -305,6 +305,27 @@ Este modelo hace que el componente sea más predecible, más fácil de testear y
 
 El componente también evolucionó para integrarse mejor con Flexbox:
 
+### Header unificado
+
+El botón de abrir el sidebar se movió del borde inferior fijo al header, junto a los demás toggles:
+
+```astro
+<header class="sticky top-0 z-40 flex items-center justify-between gap-4 px-6 py-5 ...">
+  <div class="min-w-0 flex-1">
+    <Breadcrumb ... />
+  </div>
+  <div class="flex flex-shrink-0 items-center gap-2">
+    <button id="sidebar-toggle" ... md:hidden>
+      <MenuSVG />
+    </button>
+    <ContentWidthToggle />
+    <ThemeToggle />
+  </div>
+</header>
+```
+
+Esto mantiene los controles siempre accesibles y evita que el botón de ancho de contenido parezca pertenecer al breadcrumb.
+
 ### De `fixed` a `sticky`
 
 ```astro
@@ -439,8 +460,9 @@ La migración de Grid a Flexbox resolvió dos problemas principales:
 
 Además, se ajustaron dos comportamientos responsive:
 
-- **Header sticky universal**: el header pasa de `md:sticky` a `sticky` para que el breadcrumb permanezca fijo también en móvil.
+- **Header sticky universal**: el header pasa de `md:sticky` a `sticky` para que el breadcrumb permanezca fijo también en móvil. El z-index del header se redujo a `z-40` para que el sidebar móvil, al abrirse, pueda desplegarse por encima y ocultar el breadcrumb.
 - **TOC oculto en móvil**: el contenedor del TOC solo se muestra a partir de 768px. El contenedor exterior usa `hidden md:block` y las propiedades dimensionales (`sticky`, `flex-shrink-0`, altura) se aplican solo a partir de `md`. El atributo `data-is-visible="true"` activa `display: block` dentro de la misma media query.
+- **Sidebar móvil como capa superior**: el sidebar móvil usa `z-[60]`, el backdrop `z-50`, y el header `z-40`. Al abrirse, el sidebar cubre el contenido y el breadcrumb. El ancho en móvil se limita a `min(80vw, 20rem)` para no desbordar la pantalla.
 
 Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura. El cambio más notable en la implementación del TOC fue **prescindir por completo de la manipulación de clases CSS desde JavaScript** para expresar estados. En lugar de usar `classList.add`, `classList.remove` o `classList.toggle`, el script ahora escribe atributos de datos (`data-is-active`) y deja que CSS decida la apariencia mediante selectores por atributo.
 

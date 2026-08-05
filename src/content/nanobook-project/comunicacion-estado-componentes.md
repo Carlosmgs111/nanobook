@@ -209,10 +209,13 @@ Esto evita ofrecer un modo cuyo botón no sería usable en pantallas muy pequeñ
 
 > **Nota**: el selector usa `:global(#content-width-toggle)` porque el botón pertenece al componente `ContentWidthToggle`. Astro añade atributos de scope a los estilos de cada componente, por lo que un selector normal del layout no alcanzaría al botón.
 
-### 6.4 Header sticky y TOC en móvil
+### 6.4 Header sticky, TOC y Sidebar en móvil
 
 - El header se mantiene `sticky` en todos los tamaños de viewport para que el breadcrumb y los toggles siempre estén accesibles.
+- El botón de abrir el sidebar vive en el header, junto al toggle de ancho de contenido y al de tema. Antes estaba como botón flotante en la esquina inferior.
 - El TOC no se muestra en viewports menores de 768px. El contenedor exterior usa `hidden md:block` y las propiedades `sticky`, `flex-shrink-0` y la altura solo se aplican a partir de `md`. La regla `.toc-root[data-is-visible="true"]` solo activa `display: block` dentro de `@media (min-width: 768px)`.
+- El sidebar móvil se abre como una capa superior (`z-[60]`) sobre un backdrop (`z-50`). El header usa `z-40`, por lo que el breadcrumb queda cubierto al desplegar el sidebar.
+- El ancho del sidebar en móvil se limita a `min(80vw, 20rem)` para que nunca supere el ancho de la pantalla.
 
 ---
 
