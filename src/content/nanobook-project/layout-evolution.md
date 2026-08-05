@@ -1,9 +1,9 @@
 ---
 title: "Evolución del layout principal: de Grid a Flex y mejora del TOC"
-description: "Descripción detallada de la evolución del layout principal de `nanobook`, incluyendo cambios en la estructura y funcionalidades."
-date: 2026-08-03
+description: "Análisis de la migración del layout principal de nanobook de CSS Grid a Flexbox, junto con la evolución del componente TableOfContents y la gestión de estado mediante data attributes."
+date: 2026-08-04
 author: "Nanobook"
-tags: ["estructura", "table-of-contents", "scroll-spy", "astro", "frontend"]
+tags: ["astro", "tailwind", "css", "flexbox", "grid", "toc", "layout"]
 draft: false
 index: false
 ---
@@ -191,6 +191,114 @@ line.style.top = `${percent}%`;
 
 Así, `top: X%` se resuelve correctamente contra la altura del contenedor `.toc-indicator`, logrando la correspondencia visual deseada entre la posición del encabezado en el documento y la posición de la línea en el indicador.
 
+### 5.5 Gestión de estado: de clases dinámicas a `data-is-active`
+
+Uno de los cambios más significativos en el TOC fue **dejar de manipular clases CSS desde JavaScript** para expresar estados y, en su lugar, **establecer atributos de datos** que CSS interpreta directamente. El script ya no conoce los nombres de las clases de presentación; solo escribe un booleano en el dataset. La apariencia queda enteramente delegada a las reglas de estilo.
+
+#### Antes: administración imperativa de clases
+
+El código anterior alternaba clases de Tailwind y CSS según el estado:
+
+```js
+const isActive = link.getAttribute("href") === "#" + activeId;
+if (isActive) {
+  link.classList.remove("border-transparent", "text-[var(--muted)]");
+  link.classList.add("border-[var(--accent)]", "text-[var(--text)]", "bg-white/5");
+} else {
+  link.classList.add("border-transparent", "text-[var(--muted)]");
+  link.classList.remove("border-[var(--accent)]", "text-[var(--text)]", "bg-white/5");
+}
+
+// Y para las líneas del indicador:
+line.classList.toggle("active", i === activeIndex);
+```
+
+**Problemas de este enfoque:**
+
+1. **Acoplamiento entre lógica y presentación**: el script debe conocer los nombres exactos de las clases y sus combinaciones.
+2. **Riesgo de inconsistencia**: si se renombra una clase o se cambia una variable, el script deja de aplicar el estilo correcto.
+3. **Difícil de escalar**: cada nuevo estado implica más ramas de `classList.add` / `remove`.
+4. **Flash visual inicial**: al renderizar primero con el estilo "activo" por defecto, todos los enlaces se veían resaltados hasta que el script corregía el estado.
+
+#### Ahora: estados declarativos con `data-is-active`
+
+El script solo asigna un atributo de datos:
+
+```js
+const activeId = headings[activeIndex].id;
+
+tocLinks.forEach((link) => {
+  link.dataset.isActive = link.getAttribute("href") === "#" + activeId;
+});
+
+tocLines.forEach((line, i) => {
+  line.dataset.isActive = i === activeIndex;
+});
+```
+
+Y CSS define la apariencia de cada estado:
+
+```css
+/* Estado base: inactivo */
+.toc-item a {
+  border-left: 2px solid transparent;
+  color: var(--muted);
+  background: unset;
+}
+
+/* Interacción */
+.toc-item a:hover {
+  border-left-color: var(--grid-line-strong);
+  color: var(--text);
+}
+
+/* Estado activo */
+.toc-item a[data-is-active="true"] {
+  border-left: 2px solid var(--accent);
+  color: var(--text);
+  background: #ffffff0d;
+}
+
+/* El hover no debe anular el borde activo */
+.toc-item a[data-is-active="true"]:hover {
+  border-left-color: var(--accent);
+}
+```
+
+```css
+/* Indicador compacto */
+.toc-indicator-line {
+  width: 12px;
+  background: var(--muted);
+}
+
+.toc-indicator-line[data-is-active="true"] {
+  width: 24px;
+  background: var(--accent);
+}
+```
+
+#### Ventajas de este enfoque
+
+| Aspecto | Con clases dinámicas | Con `data-is-active` |
+|---|---|---|
+| **Responsabilidad del script** | Conocer y mutar clases CSS | Solo escribir un booleano en el dataset |
+| **Mantenimiento del estilo** | Disperso entre JS y CSS | Centralizado en CSS |
+| **Flash visual inicial** | Todos los enlaces se veían activos | El estado base es inactivo por defecto |
+| **Escalabilidad** | Cada estado nuevo requiere más `classList` | Solo se añade un selector `[data-*]` |
+| **Consistencia** | Links y líneas usaban mecanismos distintos | Ambos usan `data-is-active` |
+| **Colisiones con hover** | Tailwind `hover:` podía anular el estado activo | CSS controla explícitamente ambos estados |
+
+#### Por qué dataset y no clases
+
+La elección de `dataset` sobre clases dinámicas refuerza la separación de responsabilidades:
+
+- **JavaScript** responde a eventos y calcula estado: "este enlace corresponde al heading activo".
+- **HTML** expresa ese estado: `data-is-active="true"`.
+- **CSS** decide cómo se ve: selectores por atributo.
+
+Este modelo hace que el componente sea más predecible, más fácil de testear y más sencillo de rediseñar en el futuro, porque el estado es visible en el DOM y la presentación vive en un solo lugar.
+
 ---
 
 ## 6. Cambios en SidebarNav
@@ -224,7 +332,7 @@ La migración de Grid a Flexbox resolvió dos problemas principales:
 1. **Layout condicional limpio**: los tres componentes principales ahora se muestran solo cuando son necesarios, y el contenido central se adapta automáticamente al espacio disponible.
 2. **Control refinado del dimensionamiento**: combinando `flex-shrink-0`, `flex-1` y `min-w-0`, cada pieza respeta su rol sin provocar desbordamientos ni encogimientos indebidos.
 
-Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura, especialmente en modo compacto con el indicador visual de progreso.
+Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura. El cambio más notable en la implementación del TOC fue **prescindir por completo de la manipulación de clases CSS desde JavaScript** para expresar estados. En lugar de usar `classList.add`, `classList.remove` o `classList.toggle`, el script ahora escribe atributos de datos (`data-is-active`) y deja que CSS decida la apariencia mediante selectores por atributo. Esto mantiene la lógica JavaScript mínima, centraliza la presentación en CSS, elimina el acoplamiento entre script y estilos, y facilita futuros cambios de diseño.
 
 ### Reglas y técnicas clave utilizadas
 
@@ -237,3 +345,4 @@ Paralelamente, el TOC evolucionó de un simple listado a una herramienta de nave
 | `sticky` | Mantiene sidebar y TOC visibles durante el scroll sin sacarlos del flujo. |
 | `position: absolute` + `top: X%` | Posiciona las líneas del indicador del TOC proporcionalmente a la altura del contenedor. |
 | `data-toc-mode` + `localStorage` | Alterna entre modo estándar y compacto de forma persistente. |
+| `data-is-active` + CSS | Separa el estado activo de la presentación en los enlaces y líneas del TOC. |

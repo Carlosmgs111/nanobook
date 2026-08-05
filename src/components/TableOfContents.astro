@@ -17,9 +17,9 @@ const { headings } = Astro.props;
     headings.length > 0 && (
       <div class="toc-root md:block" data-toc-mode="standard">
         <div class="toc-indicator" aria-hidden="true">
-          {headings.map((heading, index) => {
-            return <div class="toc-indicator-line" data-slug={heading.slug} />;
-          })}
+          {headings.map((heading) => (
+            <div class="toc-indicator-line" data-slug={heading.slug} />
+          ))}
         </div>
 
         <nav class="toc-nav" aria-label="En esta página">
@@ -34,7 +34,7 @@ const { headings } = Astro.props;
               >
                 <a
                   href={`#${heading.slug}`}
-                  class="block border-l-2 border-transparent py-1 pl-3 text-sm text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:text-[var(--text)]"
+                  class="block py-1 pl-3 text-sm"
                 >
                   {heading.text}
                 </a>
@@ -93,7 +93,7 @@ const { headings } = Astro.props;
       background 0.15s;
   }
 
-  .toc-indicator-line.active {
+  .toc-indicator-line[data-is-active="true"] {
     width: 24px;
     background: var(--accent);
   }
@@ -111,6 +111,27 @@ const { headings } = Astro.props;
   .toc-root[data-toc-mode="compact"]:focus-within .toc-nav {
     display: block;
     top: 0;
+  }
+
+  .toc-item a {
+    border-left: 2px solid transparent;
+    color: var(--muted);
+    background: unset;
+  }
+
+  .toc-item a:hover {
+    border-left-color: var(--grid-line-strong);
+    color: var(--text);
+  }
+
+  .toc-item a[data-is-active="true"] {
+    border-left: 2px solid var(--accent);
+    color: var(--text);
+    background: #ffffff0d;
+  }
+
+  .toc-item a[data-is-active="true"]:hover {
+    border-left-color: var(--accent);
   }
 </style>
 
@@ -141,7 +162,7 @@ const { headings } = Astro.props;
 
     function measure() {
       offsets = headings.map((heading) => heading.element.offsetTop);
-       positionIndicatorLines();
+      positionIndicatorLines();
       updateActive();
     }
 
@@ -181,26 +202,11 @@ const { headings } = Astro.props;
       const activeId = headings[activeIndex].id;
 
       tocLinks.forEach((link) => {
-        const isActive = link.getAttribute("href") === "#" + activeId;
-        if (isActive) {
-          link.classList.remove("border-transparent", "text-[var(--muted)]");
-          link.classList.add(
-            "border-[var(--accent)]",
-            "text-[var(--text)]",
-            "bg-white/5"
-          );
-        } else {
-          link.classList.add("border-transparent", "text-[var(--muted)]");
-          link.classList.remove(
-            "border-[var(--accent)]",
-            "text-[var(--text)]",
-            "bg-white/5"
-          );
-        }
+        link.dataset.isActive = link.getAttribute("href") === "#" + activeId;
       });
 
       tocLines.forEach((line, i) => {
-        line.classList.toggle("active", i === activeIndex);
+        line.dataset.isActive = i === activeIndex;
       });
     }
 
