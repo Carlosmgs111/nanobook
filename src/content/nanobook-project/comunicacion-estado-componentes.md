@@ -212,7 +212,7 @@ Esto evita ofrecer un modo cuyo botón no sería usable en pantallas muy pequeñ
 ### 6.4 Header sticky y TOC en móvil
 
 - El header se mantiene `sticky` en todos los tamaños de viewport para que el breadcrumb y los toggles siempre estén accesibles.
-- El TOC no se muestra en viewports menores de 768px. La regla `.toc-root[data-is-visible="true"]` solo activa `display: block` dentro de `@media (min-width: 768px)`.
+- El TOC no se muestra en viewports menores de 768px. El contenedor exterior usa `hidden md:block` y las propiedades `sticky`, `flex-shrink-0` y la altura solo se aplican a partir de `md`. La regla `.toc-root[data-is-visible="true"]` solo activa `display: block` dentro de `@media (min-width: 768px)`.
 
 ---
 

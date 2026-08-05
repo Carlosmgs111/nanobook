@@ -15,9 +15,9 @@ interface Props {
 const { headings } = Astro.props;
 ---
 
-<div class="h-[calc(100vh-10rem)] sticky top-32 flex-shrink-0">
+<div class="hidden md:block md:h-[calc(100vh-10rem)] md:sticky md:top-32 md:flex-shrink-0">
   <div
-    class="toc-root md:block"
+    class="toc-root"
     data-toc-mode="standard"
     data-is-visible={headings.length > 0}
   >

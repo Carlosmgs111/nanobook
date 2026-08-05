@@ -440,7 +440,7 @@ La migración de Grid a Flexbox resolvió dos problemas principales:
 Además, se ajustaron dos comportamientos responsive:
 
 - **Header sticky universal**: el header pasa de `md:sticky` a `sticky` para que el breadcrumb permanezca fijo también en móvil.
-- **TOC oculto en móvil**: el TOC solo se muestra a partir de 768px. El atributo `data-is-visible="true"` solo activa `display: block` dentro de la media query correspondiente.
+- **TOC oculto en móvil**: el contenedor del TOC solo se muestra a partir de 768px. El contenedor exterior usa `hidden md:block` y las propiedades dimensionales (`sticky`, `flex-shrink-0`, altura) se aplican solo a partir de `md`. El atributo `data-is-visible="true"` activa `display: block` dentro de la misma media query.
 
 Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura. El cambio más notable en la implementación del TOC fue **prescindir por completo de la manipulación de clases CSS desde JavaScript** para expresar estados. En lugar de usar `classList.add`, `classList.remove` o `classList.toggle`, el script ahora escribe atributos de datos (`data-is-active`) y deja que CSS decida la apariencia mediante selectores por atributo.
 
