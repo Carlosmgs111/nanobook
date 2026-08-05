@@ -5,6 +5,8 @@ import FolderUpSVG from "../icons/folder-up.svg";
 import HomeSVG from "../icons/home.svg";
 import MenuSVG from "../icons/menu.svg";
 import CloseSVG from "../icons/x.svg";
+import ChevronLeftSVG from "../icons/chevron-left.svg";
+import ChevronRightSVG from "../icons/chevron-right.svg";
 
 interface Entry {
   id: string;
@@ -40,7 +42,8 @@ const sortedEntries = entries
   .sort((a, b) => a.data.title.localeCompare(b.data.title));
 
 function linkClasses(current?: boolean): string {
-  const base = "group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
+  const base =
+    "sidebar-link group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
   const active = "border-[var(--accent)] bg-white/5 text-[var(--text)]";
   const inactive =
     "border-transparent text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:bg-white/5 hover:text-[var(--text)]";
@@ -52,7 +55,7 @@ function linkClasses(current?: boolean): string {
 <button
   id="sidebar-toggle"
   type="button"
-  class="fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] shadow-lg hover:border-[var(--accent)] md:hidden"
+  class="fixed bottom-6 left-6 z-40 flex h-12 w-12 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] shadow-lg hover:border-[var(--accent)] md:hidden"
   aria-label="Abrir navegación"
   aria-expanded="false"
   aria-controls="sidebar"
@@ -68,38 +71,64 @@ function linkClasses(current?: boolean): string {
 >
 </div>
 
+<!-- Shared tooltip (fixed, rendered outside the sidebar to avoid clipping) -->
+<div
+  id="sidebar-tooltip"
+  class="fixed z-[60] hidden max-w-[16rem] whitespace-nowrap border border-[var(--grid-line-strong)] bg-[var(--layer-1)] px-3 py-1.5 text-sm text-[var(--text)] shadow-md"
+  role="tooltip"
+>
+</div>
+
 <!-- Sidebar -->
 <aside
   id="sidebar"
-  class="absolute flex-shrink-0 max-w-64 inset-y-0 left-0 z-50 hidden -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:w-full md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
+  class="sidebar-root fixed flex-shrink-0 inset-y-0 left-0 z-40 hidden -translate-x-full border-r border-[var(--grid-line-strong)] bg-[var(--bg)] p-6 transition-[width,padding] duration-200 md:sticky md:top-32 md:block md:h-[calc(100vh-9rem)] md:max-h-[calc(100vh-9rem)] md:translate-x-0 md:overflow-y-auto md:border md:border-[var(--grid-line-strong)] md:bg-[var(--layer-1)] md:p-4"
+  data-sidebar-mode="expanded"
 >
   <div
-    class="mb-6 flex items-end justify-between md:block border-b border-[var(--grid-line-strong)] pb-2"
+    id="sidebar-header"
+    class="sidebar-header mb-6 flex items-end justify-between border-b border-[var(--grid-line-strong)] pb-2"
   >
     {
       parentEntry && (
         <a
           href={parentHref(parentEntry)}
-          class="group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+          class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+          data-tooltip={parentEntry.data.title}
         >
-          <i class="w-5">
+          <i class="sidebar-icon flex w-5 flex-shrink-0 justify-center">
             {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
           </i>
-          <span class="truncate">{parentEntry.data.title}</span>
+          <span class="sidebar-text truncate">{parentEntry.data.title}</span>
         </a>
       )
     }
     <button
       id="sidebar-close"
       type="button"
-      class="font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden w-10 aspect-square border border-[var(--grid-line-strong)]"
+      class="w-10 aspect-square border border-[var(--grid-line-strong)] font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
       aria-label="Cerrar navegación"
     >
       <CloseSVG />
     </button>
+    <button
+      id="sidebar-mode-toggle"
+      type="button"
+      class="hidden md:flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+      aria-label="Contraer navegación"
+      aria-pressed="false"
+      data-sidebar-mode="expanded"
+    >
+      <span class="sidebar-toggle-icon-expanded" aria-hidden="true">
+        <ChevronLeftSVG />
+      </span>
+      <span class="sidebar-toggle-icon-collapsed" aria-hidden="true">
+        <ChevronRightSVG />
+      </span>
+    </button>
   </div>
 
-  <ul class="space-y-2">
+  <ul class="sidebar-list space-y-2">
     {
       sortedEntries.map((page) => (
         <li>
@@ -107,9 +136,12 @@ function linkClasses(current?: boolean): string {
             href={`/${page.id}/`}
             class={linkClasses(page.current)}
             aria-current={page.current ? "page" : undefined}
+            data-tooltip={page.data.title}
           >
-            {page.data.index ? <FolderSVG /> : <FileSVG />}
-            <span class="truncate">{page.data.title}</span>
+            <i class="sidebar-icon flex w-5 flex-shrink-0 justify-center">
+              {page.data.index ? <FolderSVG /> : <FileSVG />}
+            </i>
+            <span class="sidebar-text truncate">{page.data.title}</span>
           </a>
         </li>
       ))
@@ -118,36 +150,105 @@ function linkClasses(current?: boolean): string {
 
   {
     sortedEntries.length === 0 && (
-      <p class="text-sm text-[var(--muted)]">
+      <p class="sidebar-empty text-sm text-[var(--muted)]">
         No hay elementos en esta sección.
       </p>
     )
   }
 </aside>
 
-<script is:inline>
+<style>
+  .sidebar-root {
+    width: auto;
+  }
+
+  #sidebar-tooltip {
+    pointer-events: none;
+  }
+
+  #sidebar-tooltip::before {
+    content: "";
+    position: absolute;
+    left: -0.375rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 0.375rem solid transparent;
+    border-bottom: 0.375rem solid transparent;
+    border-right: 0.375rem solid var(--grid-line-strong);
+  }
+
+  #sidebar-mode-toggle[data-sidebar-mode="collapsed"]
+    .sidebar-toggle-icon-expanded,
+  #sidebar-mode-toggle[data-sidebar-mode="expanded"]
+    .sidebar-toggle-icon-collapsed {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    #sidebar-tooltip {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .sidebar-root {
+      width: 16rem;
+    }
+
+    .sidebar-root[data-sidebar-mode="collapsed"] {
+      width: 4rem;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    .sidebar-root[data-sidebar-mode="collapsed"] .sidebar-text {
+      display: none;
+    }
+
+    #sidebar-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--grid-line-strong);
+      padding-bottom: 0.5rem;
+      gap: 0.5rem;
+    }
+
+    .sidebar-root[data-sidebar-mode="collapsed"] #sidebar-header {
+      flex-direction: column-reverse;
+      align-items: center;
+      margin-bottom: 0;
+    }
+  }
+</style>
+
+<script>
   (function () {
     const toggle = document.getElementById("sidebar-toggle");
     const close = document.getElementById("sidebar-close");
     const sidebar = document.getElementById("sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
+    const modeToggle = document.getElementById("sidebar-mode-toggle");
+    const tooltip = document.getElementById("sidebar-tooltip");
 
     if (!toggle || !close || !sidebar || !backdrop) return;
 
     function open() {
-      sidebar.classList.remove("hidden", "-translate-x-full");
-      sidebar.classList.add("translate-x-0");
-      backdrop.classList.remove("hidden");
-      toggle.setAttribute("aria-expanded", "true");
-      backdrop.setAttribute("aria-hidden", "false");
+      sidebar!.classList.remove("hidden", "-translate-x-full");
+      sidebar!.classList.add("translate-x-0");
+      backdrop!.classList.remove("hidden");
+      toggle!.setAttribute("aria-expanded", "true");
+      backdrop!.setAttribute("aria-hidden", "false");
     }
 
     function closeSidebar() {
-      sidebar.classList.add("hidden", "-translate-x-full");
-      sidebar.classList.remove("translate-x-0");
-      backdrop.classList.add("hidden");
-      toggle.setAttribute("aria-expanded", "false");
-      backdrop.setAttribute("aria-hidden", "true");
+      sidebar!.classList.add("hidden", "-translate-x-full");
+      sidebar!.classList.remove("translate-x-0");
+      backdrop!.classList.add("hidden");
+      toggle!.setAttribute("aria-expanded", "false");
+      backdrop!.setAttribute("aria-hidden", "true");
     }
 
     toggle.addEventListener("click", open);
@@ -157,5 +258,100 @@ function linkClasses(current?: boolean): string {
     sidebar.querySelectorAll("a").forEach(function (link) {
       link.addEventListener("click", closeSidebar);
     });
+
+    if (modeToggle) {
+      initSidebarMode(sidebar, modeToggle);
+    }
+
+    if (tooltip) {
+      initSidebarTooltips(sidebar, tooltip);
+    }
+
+    function initSidebarMode(root: HTMLElement, button: HTMLElement) {
+      const saved =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("sidebar-mode")
+          : null;
+
+      const mode = saved === "collapsed" ? "collapsed" : "expanded";
+      setSidebarMode(root, button, mode);
+
+      button.addEventListener("click", function () {
+        const current = root.getAttribute("data-sidebar-mode") || "expanded";
+        const next = current === "expanded" ? "collapsed" : "expanded";
+        setSidebarMode(root, button, next);
+      });
+    }
+
+    function setSidebarMode(
+      root: HTMLElement,
+      button: HTMLElement,
+      mode: string
+    ) {
+      root.setAttribute("data-sidebar-mode", mode);
+      button.setAttribute("data-sidebar-mode", mode);
+      button.setAttribute("aria-pressed", String(mode === "collapsed"));
+      button.setAttribute(
+        "aria-label",
+        mode === "expanded" ? "Contraer navegación" : "Expandir navegación"
+      );
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("sidebar-mode", mode);
+      }
+    }
+
+    function initSidebarTooltips(root: HTMLElement, tip: HTMLElement) {
+      if (window.innerWidth < 768) return;
+
+      root
+        .querySelectorAll(".sidebar-link, .sidebar-parent")
+        .forEach((target) => {
+          target.addEventListener("mouseenter", () =>
+            showTooltip(root, target, tip)
+          );
+          target.addEventListener("mouseleave", () => hideTooltip(tip));
+          target.addEventListener("focus", () =>
+            showTooltip(root, target, tip)
+          );
+          target.addEventListener("blur", () => hideTooltip(tip));
+        });
+
+      window.addEventListener("resize", () => hideTooltip(tip));
+      window.addEventListener("scroll", () => hideTooltip(tip), true);
+    }
+
+    function showTooltip(root: HTMLElement, target: Element, tip: HTMLElement) {
+      if (root.getAttribute("data-sidebar-mode") !== "collapsed") {
+        hideTooltip(tip);
+        return;
+      }
+
+      const title = target.getAttribute("data-tooltip");
+      if (!title) return;
+
+      const rect = target.getBoundingClientRect();
+      const gap = 12;
+      let left = rect.right + gap;
+      let top = rect.top + rect.height / 2;
+
+      tip.textContent = title;
+      tip.classList.remove("hidden");
+
+      const tipRect = tip.getBoundingClientRect();
+      top = top - tipRect.height / 2;
+
+      // Keep inside viewport horizontally
+      const maxLeft = window.innerWidth - tipRect.width - gap;
+      if (left > maxLeft) {
+        left = rect.left - gap - tipRect.width;
+      }
+
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    }
+
+    function hideTooltip(tip: HTMLElement) {
+      tip.classList.add("hidden");
+    }
   })();
 </script>
