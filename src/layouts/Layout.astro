@@ -143,6 +143,105 @@ const {
         <p class="tech-label">Rendered with Astro + Tailwind</p>
       </div>
     </footer>
+
+    <script is:inline>
+      (function () {
+        const wrapper = document.getElementById("content-wrapper");
+        const sidebar = document.getElementById("sidebar");
+        const tocRoot = document.querySelector(".toc-root");
+        const tocToggle = document.getElementById("toc-toggle");
+        const sidebarModeToggle = document.getElementById(
+          "sidebar-mode-toggle"
+        );
+
+        if (!wrapper || !sidebar) return;
+
+        function setTocMode(mode) {
+          if (!tocRoot || !tocToggle) return;
+          tocRoot.setAttribute("data-toc-mode", mode);
+          tocToggle.setAttribute("data-toc-mode", mode);
+          tocToggle.setAttribute("aria-pressed", String(mode === "compact"));
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("toc-mode", mode);
+          }
+        }
+
+        function enforceSingleExpanded() {
+          if (wrapper.getAttribute("data-content-mode") === "full") return;
+
+          var sidebarExpanded =
+            sidebar.getAttribute("data-sidebar-mode") === "expanded";
+
+          if (!tocRoot) return;
+
+          var tocExpanded =
+            tocRoot.getAttribute("data-toc-mode") === "standard";
+
+          if (sidebarExpanded && tocExpanded) {
+            sidebar.setAttribute("data-sidebar-mode", "collapsed");
+            if (sidebarModeToggle) {
+              sidebarModeToggle.setAttribute(
+                "data-sidebar-mode",
+                "collapsed"
+              );
+              sidebarModeToggle.setAttribute("aria-pressed", "true");
+              sidebarModeToggle.setAttribute(
+                "aria-label",
+                "Expandir navegación"
+              );
+            }
+          }
+        }
+
+        function init() {
+          window.addEventListener("resize", enforceSingleExpanded);
+
+          if (sidebarModeToggle && tocRoot && tocToggle) {
+            sidebarModeToggle.addEventListener(
+              "click",
+              function () {
+                if (wrapper.getAttribute("data-content-mode") === "full")
+                  return;
+                var sidebarMode =
+                  sidebar.getAttribute("data-sidebar-mode") || "expanded";
+                var tocMode =
+                  tocRoot.getAttribute("data-toc-mode") || "standard";
+                if (sidebarMode === "collapsed" && tocMode === "standard") {
+                  setTocMode("compact");
+                } else if (sidebarMode === "expanded" && tocMode === "compact") {
+                  setTocMode("standard");
+                }
+              },
+              true
+            );
+          }
+
+          var observer = new MutationObserver(enforceSingleExpanded);
+          observer.observe(wrapper, {
+            attributes: true,
+            attributeFilter: ["data-content-mode"],
+          });
+          observer.observe(sidebar, {
+            attributes: true,
+            attributeFilter: ["data-sidebar-mode"],
+          });
+          if (tocRoot) {
+            observer.observe(tocRoot, {
+              attributes: true,
+              attributeFilter: ["data-toc-mode"],
+            });
+          }
+
+          enforceSingleExpanded();
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+      })();
+    </script>
   </body>
 </html>
 
@@ -153,5 +252,11 @@ const {
 
   .content-wrapper[data-content-mode="full"] {
     max-width: none;
+  }
+
+  @media (max-width: 1279px) {
+    #content-width-toggle {
+      display: none;
+    }
   }
 </style>
