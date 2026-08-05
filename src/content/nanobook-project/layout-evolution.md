@@ -325,19 +325,120 @@ El componente también evolucionó para integrarse mejor con Flexbox:
 
 ---
 
-## 7. Conclusión
+## 7. Modo de ancho de contenido: `constrained` y `full`
+
+Después de estabilizar el layout en Flexbox, se añadió un control de ancho de contenido en el header. El objetivo era permitir dos experiencias distintas:
+
+- **`constrained`**: el contenido está limitado a `max-w-6xl` (72 rem). Es el modo por defecto y está pensado para lectura.
+- **`full`**: el contenedor principal ocupa todo el ancho disponible. Permite tener ambos paneles laterales expandidos simultáneamente.
+
+### 7.1 Implementación del toggle
+
+El toggle se implementa en `ContentWidthToggle.astro` y persiste la preferencia en `localStorage` bajo la clave `content-width-mode`:
+
+```js
+const saved = localStorage.getItem("content-width-mode");
+const mode = saved === "full" ? "full" : "constrained";
+```
+
+Ambos elementos, el wrapper del contenido y el botón, comparten el mismo estado mediante `data-content-mode`:
+
+```html
+<div id="content-wrapper" data-content-mode="constrained">...</div>
+<button id="content-width-toggle" data-content-mode="constrained">...</button>
+```
+
+### 7.2 Por qué ocultar el toggle en viewports pequeños
+
+El botón de ancho se oculta bajo 1279px mediante CSS:
+
+```css
+@media (max-width: 1279px) {
+  #content-width-toggle {
+    display: none;
+  }
+}
+```
+
+La razón es pragmática: en pantallas muy pequeñas el modo `full` no ofrece ventaja real y el toggle solo generaría confusión. Los paneles laterales ya tienen su propio comportamiento responsive en móvil.
+
+---
+
+## 8. Reglas de convivencia entre Sidebar y TOC
+
+### 8.1 Filosofía de los dos modos
+
+- **Modo `full`**: sin restricciones. Ambos paneles pueden expandirse. El usuario tiene el control total.
+- **Modo `constrained`**: el contenido tiene ancho limitado, por lo que no debería competir con dos paneles anchos a la vez. Solo uno de los dos paneles laterales puede estar expandido en su forma completa.
+
+### 8.2 Prioridad del TOC
+
+En documentos con encabezados, el TOC tiene prioridad. Si al cargar la página ambos paneles están expandidos en modo `constrained`, el layout colapsa automáticamente el Sidebar:
+
+```js
+if (sidebarExpanded && tocExpanded) {
+  setSidebarMode("collapsed");
+}
+```
+
+### 8.3 Alternancia mediante el botón de Sidebar
+
+En modo `constrained`, el botón de toggle del Sidebar no se queda inerte. Alterna entre dos estados válidos:
+
+1. **Sidebar expandido + TOC compacto**.
+2. **Sidebar colapsado + TOC estándar**.
+
+Para que esto funcione, el layout intercepta el click del botón en **fase de captura** (`addEventListener(..., true)`), antes de que el módulo del Sidebar reaccione. Así, el layout puede cambiar el TOC a `compact` antes de que el Sidebar se expanda, evitando que el `MutationObserver` lo revierta inmediatamente.
+
+### 8.4 Transición automática a `full`
+
+Cuando el usuario cambia de `constrained` a `full`, el layout expande ambos paneles automáticamente para aprovechar el ancho extra:
+
+```js
+function onContentModeChange() {
+  const currentMode = wrapper.getAttribute("data-content-mode") || "constrained";
+  if (currentMode === "full" && lastContentMode !== "full") {
+    expandAll();
+  }
+  lastContentMode = currentMode;
+  enforceSingleExpanded();
+}
+```
+
+Al volver a `constrained`, se vuelve a aplicar la restricción de un solo panel expandido.
+
+### 8.5 Páginas sin TOC
+
+Si la página no tiene encabezados, el TOC no se renderiza. En ese caso, el Sidebar puede permanecer expandido sin restricciones incluso en modo `constrained`.
+
+---
+
+## 9. Persistencia y estado temporal
+
+Una decisión importante fue separar el **estado de preferencia** del **estado temporal impuesto por el layout**:
+
+- Los botones de toggle persisten en `localStorage` cuando el usuario interactúa directamente.
+- El layout nunca escribe en `localStorage` cuando aplica una restricción.
+
+Esto evita que una regla de layout contamine la preferencia del usuario. Si el usuario vuelve a modo `full`, el Sidebar recupera el estado que tenía antes de la restricción.
+
+---
+
+## 10. Conclusión
 
 La migración de Grid a Flexbox resolvió dos problemas principales:
 
 1. **Layout condicional limpio**: los tres componentes principales ahora se muestran solo cuando son necesarios, y el contenido central se adapta automáticamente al espacio disponible.
 2. **Control refinado del dimensionamiento**: combinando `flex-shrink-0`, `flex-1` y `min-w-0`, cada pieza respeta su rol sin provocar desbordamientos ni encogimientos indebidos.
 
-Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura. El cambio más notable en la implementación del TOC fue **prescindir por completo de la manipulación de clases CSS desde JavaScript** para expresar estados. En lugar de usar `classList.add`, `classList.remove` o `classList.toggle`, el script ahora escribe atributos de datos (`data-is-active`) y deja que CSS decida la apariencia mediante selectores por atributo. Esto mantiene la lógica JavaScript mínima, centraliza la presentación en CSS, elimina el acoplamiento entre script y estilos, y facilita futuros cambios de diseño.
+Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura. El cambio más notable en la implementación del TOC fue **prescindir por completo de la manipulación de clases CSS desde JavaScript** para expresar estados. En lugar de usar `classList.add`, `classList.remove` o `classList.toggle`, el script ahora escribe atributos de datos (`data-is-active`) y deja que CSS decida la apariencia mediante selectores por atributo.
+
+Finalmente, la introducción de los modos `constrained` y `full` añadió una capa de coordinación entre componentes. Mediante `MutationObserver`, `localStorage` y atributos `data-*`, el layout puede aplicar restricciones inteligentes sin acoplar la lógica de los componentes individuales.
 
 ### Reglas y técnicas clave utilizadas
 
 | Regla / técnica | Función en el layout |
-|---|---|
+|---|---|---|
 | `display: flex` | Distribuye los tres componentes en una fila adaptable. |
 | `flex-shrink-0` | Impide que el sidebar y el TOC se encojan. |
 | `flex-1` | Hace que el contenido principal ocupe el espacio sobrante. |
@@ -346,3 +447,20 @@ Paralelamente, el TOC evolucionó de un simple listado a una herramienta de nave
 | `position: absolute` + `top: X%` | Posiciona las líneas del indicador del TOC proporcionalmente a la altura del contenedor. |
 | `data-toc-mode` + `localStorage` | Alterna entre modo estándar y compacto de forma persistente. |
 | `data-is-active` + CSS | Separa el estado activo de la presentación en los enlaces y líneas del TOC. |
+| `data-content-mode` | Controla el modo de ancho de contenido (`constrained` / `full`). |
+| `data-sidebar-mode` + `MutationObserver` | Coordina el Sidebar con el TOC según el modo de ancho. |
+| `addEventListener(..., true)` | Permite al layout actuar antes del listener del componente en el toggle del Sidebar. |
+
+---
+
+## 11. Documentos relacionados
+
+- `src/content/nanobook-project/comunicacion-estado-componentes.md` — explica en detalle cómo se comunican los estados entre TOC, Sidebar y ContentWidthToggle.
+- `src/content/nanobook-project/dataset-estado-toc.md` — profundiza en el cambio de `classList` a `data-is-active` en el TOC.
+
+---
+
+## 12. Commits relacionados
+
+- `d75bdb0` — `feat: enforce single expanded panel in constrained mode, allow both in full mode`
+- `b505506` — `feat: expand both sidebar and TOC when switching to full mode`
