@@ -1,0 +1,68 @@
+---
+import MaximizeSVG from "../icons/maximize.svg";
+import MinimizeSVG from "../icons/minimize.svg";
+---
+
+<button
+  id="content-width-toggle"
+  type="button"
+  class="group flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+  aria-label="Expandir contenido"
+  aria-pressed="false"
+  data-content-mode="constrained"
+>
+  <span class="content-width-icon-constrained" aria-hidden="true">
+    <MaximizeSVG />
+  </span>
+  <span class="content-width-icon-full" aria-hidden="true">
+    <MinimizeSVG />
+  </span>
+</button>
+
+<style>
+  #content-width-toggle[data-content-mode="full"]
+    .content-width-icon-constrained,
+  #content-width-toggle[data-content-mode="constrained"] .content-width-icon-full {
+    display: none;
+  }
+</style>
+
+<script>
+  (function () {
+    const button = document.getElementById("content-width-toggle");
+    const wrapper = document.getElementById("content-wrapper");
+    if (!button || !wrapper) return;
+
+    const saved =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("content-width-mode")
+        : null;
+
+    const mode = saved === "full" ? "full" : "constrained";
+    setContentMode(wrapper as HTMLElement, button as HTMLElement, mode);
+
+    button.addEventListener("click", function () {
+      const current =
+        wrapper.getAttribute("data-content-mode") || "constrained";
+      const next = current === "constrained" ? "full" : "constrained";
+      setContentMode(wrapper as HTMLElement, button as HTMLElement, next);
+    });
+
+    function setContentMode(
+      wrapper: HTMLElement,
+      button: HTMLElement,
+      mode: string
+    ) {
+      wrapper.setAttribute("data-content-mode", mode);
+      button.setAttribute("data-content-mode", mode);
+      button.setAttribute("aria-pressed", String(mode === "full"));
+      button.setAttribute(
+        "aria-label",
+        mode === "constrained" ? "Expandir contenido" : "Restringir contenido"
+      );
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("content-width-mode", mode);
+      }
+    }
+  })();
+</script>
