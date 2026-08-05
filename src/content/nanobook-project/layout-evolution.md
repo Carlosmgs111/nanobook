@@ -350,17 +350,23 @@ Ambos elementos, el wrapper del contenido y el botón, comparten el mismo estado
 
 ### 7.2 Por qué ocultar el toggle en viewports pequeños
 
-El botón de ancho se oculta bajo 1279px mediante CSS:
+El botón de ancho se oculta por debajo de una anchura mínima configurable mediante CSS. El valor por defecto es 1280px:
 
 ```css
+:root {
+  --content-width-min: 1280px;
+}
+
 @media (max-width: 1279px) {
-  #content-width-toggle {
+  :global(#content-width-toggle) {
     display: none;
   }
 }
 ```
 
 La razón es pragmática: en pantallas muy pequeñas el modo `full` no ofrece ventaja real y el toggle solo generaría confusión. Los paneles laterales ya tienen su propio comportamiento responsive en móvil.
+
+> **Nota**: el selector usa `:global(#content-width-toggle)` porque el botón pertenece a otro componente Astro. Sin `:global(...)`, el estilo scoped del layout no llegaría al botón.
 
 ---
 
@@ -430,6 +436,11 @@ La migración de Grid a Flexbox resolvió dos problemas principales:
 
 1. **Layout condicional limpio**: los tres componentes principales ahora se muestran solo cuando son necesarios, y el contenido central se adapta automáticamente al espacio disponible.
 2. **Control refinado del dimensionamiento**: combinando `flex-shrink-0`, `flex-1` y `min-w-0`, cada pieza respeta su rol sin provocar desbordamientos ni encogimientos indebidos.
+
+Además, se ajustaron dos comportamientos responsive:
+
+- **Header sticky universal**: el header pasa de `md:sticky` a `sticky` para que el breadcrumb permanezca fijo también en móvil.
+- **TOC oculto en móvil**: el TOC solo se muestra a partir de 768px. El atributo `data-is-visible="true"` solo activa `display: block` dentro de la media query correspondiente.
 
 Paralelamente, el TOC evolucionó de un simple listado a una herramienta de navegación dual, mejorando la densidad de información y la experiencia de lectura. El cambio más notable en la implementación del TOC fue **prescindir por completo de la manipulación de clases CSS desde JavaScript** para expresar estados. En lugar de usar `classList.add`, `classList.remove` o `classList.toggle`, el script ahora escribe atributos de datos (`data-is-active`) y deja que CSS decida la apariencia mediante selectores por atributo.
 

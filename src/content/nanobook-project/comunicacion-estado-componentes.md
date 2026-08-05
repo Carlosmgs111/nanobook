@@ -191,17 +191,28 @@ const mode = saved === "full" ? "full" : "constrained";
 
 ### 6.3 Botón de ancho en viewports pequeños
 
-El botón de ancho se oculta bajo 1279px mediante CSS:
+El botón de ancho se oculta por debajo de una anchura mínima configurable. El valor por defecto es 1280px:
 
 ```css
+:root {
+  --content-width-min: 1280px;
+}
+
 @media (max-width: 1279px) {
-  #content-width-toggle {
+  :global(#content-width-toggle) {
     display: none;
   }
 }
 ```
 
 Esto evita ofrecer un modo cuyo botón no sería usable en pantallas muy pequeñas.
+
+> **Nota**: el selector usa `:global(#content-width-toggle)` porque el botón pertenece al componente `ContentWidthToggle`. Astro añade atributos de scope a los estilos de cada componente, por lo que un selector normal del layout no alcanzaría al botón.
+
+### 6.4 Header sticky y TOC en móvil
+
+- El header se mantiene `sticky` en todos los tamaños de viewport para que el breadcrumb y los toggles siempre estén accesibles.
+- El TOC no se muestra en viewports menores de 768px. La regla `.toc-root[data-is-visible="true"]` solo activa `display: block` dentro de `@media (min-width: 768px)`.
 
 ---
 

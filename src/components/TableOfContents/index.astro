@@ -32,13 +32,15 @@ const { headings } = Astro.props;
     display: none;
   }
 
-  .toc-root[data-is-visible="true"] {
-    display: block;
-  }
-
   .toc-root[data-toc-mode="compact"] {
     height: inherit;
     z-index: 40;
+  }
+
+  @media (min-width: 768px) {
+    .toc-root[data-is-visible="true"] {
+      display: block;
+    }
   }
 </style>
 

@@ -101,7 +101,7 @@ const {
 
     <!-- Header -->
     <header
-      class="md:sticky md:top-0 md:z-50 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 backdrop-blur-sm flex"
+      class="sticky top-0 z-50 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 backdrop-blur-sm flex"
     >
       <div class="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-5">
         {breadcrumbs && <Breadcrumb crumbs={breadcrumbs} />}
@@ -284,6 +284,13 @@ const {
 </html>
 
 <style>
+  :root {
+    /* Anchura mínima a partir de la cual el modo full de ancho de contenido
+       tiene sentido y se muestra el botón correspondiente. Si se cambia este
+       valor, también debe actualizarse la media query de #content-width-toggle. */
+    --content-width-min: 1280px;
+  }
+
   .content-wrapper {
     max-width: 72rem;
   }
@@ -292,8 +299,9 @@ const {
     max-width: none;
   }
 
+  /* El valor debe coincidir con --content-width-min. */
   @media (max-width: 1279px) {
-    #content-width-toggle {
+    :global(#content-width-toggle) {
       display: none;
     }
   }
