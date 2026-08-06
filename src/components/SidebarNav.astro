@@ -144,6 +144,30 @@ function linkClasses(current?: boolean): string {
   }
 </aside>
 
+<script is:inline>
+  (function () {
+    const saved =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("sidebar-mode")
+        : null;
+    if (saved !== "collapsed" && saved !== "expanded") return;
+
+    const sidebar = document.getElementById("sidebar");
+    const toggle = document.getElementById("sidebar-mode-toggle");
+    if (!sidebar) return;
+
+    sidebar.setAttribute("data-sidebar-mode", saved);
+    if (toggle) {
+      toggle.setAttribute("data-sidebar-mode", saved);
+      toggle.setAttribute("aria-pressed", String(saved === "collapsed"));
+      toggle.setAttribute(
+        "aria-label",
+        saved === "expanded" ? "Contraer navegación" : "Expandir navegación"
+      );
+    }
+  })();
+</script>
+
 <style>
   .sidebar-root {
     width: min(80vw, 20rem);

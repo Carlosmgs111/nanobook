@@ -463,6 +463,8 @@ Una decisión importante fue separar el **estado de preferencia** del **estado t
 
 Esto evita que una regla de layout contamine la preferencia del usuario. Si el usuario vuelve a modo `full`, el Sidebar recupera el estado que tenía antes de la restricción.
 
+Además, para evitar el *flash* de cambio de estado al cargar una página, cada componente con estado persistente incluye un pequeño script `is:inline` que lee `localStorage` y ajusta los atributos `data-*` antes de que el navegador pintee el contenido. Así el usuario nunca ve el estado por defecto del HTML estático durante un instante.
+
 ---
 
 ## 10. Conclusión

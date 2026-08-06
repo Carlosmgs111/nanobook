@@ -136,12 +136,13 @@ El TOC tiene dos modos:
 - `standard`: lista completa de encabezados.
 - `compact`: indicador visual reducido.
 
-El modo se guarda en `localStorage` bajo la clave `toc-mode`.
+El modo se guarda en `localStorage` bajo la clave `toc-mode`. Para evitar el flash de cambio de estado al cargar, un script `is:inline` dentro del componente restaura el modo leído **antes** de que el navegador pintee la página, sobrescribiendo el valor por defecto del HTML estático.
 
 ```js
 const saved = localStorage.getItem("toc-mode");
-const mode = saved === "compact" ? "compact" : "standard";
-root.setAttribute("data-toc-mode", mode);
+if (saved === "compact" || saved === "standard") {
+  root.setAttribute("data-toc-mode", saved);
+}
 ```
 
 ---
@@ -155,12 +156,13 @@ El sidebar tiene dos modos:
 - `expanded`: ancho completo con texto visible.
 - `collapsed`: ancho reducido con iconos y tooltips.
 
-El modo se guarda en `localStorage` bajo la clave `sidebar-mode`.
+El modo se guarda en `localStorage` bajo la clave `sidebar-mode`. Al igual que en el TOC, un script `is:inline` restaura el modo guardado antes del primer paint para evitar que el usuario vea el estado por defecto (`expanded`) durante un instante y luego el colapso.
 
 ```js
 const saved = localStorage.getItem("sidebar-mode");
-const mode = saved === "collapsed" ? "collapsed" : "expanded";
-root.setAttribute("data-sidebar-mode", mode);
+if (saved === "collapsed" || saved === "expanded") {
+  root.setAttribute("data-sidebar-mode", saved);
+}
 ```
 
 ### 5.2 Tooltips fuera del sidebar
@@ -182,11 +184,14 @@ Las tooltips del modo colapsado se renderizan en un único elemento fijo `#sideb
 
 ### 6.2 Persistencia
 
-El modo se guarda en `localStorage` bajo la clave `content-width-mode`.
+El modo se guarda en `localStorage` bajo la clave `content-width-mode`. Un script `is:inline` actualiza el `data-content-mode` del wrapper y del botón antes del primer paint, evitando el flash del modo por defecto.
 
 ```js
 const saved = localStorage.getItem("content-width-mode");
-const mode = saved === "full" ? "full" : "constrained";
+if (saved === "full" || saved === "constrained") {
+  wrapper.setAttribute("data-content-mode", saved);
+  button.setAttribute("data-content-mode", saved);
+}
 ```
 
 ### 6.3 Botón de ancho en viewports pequeños

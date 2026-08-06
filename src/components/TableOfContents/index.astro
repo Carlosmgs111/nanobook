@@ -26,6 +26,26 @@ const { headings } = Astro.props;
   </div>
 </div>
 
+<script is:inline>
+  (function () {
+    const saved =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("toc-mode")
+        : null;
+    if (saved !== "compact" && saved !== "standard") return;
+
+    const root = document.querySelector(".toc-root");
+    const toggle = document.getElementById("toc-toggle");
+    if (!root) return;
+
+    root.setAttribute("data-toc-mode", saved);
+    if (toggle) {
+      toggle.setAttribute("data-toc-mode", saved);
+      toggle.setAttribute("aria-pressed", String(saved === "compact"));
+    }
+  })();
+</script>
+
 <style>
   .toc-root {
     position: relative;

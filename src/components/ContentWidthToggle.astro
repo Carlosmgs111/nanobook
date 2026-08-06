@@ -19,6 +19,28 @@ import MinimizeSVG from "../icons/minimize.svg";
   </span>
 </button>
 
+<script is:inline>
+  (function () {
+    const saved =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("content-width-mode")
+        : null;
+    if (saved !== "full" && saved !== "constrained") return;
+
+    const button = document.getElementById("content-width-toggle");
+    const wrapper = document.getElementById("content-wrapper");
+    if (!button || !wrapper) return;
+
+    button.setAttribute("data-content-mode", saved);
+    button.setAttribute("aria-pressed", String(saved === "full"));
+    button.setAttribute(
+      "aria-label",
+      saved === "constrained" ? "Expandir contenido" : "Restringir contenido"
+    );
+    wrapper.setAttribute("data-content-mode", saved);
+  })();
+</script>
+
 <style>
   #content-width-toggle[data-content-mode="full"]
     .content-width-icon-constrained,
