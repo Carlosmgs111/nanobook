@@ -15,20 +15,25 @@ const { crumbs } = Astro.props;
 
 <nav aria-label="Breadcrumb">
   <ol
-    class="flex flex-wrap items-center gap-2 font-mono text-xs text-[var(--muted)]"
+    class="flex flex-nowrap items-center gap-2 overflow-x-auto font-mono text-xs text-[var(--muted)]"
   >
     {
       crumbs.map((crumb, index) => (
-        <li class="flex items-center gap-2">
-          {index > 0 && <span class="text-[var(--grid-line-strong)]">/</span>}
+        <li class="flex min-w-0 max-w-[12rem] flex-shrink items-center gap-2">
+          {index > 0 && <span class="flex-shrink-0 text-[var(--grid-line-strong)]">/</span>}
           {crumb.current ? (
-            <span class="text-[var(--text)]" aria-current="page">
+            <span
+              class="block truncate text-[var(--text)]"
+              aria-current="page"
+              title={crumb.title}
+            >
               {crumb.title}
             </span>
           ) : (
             <a
               href={crumb.href}
-              class="transition-colors hover:text-[var(--accent)]"
+              class="block truncate transition-colors hover:text-[var(--accent)]"
+              title={crumb.title}
             >
               {crumb.title}
             </a>

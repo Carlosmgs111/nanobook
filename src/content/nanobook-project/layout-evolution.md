@@ -305,6 +305,20 @@ Este modelo hace que el componente sea más predecible, más fácil de testear y
 
 El componente también evolucionó para integrarse mejor con Flexbox:
 
+### Breadcrumb con truncamiento
+
+Cada ítem del breadcrumb tiene un ancho máximo de `12rem`. Si el título es más largo, se trunca con ellipsis y se muestra completo en el atributo `title`:
+
+```astro
+<li class="flex min-w-0 max-w-[12rem] flex-shrink items-center gap-2">
+  <a href={crumb.href} class="block truncate" title={crumb.title}>
+    {crumb.title}
+  </a>
+</li>
+```
+
+La lista usa `flex-nowrap` y `overflow-x-auto`, por lo que si el conjunto de ítems no cabe, el usuario puede desplazarse horizontalmente en lugar de romper el layout.
+
 ### Header unificado
 
 El botón de abrir el sidebar se movió del borde inferior fijo al header, junto a los demás toggles:
