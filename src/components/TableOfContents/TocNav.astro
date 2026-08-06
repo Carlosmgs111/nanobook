@@ -37,6 +37,18 @@ const { headings } = Astro.props;
   </ul>
 </nav>
 
+<script>
+  import { initScrollSpy } from "./TocNav.logic.ts";
+
+  const root = document.querySelector(".toc-root") as HTMLElement;
+  const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]') as NodeListOf<HTMLElement>;
+  const tocLines = document.querySelectorAll(".toc-indicator-line") as NodeListOf<HTMLElement>;
+
+  if (root) {
+    initScrollSpy(root, tocLinks, tocLines);
+  }
+</script>
+
 <style>
   .toc-nav {
     padding: 1rem;

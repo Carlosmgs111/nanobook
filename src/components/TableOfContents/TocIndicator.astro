@@ -18,6 +18,15 @@ const { headings } = Astro.props;
   }
 </div>
 
+<script>
+  import { initIndicatorLines } from "./TocIndicator.logic.ts";
+
+  const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]') as NodeListOf<HTMLElement>;
+  const tocLines = document.querySelectorAll(".toc-indicator-line") as NodeListOf<HTMLElement>;
+
+  initIndicatorLines(tocLinks, tocLines);
+</script>
+
 <style>
   .toc-indicator {
     position: relative;

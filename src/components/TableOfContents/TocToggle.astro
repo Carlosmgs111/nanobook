@@ -19,6 +19,16 @@ import ListCompactSVG from "../../icons/list-compact.svg";
   </span>
 </button>
 
+<script>
+  import { initTocMode } from "./TocToggle.logic.ts";
+
+  const root = document.querySelector(".toc-root") as HTMLElement;
+  const toggle = document.getElementById("toc-toggle") as HTMLElement;
+  if (root && toggle) {
+    initTocMode(root, toggle);
+  }
+</script>
+
 <style>
   #toc-toggle {
     position: relative;
