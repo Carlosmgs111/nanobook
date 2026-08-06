@@ -1,0 +1,66 @@
+---
+import FileSVG from "../../icons/file.svg";
+import FolderSVG from "../../icons/folder.svg";
+
+interface Entry {
+  id: string;
+  data: {
+    title: string;
+    index: boolean;
+  };
+  current?: boolean;
+}
+
+interface Props {
+  entries: Entry[];
+}
+
+const { entries } = Astro.props;
+
+function linkClasses(current?: boolean): string {
+  const base =
+    "sidebar-link group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
+  const active = "border-[var(--accent)] bg-white/5 text-[var(--text)]";
+  const inactive =
+    "border-transparent text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:bg-white/5 hover:text-[var(--text)]";
+  return current ? `${base} ${active}` : `${base} ${inactive}`;
+}
+---
+
+<ul class="sidebar-list space-y-2">
+  {
+    entries.map((page) => (
+      <li>
+        <a
+          href={`/${page.id}/`}
+          class={linkClasses(page.current)}
+          aria-current={page.current ? "page" : undefined}
+          data-tooltip={page.data.title}
+        >
+          <i class="sidebar-icon flex w-5 flex-shrink-0 justify-center">
+            {page.data.index ? <FolderSVG /> : <FileSVG />}
+          </i>
+          <span class="sidebar-text truncate">{page.data.title}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+{
+  entries.length === 0 && (
+    <p class="sidebar-empty text-sm text-[var(--muted)]">
+      No hay elementos en esta sección.
+    </p>
+  )
+}
+
+<script>
+  import { initSidebarTooltips } from "./SidebarList.logic.ts";
+
+  const sidebar = document.getElementById("sidebar");
+  const tooltip = document.getElementById("sidebar-tooltip");
+  if (sidebar && tooltip) {
+    initSidebarTooltips(sidebar, tooltip);
+  }
+</script>

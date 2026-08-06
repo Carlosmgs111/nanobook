@@ -1,0 +1,39 @@
+---
+import ChevronLeftSVG from "../../icons/chevron-left.svg";
+import ChevronRightSVG from "../../icons/chevron-right.svg";
+---
+
+<button
+  id="sidebar-mode-toggle"
+  type="button"
+  class="hidden md:flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+  aria-label="Contraer navegación"
+  aria-pressed="false"
+  data-sidebar-mode="expanded"
+>
+  <span class="sidebar-toggle-icon-expanded" aria-hidden="true">
+    <ChevronLeftSVG />
+  </span>
+  <span class="sidebar-toggle-icon-collapsed" aria-hidden="true">
+    <ChevronRightSVG />
+  </span>
+</button>
+
+<script>
+  import { initSidebarMode } from "./SidebarModeToggle.logic.ts";
+
+  const sidebar = document.getElementById("sidebar");
+  const toggle = document.getElementById("sidebar-mode-toggle");
+  if (sidebar && toggle) {
+    initSidebarMode(sidebar, toggle);
+  }
+</script>
+
+<style>
+  #sidebar-mode-toggle[data-sidebar-mode="collapsed"]
+    .sidebar-toggle-icon-expanded,
+  #sidebar-mode-toggle[data-sidebar-mode="expanded"]
+    .sidebar-toggle-icon-collapsed {
+    display: none;
+  }
+</style>

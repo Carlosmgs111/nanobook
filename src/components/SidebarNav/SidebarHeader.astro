@@ -1,0 +1,52 @@
+---
+import HomeSVG from "../../icons/home.svg";
+import FolderUpSVG from "../../icons/folder-up.svg";
+import CloseSVG from "../../icons/x.svg";
+import SidebarModeToggle from "./SidebarModeToggle.astro";
+
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
+}
+
+interface Props {
+  parentEntry?: ParentEntry | null;
+}
+
+const { parentEntry } = Astro.props;
+
+function parentHref(parent: ParentEntry): string {
+  return parent.id === "index" ? "/" : `/${parent.id}/`;
+}
+---
+
+<div
+  id="sidebar-header"
+  class="sidebar-header mb-6 flex items-end justify-between border-b border-[var(--grid-line-strong)] pb-2"
+>
+  {
+    parentEntry && (
+      <a
+        href={parentHref(parentEntry)}
+        class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+        data-tooltip={parentEntry.data.title}
+      >
+        <i class="sidebar-icon flex w-5 flex-shrink-0 justify-center">
+          {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
+        </i>
+        <span class="sidebar-text truncate">{parentEntry.data.title}</span>
+      </a>
+    )
+  }
+  <button
+    id="sidebar-close"
+    type="button"
+    class="w-10 aspect-square border border-[var(--grid-line-strong)] font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
+    aria-label="Cerrar navegación"
+  >
+    <CloseSVG />
+  </button>
+  <SidebarModeToggle />
+</div>
