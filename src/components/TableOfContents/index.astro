@@ -30,11 +30,7 @@ const display = Boolean(headings.length);
     data-toc-mode="standard"
     data-is-visible={headings.length > 0}
   >
-    <TocIndicator
-      headings={headings}
-      tocRootId={tocRootId}
-      tocNavId={tocNavId}
-    />
+    <TocIndicator headings={headings} tocRootId={tocRootId} />
     <TocNav
       headings={headings}
       tocRootId={tocRootId}

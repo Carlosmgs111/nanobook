@@ -60,29 +60,14 @@ function parentHref(parent: ParentEntry): string {
   }
 
   @media screen and (min-width: 768px) {
-    .sidebar-header[data-sidebar-mode="collapsed"] {
+    :global(#sidebar[data-sidebar-mode="collapsed"]) .sidebar-header {
       flex-direction: column-reverse;
       align-items: center;
       margin-bottom: 0;
     }
 
-    .sidebar-header[data-sidebar-mode="collapsed"] span {
+    :global(#sidebar[data-sidebar-mode="collapsed"]) .sidebar-header span {
       display: none;
     }
   }
 </style>
-
-<script define:vars={{ toggleId }}>
-  (function () {
-    const header = document.getElementById("sidebar-header");
-    const toggle = document.getElementById(toggleId);
-    if (!header || !toggle) return;
-
-    function syncHeaderMode() {
-      header.dataset.sidebarMode = toggle.dataset.sidebarMode || "expanded";
-    }
-
-    syncHeaderMode();
-    toggle.addEventListener("click", syncHeaderMode);
-  })();
-</script>

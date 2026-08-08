@@ -34,10 +34,14 @@ const { toggleId } = Astro.props;
     root.dataset.sidebarMode = mode;
     button.dataset.sidebarMode = mode;
     button.ariaPressed = String(mode === "collapsed");
-    button.ariaLabel = mode === "expanded" ? "Contraer navegación" : "Expandir navegación";
+    button.ariaLabel =
+      mode === "expanded" ? "Contraer navegación" : "Expandir navegación";
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("sidebar-mode", mode);
     }
+    root.dispatchEvent(
+      new CustomEvent("sidebar:mode", { detail: { mode } })
+    );
   }
 
   function initSidebarMode(root, button) {

@@ -81,11 +81,15 @@ Valores: `true` | `false`
 ### ScrollSpy
 
 1. `TocNav` recopila los headings del artículo a partir de los `href` de los enlaces.
-2. Emite el evento custom `headings` con la lista de referencias.
+2. Guarda las referencias en `#toc-root._tocHeadings` y emite el evento custom `toc:headings` sobre `#toc-root`.
 3. En cada scroll (throttled con `requestAnimationFrame`), calcula el heading activo usando `findActiveIndex`.
 4. Actualiza `data-is-active` en el enlace activo.
-5. Emite el evento custom `active` con el `id` del heading activo.
-6. `TocIndicator` escucha `active` y resalta la línea correspondiente.
+5. Guarda el `id` activo en `#toc-root._tocActiveId` y emite el evento custom `toc:active` sobre `#toc-root`.
+6. `TocIndicator` lee el estado actual al inicializarse y escucha `toc:headings` y `toc:active` para actualizaciones futuras.
+
+### Robustez ante el orden de carga
+
+Los eventos custom se emiten sobre `#toc-root`, que existe en el HTML estático desde el principio. Además, `TocNav` guarda el último estado en propiedades del elemento root (`_tocHeadings`, `_tocActiveId`). De este modo, `TocIndicator` puede leer el estado actual incluso si se inicializó después de que `TocNav` emitió los eventos.
 
 ## Componentes
 
@@ -100,14 +104,15 @@ Valores: `true` | `false`
 - Renderiza la lista de enlaces a los headings.
 - Recibe `tocRootId`, `tocNavId` y `toggleId`.
 - Contiene la lógica del scrollSpy.
-- Emite eventos custom `headings` y `active` sobre `#toc-nav`.
+- Guarda el estado en `#toc-root` y emite eventos custom `toc:headings` y `toc:active` sobre `#toc-root`.
 
 ### `TocIndicator.astro`
 
 - Renderiza líneas visuales que representan la posición de cada heading en el documento.
-- Recibe `tocRootId` y `tocNavId`.
-- Escucha los eventos `headings` y `active` de `#toc-nav`.
-- Incluye guarda defensiva: `if (!tocIndicator || !tocNav) return;`.
+- Recibe `tocRootId`.
+- Al inicializarse lee `#toc-root._tocHeadings` y `#toc-root._tocActiveId`.
+- Escucha los eventos `toc:headings` y `toc:active` de `#toc-root`.
+- Incluye guarda defensiva: `if (!tocIndicator || !root) return;`.
 
 ### `TocToggle.astro`
 
@@ -118,7 +123,7 @@ Valores: `true` | `false`
 
 ## Decisiones clave
 
-- **Eventos custom para desacoplar**: `TocNav` no conoce a `TocIndicator`. Solo emite eventos sobre un elemento del DOM identificado por ID. Esto permite cambiar o eliminar el indicador sin tocar el nav.
+- **Eventos custom + estado en el DOM**: `TocNav` no conoce a `TocIndicator`. Emite eventos sobre `#toc-root` y, además, guarda el último estado en propiedades del elemento. Esto desacopla los componentes y elimina la fragilidad del orden de carga.
 - **ScrollSpy en `TocNav`**: la responsabilidad de decidir qué heading está activo vive junto a los enlaces que lo representan.
 - **`is:inline` en `TocToggle`**: al no depender de imports externos, el toggle puede ejecutarse antes de la pintura, evitando flashes de modo.
 - **IDs fijos**: simplifican el razonamiento sobre el DOM, asumiendo un único TOC por página.

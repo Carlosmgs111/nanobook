@@ -46,7 +46,7 @@ Atributos comunes:
 
 Cuando un componente necesita notificar a otro sin conocerlo directamente, emite eventos custom sobre un elemento del DOM identificado por ID. Otro componente escucha ese evento y reacciona.
 
-Esto se usa, por ejemplo, entre `TocNav` (emite `headings` y `active`) y `TocIndicator` (los escucha).
+Esto se usa, por ejemplo, entre `TocNav` (emite `toc:headings` y `toc:active` sobre `#toc-root`) y `TocIndicator` (los escucha). Además, el emisor guarda el último estado en el propio elemento DOM, por lo que un receptor que se inicialice tarde puede leer el estado actual sin perder ningún evento.
 
 ## Estructura de alto nivel
 

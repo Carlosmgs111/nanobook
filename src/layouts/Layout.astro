@@ -155,123 +155,123 @@ const {
 
         if (!wrapper || !sidebar) return;
 
-        var lastContentMode =
-          wrapper.getAttribute("data-content-mode") || "constrained";
+        // var lastContentMode =
+        //   wrapper.getAttribute("data-content-mode") || "constrained";
 
-        function setTocMode(mode) {
-          if (!tocRoot || !tocToggle) return;
-          tocRoot.setAttribute("data-toc-mode", mode);
-          tocToggle.setAttribute("data-toc-mode", mode);
-          tocToggle.setAttribute("aria-pressed", String(mode === "compact"));
-          if (typeof localStorage !== "undefined") {
-            localStorage.setItem("toc-mode", mode);
-          }
-        }
+        // function setTocMode(mode) {
+        //   if (!tocRoot || !tocToggle) return;
+        //   tocRoot.setAttribute("data-toc-mode", mode);
+        //   tocToggle.setAttribute("data-toc-mode", mode);
+        //   tocToggle.setAttribute("aria-pressed", String(mode === "compact"));
+        //   if (typeof localStorage !== "undefined") {
+        //     localStorage.setItem("toc-mode", mode);
+        //   }
+        // }
 
-        function setSidebarMode(mode) {
-          sidebar.setAttribute("data-sidebar-mode", mode);
-          if (sidebarModeToggle) {
-            sidebarModeToggle.setAttribute("data-sidebar-mode", mode);
-            sidebarModeToggle.setAttribute(
-              "aria-pressed",
-              String(mode === "collapsed")
-            );
-            sidebarModeToggle.setAttribute(
-              "aria-label",
-              mode === "expanded"
-                ? "Contraer navegación"
-                : "Expandir navegación"
-            );
-          }
-          if (typeof localStorage !== "undefined") {
-            localStorage.setItem("sidebar-mode", mode);
-          }
-        }
+        // function setSidebarMode(mode) {
+        //   sidebar.setAttribute("data-sidebar-mode", mode);
+        //   if (sidebarModeToggle) {
+        //     sidebarModeToggle.setAttribute("data-sidebar-mode", mode);
+        //     sidebarModeToggle.setAttribute(
+        //       "aria-pressed",
+        //       String(mode === "collapsed")
+        //     );
+        //     sidebarModeToggle.setAttribute(
+        //       "aria-label",
+        //       mode === "expanded"
+        //         ? "Contraer navegación"
+        //         : "Expandir navegación"
+        //     );
+        //   }
+        //   if (typeof localStorage !== "undefined") {
+        //     localStorage.setItem("sidebar-mode", mode);
+        //   }
+        // }
 
-        function expandAll() {
-          if (sidebar.getAttribute("data-sidebar-mode") !== "expanded") {
-            setSidebarMode("expanded");
-          }
-          if (tocRoot && tocRoot.getAttribute("data-toc-mode") !== "standard") {
-            setTocMode("standard");
-          }
-        }
+        // function expandAll() {
+        //   if (sidebar.getAttribute("data-sidebar-mode") !== "expanded") {
+        //     setSidebarMode("expanded");
+        //   }
+        //   if (tocRoot && tocRoot.getAttribute("data-toc-mode") !== "standard") {
+        //     setTocMode("standard");
+        //   }
+        // }
 
-        function enforceSingleExpanded() {
-          if (wrapper.getAttribute("data-content-mode") === "full") return;
+        // function enforceSingleExpanded() {
+        //   if (wrapper.getAttribute("data-content-mode") === "full") return;
 
-          var sidebarExpanded =
-            sidebar.getAttribute("data-sidebar-mode") === "expanded";
+        //   var sidebarExpanded =
+        //     sidebar.getAttribute("data-sidebar-mode") === "expanded";
 
-          if (!tocRoot) return;
+        //   if (!tocRoot) return;
 
-          var tocExpanded =
-            tocRoot.getAttribute("data-toc-mode") === "standard";
+        //   var tocExpanded =
+        //     tocRoot.getAttribute("data-toc-mode") === "standard";
 
-          if (sidebarExpanded && tocExpanded) {
-            setSidebarMode("collapsed");
-          }
-        }
+        //   if (sidebarExpanded && tocExpanded) {
+        //     setSidebarMode("collapsed");
+        //   }
+        // }
 
-        function onContentModeChange() {
-          var currentMode =
-            wrapper.getAttribute("data-content-mode") || "constrained";
-          if (currentMode === "full" && lastContentMode !== "full") {
-            expandAll();
-          }
-          lastContentMode = currentMode;
-          enforceSingleExpanded();
-        }
+        // function onContentModeChange() {
+        //   var currentMode =
+        //     wrapper.getAttribute("data-content-mode") || "constrained";
+        //   if (currentMode === "full" && lastContentMode !== "full") {
+        //     expandAll();
+        //   }
+        //   lastContentMode = currentMode;
+        //   enforceSingleExpanded();
+        // }
 
-        function onPanelModeChange() {
-          enforceSingleExpanded();
-        }
+        // function onPanelModeChange() {
+        //   enforceSingleExpanded();
+        // }
 
         function init() {
-          window.addEventListener("resize", enforceSingleExpanded);
+          // window.addEventListener("resize", enforceSingleExpanded);
 
-          if (sidebarModeToggle && tocRoot && tocToggle) {
-            sidebarModeToggle.addEventListener(
-              "click",
-              function () {
-                if (wrapper.getAttribute("data-content-mode") === "full")
-                  return;
-                var sidebarMode =
-                  sidebar.getAttribute("data-sidebar-mode") || "expanded";
-                var tocMode =
-                  tocRoot.getAttribute("data-toc-mode") || "standard";
-                if (sidebarMode === "collapsed" && tocMode === "standard") {
-                  setTocMode("compact");
-                } else if (
-                  sidebarMode === "expanded" &&
-                  tocMode === "compact"
-                ) {
-                  setTocMode("standard");
-                }
-              },
-              true
-            );
-          }
+          // if (sidebarModeToggle && tocRoot && tocToggle) {
+          //   sidebarModeToggle.addEventListener(
+          //     "click",
+          //     function () {
+          //       if (wrapper.getAttribute("data-content-mode") === "full")
+          //         return;
+          //       var sidebarMode =
+          //         sidebar.getAttribute("data-sidebar-mode") || "expanded";
+          //       var tocMode =
+          //         tocRoot.getAttribute("data-toc-mode") || "standard";
+          //       if (sidebarMode === "collapsed" && tocMode === "standard") {
+          //         setTocMode("compact");
+          //       } else if (
+          //         sidebarMode === "expanded" &&
+          //         tocMode === "compact"
+          //       ) {
+          //         setTocMode("standard");
+          //       }
+          //     },
+          //     true
+          //   );
+          // }
 
-          var wrapperObserver = new MutationObserver(onContentModeChange);
-          wrapperObserver.observe(wrapper, {
-            attributes: true,
-            attributeFilter: ["data-content-mode"],
-          });
+          // var wrapperObserver = new MutationObserver(onContentModeChange);
+          // wrapperObserver.observe(wrapper, {
+          //   attributes: true,
+          //   attributeFilter: ["data-content-mode"],
+          // });
 
-          var panelObserver = new MutationObserver(onPanelModeChange);
-          panelObserver.observe(sidebar, {
-            attributes: true,
-            attributeFilter: ["data-sidebar-mode"],
-          });
-          if (tocRoot) {
-            panelObserver.observe(tocRoot, {
-              attributes: true,
-              attributeFilter: ["data-toc-mode"],
-            });
-          }
+          // var panelObserver = new MutationObserver(onPanelModeChange);
+          // panelObserver.observe(sidebar, {
+          //   attributes: true,
+          //   attributeFilter: ["data-sidebar-mode"],
+          // });
+          // if (tocRoot) {
+          //   panelObserver.observe(tocRoot, {
+          //     attributes: true,
+          //     attributeFilter: ["data-toc-mode"],
+          //   });
+          // }
 
-          enforceSingleExpanded();
+          // enforceSingleExpanded();
         }
 
         if (document.readyState === "loading") {

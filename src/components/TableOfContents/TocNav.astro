@@ -75,15 +75,21 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
           link.getAttribute("href") === "#" + activeId
         );
       });
-      tocNav.dispatchEvent(new CustomEvent("active", { detail: { activeId } }));
+
+      root._tocActiveId = activeId;
+      root.dispatchEvent(
+        new CustomEvent("toc:active", { detail: { activeId } })
+      );
     }
 
     function initScrollSpy(links, offset = 120) {
       if (links.length === 0) return;
 
       const headings = collectHeadings(links);
-      tocNav.dispatchEvent(
-        new CustomEvent("headings", { detail: { headings } })
+
+      root._tocHeadings = headings;
+      root.dispatchEvent(
+        new CustomEvent("toc:headings", { detail: { headings } })
       );
       if (headings.length === 0) return;
 

@@ -6,10 +6,9 @@ interface Heading {
 interface Props {
   headings: Heading[];
   tocRootId: string;
-  tocNavId: string;
 }
 
-const { headings, tocRootId, tocNavId } = Astro.props;
+const { headings, tocRootId } = Astro.props;
 const indicatorId = `${tocRootId}-indicator`;
 ---
 
@@ -21,11 +20,11 @@ const indicatorId = `${tocRootId}-indicator`;
   }
 </div>
 
-<script define:vars={{ indicatorId, tocNavId }} type="module">
+<script define:vars={{ indicatorId, tocRootId }} type="module">
   (function () {
     const tocIndicator = document.getElementById(indicatorId);
-    const tocNav = document.getElementById(tocNavId);
-    if (!tocIndicator || !tocNav) return;
+    const root = document.getElementById(tocRootId);
+    if (!tocIndicator || !root) return;
 
     const tocLines = tocIndicator.querySelectorAll(".toc-indicator-line");
 
@@ -56,15 +55,26 @@ const indicatorId = `${tocRootId}-indicator`;
       }
     }
 
-    tocNav.addEventListener("headings", (e) => {
+    function updateActiveLine(activeId) {
+      tocLines.forEach((line) => {
+        line.dataset.isActive = String(line.dataset.slug === activeId);
+      });
+    }
+
+    // Aplicar estado actual si ya existe (por si TocNav se inicializó primero).
+    if (root._tocHeadings) {
+      initIndicatorLines(tocLines, root._tocHeadings);
+    }
+    if (root._tocActiveId) {
+      updateActiveLine(root._tocActiveId);
+    }
+
+    // Escuchar futuras actualizaciones.
+    root.addEventListener("toc:headings", (e) => {
       initIndicatorLines(tocLines, e.detail.headings);
     });
-    tocNav.addEventListener("active", (e) => {
-      tocLines.forEach((line) => {
-        line.dataset.isActive = String(
-          line.dataset.slug === e.detail.activeId
-        );
-      });
+    root.addEventListener("toc:active", (e) => {
+      updateActiveLine(e.detail.activeId);
     });
   })();
 </script>

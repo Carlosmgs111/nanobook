@@ -14,10 +14,9 @@ interface Entry {
 
 interface Props {
   entries: Entry[];
-  toggleId: string;
 }
 
-const { entries, toggleId } = Astro.props;
+const { entries } = Astro.props;
 ---
 
 <ul class="sidebar-list">
@@ -107,17 +106,3 @@ const { entries, toggleId } = Astro.props;
     color: var(--muted);
   }
 </style>
-
-<script define:vars={{ entries, toggleId }}>
-  const toggle = document.getElementById(toggleId);
-  const toolTips = entries.map((page) => {
-    return document.getElementById("tooltip-" + page.id);
-  });
-
-  toggle.addEventListener("click", () => {
-    const toolTipActive = toggle.dataset.sidebarMode === "collapsed";
-    toolTips.forEach((tooltip) => {
-      tooltip.dataset.isActive = toolTipActive;
-    });
-  });
-</script>

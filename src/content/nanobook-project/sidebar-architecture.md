@@ -74,8 +74,9 @@ Valores: `true` | `false`
 
 1. El usuario hace click en `SidebarModeToggle`.
 2. `SidebarModeToggle` actualiza `data-sidebar-mode` en `#sidebar` y en sí mismo.
-3. `SidebarHeader` y `SidebarList` observan el mismo atributo (`#sidebar[data-sidebar-mode="collapsed"]`) y ajustan su presentación.
+3. `SidebarHeader` y `ToolTip` ajustan su presentación mediante CSS que responde a `#sidebar[data-sidebar-mode="collapsed"]`.
 4. `Layout.astro` observa el atributo mediante `MutationObserver` y ejecuta `enforceSingleExpanded`.
+5. Además, `SidebarModeToggle` emite el evento custom `sidebar:mode` sobre `#sidebar` para cualquier receptor que necesite ejecutar lógica JS.
 
 ### Mobile: abrir/cerrar drawer
 
@@ -94,14 +95,15 @@ Valores: `true` | `false`
 ### `SidebarHeader.astro`
 
 - Muestra el enlace al padre y los controles.
-- Recibe `toggleId` para sincronizar su propio `data-sidebar-mode` con el toggle.
-- En modo `collapsed` oculta el texto del enlace y apila los controles verticalmente.
+- Recibe `toggleId` para pasárselo a `SidebarModeToggle`.
+- Sus estilos responden directamente a `#sidebar[data-sidebar-mode="collapsed"]`, sin mantener su propio atributo de estado.
 
 ### `SidebarModeToggle.astro`
 
 - Recibe `toggleId`.
 - Inicializa y persiste el modo del sidebar.
 - Alterna entre `expanded` y `collapsed` al hacer click.
+- Emite `sidebar:mode` sobre `#sidebar` cada vez que el modo cambia.
 
 ### `OpenSidebar.astro` / `CloseSidebar.astro`
 
@@ -112,17 +114,19 @@ Valores: `true` | `false`
 ### `SidebarList.astro`
 
 - Renderiza la lista de enlaces.
-- Recibe `toggleId` para setear `data-is-active` en los tooltips cuando el sidebar se colapsa.
+- No necesita JavaScript; el estilo de los tooltips responde directamente al modo del sidebar.
 
 ### `ToolTip.astro`
 
 - Renderiza cada ítem con icono y label.
 - En modo colapsado el label se oculta y se posiciona como tooltip flotante.
 - Se muestra al pasar el cursor o al enfocar con teclado.
+- Sus estilos responden directamente a `#sidebar[data-sidebar-mode="collapsed"]`.
 
 ## Decisiones clave
 
-- **Lógica del header en `SidebarHeader`**: en lugar de que el contenedor escuche el toggle, `SidebarHeader` sincroniza su propio estado. Esto sigue el mismo patrón que `SidebarList`.
+- **Eventos `sidebar:mode` sobre `#sidebar`**: `SidebarModeToggle` notifica cambios de modo mediante un evento custom en el contenedor raíz para los receptores que necesiten ejecutar lógica JS.
+- **CSS declarativo para evitar flashes**: `SidebarHeader` y `ToolTip` no mantienen su propio `data-sidebar-mode`; sus estilos responden directamente al atributo del `#sidebar` padre. Esto evita que se pinten primero en modo `expanded` y luego salten a `collapsed`.
 - **Botones mobile parametrizables**: `OpenSidebar` y `CloseSidebar` reciben `buttonId` para permitir reutilización sin colisiones.
 - **Cierre al navegar**: en mobile, cualquier click en un enlace del sidebar cierra el drawer, mejorando la experiencia táctil.
 
