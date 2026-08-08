@@ -80,6 +80,8 @@ const toggleId = "sidebar-mode-toggle";
     transform: translateX(-100%);
     width: min(80vw, 20rem);
     overflow: hidden;
+    height: 100%;
+    top:0;
   }
 
   .sidebar-root[data-is-hidden="false"] {
@@ -124,7 +126,6 @@ const toggleId = "sidebar-mode-toggle";
     if (saved !== "collapsed" && saved !== "expanded") return;
 
     const sidebar = document.getElementById("sidebar");
-    const sidebarHeader = document.getElementById("sidebar-header");
     const toggle = document.getElementById("sidebar-mode-toggle");
     const backdrop = document.getElementById("sidebar-backdrop");
     if (!sidebar || !toggle || !backdrop) return;
@@ -134,16 +135,11 @@ const toggleId = "sidebar-mode-toggle";
       sidebar.dataset.isHidden = true;
       backdrop.dataset.isHidden = true;
     });
-    if (toggle) {
-      toggle.setAttribute("data-sidebar-mode", saved);
-      toggle.setAttribute("aria-pressed", String(saved === "collapsed"));
-      toggle.setAttribute(
-        "aria-label",
-        saved === "expanded" ? "Contraer navegación" : "Expandir navegación"
-      );
-      toggle.addEventListener("click", () => {
-        sidebarHeader.dataset.sidebarMode = toggle.dataset.sidebarMode;
-      });
-    }
+    toggle.setAttribute("data-sidebar-mode", saved);
+    toggle.setAttribute("aria-pressed", String(saved === "collapsed"));
+    toggle.setAttribute(
+      "aria-label",
+      saved === "expanded" ? "Contraer navegación" : "Expandir navegación"
+    );
   })();
 </script>

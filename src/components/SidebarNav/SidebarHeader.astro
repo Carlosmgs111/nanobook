@@ -18,8 +18,6 @@ interface Props {
 
 const { parentEntry, toggleId } = Astro.props;
 
-console.log(toggleId);
-
 function parentHref(parent: ParentEntry): string {
   return parent.id === "index" ? "/" : `/${parent.id}/`;
 }
@@ -43,7 +41,11 @@ function parentHref(parent: ParentEntry): string {
       </a>
     )
   }
-  <CloseSidebar sidebarId="sidebar" backdropId="sidebar-backdrop" />
+  <CloseSidebar
+    sidebarId="sidebar"
+    backdropId="sidebar-backdrop"
+    buttonId="sidebar-close"
+  />
   <SidebarModeToggle toggleId={toggleId} />
 </div>
 
@@ -57,13 +59,30 @@ function parentHref(parent: ParentEntry): string {
     gap: 0.5rem;
   }
 
-  .sidebar-header[data-sidebar-mode="collapsed"] {
-    flex-direction: column-reverse;
-    align-items: center;
-    margin-bottom: 0;
-  }
+  @media screen and (min-width: 768px) {
+    .sidebar-header[data-sidebar-mode="collapsed"] {
+      flex-direction: column-reverse;
+      align-items: center;
+      margin-bottom: 0;
+    }
 
-  .sidebar-header[data-sidebar-mode="collapsed"] span {
-    display: none;
+    .sidebar-header[data-sidebar-mode="collapsed"] span {
+      display: none;
+    }
   }
 </style>
+
+<script define:vars={{ toggleId }}>
+  (function () {
+    const header = document.getElementById("sidebar-header");
+    const toggle = document.getElementById(toggleId);
+    if (!header || !toggle) return;
+
+    function syncHeaderMode() {
+      header.dataset.sidebarMode = toggle.dataset.sidebarMode || "expanded";
+    }
+
+    syncHeaderMode();
+    toggle.addEventListener("click", syncHeaderMode);
+  })();
+</script>
