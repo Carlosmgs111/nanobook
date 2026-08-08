@@ -1,12 +1,19 @@
 ---
 import ListSVG from "../../icons/list.svg";
 import ListCompactSVG from "../../icons/list-compact.svg";
+
+interface Props {
+  toggleId: string;
+  tocRootId: string;
+}
+
+const { toggleId, tocRootId } = Astro.props;
 ---
 
 <button
-  id="toc-toggle"
+  id={toggleId}
   type="button"
-  class="hidden h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:flex"
+  class="toc-toggle hidden h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:flex"
   aria-label="Cambiar modo del índice"
   aria-pressed="false"
   data-toc-mode="standard"
@@ -19,23 +26,44 @@ import ListCompactSVG from "../../icons/list-compact.svg";
   </span>
 </button>
 
-<script>
-  import { initTocMode } from "./TocToggle.logic.ts";
-
-  const root = document.querySelector(".toc-root") as HTMLElement;
-  const toggle = document.getElementById("toc-toggle") as HTMLElement;
-  if (root && toggle) {
-    initTocMode(root, toggle);
-  }
-</script>
-
 <style>
-  #toc-toggle {
+  .toc-toggle {
     position: relative;
   }
 
-  #toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-standard,
-  #toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-compact {
+  .toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-standard,
+  .toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-compact {
     display: none;
   }
 </style>
+
+<script is:inline define:vars={{ toggleId, tocRootId }}>
+  (function () {
+    const root = document.getElementById(tocRootId);
+    const toggle = document.getElementById(toggleId);
+    if (!root || !toggle) return;
+
+    function getSavedTocMode() {
+      if (typeof localStorage === "undefined") return "standard";
+      const saved = localStorage.getItem("toc-mode");
+      return saved === "compact" ? "compact" : "standard";
+    }
+
+    function setTocMode(mode) {
+      root.dataset.tocMode = mode;
+      toggle.dataset.tocMode = mode;
+      toggle.ariaPressed = String(mode === "compact");
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("toc-mode", mode);
+      }
+    }
+
+    setTocMode(getSavedTocMode());
+
+    toggle.addEventListener("click", function () {
+      const current = root.getAttribute("data-toc-mode") || "standard";
+      const next = current === "standard" ? "compact" : "standard";
+      setTocMode(next);
+    });
+  })();
+</script>

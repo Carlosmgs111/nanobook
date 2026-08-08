@@ -110,7 +110,7 @@ const {
         buttonId="sidebar-open"
       />
       <div class="min-w-0 flex-1">
-        {breadcrumbs && <Breadcrumb crumbs={breadcrumbs} />}
+        <Breadcrumb crumbs={breadcrumbs} />
       </div>
       <div class="flex flex-shrink-0 items-center gap-2">
         <ContentWidthToggle />
@@ -124,11 +124,7 @@ const {
       class="content-wrapper z-10 mx-auto flex max-w-6xl gap-6 px-6 py-12"
       data-content-mode="constrained"
     >
-      {
-        sidebarEntries && (
-          <SidebarNav entries={sidebarEntries} parentEntry={parentEntry} />
-        )
-      }
+      <SidebarNav entries={sidebarEntries} parentEntry={parentEntry} />
       <main class="border-x border-[var(--grid-line)] px-6 flex-1 min-w-0">
         <div class="glass-panel corner-plus">
           <div class="prose max-w-none">
@@ -136,7 +132,7 @@ const {
           </div>
         </div>
       </main>
-      {headings && <TableOfContents headings={headings} />}
+      <TableOfContents headings={headings} />
     </div>
 
     <!-- Footer -->
@@ -151,7 +147,7 @@ const {
       (function () {
         const wrapper = document.getElementById("content-wrapper");
         const sidebar = document.getElementById("sidebar");
-        const tocRoot = document.querySelector(".toc-root");
+        const tocRoot = document.getElementById("toc-root");
         const tocToggle = document.getElementById("toc-toggle");
         const sidebarModeToggle = document.getElementById(
           "sidebar-mode-toggle"
@@ -290,21 +286,14 @@ const {
 
 <style>
   :root {
-    /* Anchura mínima a partir de la cual el modo full de ancho de contenido
-       tiene sentido y se muestra el botón correspondiente. Si se cambia este
-       valor, también debe actualizarse la media query de #content-width-toggle. */
     --content-width-min: 1280px;
   }
-
   .content-wrapper {
     max-width: 72rem;
   }
-
   .content-wrapper[data-content-mode="full"] {
     max-width: none;
   }
-
-  /* El valor debe coincidir con --content-width-min. */
   @media (max-width: 1279px) {
     :global(#content-width-toggle) {
       display: none;

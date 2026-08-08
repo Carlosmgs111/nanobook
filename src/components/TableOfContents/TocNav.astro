@@ -9,15 +9,18 @@ interface Heading {
 
 interface Props {
   headings: Heading[];
+  tocRootId: string;
+  tocNavId: string;
+  toggleId: string;
 }
 
-const { headings } = Astro.props;
+const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
 ---
 
-<nav class="toc-nav" aria-label="En esta página">
+<nav id={tocNavId} class="toc-nav" aria-label="En esta página">
   <div class="flex items-end mb-3">
     <span class="tech-label block w-full">En esta página</span>
-    <TocToggle />
+    <TocToggle toggleId={toggleId} tocRootId={tocRootId} />
   </div>
   <ul class="space-y-1 border-l border-[var(--grid-line-strong)]">
     {
@@ -37,16 +40,88 @@ const { headings } = Astro.props;
   </ul>
 </nav>
 
-<script>
-  import { initScrollSpy } from "./TocNav.logic.ts";
+<script type="module" define:vars={{ tocRootId, tocNavId }}>
+  import { findActiveIndex } from "/src/lib/scroll-spy.ts";
 
-  const root = document.querySelector(".toc-root") as HTMLElement;
-  const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]') as NodeListOf<HTMLElement>;
-  const tocLines = document.querySelectorAll(".toc-indicator-line") as NodeListOf<HTMLElement>;
+  (function () {
+    const root = document.getElementById(tocRootId);
+    const tocNav = document.getElementById(tocNavId);
+    if (!root || !tocNav) return;
 
-  if (root) {
-    initScrollSpy(root, tocLinks, tocLines);
-  }
+    const tocLinks = tocNav.querySelectorAll('.toc-item a[href^="#"]');
+
+    function collectHeadings(links) {
+      const headings = [];
+      links.forEach((link) => {
+        const href = link.getAttribute("href");
+        if (!href || !href.startsWith("#")) return;
+        const heading = document.getElementById(href.slice(1));
+        if (heading) {
+          headings.push({ id: heading.id, element: heading });
+        }
+      });
+      return headings;
+    }
+
+    function updateActiveState(links, headings, offsets, offset, activeIndexRef) {
+      const newIndex = findActiveIndex(window.scrollY, offsets, offset);
+      if (newIndex === activeIndexRef.current) return;
+      activeIndexRef.current = newIndex;
+
+      const activeId = headings[newIndex].id;
+
+      links.forEach((link) => {
+        link.dataset.isActive = String(
+          link.getAttribute("href") === "#" + activeId
+        );
+      });
+      tocNav.dispatchEvent(new CustomEvent("active", { detail: { activeId } }));
+    }
+
+    function initScrollSpy(links, offset = 120) {
+      if (links.length === 0) return;
+
+      const headings = collectHeadings(links);
+      tocNav.dispatchEvent(
+        new CustomEvent("headings", { detail: { headings } })
+      );
+      if (headings.length === 0) return;
+
+      let offsets = [];
+      const activeIndex = { current: -1 };
+
+      function measure() {
+        offsets = headings.map((heading) => heading.element.offsetTop);
+        updateActiveState(links, headings, offsets, offset, activeIndex);
+      }
+
+      function onScroll() {
+        updateActiveState(links, headings, offsets, offset, activeIndex);
+      }
+
+      let ticking = false;
+      window.addEventListener("scroll", () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            onScroll();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      });
+
+      window.addEventListener("resize", measure);
+      window.addEventListener("orientationchange", measure);
+
+      if (document.readyState === "complete") {
+        measure();
+      } else {
+        window.addEventListener("load", measure);
+      }
+    }
+
+    initScrollSpy(tocLinks);
+  })();
 </script>
 
 <style>
@@ -59,7 +134,7 @@ const { headings } = Astro.props;
     width: 18rem;
   }
 
-  :global(.toc-root[data-toc-mode="compact"]) .toc-nav {
+  :global(#toc-root[data-toc-mode="compact"]) .toc-nav {
     display: none;
     position: absolute;
     right: 100%;
@@ -69,8 +144,8 @@ const { headings } = Astro.props;
     padding: 0.75rem;
   }
 
-  :global(.toc-root[data-toc-mode="compact"]:hover) .toc-nav,
-  :global(.toc-root[data-toc-mode="compact"]:focus-within) .toc-nav {
+  :global(#toc-root[data-toc-mode="compact"]:hover) .toc-nav,
+  :global(#toc-root[data-toc-mode="compact"]:focus-within) .toc-nav {
     display: block;
   }
 

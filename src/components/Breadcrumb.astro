@@ -7,20 +7,23 @@ interface Crumb {
 }
 
 interface Props {
-  crumbs: Crumb[];
+  crumbs?: Crumb[];
 }
 
-const { crumbs } = Astro.props;
+const { crumbs = [] } = Astro.props;
+const display = Boolean(crumbs.length);
 ---
 
-<nav aria-label="Breadcrumb">
+<nav class="breadcrumb" aria-label="Breadcrumb" data-display={display}>
   <ol
     class="flex flex-nowrap items-center gap-2 overflow-x-auto font-mono text-xs text-[var(--muted)]"
   >
     {
       crumbs.map((crumb, index) => (
         <li class="flex min-w-0 max-w-[12rem] flex-shrink items-center gap-2">
-          {index > 0 && <span class="flex-shrink-0 text-[var(--grid-line-strong)]">/</span>}
+          {index > 0 && (
+            <span class="flex-shrink-0 text-[var(--grid-line-strong)]">/</span>
+          )}
           {crumb.current ? (
             <span
               class="block truncate text-[var(--text)]"
@@ -43,3 +46,9 @@ const { crumbs } = Astro.props;
     }
   </ol>
 </nav>
+
+<style>
+  .breadcrumb[data-display="false"] {
+    display: none;
+  }
+</style>

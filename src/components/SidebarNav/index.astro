@@ -21,17 +21,18 @@ interface ParentEntry {
 }
 
 interface Props {
-  entries: Entry[];
+  entries?: Entry[];
   parentEntry?: ParentEntry | null;
 }
 
-const { entries, parentEntry } = Astro.props;
+const { entries = [], parentEntry } = Astro.props;
 
 const sortedEntries = entries
   .filter((page) => !page.data.draft)
   .sort((a, b) => a.data.title.localeCompare(b.data.title));
 
 const toggleId = "sidebar-mode-toggle";
+const display = Boolean(entries.length);
 ---
 
 <div
@@ -47,6 +48,7 @@ const toggleId = "sidebar-mode-toggle";
   class="sidebar-root"
   data-sidebar-mode="expanded"
   data-is-hidden="true"
+  data-display={display}
 >
   <SidebarHeader toggleId={toggleId} parentEntry={parentEntry} />
   <SidebarList toggleId={toggleId} entries={sortedEntries} />
@@ -66,6 +68,10 @@ const toggleId = "sidebar-mode-toggle";
     display: block;
   }
 
+  .sidebar-root[data-display="false"] {
+    display: none;
+  }
+
   .sidebar-root {
     position: fixed;
     left: 0;
@@ -81,7 +87,7 @@ const toggleId = "sidebar-mode-toggle";
     width: min(80vw, 20rem);
     overflow: hidden;
     height: 100%;
-    top:0;
+    top: 0;
   }
 
   .sidebar-root[data-is-hidden="false"] {
@@ -130,16 +136,14 @@ const toggleId = "sidebar-mode-toggle";
     const backdrop = document.getElementById("sidebar-backdrop");
     if (!sidebar || !toggle || !backdrop) return;
 
-    sidebar.setAttribute("data-sidebar-mode", saved);
+    sidebar.dataset.sidebarMode = saved;
     backdrop.addEventListener("click", () => {
       sidebar.dataset.isHidden = true;
       backdrop.dataset.isHidden = true;
     });
-    toggle.setAttribute("data-sidebar-mode", saved);
-    toggle.setAttribute("aria-pressed", String(saved === "collapsed"));
-    toggle.setAttribute(
-      "aria-label",
-      saved === "expanded" ? "Contraer navegación" : "Expandir navegación"
-    );
+    toggle.dataset.sidebarMode = saved;
+    toggle.ariaPressed = String(saved === "collapsed");
+    toggle.ariaLabel =
+      saved === "expanded" ? "Contraer navegación" : "Expandir navegación";
   })();
 </script>

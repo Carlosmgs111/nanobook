@@ -5,12 +5,15 @@ interface Heading {
 
 interface Props {
   headings: Heading[];
+  tocRootId: string;
+  tocNavId: string;
 }
 
-const { headings } = Astro.props;
+const { headings, tocRootId, tocNavId } = Astro.props;
+const indicatorId = `${tocRootId}-indicator`;
 ---
 
-<div class="toc-indicator" aria-hidden="true">
+<div id={indicatorId} class="toc-indicator" aria-hidden="true">
   {
     headings.map((heading) => (
       <div class="toc-indicator-line" data-slug={heading.slug} />
@@ -18,13 +21,52 @@ const { headings } = Astro.props;
   }
 </div>
 
-<script>
-  import { initIndicatorLines } from "./TocIndicator.logic.ts";
+<script define:vars={{ indicatorId, tocNavId }} type="module">
+  (function () {
+    const tocIndicator = document.getElementById(indicatorId);
+    const tocNav = document.getElementById(tocNavId);
+    if (!tocIndicator || !tocNav) return;
 
-  const tocLinks = document.querySelectorAll('.toc-item a[href^="#"]') as NodeListOf<HTMLElement>;
-  const tocLines = document.querySelectorAll(".toc-indicator-line") as NodeListOf<HTMLElement>;
+    const tocLines = tocIndicator.querySelectorAll(".toc-indicator-line");
 
-  initIndicatorLines(tocLinks, tocLines);
+    function positionIndicatorLines(lines, offsets) {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      lines.forEach((line, i) => {
+        const percent =
+          total > 0 ? (offsets[i] / total) * 100 : i === 0 ? 0 : 100;
+        line.style.top = `${Math.min(100, Math.max(0, percent))}%`;
+      });
+    }
+
+    function initIndicatorLines(lines, headings) {
+      if (headings.length === 0) return;
+
+      function measure() {
+        const offsets = headings.map((heading) => heading.element.offsetTop);
+        positionIndicatorLines(lines, offsets);
+      }
+
+      window.addEventListener("resize", measure);
+      window.addEventListener("orientationchange", measure);
+
+      if (document.readyState === "complete") {
+        measure();
+      } else {
+        window.addEventListener("load", measure);
+      }
+    }
+
+    tocNav.addEventListener("headings", (e) => {
+      initIndicatorLines(tocLines, e.detail.headings);
+    });
+    tocNav.addEventListener("active", (e) => {
+      tocLines.forEach((line) => {
+        line.dataset.isActive = String(
+          line.dataset.slug === e.detail.activeId
+        );
+      });
+    });
+  })();
 </script>
 
 <style>
@@ -35,7 +77,7 @@ const { headings } = Astro.props;
     border: 1px solid var(--grid-line-strong);
   }
 
-  :global(.toc-root[data-toc-mode="standard"]) .toc-indicator {
+  :global(#toc-root[data-toc-mode="standard"]) .toc-indicator {
     display: none;
   }
 
