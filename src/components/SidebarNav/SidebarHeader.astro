@@ -1,8 +1,8 @@
 ---
 import HomeSVG from "../../icons/home.svg";
 import FolderUpSVG from "../../icons/folder-up.svg";
-import CloseSVG from "../../icons/x.svg";
 import SidebarModeToggle from "./SidebarModeToggle.astro";
+import CloseSidebar from "./CloseSidebar.astro";
 
 interface ParentEntry {
   id: string;
@@ -13,9 +13,12 @@ interface ParentEntry {
 
 interface Props {
   parentEntry?: ParentEntry | null;
+  toggleId: string;
 }
 
-const { parentEntry } = Astro.props;
+const { parentEntry, toggleId } = Astro.props;
+
+console.log(toggleId);
 
 function parentHref(parent: ParentEntry): string {
   return parent.id === "index" ? "/" : `/${parent.id}/`;
@@ -24,7 +27,7 @@ function parentHref(parent: ParentEntry): string {
 
 <div
   id="sidebar-header"
-  class="sidebar-header mb-6 flex items-end justify-between border-b border-[var(--grid-line-strong)] pb-2"
+  class="sidebar-header z-10 mb-6 flex items-end justify-between border-b border-[var(--grid-line-strong)] pb-2"
 >
   {
     parentEntry && (
@@ -40,13 +43,27 @@ function parentHref(parent: ParentEntry): string {
       </a>
     )
   }
-  <button
-    id="sidebar-close"
-    type="button"
-    class="w-10 aspect-square border border-[var(--grid-line-strong)] font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
-    aria-label="Cerrar navegación"
-  >
-    <CloseSVG />
-  </button>
-  <SidebarModeToggle />
+  <CloseSidebar sidebarId="sidebar" backdropId="sidebar-backdrop" />
+  <SidebarModeToggle toggleId={toggleId} />
 </div>
+
+<style>
+  .sidebar-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--grid-line-strong);
+    padding-bottom: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .sidebar-header[data-sidebar-mode="collapsed"] {
+    flex-direction: column-reverse;
+    align-items: center;
+    margin-bottom: 0;
+  }
+
+  .sidebar-header[data-sidebar-mode="collapsed"] span {
+    display: none;
+  }
+</style>

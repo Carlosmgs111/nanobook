@@ -4,8 +4,8 @@ import Breadcrumb from "../components/Breadcrumb.astro";
 import ContentWidthToggle from "../components/ContentWidthToggle.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import SidebarNav from "../components/SidebarNav/index.astro";
-import MenuSVG from "../icons/menu.svg";
 import TableOfContents from "../components/TableOfContents/index.astro";
+import OpenSidebar from "../components/SidebarNav/OpenSidebar.astro";
 
 interface Crumb {
   id: string;
@@ -104,20 +104,11 @@ const {
     <header
       class="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 px-6 py-5 backdrop-blur-sm"
     >
+      <OpenSidebar sidebarId="sidebar" backdropId="sidebar-backdrop" />
       <div class="min-w-0 flex-1">
         {breadcrumbs && <Breadcrumb crumbs={breadcrumbs} />}
       </div>
       <div class="flex flex-shrink-0 items-center gap-2">
-        <button
-          id="sidebar-toggle"
-          type="button"
-          class="flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:hidden"
-          aria-label="Abrir navegación"
-          aria-expanded="false"
-          aria-controls="sidebar"
-        >
-          <MenuSVG />
-        </button>
         <ContentWidthToggle />
         <ThemeToggle />
       </div>
@@ -142,7 +133,6 @@ const {
         </div>
       </main>
       {headings && <TableOfContents headings={headings} />}
-      <!--  -->
     </div>
 
     <!-- Footer -->

@@ -1,6 +1,7 @@
 ---
 import FileSVG from "../../icons/file.svg";
 import FolderSVG from "../../icons/folder.svg";
+import ToolTip from "./ToolTip.astro";
 
 interface Entry {
   id: string;
@@ -13,34 +14,30 @@ interface Entry {
 
 interface Props {
   entries: Entry[];
+  toggleId: string;
 }
 
-const { entries } = Astro.props;
-
-function linkClasses(current?: boolean): string {
-  const base =
-    "sidebar-link group flex items-center gap-3 border-l-2 px-3 py-2 text-sm";
-  const active = "border-[var(--accent)] bg-white/5 text-[var(--text)]";
-  const inactive =
-    "border-transparent text-[var(--muted)] hover:border-[var(--grid-line-strong)] hover:bg-white/5 hover:text-[var(--text)]";
-  return current ? `${base} ${active}` : `${base} ${inactive}`;
-}
+const { entries, toggleId } = Astro.props;
 ---
 
-<ul class="sidebar-list space-y-2">
+<ul class="sidebar-list">
   {
     entries.map((page) => (
       <li>
         <a
           href={`/${page.id}/`}
-          class={linkClasses(page.current)}
+          class="sidebar-link"
           aria-current={page.current ? "page" : undefined}
           data-tooltip={page.data.title}
         >
-          <i class="sidebar-icon flex w-5 flex-shrink-0 justify-center">
-            {page.data.index ? <FolderSVG /> : <FileSVG />}
-          </i>
-          <span class="sidebar-text truncate">{page.data.title}</span>
+          <ToolTip id={"tooltip-" + page.id}>
+            <i class="sidebar-icon" slot="icon">
+              {page.data.index ? <FolderSVG /> : <FileSVG />}
+            </i>
+            <span class="sidebar-text" slot="label">
+              {page.data.title}
+            </span>
+          </ToolTip>
         </a>
       </li>
     ))
@@ -49,18 +46,78 @@ function linkClasses(current?: boolean): string {
 
 {
   entries.length === 0 && (
-    <p class="sidebar-empty text-sm text-[var(--muted)]">
+    <p class="sidebar-empty">
       No hay elementos en esta sección.
     </p>
   )
 }
 
-<script>
-  import { initSidebarTooltips } from "./SidebarList.logic.ts";
-
-  const sidebar = document.getElementById("sidebar");
-  const tooltip = document.getElementById("sidebar-tooltip");
-  if (sidebar && tooltip) {
-    initSidebarTooltips(sidebar, tooltip);
+<style>
+  .sidebar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: fit-content;
+    z-index: 50;
+    width: 100%;
   }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-left: 2px solid transparent;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    width: fit-content;
+    color: var(--muted);
+    position: relative;
+    z-index: 10;
+  }
+
+  .sidebar-link:hover {
+    border-color: var(--grid-line-strong);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+  }
+
+  .sidebar-link[aria-current="page"] {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+  }
+
+  .sidebar-icon {
+    display: flex;
+    width: 1.25rem;
+    flex-shrink: 0;
+    justify-content: center;
+  }
+
+  .sidebar-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-empty {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--muted);
+  }
+</style>
+
+<script define:vars={{ entries, toggleId }}>
+  const toggle = document.getElementById(toggleId);
+  const toolTips = entries.map((page) => {
+    return document.getElementById("tooltip-" + page.id);
+  });
+
+  toggle.addEventListener("click", () => {
+    const toolTipActive = toggle.dataset.sidebarMode === "collapsed";
+    toolTips.forEach((tooltip) => {
+      tooltip.dataset.isActive = toolTipActive;
+    });
+  });
 </script>

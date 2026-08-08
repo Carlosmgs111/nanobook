@@ -1,0 +1,49 @@
+---
+const { id } = Astro.props;
+---
+
+<div class="tooltip-container" id={id}>
+  <slot class="tool-icon" name="icon" />
+  <div class="tool-label">
+    <slot name="label" />
+  </div>
+</div>
+
+<style>
+  .tooltip-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .tool-label {
+    display: block;
+    width: inherit;
+  }
+  .tooltip-container[data-is-active="true"] .tool-label {
+    position: absolute;
+    top: 50%;
+    left: 2.8rem;
+    transform: translateY(-50%);
+    border: 1px solid var(--grid-line-strong);
+    background-color: var(--layer-1);
+    padding: 0.5rem;
+    display: none;
+  }
+  .tooltip-container[data-is-active="true"] .tool-label::before {
+    content: "";
+    position: absolute;
+    left: -0.375rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 0.375rem solid transparent;
+    border-bottom: 0.375rem solid transparent;
+    border-right: 0.375rem solid var(--grid-line-strong);
+  }
+  .tooltip-container:hover .tool-label,
+  .tooltip-container:focus-within .tool-label {
+    display: block;
+  }
+</style>
