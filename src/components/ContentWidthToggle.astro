@@ -44,16 +44,78 @@ import MinimizeSVG from "../icons/minimize.svg";
 <style>
   #content-width-toggle[data-content-mode="full"]
     .content-width-icon-constrained,
-  #content-width-toggle[data-content-mode="constrained"] .content-width-icon-full {
+  #content-width-toggle[data-content-mode="constrained"]
+    .content-width-icon-full {
     display: none;
   }
 </style>
 
-<script>
+<script type="module">
   (function () {
     const button = document.getElementById("content-width-toggle");
     const wrapper = document.getElementById("content-wrapper");
-    if (!button || !wrapper) return;
+    const sidebar = document.getElementById("sidebar");
+    const tocRoot = document.getElementById("toc-root");
+
+    if (!button || !wrapper || !sidebar || !tocRoot) return;
+
+    function isUserEvent(event) {
+      return !event.detail || event.detail.source !== "content-width";
+    }
+
+    sidebar.addEventListener("sidebar:mode", function (event) {
+      if (!isUserEvent(event)) return;
+      let tocMode = "";
+      if (
+        wrapper.dataset.contentMode === "constrained" &&
+        event.detail.mode === "expanded"
+      ) {
+        tocMode = "compact";
+      }
+      if (
+        wrapper.dataset.contentMode === "constrained" &&
+        event.detail.mode === "collapsed"
+      ) {
+        tocMode = "standard";
+      }
+      if (!tocMode) return;
+      tocRoot.dataset.tocMode = tocMode;
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("toc-mode", tocMode);
+      }
+      tocRoot.dispatchEvent(
+        new CustomEvent("toc:mode", {
+          detail: { mode: tocMode, source: "content-width" },
+        })
+      );
+    });
+
+    tocRoot.addEventListener("toc:mode", function (event) {
+      if (!isUserEvent(event)) return;
+      let sidebarMode = "";
+      if (
+        wrapper.dataset.contentMode === "constrained" &&
+        event.detail.mode === "standard"
+      ) {
+        sidebarMode = "collapsed";
+      }
+      if (
+        wrapper.dataset.contentMode === "constrained" &&
+        event.detail.mode === "compact"
+      ) {
+        sidebarMode = "expanded";
+      }
+      if (!sidebarMode) return;
+      sidebar.dataset.sidebarMode = sidebarMode;
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("sidebar-mode", sidebarMode);
+      }
+      sidebar.dispatchEvent(
+        new CustomEvent("sidebar:mode", {
+          detail: { mode: sidebarMode, source: "content-width" },
+        })
+      );
+    });
 
     const saved =
       typeof localStorage !== "undefined"
@@ -61,20 +123,34 @@ import MinimizeSVG from "../icons/minimize.svg";
         : null;
 
     const mode = saved === "full" ? "full" : "constrained";
-    setContentMode(wrapper as HTMLElement, button as HTMLElement, mode);
+    setContentMode(wrapper, button, mode);
+
+    function dispatchMode(root, eventName, mode) {
+      root.dataset[eventName === "sidebar:mode" ? "sidebarMode" : "tocMode"] =
+        mode;
+      root.dispatchEvent(
+        new CustomEvent(eventName, {
+          detail: { mode, source: "content-width" },
+        })
+      );
+    }
 
     button.addEventListener("click", function () {
       const current =
         wrapper.getAttribute("data-content-mode") || "constrained";
       const next = current === "constrained" ? "full" : "constrained";
-      setContentMode(wrapper as HTMLElement, button as HTMLElement, next);
+      setContentMode(wrapper, button, next);
+      if (next === "full") {
+        dispatchMode(sidebar, "sidebar:mode", "expanded");
+        dispatchMode(tocRoot, "toc:mode", "standard");
+      }
+      if (next === "constrained") {
+        dispatchMode(sidebar, "sidebar:mode", "collapsed");
+        dispatchMode(tocRoot, "toc:mode", "compact");
+      }
     });
 
-    function setContentMode(
-      wrapper: HTMLElement,
-      button: HTMLElement,
-      mode: string
-    ) {
+    function setContentMode(wrapper, button, mode) {
       wrapper.setAttribute("data-content-mode", mode);
       button.setAttribute("data-content-mode", mode);
       button.setAttribute("aria-pressed", String(mode === "full"));

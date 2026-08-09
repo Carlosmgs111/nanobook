@@ -39,9 +39,6 @@ const { toggleId } = Astro.props;
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("sidebar-mode", mode);
     }
-    root.dispatchEvent(
-      new CustomEvent("sidebar:mode", { detail: { mode } })
-    );
   }
 
   function initSidebarMode(root, button) {
@@ -51,6 +48,13 @@ const { toggleId } = Astro.props;
       const current = root.getAttribute("data-sidebar-mode") || "expanded";
       const next = current === "expanded" ? "collapsed" : "expanded";
       setSidebarMode(root, button, next);
+      root.dispatchEvent(
+        new CustomEvent("sidebar:mode", { detail: { mode: next } })
+      );
+    });
+    root.addEventListener("sidebar:mode", (event) => {
+      const { mode } = event.detail;
+      setSidebarMode(root, toggle, mode);
     });
   }
   if (sidebar && toggle) {
