@@ -19,6 +19,15 @@ import MinimizeSVG from "../icons/minimize.svg";
   </span>
 </button>
 
+<style>
+  #content-width-toggle[data-content-mode="full"]
+    .content-width-icon-constrained,
+  #content-width-toggle[data-content-mode="constrained"]
+    .content-width-icon-full {
+    display: none;
+  }
+</style>
+
 <script is:inline>
   (function () {
     const saved =
@@ -41,15 +50,6 @@ import MinimizeSVG from "../icons/minimize.svg";
   })();
 </script>
 
-<style>
-  #content-width-toggle[data-content-mode="full"]
-    .content-width-icon-constrained,
-  #content-width-toggle[data-content-mode="constrained"]
-    .content-width-icon-full {
-    display: none;
-  }
-</style>
-
 <script type="module">
   (function () {
     const button = document.getElementById("content-width-toggle");
@@ -65,56 +65,34 @@ import MinimizeSVG from "../icons/minimize.svg";
 
     sidebar.addEventListener("sidebar:mode", function (event) {
       if (!isUserEvent(event)) return;
-      let tocMode = "";
-      if (
-        wrapper.dataset.contentMode === "constrained" &&
-        event.detail.mode === "expanded"
-      ) {
-        tocMode = "compact";
+      let tocMode = "compact";
+      if (wrapper.dataset.contentMode !== "constrained") return;
+      if (event.detail.mode === "expanded") {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("toc-mode", tocMode);
+        }
+        tocRoot.dispatchEvent(
+          new CustomEvent("toc:mode", {
+            detail: { mode: tocMode, source: "content-width" },
+          })
+        );
       }
-      if (
-        wrapper.dataset.contentMode === "constrained" &&
-        event.detail.mode === "collapsed"
-      ) {
-        tocMode = "standard";
-      }
-      if (!tocMode) return;
-      tocRoot.dataset.tocMode = tocMode;
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem("toc-mode", tocMode);
-      }
-      tocRoot.dispatchEvent(
-        new CustomEvent("toc:mode", {
-          detail: { mode: tocMode, source: "content-width" },
-        })
-      );
     });
 
     tocRoot.addEventListener("toc:mode", function (event) {
       if (!isUserEvent(event)) return;
-      let sidebarMode = "";
-      if (
-        wrapper.dataset.contentMode === "constrained" &&
-        event.detail.mode === "standard"
-      ) {
-        sidebarMode = "collapsed";
+      if (wrapper.dataset.contentMode !== "constrained") return;
+      let sidebarMode = "collapsed";
+      if (event.detail.mode === "standard") {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("sidebar-mode", sidebarMode);
+        }
+        sidebar.dispatchEvent(
+          new CustomEvent("sidebar:mode", {
+            detail: { mode: sidebarMode, source: "content-width" },
+          })
+        );
       }
-      if (
-        wrapper.dataset.contentMode === "constrained" &&
-        event.detail.mode === "compact"
-      ) {
-        sidebarMode = "expanded";
-      }
-      if (!sidebarMode) return;
-      sidebar.dataset.sidebarMode = sidebarMode;
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem("sidebar-mode", sidebarMode);
-      }
-      sidebar.dispatchEvent(
-        new CustomEvent("sidebar:mode", {
-          detail: { mode: sidebarMode, source: "content-width" },
-        })
-      );
     });
 
     const saved =
@@ -146,7 +124,7 @@ import MinimizeSVG from "../icons/minimize.svg";
       }
       if (next === "constrained") {
         dispatchMode(sidebar, "sidebar:mode", "collapsed");
-        dispatchMode(tocRoot, "toc:mode", "compact");
+        dispatchMode(tocRoot, "toc:mode", "standard");
       }
     });
 

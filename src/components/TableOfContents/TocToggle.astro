@@ -69,7 +69,6 @@ const { toggleId, tocRootId } = Astro.props;
       const current = root.getAttribute("data-toc-mode") || "standard";
       const next = current === "standard" ? "compact" : "standard";
       setTocMode(next);
-      console.log("Dispatching toc:mode event")
       root.dispatchEvent(
         new CustomEvent("toc:mode", { detail: { mode: next } })
       );

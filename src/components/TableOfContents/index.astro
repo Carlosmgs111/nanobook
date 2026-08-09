@@ -61,3 +61,27 @@ const display = Boolean(headings.length);
     }
   }
 </style>
+
+<script is:inline>
+  (function () {
+    const saved =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("toc-mode")
+        : null;
+    if (saved !== "compact" && saved !== "standard") return;
+
+    const root = document.getElementById("toc-root");
+    const toggle = document.getElementById("toc-toggle");
+    if (root) {
+      root.setAttribute("data-toc-mode", saved);
+    }
+    if (toggle) {
+      toggle.setAttribute("data-toc-mode", saved);
+      toggle.setAttribute("aria-pressed", String(saved === "compact"));
+      toggle.setAttribute(
+        "aria-label",
+        saved === "compact" ? "Expandir índice" : "Contraer índice"
+      );
+    }
+  })();
+</script>
