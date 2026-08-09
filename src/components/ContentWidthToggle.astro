@@ -139,6 +139,9 @@ import MinimizeSVG from "../icons/minimize.svg";
       if (typeof localStorage !== "undefined") {
         localStorage.setItem("content-width-mode", mode);
       }
+      wrapper.dispatchEvent(
+        new CustomEvent("content:mode", { detail: { mode } })
+      );
     }
   })();
 </script>

@@ -102,21 +102,54 @@ const {
 
     <!-- Header -->
     <header
-      class="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 px-6 py-5 backdrop-blur-sm"
+      class="sticky top-0 z-40 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 backdrop-blur-sm"
     >
-      <OpenSidebar
-        sidebarId="sidebar"
-        backdropId="sidebar-backdrop"
-        buttonId="sidebar-open"
-      />
-      <div class="min-w-0 flex-1">
-        <Breadcrumb crumbs={breadcrumbs} />
-      </div>
-      <div class="flex flex-shrink-0 items-center gap-2">
-        <ContentWidthToggle />
-        <ThemeToggle />
+      <div
+        id="header-inner"
+        class="header-inner mx-auto flex items-center justify-between gap-4 px-6 py-5"
+        data-content-mode="constrained"
+      >
+        <OpenSidebar
+          sidebarId="sidebar"
+          backdropId="sidebar-backdrop"
+          buttonId="sidebar-open"
+        />
+        <div class="min-w-0 flex-1">
+          <Breadcrumb crumbs={breadcrumbs} />
+        </div>
+        <div class="flex flex-shrink-0 items-center gap-2">
+          <ContentWidthToggle />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
+
+    <script is:inline>
+      (function () {
+        const saved =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem("content-width-mode")
+            : null;
+        if (saved !== "full" && saved !== "constrained") return;
+
+        const headerInner = document.getElementById("header-inner");
+        if (headerInner) {
+          headerInner.setAttribute("data-content-mode", saved);
+        }
+      })();
+    </script>
+
+    <script type="module">
+      (function () {
+        const wrapper = document.getElementById("content-wrapper");
+        const headerInner = document.getElementById("header-inner");
+        if (!wrapper || !headerInner) return;
+
+        wrapper.addEventListener("content:mode", function (event) {
+          headerInner.setAttribute("data-content-mode", event.detail.mode);
+        });
+      })();
+    </script>
 
     <!-- Main content -->
     <div
@@ -153,6 +186,12 @@ const {
     max-width: 72rem;
   }
   .content-wrapper[data-content-mode="full"] {
+    max-width: none;
+  }
+  .header-inner {
+    max-width: 72rem;
+  }
+  .header-inner[data-content-mode="full"] {
     max-width: none;
   }
   @media (max-width: 1279px) {

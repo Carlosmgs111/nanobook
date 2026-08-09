@@ -18,7 +18,7 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
 ---
 
 <nav id={tocNavId} class="toc-nav" aria-label="En esta página">
-  <div class="flex items-end mb-3">
+  <div class="toc-nav-header">
     <span class="tech-label block w-full">En esta página</span>
     <TocToggle toggleId={toggleId} tocRootId={tocRootId} />
   </div>
@@ -63,7 +63,13 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
       return headings;
     }
 
-    function updateActiveState(links, headings, offsets, offset, activeIndexRef) {
+    function updateActiveState(
+      links,
+      headings,
+      offsets,
+      offset,
+      activeIndexRef
+    ) {
       const newIndex = findActiveIndex(window.scrollY, offsets, offset);
       if (newIndex === activeIndexRef.current) return;
       activeIndexRef.current = newIndex;
@@ -141,18 +147,89 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
   }
 
   :global(#toc-root[data-toc-mode="compact"]) .toc-nav {
-    display: none;
+    display: block;
     position: absolute;
     right: 100%;
     top: 0;
     width: 220px;
     min-height: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(var(--surface-rgb), 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--grid-line-strong);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(8px);
+    transition:
+      opacity 150ms ease,
+      transform 150ms ease,
+      visibility 150ms ease;
   }
 
   :global(#toc-root[data-toc-mode="compact"]:hover) .toc-nav,
   :global(#toc-root[data-toc-mode="compact"]:focus-within) .toc-nav {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  :global(#toc-root[data-toc-mode="compact"]) .toc-nav::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"])
+    .toc-nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"])
+    .toc-nav::-webkit-scrollbar-thumb {
+    background: var(--grid-line-strong);
+    border-radius: 2px;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"])
+    .toc-nav::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
+
+  .toc-nav-header {
+    display: flex;
+    align-items: flex-end;
+    padding: 0.5rem;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"]) .toc-nav-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    gap: 0.5rem;
+    background-color: #2c2c2ce2;
+    border-bottom: 1px solid var(--grid-line-strong);
+  }
+
+  :global(#toc-root[data-toc-mode="compact"]) .toc-nav ul {
+    border-left: none;
+    gap: 0;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"]) .toc-item {
+    padding-left: 0 !important;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"]) .toc-item a {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    border-left-width: 1px;
+  }
+
+  :global(#toc-root[data-toc-mode="compact"])
+    .toc-item
+    a[data-is-active="true"] {
+    border-left-width: 2px;
   }
 
   .toc-item a {

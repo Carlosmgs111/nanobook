@@ -56,8 +56,6 @@ const { entries } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    width: fit-content;
-    z-index: 50;
     width: 100%;
   }
 
@@ -69,7 +67,8 @@ const { entries } = Astro.props;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    width: fit-content;
+    width: 100%;
+    min-width: 0;
     color: var(--muted);
     position: relative;
     z-index: 10;
@@ -95,9 +94,12 @@ const { entries } = Astro.props;
   }
 
   .sidebar-text {
+    display: block;
+    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
   }
 
   .sidebar-empty {
