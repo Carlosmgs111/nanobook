@@ -19,6 +19,7 @@
     "github-slugger": "^2.0.0",
     "hast-util-to-string": "^3.0.1",
     "mdast-util-to-string": "^4.0.0",
+    "picomatch": "^4.0.5",
     "rehype-slug": "^6.0.0",
     "remark-parse": "^11.0.0",
     "tailwindcss": "^4.3.3",
@@ -27,6 +28,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/picomatch": "^4.0.3",
     "@types/unist": "^3.0.3"
   }
 }

@@ -1,4 +1,5 @@
 import { parse as parseYaml } from "yaml";
+import picomatch from "picomatch";
 import type { GitHubLoaderOptions, ParsedEntry } from "./types";
 
 const FRONTMATTER_REGEX = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
@@ -76,24 +77,10 @@ export function matchesPattern(
   const positive = patterns.filter((p) => !p.startsWith("!"));
   const negative = patterns.filter((p) => p.startsWith("!")).map((p) => p.slice(1));
 
-  const matchesPositive = positive.some((p) => matchGlob(filePath, p));
-  const matchesNegative = negative.some((p) => matchGlob(filePath, p));
+  const isMatch = picomatch(positive, { dot: true });
+  const isIgnored = picomatch(negative, { dot: true });
 
-  return matchesPositive && !matchesNegative;
-}
-
-function matchGlob(path: string, pattern: string): boolean {
-  const regex = globToRegex(pattern);
-  return regex.test(path);
-}
-
-function globToRegex(pattern: string): RegExp {
-  const escaped = pattern
-    .replace(/\*\*/g, "{{GLOBSTAR}}")
-    .replace(/\*/g, "[^/]*")
-    .replace(/\?/g, ".")
-    .replace(/\{\{GLOBSTAR\}\}/g, ".*");
-  return new RegExp(`^${escaped}$`);
+  return isMatch(filePath) && !isIgnored(filePath);
 }
 
 export function createParsedEntry(
