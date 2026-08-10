@@ -11,7 +11,7 @@ export function github(options: GitHubLoaderOptions): Loader {
   return {
     name: "github-loader",
     load: async (context: LoaderContext) => {
-      const { logger, parseData, store, generateDigest } = context;
+      const { logger, parseData, store, generateDigest, renderMarkdown } = context;
 
       if (!owner || !repo) {
         logger.error("GitHub loader requires both owner and repo options.");
@@ -57,12 +57,15 @@ export function github(options: GitHubLoaderOptions): Loader {
               filePath: file.path,
             });
 
+            const rendered = await renderMarkdown(body);
+
             store.set({
               id,
               data: parsedData,
               body,
               digest: generateDigest(raw),
               filePath: file.path,
+              rendered,
             });
           } catch (error) {
             const message =
