@@ -33,7 +33,7 @@ const { entries } = Astro.props;
             <i class="sidebar-icon" slot="icon">
               {page.data.index ? <FolderSVG /> : <FileSVG />}
             </i>
-            <span class="sidebar-text" slot="label">
+            <span class="sidebar-text" slot="label" title={page.data.title}>
               {page.data.title}
             </span>
           </ToolTip>
@@ -45,9 +45,7 @@ const { entries } = Astro.props;
 
 {
   entries.length === 0 && (
-    <p class="sidebar-empty">
-      No hay elementos en esta sección.
-    </p>
+    <p class="sidebar-empty">No hay elementos en esta sección.</p>
   )
 }
 

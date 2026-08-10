@@ -7,6 +7,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+- `parseDocument(entry)` en `src/lib/document.ts` para extraer headings del contenido sin depender del loader ni de la extensión del archivo.
+
+### Changed
+- Refactor de `src/lib/content.ts`: elimina `getHeadings()` y su dependencia del filesystem.
+- `src/pages/[...slug].astro` ahora consume headings a través de `parseDocument(entry)`.
+
+### Fixed
+- Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.
+
 ## [0.1.0] - 2026-08-09
 
 ### Added
