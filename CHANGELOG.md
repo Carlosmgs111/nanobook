@@ -9,13 +9,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 - `parseDocument(entry)` en `src/lib/document.ts` para extraer headings del contenido sin depender del loader ni de la extensión del archivo.
+- Loader `github` en `src/loaders/github/` para cargar contenido Markdown desde un repositorio de GitHub.
+- Loader `mixed` en `src/loaders/mixed.ts` para combinar múltiples loaders en una sola colección.
+- Script `scripts/push-content-to-github.mjs` para poblar el repositorio `nanobook-content` desde el contenido local.
 
 ### Changed
 - Refactor de `src/lib/content.ts`: elimina `getHeadings()` y su dependencia del filesystem.
 - `src/pages/[...slug].astro` ahora consume headings a través de `parseDocument(entry)`.
+- `src/content.config.ts` ahora usa el loader compuesto `mixed([glob(...), github(...)])` para unir contenido local y remoto.
 
 ### Fixed
 - Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.
+- Loader de GitHub: coerción de fechas ISO a `Date`, soporte para saltos de línea CRLF y generación de IDs alineada con la convención de Astro (`index.md`).
 
 ## [0.1.0] - 2026-08-09
 
