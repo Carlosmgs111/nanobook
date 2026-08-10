@@ -17,6 +17,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Refactor de `src/lib/content.ts`: elimina `getHeadings()` y su dependencia del filesystem.
 - `src/pages/[...slug].astro` ahora consume headings a través de `parseDocument(entry)`.
 - `src/content.config.ts` ahora usa el loader compuesto `mixed([glob(...), github(...)])` para unir contenido local y remoto.
+- Loader de GitHub: pre-renderiza el Markdown con `renderMarkdown()` para que `render(entry)` muestre el cuerpo del documento.
+- Loader de GitHub: excluye `README.md` del patrón para evitar errores de validación de schema.
 
 ### Fixed
 - Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.
