@@ -16,3 +16,28 @@ html {
     linear-gradient(90deg, var(--grid-line) var(--line-thickness), transparent var(--line-thickness));
   background-size: var(--grid-step) var(--grid-step);
 }
+
+/* ─────────────────────────────────────────────
+   Custom scrollbar
+   ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--grid-line-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

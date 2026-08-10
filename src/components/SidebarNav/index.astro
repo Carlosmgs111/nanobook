@@ -51,7 +51,9 @@ const display = Boolean(entries.length);
   data-display={display}
 >
   <SidebarHeader toggleId={toggleId} parentEntry={parentEntry} />
-  <SidebarList entries={sortedEntries} />
+  <div class="sidebar-scroll">
+    <SidebarList entries={sortedEntries} />
+  </div>
 </aside>
 
 <style>
@@ -91,8 +93,21 @@ const display = Boolean(entries.length);
   }
 
   .sidebar-root[data-is-hidden="false"] {
-    display: block;
+    display: flex;
+    flex-direction: column;
     transform: translateX(0);
+  }
+
+  .sidebar-scroll {
+    overflow-y: auto;
+    flex: 1 1 0%;
+    min-height: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   @media (min-width: 768px) {
@@ -102,7 +117,8 @@ const display = Boolean(entries.length);
     .sidebar-root {
       position: sticky;
       top: 8rem;
-      display: block;
+      display: flex;
+      flex-direction: column;
       height: calc(100vh - 9rem);
       max-height: calc(100vh - 9rem);
       flex-shrink: 0;
