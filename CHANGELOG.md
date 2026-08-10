@@ -20,7 +20,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 - Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.
-- Loader de GitHub: coerción de fechas ISO a `Date`, soporte para saltos de línea CRLF y generación de IDs alineada con la convención de Astro (`index.md`).
+- Loader de GitHub: coerción de fechas ISO a `Date`, soporte para saltos de línea CRLF, generación de IDs alineada con la convención de Astro (`index.md`) y uso de `picomatch` para soportar archivos en la raíz del repositorio.
 
 ## [0.1.0] - 2026-08-09
 
