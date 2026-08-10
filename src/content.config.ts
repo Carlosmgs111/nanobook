@@ -11,7 +11,7 @@ const content = defineCollection({
       repo: "nanobook-content",
       path: "",
       branch: "main",
-      pattern: "**/*.md",
+      pattern: ["**/*.md", "!README.md"],
       token: import.meta.env.GITHUB_TOKEN,
     }),
   ]),
