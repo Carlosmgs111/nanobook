@@ -3,6 +3,7 @@ import HomeSVG from "../../icons/home.svg";
 import FolderUpSVG from "../../icons/folder-up.svg";
 import SidebarModeToggle from "./SidebarModeToggle.astro";
 import CloseSidebar from "./CloseSidebar.astro";
+import ToolTip from "./ToolTip.astro";
 
 interface ParentEntry {
   id: string;
@@ -34,10 +35,17 @@ function parentHref(parent: ParentEntry): string {
         class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
         data-tooltip={parentEntry.data.title}
       >
-        <i class="sidebar-icon flex w-5 flex-shrink-0 justify-center">
-          {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
-        </i>
-        <span class="sidebar-text truncate">{parentEntry.data.title}</span>
+        <ToolTip id={"tooltip-" + parentEntry.id}>
+          <i
+            class="sidebar-icon flex w-5 flex-shrink-0 justify-center"
+            slot="icon"
+          >
+            {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
+          </i>
+          <span class="sidebar-text truncate" slot="label">
+            {parentEntry.data.title}
+          </span>
+        </ToolTip>
       </a>
     )
   }
@@ -64,10 +72,6 @@ function parentHref(parent: ParentEntry): string {
       flex-direction: column-reverse;
       align-items: center;
       margin-bottom: 0;
-    }
-
-    :global(#sidebar[data-sidebar-mode="collapsed"]) .sidebar-header span {
-      display: none;
     }
   }
 </style>

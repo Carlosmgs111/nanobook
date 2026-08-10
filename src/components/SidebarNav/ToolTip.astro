@@ -28,7 +28,7 @@ const { id } = Astro.props;
     :global(#sidebar[data-sidebar-mode="collapsed"]) .tool-label {
       position: absolute;
       top: 50%;
-      left: 2.8rem;
+      left: 4rem;
       transform: translateY(-50%);
       border: 1px solid var(--grid-line-strong);
       background-color: var(--layer-1);
@@ -37,6 +37,7 @@ const { id } = Astro.props;
       width: auto;
       min-width: auto;
       white-space: nowrap;
+      backdrop-filter: blur(16px);
     }
 
     :global(#sidebar[data-sidebar-mode="collapsed"]) .tool-label::before {
