@@ -46,50 +46,6 @@ export function getParentPath(entryId: string): string | null {
   return lastSlash === -1 ? "" : entryId.slice(0, lastSlash);
 }
 
-import { readFileSync } from "node:fs";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import { toString } from "mdast-util-to-string";
-import { slug } from "github-slugger";
-import type { Node } from "unist";
-
-export interface Heading {
-  depth: number;
-  slug: string;
-  text: string;
-}
-
-export function getHeadings(entryId: string): Heading[] {
-  const filePath = `./src/content/${entryId}.md`;
-  try {
-    const source = readFileSync(filePath, "utf-8").replace(
-      /^---[\s\S]*?---\n?/,
-      "",
-    );
-    const tree = unified().use(remarkParse).parse(source);
-    const headings: Heading[] = [];
-
-    const visit = (node: Node) => {
-      const anyNode = node as any;
-      if (anyNode.type === "heading" && anyNode.depth >= 2 && anyNode.depth <= 3) {
-        const text = toString(anyNode);
-        const headingSlug = slug(text);
-        if (headingSlug) {
-          headings.push({ depth: anyNode.depth, slug: headingSlug, text });
-        }
-      }
-      if (anyNode.children && Array.isArray(anyNode.children)) {
-        anyNode.children.forEach(visit);
-      }
-    };
-
-    visit(tree);
-    return headings;
-  } catch {
-    return [];
-  }
-}
-
 export function getParentEntry(entryId: string, entries: any[]): any | null {
   const parentPath = getParentPath(entryId);
   if (parentPath === null) return null;
