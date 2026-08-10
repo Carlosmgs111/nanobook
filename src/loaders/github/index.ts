@@ -11,7 +11,8 @@ export function github(options: GitHubLoaderOptions): Loader {
   return {
     name: "github-loader",
     load: async (context: LoaderContext) => {
-      const { logger, parseData, store, generateDigest, renderMarkdown } = context;
+      const { logger, parseData, store, generateDigest, renderMarkdown } =
+        context;
 
       if (!owner || !repo) {
         logger.error("GitHub loader requires both owner and repo options.");
