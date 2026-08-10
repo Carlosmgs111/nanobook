@@ -1,8 +1,20 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
+import { github } from "./loaders/github";
+import { mixed } from "./loaders/mixed";
 
 const content = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/" }),
+  loader: mixed([
+    glob({ pattern: "**/*.md", base: "./src/content/" }),
+    github({
+      owner: import.meta.env.GITHUB_OWNER || "",
+      repo: "nanobook-content",
+      path: "",
+      branch: "main",
+      pattern: "**/*.md",
+      token: import.meta.env.GITHUB_TOKEN,
+    }),
+  ]),
   schema: z.object({
     title: z.string(),
     description: z.string(),
