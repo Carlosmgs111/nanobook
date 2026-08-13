@@ -19,7 +19,7 @@ export function parseFrontmatter(raw: string): {
 
   try {
     const data = parseYaml(frontmatter) as Record<string, unknown>;
-    return { data: coerceDates(data), body };
+    return { data: coerceDates(data) as Record<string, unknown>, body };
   } catch (error) {
     throw new Error(
       `Failed to parse YAML frontmatter: ${error instanceof Error ? error.message : String(error)}`,

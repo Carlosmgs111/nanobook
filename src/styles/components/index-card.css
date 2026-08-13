@@ -2,7 +2,7 @@
    Navigation index cards
    ───────────────────────────────────────────── */
 
-.index-card {
+.index-card:not([data-cover]) {
   background:
     linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%),
     repeating-linear-gradient(135deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
@@ -45,4 +45,28 @@
 
 .index-card[data-draft="true"] .index-card-title::before {
   content: attr(data-title) " [DRAFT]";
+}
+
+/* Cover image rendered behind the existing pattern */
+.index-card[data-cover] {
+  isolation: isolate;
+}
+
+.index-card[data-cover]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%),
+    repeating-linear-gradient(135deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg) 25%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 80%, transparent) 100%
+    ),
+    var(--card-cover);
+  background-size: 100% 100%, 100% 100%, 100% 100%, cover;
+  background-position: center;
+  filter: saturate(1.1);
 }

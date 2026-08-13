@@ -8,6 +8,7 @@ interface Entry {
     description: string;
     draft: boolean;
     index: boolean;
+    art?: string;
   };
 }
 
@@ -16,9 +17,10 @@ interface Props {
   description?: string;
   label?: string;
   entries: Entry[];
+  art?: string;
 }
 
-const { title, description, label = "Index", entries } = Astro.props;
+const { title, description, label = "Index", entries, art } = Astro.props;
 
 const sortedEntries = entries
   .filter((page) => !page.data.draft)
