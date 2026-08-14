@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import IndexList from "../components/IndexList.astro";
 import { AstroCollectionRepository } from "../core/content/repository";
+import { AstroMarkdownRenderer } from "../core/rendering/adapters/astro-markdown";
 import {
   buildNavigationTree,
   getFolderPath,
@@ -13,6 +14,7 @@ import {
 import { parseDocument } from "../lib/document";
 
 const repository = new AstroCollectionRepository();
+const renderer = new AstroMarkdownRenderer();
 
 export async function getStaticPaths() {
   const repo = new AstroCollectionRepository();
@@ -31,7 +33,7 @@ if (!entry) {
   throw new Error(`Document not found: ${documentId}`);
 }
 
-const { Content } = await repository.render(entry);
+const { Content } = await renderer.render(entry);
 const allDocuments = await repository.list();
 const { nodeMap } = buildNavigationTree(allDocuments);
 

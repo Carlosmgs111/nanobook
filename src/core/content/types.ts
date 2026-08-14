@@ -15,6 +15,7 @@ export interface DocumentMetadata {
   tags: string[];
   draft: boolean;
   index: boolean;
+  position: number;
 }
 
 export interface Document {

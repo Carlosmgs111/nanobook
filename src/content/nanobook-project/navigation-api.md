@@ -173,12 +173,37 @@ const sidebar = getSidebarEntries(nodeMap, currentId);
 const children = getImmediateChildren(nodeMap, "nanobook-project/arquitectura");
 ```
 
+## Ordenación de documentos
+
+Los documentos se ordenan usando el campo `position` del frontmatter. Si dos documentos tienen el mismo `position`, se ordenan alfabéticamente por título.
+
+```md
+---
+title: "Primer documento"
+description: "..."
+position: 1
+---
+```
+
+```md
+---
+title: "Segundo documento"
+description: "..."
+position: 2
+---
+```
+
+- `position` menor → aparece primero.
+- Sin `position` → se asume `0`.
+- Mismo `position` → orden alfabético por `title`.
+
 ## Reglas semánticas
 
 - `folder = hierarchy`: la estructura física de carpetas se proyecta en la jerarquía de navegación.
 - `index.md` con `index: true` representa una carpeta.
 - Los documentos se listan en el índice de su carpeta padre inmediata.
 - Los documentos marcados como `draft: true` se excluyen de navegación e índices.
+- El orden de los documentos se controla mediante `position`.
 
 ## Relación con otros módulos
 

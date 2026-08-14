@@ -64,6 +64,7 @@ author: "Autor"
 tags: ["tag1", "tag2"]
 draft: false
 index: true
+position: 1
 ---
 ```
 
@@ -76,6 +77,7 @@ Campos:
 - `tags` (obligatorio): Lista de etiquetas.
 - `draft` (opcional): Si es `true`, el documento no se genera.
 - `index` (obligatorio para `index.md`): Marca el archivo como representación de una carpeta.
+- `position` (opcional): Orden del documento dentro de su carpeta. Menor valor = primero. Por defecto `0`.
 
 ## Reglas de indexado
 

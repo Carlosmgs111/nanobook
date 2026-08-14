@@ -24,6 +24,7 @@ const content = defineCollection({
     tags: z.array(z.string()),
     draft: z.boolean().default(false),
     index: z.boolean().default(false),
+    position: z.number().default(0),
   }),
 });
 

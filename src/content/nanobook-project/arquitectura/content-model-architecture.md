@@ -71,9 +71,9 @@ Por debajo:
 ## Conceptos del dominio
 
 - **Document**: unidad mínima de contenido. Tiene `id`, `slug`, `parentId`, `position`, `title`, `description`, `content` y `metadata`.
-- **ContentRepository**: interfaz para listar, obtener y buscar hijos de documentos.
+- **ContentRepository**: interfaz para listar, obtener y buscar hijos de documentos. Responsabilidad única: persistencia/lectura.
 - **NavigationBuilder**: construye árboles de navegación a partir de una lista de documentos.
-- **DocumentRenderer**: convierte el contenido crudo en HTML y extrae headings.
+- **DocumentRenderer**: interfaz para convertir el contenido crudo en HTML. Tiene su propio adapter (ej. `AstroMarkdownRenderer`).
 - **Publisher**: genera el sitio público, estático o en runtime.
 
 ## Estado actual
@@ -92,6 +92,16 @@ Por debajo:
 - Se actualizó `src/pages/[...slug].astro` para construir el árbol de navegación y derivar breadcrumb, sidebar e índices del `nodeMap`.
 - Se eliminó `src/lib/content.ts` porque toda su lógica ahora vive en `src/core/`.
 - Los componentes `Layout.astro`, `SidebarNav/index.astro` y `SidebarList.astro` ahora usan `NavigationNode`.
+
+### Fase 2 completada
+
+- Se añadió `position` al schema de Astro (`src/content.config.ts`) y a `DocumentMetadata`.
+- `NavigationBuilder` ordena por `position` con fallback por título.
+- Se creó `src/core/rendering/types.ts` con la interfaz `DocumentRenderer`.
+- Se creó `src/core/rendering/adapters/astro-markdown.ts` con `AstroMarkdownRenderer`, el encargado exclusivo de renderizar Markdown mediante Astro.
+- `AstroCollectionRepository` ya no se encarga del renderizado; su responsabilidad es solo la lectura de documentos.
+- Se creó `src/core/content/astro-cache.ts` para compartir las entradas crudas de Astro entre repository y renderer sin acoplarlos.
+- `src/pages/[...slug].astro` crea `repository` y `renderer` como objetos separados.
 - El build genera 52 páginas correctamente.
 
 ## Escalabilidad y SSR
@@ -135,10 +145,9 @@ No optimizar prematuramente. Hoy el árbol completo es la solución pragmática.
 
 ## Próximos pasos documentados
 
-1. **DocumentRenderer**: abstraer el renderizado de Markdown. Actualmente `AstroCollectionRepository.render()` hace ese trabajo porque Astro necesita su entrada original; en el futuro se puede extraer a un adapter propio.
-2. **Storage adapters**: añadir `FileSystemRepository`, `MemoryRepository` y un stub de `DatabaseRepository` cuando sea necesario. No se implementan ahora porque Astro sigue siendo el único publisher.
-3. **Publisher + manifest**: habilitar static/SSR híbrido y parches dinámicos. Se deja documentado para cuando se retome la Propuesta B de parches dinámicos.
-4. **Ordering**: añadir `position` al frontmatter y al schema de Astro para permitir orden explícito de documentos.
+1. **Storage adapters**: añadir `FileSystemRepository`, `MemoryRepository` y un stub de `DatabaseRepository` cuando sea necesario. No se implementan ahora porque Astro sigue siendo el único publisher.
+2. **Publisher + manifest**: habilitar static/SSR híbrido y parches dinámicos. Se deja documentado para cuando se retome la Propuesta B de parches dinámicos.
+3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
 
 ## Lo que NO se hará ahora
 

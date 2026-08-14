@@ -1,8 +1,5 @@
-import {
-  getCollection,
-  render,
-  type CollectionEntry,
-} from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import { getAstroEntries } from "./astro-cache";
 import type { ContentRepository, Document, DocumentMetadata } from "./types";
 
 function getParentId(id: string): string | null {
@@ -11,17 +8,14 @@ function getParentId(id: string): string | null {
   return lastSlash === -1 ? "" : id.slice(0, lastSlash);
 }
 
-function toDocument(
-  entry: CollectionEntry<"content">,
-  position: number = 0,
-): Document {
+function toDocument(entry: CollectionEntry<"content">): Document {
   const data = entry.data as DocumentMetadata;
 
   return {
     id: entry.id,
     slug: entry.id === "index" ? "" : entry.id,
     parentId: getParentId(entry.id),
-    position,
+    position: data.position,
     title: data.title,
     description: data.description,
     content: entry.body ?? "",
@@ -30,42 +24,35 @@ function toDocument(
 }
 
 /**
- * Cache a nivel de módulo. Astro carga este módulo una vez por proceso
- * de build, así que todas las instancias de AstroCollectionRepository
- * comparten la misma colección. Esto evita llamar repetidamente a
- * getCollection("content") y reconstruir el árbol de navegación para
- * cada página generada.
+ * Cache a nivel de módulo de documentos del dominio. Astro carga este
+ * módulo una vez por proceso de build, así que todas las instancias de
+ * AstroCollectionRepository comparten la misma lista. Esto evita
+ * reconstruir los documentos y el árbol de navegación para cada página
+ * generada.
  */
 let cachedDocuments: Document[] | null = null;
-let cachedAstroEntries: Map<string, CollectionEntry<"content">> | null = null;
 
 /**
  * Adapter que expone la colección de Astro como un ContentRepository.
  *
  * Es la implementación actual y la más simple: lee todo en build time
- * mediante getCollection("content"). En el futuro se pueden añadir
+ * mediante las entradas de Astro. En el futuro se pueden añadir
  * FileSystemRepository, DatabaseRepository, etc., sin tocar el resto
  * del dominio.
  *
- * Incluye render() porque Astro requiere la entrada original de su
- * colección para renderizar Markdown. El tipo Document del dominio no
- * sabe nada de Astro; el adapter mantiene el mapeo interno.
+ * Responsabilidad única: gestionar la persistencia/lectura de documentos.
+ * El renderizado es responsabilidad de DocumentRenderer.
  */
 export class AstroCollectionRepository implements ContentRepository {
   async list(): Promise<Document[]> {
     if (cachedDocuments) return cachedDocuments;
 
-    const astroEntries = new Map<string, CollectionEntry<"content">>();
-    const collection = await getCollection("content");
+    const entries = await getAstroEntries();
 
-    cachedDocuments = collection
+    cachedDocuments = Array.from(entries.values())
       .filter((entry) => !entry.data.draft)
-      .map((entry, index) => {
-        astroEntries.set(entry.id, entry);
-        return toDocument(entry, index);
-      });
+      .map((entry) => toDocument(entry));
 
-    cachedAstroEntries = astroEntries;
     return cachedDocuments;
   }
 
@@ -77,17 +64,6 @@ export class AstroCollectionRepository implements ContentRepository {
   async listChildren(parentId: string | null): Promise<Document[]> {
     const entries = await this.list();
     return entries.filter((entry) => entry.parentId === parentId);
-  }
-
-  async render(document: Document): Promise<Awaited<ReturnType<typeof render>>> {
-    if (!cachedAstroEntries) await this.list();
-
-    const entry = cachedAstroEntries?.get(document.id);
-    if (!entry) {
-      throw new Error(`Cannot render document ${document.id}: Astro entry not found`);
-    }
-
-    return render(entry);
   }
 }
 

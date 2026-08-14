@@ -12,6 +12,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Loader `github` en `src/loaders/github/` para cargar contenido Markdown desde un repositorio de GitHub.
 - Loader `mixed` en `src/loaders/mixed.ts` para combinar múltiples loaders en una sola colección.
 - Script `scripts/push-content-to-github.mjs` para poblar el repositorio `nanobook-content` desde el contenido local.
+- Capa de dominio `src/core/` con tipos `Document`, `DocumentMetadata` y `ContentRepository`.
+- `AstroCollectionRepository` en `src/core/content/repository.ts` como adapter storage-agnostic para Astro.
+- `NavigationBuilder` en `src/core/navigation/builder.ts` con `NavigationTree` cacheado.
+- Interfaz `DocumentRenderer` en `src/core/rendering/types.ts` para separar renderizado de almacenamiento.
+- Campo `position` en el frontmatter para controlar el orden de documentos en índices y sidebar.
+- Documentación de arquitectura en `src/content/nanobook-project/arquitectura/content-model-architecture.md`.
+- Documentación de la API de navegación en `src/content/nanobook-project/navigation-api.md`.
 
 ### Changed
 - Reorganización de `src/content/nanobook-project/` en subcarpetas temáticas (`general`, `arquitectura`, `layout`, `sidebar`, `table-of-contents`, `versionado`) con índices propios y referencias internas actualizadas.
