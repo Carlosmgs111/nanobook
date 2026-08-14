@@ -41,7 +41,7 @@ Pero cambiamos la arquitectura para que el modelo de contenido no dependa del fi
         │                     │
         └──────────┬──────────┘
                    │
-            Publishing API
+            Rendering Layer
                    │
         ┌──────────┴──────────┐
         │                     │
@@ -74,7 +74,6 @@ Por debajo:
 - **ContentRepository**: interfaz para listar, obtener y buscar hijos de documentos. Responsabilidad única: persistencia/lectura.
 - **NavigationBuilder**: construye árboles de navegación a partir de una lista de documentos.
 - **DocumentRenderer**: interfaz para convertir el contenido crudo en HTML. Tiene su propio adapter (ej. `AstroMarkdownRenderer`).
-- **Publisher**: genera el sitio público, estático o en runtime.
 
 ## Estado actual
 
@@ -110,13 +109,6 @@ Por debajo:
 - Se creó `src/core/content/adapters/database-repository.ts` como stub del adapter de base de datos.
 - Se documentó la arquitectura de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 - El build sigue usando `AstroCollectionRepository`; los nuevos adapters demuestran que el dominio es storage-agnostic.
-
-### Fase 4 completada
-
-- Se creó `src/core/publishing/types.ts` con `Publisher`, `SiteManifest` y `ManifestEntry`.
-- Se creó `src/core/publishing/manifest.ts` con `generateManifest`, `serializeManifest` y `parseManifest`.
-- Se documentó la arquitectura de publisher y manifest en `src/content/nanobook-project/arquitectura/publisher-manifest.md`.
-- No se conectó al build actual; queda listo para cuando se implemente la Propuesta B de parches dinámicos.
 
 ## Escalabilidad y SSR
 
@@ -159,9 +151,8 @@ No optimizar prematuramente. Hoy el árbol completo es la solución pragmática.
 
 ## Próximos pasos documentados
 
-1. **Publisher real**: implementar un publisher que genere el manifest en build y decida entre estático/dinámico en runtime.
-2. **Parches dinámicos**: retomar la Propuesta B (API REST + overrides en runtime) sobre la base del manifest.
-3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
+1. **Parches dinámicos**: implementar API REST + overrides en runtime cuando haya un caso de uso real de edición rápida.
+2. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
 
 ## Lo que NO se hará ahora
 
