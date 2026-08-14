@@ -104,6 +104,13 @@ Por debajo:
 - `src/pages/[...slug].astro` crea `repository` y `renderer` como objetos separados.
 - El build genera 52 páginas correctamente.
 
+### Fase 3 completada
+
+- Se creó `src/core/content/adapters/memory-repository.ts` para tests y desarrollo.
+- Se creó `src/core/content/adapters/database-repository.ts` como stub del adapter de base de datos.
+- Se documentó la arquitectura de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
+- El build sigue usando `AstroCollectionRepository`; los nuevos adapters demuestran que el dominio es storage-agnostic.
+
 ## Escalabilidad y SSR
 
 ### Árbol completo vs. rama parcial
@@ -145,9 +152,8 @@ No optimizar prematuramente. Hoy el árbol completo es la solución pragmática.
 
 ## Próximos pasos documentados
 
-1. **Storage adapters**: añadir `FileSystemRepository`, `MemoryRepository` y un stub de `DatabaseRepository` cuando sea necesario. No se implementan ahora porque Astro sigue siendo el único publisher.
-2. **Publisher + manifest**: habilitar static/SSR híbrido y parches dinámicos. Se deja documentado para cuando se retome la Propuesta B de parches dinámicos.
-3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
+1. **Publisher + manifest**: habilitar static/SSR híbrido y parches dinámicos. Se deja documentado para cuando se retome la Propuesta B de parches dinámicos.
+2. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
 
 ## Lo que NO se hará ahora
 

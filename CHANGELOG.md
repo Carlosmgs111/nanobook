@@ -19,6 +19,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Campo `position` en el frontmatter para controlar el orden de documentos en índices y sidebar.
 - Documentación de arquitectura en `src/content/nanobook-project/arquitectura/content-model-architecture.md`.
 - Documentación de la API de navegación en `src/content/nanobook-project/navigation-api.md`.
+- `MemoryRepository` en `src/core/content/adapters/memory-repository.ts` para tests y desarrollo.
+- Stub `DatabaseRepository` en `src/core/content/adapters/database-repository.ts` para el futuro adapter de base de datos.
+- Documentación de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 
 ### Changed
 - Reorganización de `src/content/nanobook-project/` en subcarpetas temáticas (`general`, `arquitectura`, `layout`, `sidebar`, `table-of-contents`, `versionado`) con índices propios y referencias internas actualizadas.
