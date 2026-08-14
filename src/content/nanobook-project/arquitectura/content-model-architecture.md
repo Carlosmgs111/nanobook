@@ -111,6 +111,13 @@ Por debajo:
 - Se documentó la arquitectura de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 - El build sigue usando `AstroCollectionRepository`; los nuevos adapters demuestran que el dominio es storage-agnostic.
 
+### Fase 4 completada
+
+- Se creó `src/core/publishing/types.ts` con `Publisher`, `SiteManifest` y `ManifestEntry`.
+- Se creó `src/core/publishing/manifest.ts` con `generateManifest`, `serializeManifest` y `parseManifest`.
+- Se documentó la arquitectura de publisher y manifest en `src/content/nanobook-project/arquitectura/publisher-manifest.md`.
+- No se conectó al build actual; queda listo para cuando se implemente la Propuesta B de parches dinámicos.
+
 ## Escalabilidad y SSR
 
 ### Árbol completo vs. rama parcial
@@ -152,8 +159,9 @@ No optimizar prematuramente. Hoy el árbol completo es la solución pragmática.
 
 ## Próximos pasos documentados
 
-1. **Publisher + manifest**: habilitar static/SSR híbrido y parches dinámicos. Se deja documentado para cuando se retome la Propuesta B de parches dinámicos.
-2. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
+1. **Publisher real**: implementar un publisher que genere el manifest en build y decida entre estático/dinámico en runtime.
+2. **Parches dinámicos**: retomar la Propuesta B (API REST + overrides en runtime) sobre la base del manifest.
+3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
 
 ## Lo que NO se hará ahora
 

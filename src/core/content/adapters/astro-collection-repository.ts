@@ -1,6 +1,6 @@
 import type { CollectionEntry } from "astro:content";
-import { getAstroEntries } from "./astro-cache";
-import type { ContentRepository, Document, DocumentMetadata } from "./types";
+import { getAstroEntries } from "../astro-cache";
+import type { ContentRepository, Document, DocumentMetadata } from "../types";
 
 function getParentId(id: string): string | null {
   if (id === "index") return null;
