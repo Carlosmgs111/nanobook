@@ -14,7 +14,7 @@ export interface Document {
   headings: Heading[];
 }
 
-export interface DocumentEntry {
+export interface DocumentSource {
   body?: string;
 }
 
@@ -45,17 +45,17 @@ function extractHeadings(source: string): Heading[] {
 }
 
 /**
- * Parses a generic content entry into a Document abstraction.
+ * Parses a generic content source into a Document abstraction.
  *
- * Contract: every loader must provide `entry.body` as the raw document source.
+ * Contract: the source must provide `body` as the raw document source.
  * The source may or may not include frontmatter; it is stripped here before
  * parsing headings. This keeps the rest of the codebase independent of the
  * underlying loader (glob, GitHub, CMS, etc.) and of file extensions like
  * `.md` or `.mdx`.
  */
-export function parseDocument(entry: DocumentEntry): Document {
-  const source = stripFrontmatter(entry.body ?? "");
+export function parseDocument(source: DocumentSource): Document {
+  const raw = stripFrontmatter(source.body ?? "");
   return {
-    headings: extractHeadings(source),
+    headings: extractHeadings(raw),
   };
 }

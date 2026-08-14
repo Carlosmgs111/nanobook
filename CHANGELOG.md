@@ -14,6 +14,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Script `scripts/push-content-to-github.mjs` para poblar el repositorio `nanobook-content` desde el contenido local.
 
 ### Changed
+- Reorganización de `src/content/nanobook-project/` en subcarpetas temáticas (`general`, `arquitectura`, `layout`, `sidebar`, `table-of-contents`, `versionado`) con índices propios y referencias internas actualizadas.
 - Refactor de `src/lib/content.ts`: elimina `getHeadings()` y su dependencia del filesystem.
 - `src/pages/[...slug].astro` ahora consume headings a través de `parseDocument(entry)`.
 - `src/content.config.ts` ahora usa el loader compuesto `mixed([glob(...), github(...)])` para unir contenido local y remoto.

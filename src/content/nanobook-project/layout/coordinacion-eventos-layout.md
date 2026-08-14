@@ -180,5 +180,5 @@ Si la prioridad es eliminar la complejidad por completo, la **Opción D** (elimi
 - `src/components/ContentWidthToggle.astro`
 - `src/components/SidebarNav/SidebarModeToggle.astro`
 - `src/components/TableOfContents/TocToggle.astro`
-- `src/content/nanobook-project/comunicacion-estado-componentes.md` — evolución anterior basada en `MutationObserver`.
-- `src/content/nanobook-project/id-based-component-architecture.md` — principios de la arquitectura basada en IDs.
+- `src/content/nanobook-project/layout/comunicacion-estado-componentes.md` — evolución anterior basada en `MutationObserver`.
+- `src/content/nanobook-project/arquitectura/id-based-component-architecture.md` — principios de la arquitectura basada en IDs.

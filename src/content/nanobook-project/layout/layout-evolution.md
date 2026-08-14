@@ -504,8 +504,8 @@ Finalmente, la introducción de los modos `constrained` y `full` añadió una ca
 
 ## 11. Documentos relacionados
 
-- `src/content/nanobook-project/comunicacion-estado-componentes.md` — explica en detalle cómo se comunican los estados entre TOC, Sidebar y ContentWidthToggle.
-- `src/content/nanobook-project/dataset-estado-toc.md` — profundiza en el cambio de `classList` a `data-is-active` en el TOC.
+- `src/content/nanobook-project/layout/comunicacion-estado-componentes.md` — explica en detalle cómo se comunican los estados entre TOC, Sidebar y ContentWidthToggle.
+- `src/content/nanobook-project/table-of-contents/dataset-estado-toc.md` — profundiza en el cambio de `classList` a `data-is-active` en el TOC.
 
 ---
 

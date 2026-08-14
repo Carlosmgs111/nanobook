@@ -1,61 +1,72 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import IndexList from "../components/IndexList.astro";
-import { getCollection, render } from "astro:content";
+import { AstroCollectionRepository } from "../core/content/repository";
 import {
-  getStaticSlug,
+  buildNavigationTree,
   getFolderPath,
   getImmediateChildren,
   getBreadcrumbs,
   getSidebarEntries,
   getParentEntry,
-} from "../lib/content";
+} from "../core/navigation/builder";
 import { parseDocument } from "../lib/document";
 
-export async function getStaticPaths() {
-  const entries = await getCollection("content");
+const repository = new AstroCollectionRepository();
 
-  return entries
-    .filter((entry) => !entry.data.draft)
-    .map((entry) => ({
-      params: { slug: getStaticSlug(entry.id) },
-      props: { entry, allEntries: entries },
-    }));
+export async function getStaticPaths() {
+  const repo = new AstroCollectionRepository();
+  const documents = await repo.list();
+
+  return documents.map((document) => ({
+    params: { slug: document.slug || undefined },
+    props: { documentId: document.id },
+  }));
 }
 
-const { entry, allEntries } = Astro.props;
-const { Content } = await render(entry);
+const { documentId } = Astro.props;
+const entry = await repository.get(documentId);
+
+if (!entry) {
+  throw new Error(`Document not found: ${documentId}`);
+}
+
+const { Content } = await repository.render(entry);
+const allDocuments = await repository.list();
+const { nodeMap } = buildNavigationTree(allDocuments);
 
 const folderPath = getFolderPath(entry.id);
-const children = entry.data.index
-  ? getImmediateChildren(allEntries, folderPath, entry.id)
+const children = entry.metadata.index
+  ? getImmediateChildren(nodeMap, folderPath, entry.id)
   : [];
 
 const childEntries = children.map((child) => ({
   id: child.id,
-  data: child.data,
+  data: child.metadata,
 }));
 
-const breadcrumbs = getBreadcrumbs(entry.id, allEntries);
-const sidebarEntries = getSidebarEntries(allEntries, entry.id);
-const parentEntry = getParentEntry(entry.id, allEntries);
-const { headings } = parseDocument(entry);
+const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
+const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
+const parentNode = getParentEntry(nodeMap, entry.id);
+const { headings } = parseDocument({ body: entry.content });
 ---
 
 <Layout
-  title={entry.data.title}
-  description={entry.data.description}
-  label={entry.data.index ? "Index" : "Document"}
+  title={entry.title}
+  description={entry.description}
+  label={entry.metadata.index ? "Index" : "Document"}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
-  parentEntry={parentEntry}
+  parentEntry={parentNode
+    ? { id: parentNode.id, data: { title: parentNode.title } }
+    : null}
   headings={headings}
 >
   {
-    entry.data.index ? (
+    entry.metadata.index ? (
       <IndexList
-        title={entry.data.title}
-        description={entry.data.description}
+        title={entry.title}
+        description={entry.description}
         label="Index"
         entries={childEntries}
       />
@@ -64,16 +75,18 @@ const { headings } = parseDocument(entry);
         <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
           <span class="tech-label mb-3 block">Document</span>
           <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
-            {entry.data.title}
+            {entry.title}
           </h1>
         </div>
 
         <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
           <span>ID: {entry.id}</span>
           <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
-          <span class="text-sm">DATE: {entry.data.date.toISOString().slice(0, 10)}</span>
+          <span class="text-sm">
+            DATE: {entry.metadata.date.toISOString().slice(0, 10)}
+          </span>
           <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
-          <span>AUTHOR: {entry.data.author}</span>
+          <span>AUTHOR: {entry.metadata.author}</span>
         </div>
 
         <Content />

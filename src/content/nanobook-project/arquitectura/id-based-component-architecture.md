@@ -78,8 +78,8 @@ Tanto `SidebarNav` como `TableOfContents` definen IDs fijos en su componente ra�
 
 ## Documentación específica
 
-- [`sidebar-architecture.md`](./sidebar-architecture.md): estructura, contratos de IDs y flujo de datos del `SidebarNav`.
-- [`toc-architecture.md`](./toc-architecture.md): estructura, scrollSpy, eventos custom y contratos de IDs del `TableOfContents`.
+- [`sidebar-architecture.md`](../sidebar/sidebar-architecture.md): estructura, contratos de IDs y flujo de datos del `SidebarNav`.
+- [`toc-architecture.md`](../table-of-contents/toc-architecture.md): estructura, scrollSpy, eventos custom y contratos de IDs del `TableOfContents`.
 
 ## Fortalezas
 

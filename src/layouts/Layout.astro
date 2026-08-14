@@ -6,23 +6,13 @@ import ThemeToggle from "../components/ThemeToggle.astro";
 import SidebarNav from "../components/SidebarNav/index.astro";
 import TableOfContents from "../components/TableOfContents/index.astro";
 import OpenSidebar from "../components/SidebarNav/OpenSidebar.astro";
+import type { NavigationNode } from "../core/navigation/builder";
 
 interface Crumb {
   id: string;
   title: string;
   href: string;
   current: boolean;
-}
-
-interface SidebarEntry {
-  id: string;
-  data: {
-    title: string;
-    description: string;
-    draft: boolean;
-    index: boolean;
-  };
-  current?: boolean;
 }
 
 interface ParentEntry {
@@ -43,7 +33,7 @@ interface Props {
   description?: string;
   label?: string;
   breadcrumbs?: Crumb[];
-  sidebarEntries?: SidebarEntry[];
+  sidebarEntries?: NavigationNode[];
   parentEntry?: ParentEntry | null;
   headings?: Heading[];
 }

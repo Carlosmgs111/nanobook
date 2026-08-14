@@ -1,17 +1,7 @@
 ---
 import SidebarHeader from "./SidebarHeader.astro";
 import SidebarList from "./SidebarList.astro";
-
-interface Entry {
-  id: string;
-  data: {
-    title: string;
-    description: string;
-    draft: boolean;
-    index: boolean;
-  };
-  current?: boolean;
-}
+import type { NavigationNode } from "../../core/navigation/builder";
 
 interface ParentEntry {
   id: string;
@@ -21,15 +11,15 @@ interface ParentEntry {
 }
 
 interface Props {
-  entries?: Entry[];
+  entries?: NavigationNode[];
   parentEntry?: ParentEntry | null;
 }
 
 const { entries = [], parentEntry } = Astro.props;
 
 const sortedEntries = entries
-  .filter((page) => !page.data.draft)
-  .sort((a, b) => a.data.title.localeCompare(b.data.title));
+  .filter((page) => !page.metadata.draft)
+  .sort((a, b) => a.title.localeCompare(b.title));
 
 const toggleId = "sidebar-mode-toggle";
 const display = Boolean(entries.length);

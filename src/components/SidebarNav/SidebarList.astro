@@ -2,18 +2,10 @@
 import FileSVG from "../../icons/file.svg";
 import FolderSVG from "../../icons/folder.svg";
 import ToolTip from "./ToolTip.astro";
-
-interface Entry {
-  id: string;
-  data: {
-    title: string;
-    index: boolean;
-  };
-  current?: boolean;
-}
+import type { NavigationNode } from "../../core/navigation/builder";
 
 interface Props {
-  entries: Entry[];
+  entries: NavigationNode[];
 }
 
 const { entries } = Astro.props;
@@ -27,14 +19,14 @@ const { entries } = Astro.props;
           href={`/${page.id}/`}
           class="sidebar-link"
           aria-current={page.current ? "page" : undefined}
-          data-tooltip={page.data.title}
+          data-tooltip={page.title}
         >
           <ToolTip id={"tooltip-" + page.id}>
             <i class="sidebar-icon" slot="icon">
-              {page.data.index ? <FolderSVG /> : <FileSVG />}
+              {page.isIndex ? <FolderSVG /> : <FileSVG />}
             </i>
-            <span class="sidebar-text" slot="label" title={page.data.title}>
-              {page.data.title}
+            <span class="sidebar-text" slot="label" title={page.title}>
+              {page.title}
             </span>
           </ToolTip>
         </a>
