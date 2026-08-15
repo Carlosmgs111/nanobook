@@ -27,9 +27,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Reorganización de `src/content/nanobook-project/` en subcarpetas temáticas (`general`, `arquitectura`, `layout`, `sidebar`, `table-of-contents`, `versionado`) con índices propios y referencias internas actualizadas.
 - Refactor de `src/lib/content.ts`: elimina `getHeadings()` y su dependencia del filesystem.
 - `src/pages/[...slug].astro` ahora consume headings a través de `parseDocument(entry)`.
-- `src/content.config.ts` ahora usa el loader compuesto `mixed([glob(...), github(...)])` para unir contenido local y remoto.
+
 - Loader de GitHub: pre-renderiza el Markdown con `renderMarkdown()` para que `render(entry)` muestre el cuerpo del documento.
 - Loader de GitHub: excluye `README.md` del patrón para evitar errores de validación de schema.
+- Modo de despliegue configurable mediante `OUTPUT_MODE` (`static` / `dynamic`) en `astro.config.mjs`.
+- Adapter de servidor `@astrojs/node` para el modo dinámico.
+- `src/content.config.ts` ahora usa solo `glob` en modo estático y solo `github` en modo dinámico; no se mezclan fuentes.
 
 ### Fixed
 - Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.

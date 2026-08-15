@@ -10,9 +10,9 @@ index: false
 
 ## Contexto
 
-Nanobook nació como un generador estático que carga Markdown desde `src/content/` mediante el loader `glob` de Astro. Más adelante se añadió un loader `github` para mezclar contenido remoto. Eso funciona, pero el código depende demasiado de la forma en que Astro expone las entradas (`entry.id`, `entry.data`, `entry.body`).
+Nanobook nació como un generador estático que carga Markdown desde `src/content/` mediante el loader `glob` de Astro. Con el tiempo surgió la necesidad de poder actualizar contenido en producción sin generar un nuevo build, pero sin perder la capacidad de que cualquiera clone el repo, guarde contenido local y genere un sitio estático.
 
-Surge la pregunta: ¿deberíamos migrar el contenido a una base de datos para poder ofrecer edición online, colaboración y SaaS?
+Este documento define la arquitectura actual: dos modos de despliegue excluyentes, cada uno con una sola fuente de verdad y edición directa de archivos.
 
 ## Decisión
 
@@ -21,14 +21,44 @@ Surge la pregunta: ¿deberíamos migrar el contenido a una base de datos para po
 Seguimos con:
 
 ```text
-Markdown + Filesystem + Git + Astro
+Markdown + Astro
 ```
 
-Pero cambiamos la arquitectura para que el modelo de contenido no dependa del filesystem ni de Astro. Astro pasa a ser una capa de publicación/rendering, no el corazón del dominio.
+Pero la fuente de los Markdown depende del modo de despliegue:
+
+- **Modo estático**: archivos locales en `src/content/`.
+- **Modo dinámico**: archivos remotos en GitHub (por defecto), renderizados bajo demanda.
+
+En ambos casos la edición se hace directamente sobre la fuente de verdad; no hay overrides ni manifest.
+
+## Modos de despliegue
+
+Los modos son **mutuamente excluyentes**. Se eligen mediante la variable de entorno `OUTPUT_MODE`:
+
+```text
+OUTPUT_MODE=static   # default
+OUTPUT_MODE=dynamic
+```
+
+### Modo estático
+
+- `output: "static"` en Astro.
+- Fuente de verdad: archivos Markdown en `src/content/`.
+- El build genera HTML estático en `dist/`.
+- La edición solo puede ocurrir en modo desarrollo, antes del build de producción.
+- En desarrollo se desplegará un editor integrado para modificar los archivos Markdown sin salir del navegador.
+
+### Modo dinámico
+
+- `output: "server"` en Astro + adapter `@astrojs/node`.
+- Fuente de verdad: repositorio de GitHub (configurable en el futuro).
+- El servidor renderiza las páginas bajo demanda.
+- Permite edición en vivo sobre la fuente remota.
+- Todos los archivos viven fuera del build.
 
 ## Principio rector
 
-> El dominio de Nanobook nunca debe saber si un documento proviene de Markdown, PostgreSQL, GitHub o una API.
+> El dominio de Nanobook nunca debe saber si un documento proviene del filesystem local, GitHub, PostgreSQL o una API.
 
 ## Arquitectura objetivo
 
@@ -50,6 +80,8 @@ Pero cambiamos la arquitectura para que el modelo de contenido no dependa del fi
      Astro SSG            Astro SSR
         │                     │
      HTML/CDN              Server
+        │                     │
+   src/content/           GitHub (default)
 ```
 
 Por debajo:
@@ -59,13 +91,13 @@ Por debajo:
                   │
         ┌─────────┴─────────┐
         │                   │
-    Filesystem           Database
+    Filesystem           GitHub
         │                   │
-      Markdown          PostgreSQL
+      Markdown          Markdown
         │                   │
         └──────────┬──────────┘
                    │
-            Content Tree
+             Content Tree
 ```
 
 ## Conceptos del dominio
@@ -101,7 +133,7 @@ Por debajo:
 - `AstroCollectionRepository` ya no se encarga del renderizado; su responsabilidad es solo la lectura de documentos.
 - Se creó `src/core/content/astro-cache.ts` para compartir las entradas crudas de Astro entre repository y renderer sin acoplarlos.
 - `src/pages/[...slug].astro` crea `repository` y `renderer` como objetos separados.
-- El build genera 52 páginas correctamente.
+- El build genera 37 páginas en modo estático (solo contenido local).
 
 ### Fase 3 completada
 
@@ -109,6 +141,12 @@ Por debajo:
 - Se creó `src/core/content/adapters/database-repository.ts` como stub del adapter de base de datos.
 - Se documentó la arquitectura de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 - El build sigue usando `AstroCollectionRepository`; los nuevos adapters demuestran que el dominio es storage-agnostic.
+
+### Configuración de modos completada
+
+- `astro.config.mjs` ahora usa `OUTPUT_MODE` para elegir entre `output: "static"` y `output: "server"` + `@astrojs/node`.
+- `src/content.config.ts` ahora carga solo archivos locales en modo estático y solo archivos de GitHub en modo dinámico.
+- El build pasa en ambos modos.
 
 ## Escalabilidad y SSR
 
@@ -147,17 +185,28 @@ En SSR, `DatabaseRepository` puede implementar consultas puntuales. `NavigationB
 
 ### Regla
 
-No optimizar prematuramente. Hoy el árbol completo es la solución pragmática. Cuando el SaaS lo requiera, se añadirá una estrategia de rama parcial sobre la misma arquitectura.
+No optimizar prematuramente. Hoy el árbol completo es la solución pragmática. Cuando el modo dinámico escale, se añadirá una estrategia de rama parcial sobre la misma arquitectura.
+
+## Editor integrado
+
+El editor integrado es una funcionalidad pendiente de diseño. Su objetivo es permitir editar documentos Markdown desde el navegador durante el modo desarrollo, sin necesidad de un editor de código.
+
+Preguntas abiertas:
+
+- ¿Ruta separada (`/editor`, `/admin`) o panel embebido en el sitio?
+- ¿Edición solo de frontmatter + body, o también CRUD completo (crear, mover, eliminar documentos)?
+- ¿Se activa solo en desarrollo o con una variable explícita?
 
 ## Próximos pasos documentados
 
-1. **Parches dinámicos**: implementar API REST + overrides en runtime cuando haya un caso de uso real de edición rápida.
-2. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
+1. **Editor integrado**: diseñar e implementar la experiencia de edición de Markdown en modo desarrollo.
+2. **Edición en modo dinámico**: definir el flujo de escritura de vuelta a GitHub (u otra fuente externa) en producción.
+3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
 
 ## Lo que NO se hará ahora
 
 - No se implementa un adapter de base de datos real.
 - No se cambia el flujo de build estático.
-- No se añade SSR ni API REST todavía.
+- No se añaden overrides ni manifest.
 
 Todo eso se documenta y se deja listo para continuar sin reescribir el core.

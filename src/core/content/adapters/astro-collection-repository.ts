@@ -5,7 +5,7 @@ import type { ContentRepository, Document, DocumentMetadata } from "../types";
 function getParentId(id: string): string | null {
   if (id === "index") return null;
   const lastSlash = id.lastIndexOf("/");
-  return lastSlash === -1 ? "" : id.slice(0, lastSlash);
+  return lastSlash === -1 ? "index" : id.slice(0, lastSlash);
 }
 
 function toDocument(entry: CollectionEntry<"content">): Document {

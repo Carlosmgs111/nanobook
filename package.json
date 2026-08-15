@@ -28,6 +28,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@astrojs/node": "^11.1.2",
     "@types/node": "^26.2.0",
     "@types/picomatch": "^4.0.3",
     "@types/unist": "^3.0.3"
