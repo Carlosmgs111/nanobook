@@ -27,6 +27,7 @@ export interface Document {
   description: string;
   content: string;
   metadata: DocumentMetadata;
+  rawFrontmatter: string;
 }
 
 /**

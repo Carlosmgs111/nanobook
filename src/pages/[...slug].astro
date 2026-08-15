@@ -63,6 +63,7 @@ const { headings } = parseDocument({ body: entry.content });
     ? { id: parentNode.id, data: { title: parentNode.title } }
     : null}
   headings={headings}
+  editHref={entry.metadata.index ? undefined : `/${entry.slug}/edit`}
 >
   {
     entry.metadata.index ? (

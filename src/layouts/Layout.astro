@@ -36,6 +36,9 @@ interface Props {
   sidebarEntries?: NavigationNode[];
   parentEntry?: ParentEntry | null;
   headings?: Heading[];
+  hideToc?: boolean;
+  editHref?: string;
+  viewHref?: string;
 }
 
 const {
@@ -46,6 +49,9 @@ const {
   sidebarEntries,
   parentEntry,
   headings,
+  hideToc = false,
+  editHref,
+  viewHref,
 } = Astro.props;
 ---
 
@@ -108,6 +114,26 @@ const {
           <Breadcrumb crumbs={breadcrumbs} />
         </div>
         <div class="flex flex-shrink-0 items-center gap-2">
+          {
+            editHref && (
+              <a
+                href={editHref}
+                class="inline-flex items-center justify-center rounded-md border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+              >
+                Editar
+              </a>
+            )
+          }
+          {
+            viewHref && (
+              <a
+                href={viewHref}
+                class="inline-flex items-center justify-center rounded-md border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+              >
+                Ver
+              </a>
+            )
+          }
           <ContentWidthToggle />
           <ThemeToggle />
         </div>
@@ -148,14 +174,16 @@ const {
       data-content-mode="constrained"
     >
       <SidebarNav entries={sidebarEntries} parentEntry={parentEntry} />
-      <main class="border-x border-[var(--grid-line)] md:px-6 flex-1 min-w-0 overflow-x-hidden md:overflow-x-visible">
+      <main
+        class="border-x border-[var(--grid-line)] md:px-6 flex-1 min-w-0 overflow-x-hidden md:overflow-x-visible"
+      >
         <div class="glass-panel corner-plus">
           <div class="prose max-w-none">
             <slot />
           </div>
         </div>
       </main>
-      <TableOfContents headings={headings} />
+      <TableOfContents headings={headings} hide={hideToc} />
     </div>
 
     <!-- Footer -->

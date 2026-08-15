@@ -51,13 +51,15 @@ import MinimizeSVG from "../icons/minimize.svg";
 </script>
 
 <script type="module">
+  import { id } from "zod/locales";
+
   (function () {
     const button = document.getElementById("content-width-toggle");
     const wrapper = document.getElementById("content-wrapper");
     const sidebar = document.getElementById("sidebar");
     const tocRoot = document.getElementById("toc-root");
 
-    if (!button || !wrapper || !sidebar || !tocRoot) return;
+    if (!button || !wrapper || !sidebar) return;
 
     function isUserEvent(event) {
       return !event.detail || event.detail.source !== "content-width";
@@ -79,21 +81,22 @@ import MinimizeSVG from "../icons/minimize.svg";
       }
     });
 
-    tocRoot.addEventListener("toc:mode", function (event) {
-      if (!isUserEvent(event)) return;
-      if (wrapper.dataset.contentMode !== "constrained") return;
-      let sidebarMode = "collapsed";
-      if (event.detail.mode === "standard") {
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem("sidebar-mode", sidebarMode);
+    if (tocRoot)
+      tocRoot.addEventListener("toc:mode", function (event) {
+        if (!isUserEvent(event)) return;
+        if (wrapper.dataset.contentMode !== "constrained") return;
+        let sidebarMode = "collapsed";
+        if (event.detail.mode === "standard") {
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("sidebar-mode", sidebarMode);
+          }
+          sidebar.dispatchEvent(
+            new CustomEvent("sidebar:mode", {
+              detail: { mode: sidebarMode, source: "content-width" },
+            })
+          );
         }
-        sidebar.dispatchEvent(
-          new CustomEvent("sidebar:mode", {
-            detail: { mode: sidebarMode, source: "content-width" },
-          })
-        );
-      }
-    });
+      });
 
     const saved =
       typeof localStorage !== "undefined"
@@ -120,11 +123,11 @@ import MinimizeSVG from "../icons/minimize.svg";
       setContentMode(wrapper, button, next);
       if (next === "full") {
         dispatchMode(sidebar, "sidebar:mode", "expanded");
-        dispatchMode(tocRoot, "toc:mode", "standard");
+        if (tocRoot) dispatchMode(tocRoot, "toc:mode", "standard");
       }
       if (next === "constrained") {
         dispatchMode(sidebar, "sidebar:mode", "collapsed");
-        dispatchMode(tocRoot, "toc:mode", "standard");
+        if (tocRoot) dispatchMode(tocRoot, "toc:mode", "standard");
       }
     });
 

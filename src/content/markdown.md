@@ -1,13 +1,13 @@
 ---
-title: "Guia markdown"
-description: "Guia para aprender markdown."
-date: 2026-07-30
-author: "Astro"
+title: Guia markdown
+description: Guia para aprender markdown.
+date: 2026-07-30T00:00:00.000Z
+author: Astro
 tags: []
 draft: false
 index: false
+position: 0
 ---
-
 
 # Markmap para modelar tus Mindmaps
 

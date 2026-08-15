@@ -46,18 +46,27 @@ const { entries } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    width: 100%;
+    flex: 1 1 0%;
+    min-height: 0;
   }
 
-  :global(.tooltip-container) {
-    padding: 0.5rem;
+  :global(.sidebar-root[data-sidebar-mode="collapsed"]) .sidebar-list {
+    width: calc(100% + 20rem);
+    pointer-events: none;
+    padding: 0.5rem 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sidebar-list::-webkit-scrollbar {
+    display: none;
   }
 
   .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    border-left: 2px solid transparent;
     font-size: 0.875rem;
     line-height: 1.25rem;
     width: 100%;
@@ -67,23 +76,28 @@ const { entries } = Astro.props;
     z-index: 10;
   }
 
-  .sidebar-link:hover {
+  .sidebar-link:hover .sidebar-icon,
+  .sidebar-link:hover .sidebar-text {
     border-color: var(--grid-line-strong);
     background: rgba(255, 255, 255, 0.05);
     color: var(--text);
   }
 
-  .sidebar-link[aria-current="page"] {
+  .sidebar-link[aria-current="page"] .sidebar-icon,
+  .sidebar-link[aria-current="page"] .sidebar-text {
     border-color: var(--accent);
     background: rgba(255, 255, 255, 0.05);
     color: var(--text);
   }
 
   .sidebar-icon {
+    border-left: 2px solid transparent;
     display: flex;
-    width: 1.25rem;
+    width: 2.5rem;
     flex-shrink: 0;
     justify-content: center;
+    padding: 0.5rem;
+    pointer-events: all;
   }
 
   .sidebar-text {
@@ -93,6 +107,9 @@ const { entries } = Astro.props;
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
+    padding: 0.5rem;
+    max-width: 18rem;
+    pointer-events: all;
   }
 
   .sidebar-empty {

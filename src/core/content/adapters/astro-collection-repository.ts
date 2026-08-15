@@ -1,6 +1,7 @@
 import type { CollectionEntry } from "astro:content";
 import { getAstroEntries } from "../astro-cache";
 import type { ContentRepository, Document, DocumentMetadata } from "../types";
+import { stringify } from "yaml";
 
 function getParentId(id: string): string | null {
   if (id === "index") return null;
@@ -20,6 +21,7 @@ function toDocument(entry: CollectionEntry<"content">): Document {
     description: data.description,
     content: entry.body ?? "",
     metadata: data,
+    rawFrontmatter: `---\n${stringify(entry.data)}---\n\n`,
   };
 }
 

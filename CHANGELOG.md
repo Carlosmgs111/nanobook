@@ -8,6 +8,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Editor integrado por documento: vista de edición en `/{slug}/edit` usando CodeMirror 6.
+- `src/components/DocumentEditor/` con componente Astro y módulo de setup de CodeMirror, diseñado para permitir cambiar de editor en el futuro.
+- `src/lib/editor/document.ts` para leer y escribir archivos Markdown de `src/content/`.
+- `src/lib/editor/vite-plugin.ts` para exponer endpoints de edición solo en el servidor de desarrollo.
+- Botón "Editar" en el header de páginas de documento y botón "Ver" en la vista de edición.
+- Prop `hideToc` en `Layout.astro` para ocultar el TOC en la vista de edición.
 - `parseDocument(entry)` en `src/lib/document.ts` para extraer headings del contenido sin depender del loader ni de la extensión del archivo.
 - Loader `github` en `src/loaders/github/` para cargar contenido Markdown desde un repositorio de GitHub.
 - Loader `mixed` en `src/loaders/mixed.ts` para combinar múltiples loaders en una sola colección.

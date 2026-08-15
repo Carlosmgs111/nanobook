@@ -41,9 +41,7 @@ const display = Boolean(entries.length);
   data-display={display}
 >
   <SidebarHeader toggleId={toggleId} parentEntry={parentEntry} />
-  <div class="sidebar-scroll">
-    <SidebarList entries={sortedEntries} />
-  </div>
+  <SidebarList entries={sortedEntries} />
 </aside>
 
 <style>
@@ -139,7 +137,8 @@ const display = Boolean(entries.length);
       -ms-overflow-style: none;
     }
 
-    .sidebar-root[data-sidebar-mode="collapsed"] .sidebar-scroll::-webkit-scrollbar {
+    .sidebar-root[data-sidebar-mode="collapsed"]
+      .sidebar-scroll::-webkit-scrollbar {
       display: none;
     }
   }

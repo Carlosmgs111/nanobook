@@ -148,6 +148,14 @@ Por debajo:
 - `src/content.config.ts` ahora carga solo archivos locales en modo estático y solo archivos de GitHub en modo dinámico.
 - El build pasa en ambos modos.
 
+### Editor integrado por documento
+
+- Cada documento tiene una vista alterna de edición en `/{slug}/edit` (por ejemplo `/markdown/edit`).
+- Se añade un botón "Editar" en el header de las páginas de documento; en la vista de edición se muestra un botón "Ver" para volver.
+- La vista de edición reutiliza el layout principal pero oculta el TOC (`hideToc`).
+- El editor usa CodeMirror 6 (`codemirror`, `@codemirror/lang-markdown`) encapsulado en `src/components/DocumentEditor/` para permitir cambiar de editor más adelante.
+- Lectura y escritura de archivos se hace mediante un plugin de Vite (`src/lib/editor/vite-plugin.ts`) que expone endpoints solo en desarrollo.
+
 ## Escalabilidad y SSR
 
 ### Árbol completo vs. rama parcial
@@ -189,17 +197,25 @@ No optimizar prematuramente. Hoy el árbol completo es la solución pragmática.
 
 ## Editor integrado
 
-El editor integrado es una funcionalidad pendiente de diseño. Su objetivo es permitir editar documentos Markdown desde el navegador durante el modo desarrollo, sin necesidad de un editor de código.
+El editor integrado permite editar documentos Markdown desde el navegador durante el modo desarrollo, sin necesidad de un editor de código.
+
+- Cada documento tiene su propia URL de edición: `/{slug}/edit`.
+- La vista de edición reutiliza el mismo layout que la vista de lectura, pero oculta el TOC y muestra el editor en el área de contenido.
+- Botón "Editar" en el header de documentos; botón "Ver" en la vista de edición.
+- Editor actual: CodeMirror 6, encapsulado en `src/components/DocumentEditor/` para poder cambiarlo sin tocar las páginas.
+- Endpoints: plugin de Vite con `GET /api/editor/document?id=...` y `POST /api/editor/document`.
+- Solo edita documentos existentes; índices se excluyen de la vista de edición en esta primera versión.
+- Los ids se validan para evitar path traversal y se crean directorios padre automáticamente si se guarda en una ruta nueva.
 
 Preguntas abiertas:
 
-- ¿Ruta separada (`/editor`, `/admin`) o panel embebido en el sitio?
-- ¿Edición solo de frontmatter + body, o también CRUD completo (crear, mover, eliminar documentos)?
-- ¿Se activa solo en desarrollo o con una variable explícita?
+- ¿Edición de índices con una experiencia diferente?
+- ¿CRUD completo (crear, renombrar, eliminar) o solo edición de contenido existente?
+- ¿Activación explícita mediante variable de entorno o siempre en desarrollo?
 
 ## Próximos pasos documentados
 
-1. **Editor integrado**: diseñar e implementar la experiencia de edición de Markdown en modo desarrollo.
+1. **Editor integrado**: mejorar UX, añadir atajos de teclado y decidir si se amplía a CRUD completo.
 2. **Edición en modo dinámico**: definir el flujo de escritura de vuelta a GitHub (u otra fuente externa) en producción.
 3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
 

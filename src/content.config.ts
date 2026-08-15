@@ -1,7 +1,6 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 import { github } from "./loaders/github";
-import { mixed } from "./loaders/mixed";
 
 const outputMode = process.env.OUTPUT_MODE || "static";
 const isDynamicMode = outputMode === "dynamic";
