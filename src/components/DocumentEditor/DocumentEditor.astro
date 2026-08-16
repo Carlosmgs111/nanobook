@@ -1,15 +1,23 @@
 ---
+import type { Document } from "../../core/content/types";
+
 interface Props {
-  documentId: string;
-  initialContent: string;
+  document: Document;
 }
 
-const { documentId, initialContent } = Astro.props;
+const { document } = Astro.props;
+const initialContent = document.rawFrontmatter + document.content;
 ---
 
-<div class="editor-wrapper" data-document-id={documentId} data-initial-content={initialContent}>
+<div
+  class="editor-wrapper"
+  data-document={JSON.stringify(document)}
+  data-document-id={document.id}
+  data-initial-content={initialContent}
+>
   <div class="editor-toolbar">
-    <button type="button" class="save-button" data-action="save">Guardar</button>
+    <button type="button" class="save-button" data-action="save">Guardar</button
+    >
     <span class="status" role="status" aria-live="polite"></span>
   </div>
   <div class="editor-container" data-editor-container></div>
@@ -17,14 +25,23 @@ const { documentId, initialContent } = Astro.props;
 
 <script>
   import { createCodeMirrorEditor } from "./code-mirror-editor";
+  import { parse } from "yaml";
 
   const wrapper = document.querySelector<HTMLElement>(".editor-wrapper");
   if (!wrapper) throw new Error("Editor wrapper not found");
 
   const documentId = wrapper.dataset.documentId;
   const initialContent = wrapper.dataset.initialContent;
-  const container = wrapper.querySelector<HTMLElement>("[data-editor-container]");
-  const saveButton = wrapper.querySelector<HTMLButtonElement>("[data-action='save']");
+  const container = wrapper.querySelector<HTMLElement>(
+    "[data-editor-container]"
+  );
+  container?.addEventListener("change", (event) => {
+    console.log(event);
+  });
+
+  const saveButton = wrapper.querySelector<HTMLButtonElement>(
+    "[data-action='save']"
+  );
   const status = wrapper.querySelector<HTMLElement>(".status");
 
   if (!documentId || initialContent === undefined || !container) {
@@ -46,12 +63,28 @@ const { documentId, initialContent } = Astro.props;
     }, 4000);
   }
 
+  function updateDocument(oldDocument: Document) {
+    const rawFrontmatter = editor
+      .getContent()
+      .match(/^---[\s\S]*?---\n?/)?.[0]!;
+    const data = parse(rawFrontmatter.replaceAll("---", "")!);
+    const content = editor.getContent().replace(/^---[\s\S]*?---\n?/g, "");
+    const document = {
+      ...oldDocument,
+      metadata: data,
+      content,
+      rawFrontmatter,
+    };
+    return document;
+  }
+
   saveButton?.addEventListener("click", async () => {
     try {
-      const response = await fetch("/api/editor/document", {
-        method: "POST",
+      const document = updateDocument(JSON.parse(wrapper.dataset.document!));
+      const response = await fetch("/api/" + documentId, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: documentId, content: editor.getContent() }),
+        body: JSON.stringify(document),
       });
 
       if (!response.ok) {
@@ -61,7 +94,11 @@ const { documentId, initialContent } = Astro.props;
 
       showStatus("Guardado correctamente");
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : "Error al guardar", true);
+      console.error(error);
+      showStatus(
+        error instanceof Error ? error.message : "Error al guardar",
+        true
+      );
     }
   });
 

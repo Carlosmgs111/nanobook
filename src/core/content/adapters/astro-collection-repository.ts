@@ -2,6 +2,26 @@ import type { CollectionEntry } from "astro:content";
 import { getAstroEntries } from "../astro-cache";
 import type { ContentRepository, Document, DocumentMetadata } from "../types";
 import { stringify } from "yaml";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join, resolve, sep } from "node:path";
+
+const CONTENT_DIR = "./src/content";
+const ALLOWED_ID_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
+
+function idToFilePath(id: string): string {
+  if (!ALLOWED_ID_PATTERN.test(id)) {
+    throw new Error(`Id de documento inválido: ${id}`);
+  }
+
+  const filePath = resolve(join(CONTENT_DIR, `${id}.md`));
+  const contentRoot = resolve(CONTENT_DIR);
+
+  if (!filePath.startsWith(contentRoot + sep) && filePath !== contentRoot) {
+    throw new Error(`Id de documento fuera del directorio de contenido: ${id}`);
+  }
+
+  return filePath;
+}
 
 function getParentId(id: string): string | null {
   if (id === "index") return null;
@@ -25,26 +45,8 @@ function toDocument(entry: CollectionEntry<"content">): Document {
   };
 }
 
-/**
- * Cache a nivel de módulo de documentos del dominio. Astro carga este
- * módulo una vez por proceso de build, así que todas las instancias de
- * AstroCollectionRepository comparten la misma lista. Esto evita
- * reconstruir los documentos y el árbol de navegación para cada página
- * generada.
- */
 let cachedDocuments: Document[] | null = null;
 
-/**
- * Adapter que expone la colección de Astro como un ContentRepository.
- *
- * Es la implementación actual y la más simple: lee todo en build time
- * mediante las entradas de Astro. En el futuro se pueden añadir
- * FileSystemRepository, DatabaseRepository, etc., sin tocar el resto
- * del dominio.
- *
- * Responsabilidad única: gestionar la persistencia/lectura de documentos.
- * El renderizado es responsabilidad de DocumentRenderer.
- */
 export class AstroCollectionRepository implements ContentRepository {
   async list(): Promise<Document[]> {
     if (cachedDocuments) return cachedDocuments;
@@ -66,6 +68,16 @@ export class AstroCollectionRepository implements ContentRepository {
   async listChildren(parentId: string | null): Promise<Document[]> {
     const entries = await this.list();
     return entries.filter((entry) => entry.parentId === parentId);
+  }
+
+  async save(document: Document): Promise<void> {
+    const filePath = idToFilePath(document.id);
+    await mkdir(dirname(filePath), { recursive: true });
+    await writeFile(
+      filePath,
+      document.rawFrontmatter + document.content,
+      "utf-8"
+    );
   }
 }
 

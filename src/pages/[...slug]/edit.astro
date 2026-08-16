@@ -29,8 +29,6 @@ const entry = await repository.get(documentId);
 if (!entry) {
   throw new Error(`Document not found: ${documentId}`);
 }
-
-const rawContent = entry.rawFrontmatter + entry.content;
 const allDocuments = await repository.list();
 const { nodeMap } = buildNavigationTree(allDocuments);
 
@@ -60,5 +58,5 @@ const parentNode = getParentEntry(nodeMap, entry.id);
     </h1>
   </div>
 
-  <DocumentEditor documentId={entry.id} initialContent={rawContent} />
+  <DocumentEditor document={entry} />
 </Layout>

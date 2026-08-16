@@ -25,11 +25,6 @@ export interface NavigationTree {
   nodeMap: Map<string, NavigationNode>;
 }
 
-/**
- * Cache a nivel de módulo para el árbol de navegación.
- * Como los Document[] suelen venir del mismo repository.list(),
- * un WeakMap evita reconstruir el árbol para cada página generada.
- */
 const treeCache = new WeakMap<Document[], NavigationTree>();
 
 function toNavigationNode(document: Document): NavigationNode {
@@ -53,15 +48,6 @@ function sortNodes(nodes: NavigationNode[]): NavigationNode[] {
   });
 }
 
-/**
- * Construye el árbol de navegación completo a partir de todos los documentos.
- *
- * Devuelve las raíces del árbol y un mapa id → nodo para consultas directas.
- * A partir de esta estructura se derivan breadcrumb, sidebar e índices.
- *
- * El resultado se cachea por el array de documentos para no reconstruirlo
- * en cada página durante el build.
- */
 export function buildNavigationTree(documents: Document[]): NavigationTree {
   const cached = treeCache.get(documents);
 
@@ -108,15 +94,6 @@ function getFolderPath(entryId: string): string {
   return entryId === "index" ? "" : entryId;
 }
 
-function getParentPath(entryId: string): string | null {
-  if (entryId === "index") return null;
-  const lastSlash = entryId.lastIndexOf("/");
-  return lastSlash === -1 ? "" : entryId.slice(0, lastSlash);
-}
-
-/**
- * Devuelve el nodo padre de un documento dado.
- */
 export function getParentEntry(
   nodeMap: Map<string, NavigationNode>,
   entryId: string,
@@ -126,9 +103,6 @@ export function getParentEntry(
   return nodeMap.get(node.parentId) ?? null;
 }
 
-/**
- * Devuelve los nodos hijos directos de una carpeta.
- */
 export function getImmediateChildren(
   nodeMap: Map<string, NavigationNode>,
   folderPath: string,
@@ -140,9 +114,6 @@ export function getImmediateChildren(
   return folder.children.filter((child) => child.id !== excludeId);
 }
 
-/**
- * Construye el breadcrumb de un documento usando el árbol de navegación.
- */
 export function getBreadcrumbs(
   nodeMap: Map<string, NavigationNode>,
   entryId: string,
@@ -179,10 +150,6 @@ export function getBreadcrumbs(
   return crumbs;
 }
 
-/**
- * Devuelve las entradas del sidebar para un documento dado.
- * Son los hermanos del documento dentro de su carpeta padre.
- */
 export function getSidebarEntries(
   nodeMap: Map<string, NavigationNode>,
   entryId: string,

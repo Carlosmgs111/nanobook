@@ -2,13 +2,6 @@ import { render } from "astro:content";
 import { getAstroEntries } from "../../content/astro-cache";
 import type { DocumentRenderer, RenderedDocument } from "../types";
 
-/**
- * Renderer de Markdown usando Astro.
- *
- * Responsabilidad única: convertir un documento del dominio en HTML
- * renderizado. Depende de las entradas crudas de Astro, pero no del
- * ContentRepository.
- */
 export class AstroMarkdownRenderer implements DocumentRenderer {
   async render(document: {
     id: string;

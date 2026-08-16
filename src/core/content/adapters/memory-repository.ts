@@ -27,4 +27,15 @@ export class MemoryRepository implements ContentRepository {
         document.parentId === parentId && !document.metadata.draft,
     );
   }
+  async save(document: Document): Promise<void> {
+    const { id } = document;
+    const index = this.documents.findIndex(
+      (doc) => doc.id === id,
+    );
+    if (index === -1) {
+      this.documents.push(document);
+    } else {
+      this.documents[index] = document;
+    }
+  }
 }

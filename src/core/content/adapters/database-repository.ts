@@ -30,6 +30,10 @@ export class DatabaseRepository implements ContentRepository {
     );
   }
 
+  async save(document: Document): Promise<void> {
+    throw new Error(`DatabaseRepository.save(${document.id}, ${document.content}) not implemented yet`);
+  }
+
   // Métodos adicionales que un DatabaseRepository real necesitaría:
   // async getAncestors(id: string): Promise<Document[]> { ... }
   // async getSiblings(id: string): Promise<Document[]> { ... }
