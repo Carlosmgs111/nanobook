@@ -24,7 +24,9 @@ const initialContent = document.rawFrontmatter + document.content;
 </div>
 
 <script>
+  import { $stagedDocument } from "../../core/content/stores/staged";
   import { createCodeMirrorEditor } from "./code-mirror-editor";
+  import type { Document } from "../../core/content/types";
   import { parse } from "yaml";
 
   const wrapper = document.querySelector<HTMLElement>(".editor-wrapper");
@@ -35,9 +37,6 @@ const initialContent = document.rawFrontmatter + document.content;
   const container = wrapper.querySelector<HTMLElement>(
     "[data-editor-container]"
   );
-  container?.addEventListener("change", (event) => {
-    console.log(event);
-  });
 
   const saveButton = wrapper.querySelector<HTMLButtonElement>(
     "[data-action='save']"
@@ -48,22 +47,15 @@ const initialContent = document.rawFrontmatter + document.content;
     throw new Error("Missing editor data attributes");
   }
 
-  const editor = createCodeMirrorEditor({
-    container,
-    initialContent,
-  });
-
-  function showStatus(message: string, isError = false) {
-    if (!status) return;
-    status.textContent = message;
-    status.className = `status ${isError ? "status-error" : "status-success"}`;
-    window.setTimeout(() => {
-      status.textContent = "";
-      status.className = "status";
-    }, 4000);
+  function onChange() {
+    if (!wrapper) return;
+    const stagedDocument = updateDocument(
+      JSON.parse(wrapper.dataset.document!)
+    );
+    $stagedDocument.set(stagedDocument);
   }
 
-  function updateDocument(oldDocument: Document) {
+  function updateDocument(oldDocument: Document): Document {
     const rawFrontmatter = editor
       .getContent()
       .match(/^---[\s\S]*?---\n?/)?.[0]!;
@@ -77,6 +69,24 @@ const initialContent = document.rawFrontmatter + document.content;
     };
     return document;
   }
+
+  const editor = createCodeMirrorEditor({
+    container,
+    initialContent,
+    onChange,
+  });
+
+  function showStatus(message: string, isError = false) {
+    if (!status) return;
+    status.textContent = message;
+    status.className = `status ${isError ? "status-error" : "status-success"}`;
+    window.setTimeout(() => {
+      status.textContent = "";
+      status.className = "status";
+    }, 4000);
+  }
+
+  $stagedDocument.set(updateDocument(JSON.parse(wrapper.dataset.document!)));
 
   saveButton?.addEventListener("click", async () => {
     try {

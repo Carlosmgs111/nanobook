@@ -1,0 +1,35 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { AstroMarkdownRenderer } from "../../core/rendering/adapters/astro-markdown";
+import { $stagedDocument } from "../../core/content/stores/staged";
+import { AstroCollectionRepository } from "../../core/content/adapters/astro-collection-repository";
+
+export const prerender = true
+// export async function getStaticPaths() {
+//   const repo = new AstroCollectionRepository();
+//   const documents = await repo.list();
+//   return documents
+//     .filter((document) => !document.metadata.index)
+//     .map((document) => ({
+//       params: { slug: document.slug || undefined },
+//       props: { documentId: document.id },
+//     }));
+// }
+
+const stagedDocument = $stagedDocument.get()!;
+console.log(stagedDocument);
+// if (!stagedDocument) throw new Error(`Staged Document not found`);
+const renderer = new AstroMarkdownRenderer();
+const { Content } = await renderer.render(stagedDocument);
+---
+
+<Layout>
+  <!-- <Content /> -->
+</Layout>
+
+<script type="module">
+    import { $stagedDocument } from "../../core/content/stores/staged";
+    document.addEventListener("astro:page-load", () => {
+        console.log($stagedDocument.get());
+    })
+</script>

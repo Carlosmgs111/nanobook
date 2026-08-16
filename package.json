@@ -24,6 +24,7 @@
     "github-slugger": "^2.0.0",
     "hast-util-to-string": "^3.0.1",
     "mdast-util-to-string": "^4.0.0",
+    "nanostores": "^1.4.2",
     "picomatch": "^4.0.5",
     "rehype-slug": "^6.0.0",
     "remark-parse": "^11.0.0",
