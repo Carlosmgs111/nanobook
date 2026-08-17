@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import IndexList from "../components/IndexList.astro";
 import { AstroCollectionRepository } from "../core/content/adapters/astro-collection-repository";
-import { AstroMarkdownRenderer } from "../core/rendering/adapters/astro-markdown";
+import { UnifiedMarkdownRenderer } from "../core/rendering/adapters/unified-markdown";
 import {
   buildNavigationTree,
   getFolderPath,
@@ -14,7 +14,7 @@ import {
 import { parseDocument } from "../lib/document";
 
 const repository = new AstroCollectionRepository();
-const renderer = new AstroMarkdownRenderer();
+const renderer = new UnifiedMarkdownRenderer();
 
 export async function getStaticPaths() {
   const repo = new AstroCollectionRepository();
@@ -51,6 +51,7 @@ const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
 const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
 const parentNode = getParentEntry(nodeMap, entry.id);
 const { headings } = parseDocument({ body: entry.content });
+console.log(headings);
 ---
 
 <Layout
@@ -91,7 +92,7 @@ const { headings } = parseDocument({ body: entry.content });
           <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
           <span>AUTHOR: {entry.metadata.author}</span>
         </div>
-        <Content />
+        <Fragment set:html={Content} />
       </>
     )
   }

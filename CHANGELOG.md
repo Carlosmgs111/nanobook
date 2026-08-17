@@ -41,6 +41,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `src/content.config.ts` ahora usa solo `glob` en modo estático y solo `github` en modo dinámico; no se mezclan fuentes.
 
 ### Fixed
+- Renderizado de listas de tareas (checkboxes) al usar `remark`/`unified` añadiendo `remark-gfm` al pipeline.
+- TOC no resaltaba la sección visible porque los headings renderizados no tenían `id`; se añadió `rehype-slug` al pipeline.
+- Build fallaba al usar `OUTPUT_MODE`: `astro.config.mjs` ahora lee `process.env.OUTPUT_MODE` y las rutas server-only (`preview`, `api`) ajustan `prerender` según el modo.
 - Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.
 - Loader de GitHub: coerción de fechas ISO a `Date`, soporte para saltos de línea CRLF, generación de IDs alineada con la convención de Astro (`index.md`) y uso de `picomatch` para soportar archivos en la raíz del repositorio.
 

@@ -53,6 +53,8 @@ const {
   editHref,
   viewHref,
 } = Astro.props;
+
+console.log({ editHref });
 ---
 
 <!doctype html>
@@ -118,7 +120,7 @@ const {
             editHref && (
               <a
                 href={editHref}
-                class="inline-flex items-center justify-center rounded-md border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+                class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
               >
                 Editar
               </a>
@@ -128,7 +130,7 @@ const {
             viewHref && (
               <a
                 href={viewHref}
-                class="inline-flex items-center justify-center rounded-md border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+                class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
               >
                 Ver
               </a>
