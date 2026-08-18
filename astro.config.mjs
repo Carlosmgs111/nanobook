@@ -4,16 +4,14 @@ import node from "@astrojs/node";
 import tailwindcss from "@tailwindcss/vite";
 import rehypeSlug from "rehype-slug";
 
-const outputMode = process.env.OUTPUT_MODE || "static";
-const isDynamicMode = outputMode === "dynamic";
-
 export default defineConfig({
-  output: isDynamicMode ? "server" : "static",
-  adapter: isDynamicMode ? node({ mode: "standalone" }) : undefined,
+  output: "server",
+  adapter: node({
+    mode: "standalone",
+  }),
   vite: {
     plugins: [tailwindcss()],
     define: {
-      "import.meta.env.OUTPUT_MODE": JSON.stringify(outputMode),
       "process.env": {},
       "process.browser": true,
     },
@@ -21,4 +19,7 @@ export default defineConfig({
   markdown: {
     rehypePlugins: [rehypeSlug],
   },
+  server: ({ command }) => ({
+    port: command === "dev" ? 4321 : 4320,
+  }),
 });

@@ -26,16 +26,23 @@ const initialContent = document.rawFrontmatter + document.content;
 </div>
 
 <script>
-  // import { $stagedDocument } from "../../core/content/stores/staged";
   import { createCodeMirrorEditor } from "./code-mirror-editor";
   import type { Document } from "../../core/content/types";
   import { parse } from "yaml";
+  import { debounce } from "../../core/utils/debounce";
+  import { UnifiedMarkdownRenderer } from "../../core/rendering/adapters/unified-markdown";
+
+  const renderer = new UnifiedMarkdownRenderer();
 
   const wrapper = document.querySelector<HTMLElement>(".editor-wrapper");
   if (!wrapper) throw new Error("Editor wrapper not found");
 
+  const stagedDocument = JSON.parse(sessionStorage.getItem("stagedDocument")!);
+  console.log(stagedDocument);
   const documentId = wrapper.dataset.documentId;
-  const initialContent = wrapper.dataset.initialContent;
+  const initialContent = stagedDocument
+    ? stagedDocument.rawFrontmatter + stagedDocument.content
+    : wrapper.dataset.initialContent;
   const container = wrapper.querySelector<HTMLElement>(
     "[data-editor-container]"
   );
@@ -48,15 +55,18 @@ const initialContent = document.rawFrontmatter + document.content;
   if (!documentId || initialContent === undefined || !container) {
     throw new Error("Missing editor data attributes");
   }
-
-  function onChange() {
+  const debouncedOnChange = debounce(async () => {
     if (!wrapper) return;
     const stagedDocument = updateDocument(
       JSON.parse(wrapper.dataset.document!)
     );
     sessionStorage.setItem("stagedDocument", JSON.stringify(stagedDocument));
-    // $stagedDocument.set(stagedDocument);
-  }
+    const renderedDocument = await renderer.render(stagedDocument);
+    sessionStorage.setItem(
+      "renderedStagedDocument",
+      JSON.stringify(renderedDocument)
+    );
+  }, 1000);
 
   function updateDocument(oldDocument: Document): Document {
     const rawFrontmatter = editor
@@ -76,7 +86,7 @@ const initialContent = document.rawFrontmatter + document.content;
   const editor = createCodeMirrorEditor({
     container,
     initialContent,
-    onChange,
+    onChange: debouncedOnChange,
   });
 
   function showStatus(message: string, isError = false) {
@@ -89,11 +99,23 @@ const initialContent = document.rawFrontmatter + document.content;
     }, 4000);
   }
 
-  // $stagedDocument.set(updateDocument(JSON.parse(wrapper.dataset.document!)));
-  sessionStorage.setItem(
-    "stagedDocument",
-    JSON.stringify(updateDocument(JSON.parse(wrapper.dataset.document!)))
-  );
+  if (!sessionStorage.getItem("renderedStagedDocument"))
+    sessionStorage.setItem(
+      "renderedStagedDocument",
+      JSON.stringify(
+        await renderer.render(
+          updateDocument(JSON.parse(wrapper.dataset.document!))
+        )
+      )
+    );
+  if(!sessionStorage.getItem("stagedDocument")){
+    sessionStorage.setItem(
+      "stagedDocument",
+      JSON.stringify(
+        updateDocument(JSON.parse(wrapper.dataset.document!))
+      )
+    );
+  }
 
   saveButton?.addEventListener("click", async () => {
     try {

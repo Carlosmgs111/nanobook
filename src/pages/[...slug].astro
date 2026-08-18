@@ -16,6 +16,8 @@ import { parseDocument } from "../lib/document";
 const repository = new AstroCollectionRepository();
 const renderer = new UnifiedMarkdownRenderer();
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   const repo = new AstroCollectionRepository();
   const documents = await repo.list();

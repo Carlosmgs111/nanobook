@@ -1,25 +1,21 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 export const prerender = false;
-console.log(Astro.params.slug);
 const editHref = `/${Astro.params.slug}/edit`;
 ---
 
 <Layout editHref={editHref}>
-  <h1 class="font-bold border-b-2 pb-4">Preview de {Astro.params.slug}</h1>
+  <h1><mark>Preview de {Astro.params.slug}</mark></h1>
   <div id="preview-container"></div>
 </Layout>
 
 <script>
-  import { UnifiedMarkdownRenderer } from "../../core/rendering/adapters/unified-markdown";
   (async () => {
-    const stagedDocument = JSON.parse(
-      sessionStorage.getItem("stagedDocument")!
+    const renderedStagedDocument = JSON.parse(
+      sessionStorage.getItem("renderedStagedDocument")!
     );
     const container = document.getElementById("preview-container");
     if (!container) return;
-    const renderer = new UnifiedMarkdownRenderer();
-    const renderedDocument = await renderer.render(stagedDocument);
-    container.innerHTML = renderedDocument.Content;
+    container.innerHTML = renderedStagedDocument.Content;
   })();
 </script>
