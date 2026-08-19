@@ -26,124 +26,159 @@ const initialContent = document.rawFrontmatter + document.content;
 </div>
 
 <script>
-  import { createCodeMirrorEditor } from "./code-mirror-editor";
   import type { Document } from "../../core/content/types";
-  import { parse } from "yaml";
+  import {
+    createCodeMirrorEditor,
+    type CodeMirrorEditorInstance,
+  } from "./code-mirror-editor";
   import { debounce } from "../../core/utils/debounce";
-  import { UnifiedMarkdownRenderer } from "../../core/rendering/adapters/unified-markdown";
+  import { worker } from "../../workers";
+  import { parse } from "yaml";
 
-  const renderer = new UnifiedMarkdownRenderer();
+  let editor: CodeMirrorEditorInstance | null = null;
+  let statusElement: HTMLElement | null = null;
 
-  const wrapper = document.querySelector<HTMLElement>(".editor-wrapper");
-  if (!wrapper) throw new Error("Editor wrapper not found");
-
-  const stagedDocument = JSON.parse(sessionStorage.getItem("stagedDocument")!);
-  console.log(stagedDocument);
-  const documentId = wrapper.dataset.documentId;
-  const initialContent = stagedDocument
-    ? stagedDocument.rawFrontmatter + stagedDocument.content
-    : wrapper.dataset.initialContent;
-  const container = wrapper.querySelector<HTMLElement>(
-    "[data-editor-container]"
-  );
-
-  const saveButton = wrapper.querySelector<HTMLButtonElement>(
-    "[data-action='save']"
-  );
-  const status = wrapper.querySelector<HTMLElement>(".status");
-
-  if (!documentId || initialContent === undefined || !container) {
-    throw new Error("Missing editor data attributes");
+  function getWrapper() {
+    return document.querySelector<HTMLElement>(".editor-wrapper");
   }
-  const debouncedOnChange = debounce(async () => {
+
+  function getStagedDocument() {
+    const raw = sessionStorage.getItem("stagedDocument");
+    return raw ? (JSON.parse(raw) as Document) : null;
+  }
+
+  function getInitialContent(wrapper: HTMLElement) {
+    const staged = getStagedDocument();
+    return staged
+      ? staged.rawFrontmatter + staged.content
+      : wrapper.dataset.initialContent || "";
+  }
+
+  function ensureSessionState(baseDocument: Document) {
+    if (!sessionStorage.getItem("renderedStagedDocument")) {
+      updateRenderedDocument(baseDocument);
+    }
+    if (!sessionStorage.getItem("stagedDocument")) {
+      sessionStorage.setItem("stagedDocument", JSON.stringify(baseDocument));
+    }
+  }
+
+  function initEditor() {
+    const wrapper = getWrapper();
     if (!wrapper) return;
+
+    const documentId = wrapper.dataset.documentId;
+    const container = wrapper.querySelector<HTMLElement>(
+      "[data-editor-container]"
+    );
+    statusElement = wrapper.querySelector<HTMLElement>(".status");
+
+    if (!documentId || !container) {
+      throw new Error("Missing editor data attributes");
+    }
+
+    destroyEditor();
+
+    const baseDocument = JSON.parse(wrapper.dataset.document!) as Document;
+    ensureSessionState(baseDocument);
+
+    editor = createCodeMirrorEditor({
+      container,
+      initialContent: getInitialContent(wrapper),
+      onChange: debouncedOnChange,
+    });
+
+    setupSaveButton(wrapper, documentId);
+  }
+
+  function setupSaveButton(wrapper: HTMLElement, documentId: string) {
+    const saveButton = wrapper.querySelector<HTMLButtonElement>(
+      "[data-action='save']"
+    );
+    if (!saveButton) return;
+
+    const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
+    saveButton.replaceWith(cleanButton);
+
+    cleanButton.addEventListener("click", async () => {
+      try {
+        const document = updateDocument(
+          JSON.parse(wrapper.dataset.document!) as Document
+        );
+        const response = await fetch("/api/" + documentId, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(document),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Error al guardar");
+        }
+
+        showStatus("Guardado correctamente");
+      } catch (error) {
+        console.error(error);
+        showStatus(
+          error instanceof Error ? error.message : "Error al guardar",
+          true
+        );
+      }
+    });
+  }
+
+  function destroyEditor() {
+    if (editor) {
+      editor.destroy();
+      editor = null;
+    }
+  }
+
+  async function updateRenderedDocument(stagedDocument: Document) {
+    const result = await worker.render(stagedDocument);
+    console.log(result);
+    sessionStorage.setItem("renderedStagedDocument", JSON.stringify(result));
+  }
+
+  const debouncedOnChange = debounce(async () => {
+    const wrapper = getWrapper();
+    if (!wrapper || !editor) return;
     const stagedDocument = updateDocument(
-      JSON.parse(wrapper.dataset.document!)
+      JSON.parse(wrapper.dataset.document!) as Document
     );
     sessionStorage.setItem("stagedDocument", JSON.stringify(stagedDocument));
-    const renderedDocument = await renderer.render(stagedDocument);
-    sessionStorage.setItem(
-      "renderedStagedDocument",
-      JSON.stringify(renderedDocument)
-    );
+    console.log(stagedDocument);
+    updateRenderedDocument(stagedDocument);
   }, 1000);
 
   function updateDocument(oldDocument: Document): Document {
+    if (!editor) return oldDocument;
     const rawFrontmatter = editor
       .getContent()
       .match(/^---[\s\S]*?---\n?/)?.[0]!;
     const data = parse(rawFrontmatter.replaceAll("---", "")!);
     const content = editor.getContent().replace(/^---[\s\S]*?---\n?/g, "");
-    const document = {
+    return {
       ...oldDocument,
       metadata: data,
       content,
       rawFrontmatter,
     };
-    return document;
   }
 
-  const editor = createCodeMirrorEditor({
-    container,
-    initialContent,
-    onChange: debouncedOnChange,
-  });
-
   function showStatus(message: string, isError = false) {
-    if (!status) return;
-    status.textContent = message;
-    status.className = `status ${isError ? "status-error" : "status-success"}`;
+    if (!statusElement) return;
+    statusElement.textContent = message;
+    statusElement.className = `status ${isError ? "status-error" : "status-success"}`;
     window.setTimeout(() => {
-      status.textContent = "";
-      status.className = "status";
+      if (!statusElement) return;
+      statusElement.textContent = "";
+      statusElement.className = "status";
     }, 4000);
   }
 
-  if (!sessionStorage.getItem("renderedStagedDocument"))
-    sessionStorage.setItem(
-      "renderedStagedDocument",
-      JSON.stringify(
-        await renderer.render(
-          updateDocument(JSON.parse(wrapper.dataset.document!))
-        )
-      )
-    );
-  if(!sessionStorage.getItem("stagedDocument")){
-    sessionStorage.setItem(
-      "stagedDocument",
-      JSON.stringify(
-        updateDocument(JSON.parse(wrapper.dataset.document!))
-      )
-    );
-  }
-
-  saveButton?.addEventListener("click", async () => {
-    try {
-      const document = updateDocument(JSON.parse(wrapper.dataset.document!));
-      const response = await fetch("/api/" + documentId, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(document),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al guardar");
-      }
-
-      showStatus("Guardado correctamente");
-    } catch (error) {
-      console.error(error);
-      showStatus(
-        error instanceof Error ? error.message : "Error al guardar",
-        true
-      );
-    }
-  });
-
-  window.addEventListener("beforeunload", () => {
-    editor.destroy();
-  });
+  document.addEventListener("astro:page-load", initEditor);
+  document.addEventListener("astro:before-swap", destroyEditor);
 </script>
 
 <style>
