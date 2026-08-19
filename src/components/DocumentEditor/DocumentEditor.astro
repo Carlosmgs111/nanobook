@@ -138,7 +138,10 @@ const initialContent = document.rawFrontmatter + document.content;
 
   async function updateRenderedDocument(stagedDocument: Document) {
     const result = await worker.render(stagedDocument);
-    console.log(result);
+    const current = getStagedDocument();
+    if (current && JSON.stringify(current) !== JSON.stringify(stagedDocument)) {
+      return;
+    }
     sessionStorage.setItem("renderedStagedDocument", JSON.stringify(result));
     channel.postMessage("");
   }

@@ -50,6 +50,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `DocumentEditor` ahora se reinicializa correctamente al volver de la vista preview con `ClientRouter`; se destruye la instancia de CodeMirror en `astro:before-swap` y se vuelve a crear en `astro:page-load` consultando el DOM actual.
 - Vista `preview` ahora se renderiza correctamente en cada transición de `ClientRouter` (editor → preview → editor → preview), escuchando `astro:page-load` y manejando el caso de `sessionStorage` vacío.
 - `MarkdownItRenderer` ahora usa el motor de regex de JavaScript de Shiki (`createJavaScriptRegexEngine`) en lugar del motor Oniguruma/WASM, evitando errores de carga dinámica de WASM dentro del Web Worker de preview.
+- `MarkdownRenderClient` vuelve a usar IDs de petición y un `Map` de promesas pendientes, eliminando la cancelación por terminación del worker que perdía respuestas y dejaba el preview sin actualizar.
+- `DocumentEditor` descarta renders obsoletos antes de escribir `renderedStagedDocument`, evitando que un render anterior sobrescriba el preview con contenido desactualizado.
 
 ## [0.1.0] - 2026-08-09
 

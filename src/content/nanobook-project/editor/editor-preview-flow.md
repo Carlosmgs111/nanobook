@@ -88,8 +88,8 @@ El renderizado del borrador se ejecuta en un Web Worker para mantener fluida la 
 
 ### Arquitectura
 
-- `src/workers/index.ts` — `MarkdownRenderClient`, una pequeña clase que envía peticiones al worker y devuelve una promesa con el resultado.
-- `src/workers/work.ts` — El worker propiamente dicho. Recibe un `RenderRequest`, llama al renderer y responde con el `RenderedDocument`.
+- `src/workers/index.ts` — `MarkdownRenderClient`, una pequeña clase que envía peticiones numeradas al worker y devuelve una promesa por cada petición. Mantiene un `Map<id, resolve>` para poder resolver cada respuesta independientemente, incluso si llegan desordenadas.
+- `src/workers/work.ts` — El worker propiamente dicho. Recibe un `RenderRequest`, llama al renderer y responde con el `RenderedDocument` incluyendo el mismo `id`.
 - `src/core/rendering/adapters/it-mardown.ts` — Implementación basada en `markdown-it` + `@shikijs/markdown-it` + `markdown-it-anchor`. Usa el motor de regex de JavaScript de Shiki para evitar cargar WASM dentro del worker.
 - `src/core/rendering/adapters/astro-markdown.ts` — Implementación alternativa basada en `@astrojs/markdown-remark`.
 
@@ -154,6 +154,8 @@ Ambos valores se limpian al cerrar la pestaña. No son persistentes entre sesion
 - **Editor vacío al volver de preview**: el script del editor capturaba el wrapper en el scope del módulo; tras una transición de `ClientRouter` apuntaba a un nodo desconectado. Se movió la consulta del DOM a `astro:page-load` y se añadió destrucción en `astro:before-swap`.
 - **Preview vacío en la segunda visita**: el script de preview era un IIFE que solo corría una vez. Se convirtió a listener de `astro:page-load`.
 - **Doble inicialización del editor**: se eliminó la llamada inmediata a `initEditor()`; `astro:page-load` ya dispara en la carga inicial.
+- **Worker perdía respuestas al cancelar renders**: una versión intermedia cancelaba renders terminando el worker y recreándolo, lo que perdía mensajes en tránsito. Se volvió a un modelo de IDs numéricos con un `Map` de promesas pendientes, sin terminar el worker.
+- **Renders obsoletos sobreescribiendo `sessionStorage`**: si un render anterior terminaba después de uno más reciente, podía dejar el preview desactualizado. `updateRenderedDocument` ahora verifica que el `stagedDocument` de `sessionStorage` siga siendo el mismo que se renderizó antes de escribir el resultado.
 
 ## Próximos pasos
 
