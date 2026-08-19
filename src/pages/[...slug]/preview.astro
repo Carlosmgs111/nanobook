@@ -21,7 +21,6 @@ const editHref = `/${Astro.params.slug}/edit`;
     }
 
     const renderedStagedDocument = JSON.parse(raw);
-    console.log({ renderedStagedDocument });
     container.innerHTML = renderedStagedDocument.Content;
   }
 
