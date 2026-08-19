@@ -10,12 +10,20 @@ const editHref = `/${Astro.params.slug}/edit`;
 </Layout>
 
 <script>
-  (async () => {
-    const renderedStagedDocument = JSON.parse(
-      sessionStorage.getItem("renderedStagedDocument")!
-    );
+  function renderPreview() {
     const container = document.getElementById("preview-container");
     if (!container) return;
+
+    const raw = sessionStorage.getItem("renderedStagedDocument");
+    if (!raw) {
+      container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
+      return;
+    }
+
+    const renderedStagedDocument = JSON.parse(raw);
+    console.log({ renderedStagedDocument });
     container.innerHTML = renderedStagedDocument.Content;
-  })();
+  }
+
+  document.addEventListener("astro:page-load", renderPreview);
 </script>

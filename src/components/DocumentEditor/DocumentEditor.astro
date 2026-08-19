@@ -153,11 +153,10 @@ const initialContent = document.rawFrontmatter + document.content;
 
   function updateDocument(oldDocument: Document): Document {
     if (!editor) return oldDocument;
-    const rawFrontmatter = editor
-      .getContent()
-      .match(/^---[\s\S]*?---\n?/)?.[0]!;
+    const fullContent = editor.getContent();
+    const rawFrontmatter = fullContent.match(/^---[\s\S]*?---\n?/)?.[0]!;
     const data = parse(rawFrontmatter.replaceAll("---", "")!);
-    const content = editor.getContent().replace(/^---[\s\S]*?---\n?/g, "");
+    const content = fullContent.replace(/^---[\s\S]*?---\n?/g, "");
     return {
       ...oldDocument,
       metadata: data,
