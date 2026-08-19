@@ -20,46 +20,48 @@ const { toggleId } = Astro.props;
   </span>
 </button>
 
-<script define:vars={{ toggleId }}>
-  const sidebar = document.getElementById("sidebar");
-  const toggle = document.getElementById(toggleId);
+<script type="module" define:vars={{ toggleId }}>
+  document.addEventListener("astro:page-load", function () {
+    const sidebar = document.getElementById("sidebar");
+    const toggle = document.getElementById(toggleId);
 
-  function getSavedSidebarMode() {
-    if (typeof localStorage === "undefined") return "expanded";
-    const saved = localStorage.getItem("sidebar-mode");
-    return saved === "collapsed" ? "collapsed" : "expanded";
-  }
-
-  function setSidebarMode(root, button, mode) {
-    root.dataset.sidebarMode = mode;
-    button.dataset.sidebarMode = mode;
-    button.ariaPressed = String(mode === "collapsed");
-    button.ariaLabel =
-      mode === "expanded" ? "Contraer navegación" : "Expandir navegación";
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("sidebar-mode", mode);
+    function getSavedSidebarMode() {
+      if (typeof localStorage === "undefined") return "expanded";
+      const saved = localStorage.getItem("sidebar-mode");
+      return saved === "collapsed" ? "collapsed" : "expanded";
     }
-  }
 
-  function initSidebarMode(root, button) {
-    setSidebarMode(root, button, getSavedSidebarMode());
+    function setSidebarMode(root, button, mode) {
+      root.dataset.sidebarMode = mode;
+      button.dataset.sidebarMode = mode;
+      button.ariaPressed = String(mode === "collapsed");
+      button.ariaLabel =
+        mode === "expanded" ? "Contraer navegación" : "Expandir navegación";
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("sidebar-mode", mode);
+      }
+    }
 
-    button.addEventListener("click", () => {
-      const current = root.getAttribute("data-sidebar-mode") || "expanded";
-      const next = current === "expanded" ? "collapsed" : "expanded";
-      setSidebarMode(root, button, next);
-      root.dispatchEvent(
-        new CustomEvent("sidebar:mode", { detail: { mode: next } })
-      );
-    });
-    root.addEventListener("sidebar:mode", (event) => {
-      const { mode } = event.detail;
-      setSidebarMode(root, toggle, mode);
-    });
-  }
-  if (sidebar && toggle) {
-    initSidebarMode(sidebar, toggle);
-  }
+    function initSidebarMode(root, button) {
+      setSidebarMode(root, button, getSavedSidebarMode());
+
+      button.addEventListener("click", () => {
+        const current = root.getAttribute("data-sidebar-mode") || "expanded";
+        const next = current === "expanded" ? "collapsed" : "expanded";
+        setSidebarMode(root, button, next);
+        root.dispatchEvent(
+          new CustomEvent("sidebar:mode", { detail: { mode: next } })
+        );
+      });
+      root.addEventListener("sidebar:mode", (event) => {
+        const { mode } = event.detail;
+        setSidebarMode(root, toggle, mode);
+      });
+    }
+    if (sidebar && toggle) {
+      initSidebarMode(sidebar, toggle);
+    }
+  });
 </script>
 
 <style>

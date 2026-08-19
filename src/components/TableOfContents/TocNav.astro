@@ -43,10 +43,16 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
 <script type="module" define:vars={{ tocRootId, tocNavId }}>
   import { findActiveIndex } from "/src/lib/scroll-spy.ts";
 
-  (function () {
+  let abortController = null;
+
+  document.addEventListener("astro:page-load", function () {
     const root = document.getElementById(tocRootId);
     const tocNav = document.getElementById(tocNavId);
     if (!root || !tocNav) return;
+
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+    const { signal } = abortController;
 
     const tocLinks = tocNav.querySelectorAll('.toc-item a[href^="#"]');
 
@@ -112,28 +118,28 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
       }
 
       let ticking = false;
-      window.addEventListener("scroll", () => {
-        if (!ticking) {
-          window.requestAnimationFrame(() => {
-            onScroll();
-            ticking = false;
-          });
-          ticking = true;
-        }
-      });
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              onScroll();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        },
+        { signal }
+      );
 
-      window.addEventListener("resize", measure);
-      window.addEventListener("orientationchange", measure);
+      window.addEventListener("resize", measure, { signal });
+      window.addEventListener("orientationchange", measure, { signal });
 
-      if (document.readyState === "complete") {
-        measure();
-      } else {
-        window.addEventListener("load", measure);
-      }
+      measure();
     }
 
     initScrollSpy(tocLinks);
-  })();
+  });
 </script>
 
 <style>

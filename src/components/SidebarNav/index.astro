@@ -146,25 +146,41 @@ const display = Boolean(entries.length);
 
 <script is:inline>
   (function () {
-    const saved =
-      typeof localStorage !== "undefined"
-        ? localStorage.getItem("sidebar-mode")
-        : null;
-    if (saved !== "collapsed" && saved !== "expanded") return;
+    if (window.__nanobookSidebarRestored) return;
+    window.__nanobookSidebarRestored = true;
 
-    const sidebar = document.getElementById("sidebar");
-    const toggle = document.getElementById("sidebar-mode-toggle");
-    const backdrop = document.getElementById("sidebar-backdrop");
-    if (!sidebar || !toggle || !backdrop) return;
+    function restoreSidebar() {
+      const saved =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("sidebar-mode")
+          : null;
+      if (saved !== "collapsed" && saved !== "expanded") return;
 
-    sidebar.dataset.sidebarMode = saved;
-    backdrop.addEventListener("click", () => {
-      sidebar.dataset.isHidden = true;
-      backdrop.dataset.isHidden = true;
-    });
-    toggle.dataset.sidebarMode = saved;
-    toggle.ariaPressed = String(saved === "collapsed");
-    toggle.ariaLabel =
-      saved === "expanded" ? "Contraer navegación" : "Expandir navegación";
+      const sidebar = document.getElementById("sidebar");
+      const toggle = document.getElementById("sidebar-mode-toggle");
+      if (!sidebar || !toggle) return;
+
+      sidebar.dataset.sidebarMode = saved;
+      toggle.dataset.sidebarMode = saved;
+      toggle.ariaPressed = String(saved === "collapsed");
+      toggle.ariaLabel =
+        saved === "expanded" ? "Contraer navegación" : "Expandir navegación";
+    }
+
+    restoreSidebar();
+    document.addEventListener("astro:after-swap", restoreSidebar);
   })();
+</script>
+
+<script type="module">
+  document.addEventListener("astro:page-load", function () {
+    const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (!sidebar || !backdrop) return;
+
+    backdrop.addEventListener("click", () => {
+      sidebar.dataset.isHidden = "true";
+      backdrop.dataset.isHidden = "true";
+    });
+  });
 </script>

@@ -21,10 +21,16 @@ const indicatorId = `${tocRootId}-indicator`;
 </div>
 
 <script define:vars={{ indicatorId, tocRootId }} type="module">
-  (function () {
+  let abortController = null;
+
+  document.addEventListener("astro:page-load", function () {
     const tocIndicator = document.getElementById(indicatorId);
     const root = document.getElementById(tocRootId);
     if (!tocIndicator || !root) return;
+
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+    const { signal } = abortController;
 
     const tocLines = tocIndicator.querySelectorAll(".toc-indicator-line");
 
@@ -45,14 +51,10 @@ const indicatorId = `${tocRootId}-indicator`;
         positionIndicatorLines(lines, offsets);
       }
 
-      window.addEventListener("resize", measure);
-      window.addEventListener("orientationchange", measure);
+      window.addEventListener("resize", measure, { signal });
+      window.addEventListener("orientationchange", measure, { signal });
 
-      if (document.readyState === "complete") {
-        measure();
-      } else {
-        window.addEventListener("load", measure);
-      }
+      measure();
     }
 
     function updateActiveLine(activeId) {
@@ -76,7 +78,7 @@ const indicatorId = `${tocRootId}-indicator`;
     root.addEventListener("toc:active", (e) => {
       updateActiveLine(e.detail.activeId);
     });
-  })();
+  });
 </script>
 
 <style>

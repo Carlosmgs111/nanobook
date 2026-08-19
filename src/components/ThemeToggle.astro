@@ -20,23 +20,31 @@ import MoonSVG from "../icons/moon.svg";
 
 <script is:inline>
   (function () {
-    const stored =
-      typeof localStorage !== "undefined"
-        ? localStorage.getItem("theme")
-        : null;
-    const prefersLight =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-color-scheme: light)").matches;
-    const isLight = stored ? stored === "light" : prefersLight;
-    const toggle = document.getElementById("theme-toggle");
-    if (toggle) {
-      toggle.setAttribute("data-theme", isLight ? "light" : "dark");
+    if (window.__nanobookThemeToggleRestored) return;
+    window.__nanobookThemeToggleRestored = true;
+
+    function restoreThemeToggle() {
+      const stored =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("theme")
+          : null;
+      const prefersLight =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: light)").matches;
+      const isLight = stored ? stored === "light" : prefersLight;
+      const toggle = document.getElementById("theme-toggle");
+      if (toggle) {
+        toggle.setAttribute("data-theme", isLight ? "light" : "dark");
+      }
     }
+
+    restoreThemeToggle();
+    document.addEventListener("astro:after-swap", restoreThemeToggle);
   })();
 </script>
 
 <script type="module">
-  (function () {
+  document.addEventListener("astro:page-load", function () {
     const root = document.documentElement;
     const toggle = document.getElementById("theme-toggle");
     if (!toggle) return;
@@ -46,7 +54,7 @@ import MoonSVG from "../icons/moon.svg";
       localStorage.setItem("theme", isLight ? "light" : "dark");
       toggle.setAttribute("data-theme", isLight ? "light" : "dark");
     });
-  })();
+  });
 </script>
 
 <style>

@@ -46,6 +46,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Build fallaba al usar `OUTPUT_MODE`: `astro.config.mjs` ahora lee `process.env.OUTPUT_MODE` y las rutas server-only (`preview`, `api`) ajustan `prerender` según el modo.
 - Tooltips del sidebar no se mostraban al hacer hover en modo colapsado.
 - Loader de GitHub: coerción de fechas ISO a `Date`, soporte para saltos de línea CRLF, generación de IDs alineada con la convención de Astro (`index.md`) y uso de `picomatch` para soportar archivos en la raíz del repositorio.
+- Botones de toggle (ancho de contenido, tema, TOC, sidebar) y listeners globales ahora funcionan correctamente tras navegar con `ClientRouter` de Astro; se migraron a scripts tipo módulo bajo `astro:page-load` y se añadieron scripts de restauración de estado en `astro:after-swap`.
 
 ## [0.1.0] - 2026-08-09
 

@@ -38,7 +38,7 @@ const { toggleId, tocRootId } = Astro.props;
 </style>
 
 <script type="module" define:vars={{ toggleId, tocRootId }}>
-  (function () {
+  document.addEventListener("astro:page-load", function () {
     const root = document.getElementById(tocRootId);
     const toggle = document.getElementById(toggleId);
     if (!root || !toggle) return;
@@ -73,5 +73,5 @@ const { toggleId, tocRootId } = Astro.props;
         new CustomEvent("toc:mode", { detail: { mode: next } })
       );
     });
-  })();
+  });
 </script>

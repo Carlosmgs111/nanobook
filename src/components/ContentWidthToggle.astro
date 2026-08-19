@@ -30,30 +30,36 @@ import MinimizeSVG from "../icons/minimize.svg";
 
 <script is:inline>
   (function () {
-    const saved =
-      typeof localStorage !== "undefined"
-        ? localStorage.getItem("content-width-mode")
-        : null;
-    if (saved !== "full" && saved !== "constrained") return;
+    if (window.__nanobookContentWidthToggleRestored) return;
+    window.__nanobookContentWidthToggleRestored = true;
 
-    const button = document.getElementById("content-width-toggle");
-    const wrapper = document.getElementById("content-wrapper");
-    if (!button || !wrapper) return;
+    function restoreContentWidthToggle() {
+      const saved =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("content-width-mode")
+          : null;
+      if (saved !== "full" && saved !== "constrained") return;
 
-    button.setAttribute("data-content-mode", saved);
-    button.setAttribute("aria-pressed", String(saved === "full"));
-    button.setAttribute(
-      "aria-label",
-      saved === "constrained" ? "Expandir contenido" : "Restringir contenido"
-    );
-    wrapper.setAttribute("data-content-mode", saved);
+      const button = document.getElementById("content-width-toggle");
+      const wrapper = document.getElementById("content-wrapper");
+      if (!button || !wrapper) return;
+
+      button.setAttribute("data-content-mode", saved);
+      button.setAttribute("aria-pressed", String(saved === "full"));
+      button.setAttribute(
+        "aria-label",
+        saved === "constrained" ? "Expandir contenido" : "Restringir contenido"
+      );
+      wrapper.setAttribute("data-content-mode", saved);
+    }
+
+    restoreContentWidthToggle();
+    document.addEventListener("astro:after-swap", restoreContentWidthToggle);
   })();
 </script>
 
 <script type="module">
-  import { id } from "zod/locales";
-
-  (function () {
+  document.addEventListener("astro:page-load", function () {
     const button = document.getElementById("content-width-toggle");
     const wrapper = document.getElementById("content-wrapper");
     const sidebar = document.getElementById("sidebar");
@@ -146,5 +152,5 @@ import MinimizeSVG from "../icons/minimize.svg";
         new CustomEvent("content:mode", { detail: { mode } })
       );
     }
-  })();
+  });
 </script>

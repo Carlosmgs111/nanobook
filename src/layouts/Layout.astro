@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import Breadcrumb from "../components/Breadcrumb.astro";
 import ContentWidthToggle from "../components/ContentWidthToggle.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
@@ -64,17 +65,26 @@ const {
     {description && <meta name="description" content={description} />}
     <link rel="icon" href="/favicon.ico" />
     <title>{title}</title>
+    <ClientRouter />
     <script is:inline>
       (function () {
-        const stored =
-          typeof localStorage !== "undefined"
-            ? localStorage.getItem("theme")
-            : null;
-        const prefersLight =
-          typeof window !== "undefined" &&
-          window.matchMedia("(prefers-color-scheme: light)").matches;
-        const isLight = stored ? stored === "light" : prefersLight;
-        document.documentElement.classList.toggle("light", isLight);
+        if (window.__nanobookThemeRestored) return;
+        window.__nanobookThemeRestored = true;
+
+        function restoreTheme() {
+          const stored =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("theme")
+              : null;
+          const prefersLight =
+            typeof window !== "undefined" &&
+            window.matchMedia("(prefers-color-scheme: light)").matches;
+          const isLight = stored ? stored === "light" : prefersLight;
+          document.documentElement.classList.toggle("light", isLight);
+        }
+
+        restoreTheme();
+        document.addEventListener("astro:after-swap", restoreTheme);
       })();
     </script>
   </head>
@@ -142,21 +152,29 @@ const {
 
     <script is:inline>
       (function () {
-        const saved =
-          typeof localStorage !== "undefined"
-            ? localStorage.getItem("content-width-mode")
-            : null;
-        if (saved !== "full" && saved !== "constrained") return;
+        if (window.__nanobookContentWidthRestored) return;
+        window.__nanobookContentWidthRestored = true;
 
-        const headerInner = document.getElementById("header-inner");
-        if (headerInner) {
-          headerInner.setAttribute("data-content-mode", saved);
+        function restoreContentWidth() {
+          const saved =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("content-width-mode")
+              : null;
+          if (saved !== "full" && saved !== "constrained") return;
+
+          const headerInner = document.getElementById("header-inner");
+          if (headerInner) {
+            headerInner.setAttribute("data-content-mode", saved);
+          }
         }
+
+        restoreContentWidth();
+        document.addEventListener("astro:after-swap", restoreContentWidth);
       })();
     </script>
 
     <script type="module">
-      (function () {
+      document.addEventListener("astro:page-load", function () {
         const wrapper = document.getElementById("content-wrapper");
         const headerInner = document.getElementById("header-inner");
         if (!wrapper || !headerInner) return;
@@ -164,7 +182,7 @@ const {
         wrapper.addEventListener("content:mode", function (event) {
           headerInner.setAttribute("data-content-mode", event.detail.mode);
         });
-      })();
+      });
     </script>
 
     <!-- Main content -->
