@@ -71,7 +71,7 @@ worker.render(stagedDocument)
 sessionStorage.setItem("renderedStagedDocument", ...)
         │
         ▼
-Usuario navega a preview
+BroadcastChannel("rendered-document") notifica a preview
         │
         ▼
 preview.astro lee renderedStagedDocument
@@ -79,6 +79,8 @@ preview.astro lee renderedStagedDocument
         ▼
 #preview-container.innerHTML = renderedContent
 ```
+
+`BroadcastChannel` permite que la vista de preview se refresque automáticamente cuando el worker termina de renderizar, sin necesidad de que el usuario vuelva a cargar la página.
 
 ## Workers de renderizado
 
@@ -88,7 +90,7 @@ El renderizado del borrador se ejecuta en un Web Worker para mantener fluida la 
 
 - `src/workers/index.ts` — `MarkdownRenderClient`, una pequeña clase que envía peticiones al worker y devuelve una promesa con el resultado.
 - `src/workers/work.ts` — El worker propiamente dicho. Recibe un `RenderRequest`, llama al renderer y responde con el `RenderedDocument`.
-- `src/core/rendering/adapters/it-mardown.ts` — Implementación basada en `markdown-it` + `@shikijs/markdown-it` + `markdown-it-anchor`.
+- `src/core/rendering/adapters/it-mardown.ts` — Implementación basada en `markdown-it` + `@shikijs/markdown-it` + `markdown-it-anchor`. Usa el motor de regex de JavaScript de Shiki para evitar cargar WASM dentro del worker.
 - `src/core/rendering/adapters/astro-markdown.ts` — Implementación alternativa basada en `@astrojs/markdown-remark`.
 
 ### Contrato
@@ -111,6 +113,16 @@ El worker serializa el `Document` completo, pero el renderer solo necesita `id` 
 - **No bloquear el hilo principal**: el renderizado con Shiki puede ser costoso; en un worker no se congela el cursor ni el scroll del editor.
 - **Aislar el pipeline de renderizado**: permite cambiar entre `markdown-it` y `@astrojs/markdown-remark` sin tocar el editor.
 - **Reutilizar el mismo contrato**: el renderer puede usarse también en servidor si en el futuro se decide renderizar bajo demanda.
+
+### Motor de Shiki
+
+Inicialmente el renderer usaba el motor Oniguruma de Shiki, que depende de un archivo `.wasm`. Dentro de un Web Worker en Vite, la carga dinámica de ese WASM fallaba con:
+
+```
+TypeError: Failed to fetch dynamically imported module: .../wasm-XXXX.js
+```
+
+La solución fue cambiar al **motor de regex de JavaScript** (`createJavaScriptRegexEngine` de `@shikijs/engine-javascript`). Este motor no requiere WASM, es más ligero para el worker y, con `forgiving: true`, ignora patrones de grammars que no pueda emular.
 
 ## Estado en `sessionStorage`
 
