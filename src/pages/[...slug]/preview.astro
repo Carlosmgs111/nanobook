@@ -10,32 +10,20 @@ const editHref = `/${Astro.params.slug}/edit`;
 </Layout>
 
 <script>
-  import {
-    ensureRendered,
-    getRenderedDocument,
-  } from "../../services/render";
-
   const channel = new BroadcastChannel("rendered-document");
 
-  async function renderPreview() {
+  function renderPreview() {
     const container = document.getElementById("preview-container");
     if (!container) return;
 
-    const rendered = getRenderedDocument();
-    if (!rendered) {
-      container.innerHTML = "<p>Generando preview...</p>";
-      try {
-        await ensureRendered();
-        const fresh = getRenderedDocument();
-        container.innerHTML = fresh?.Content ?? "<p>No hay contenido para previsualizar.</p>";
-      } catch (error) {
-        console.error(error);
-        container.innerHTML = "<p>Error al generar el preview.</p>";
-      }
+    const raw = sessionStorage.getItem("renderedStagedDocument");
+    if (!raw) {
+      container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
       return;
     }
 
-    container.innerHTML = rendered.Content;
+    const renderedStagedDocument = JSON.parse(raw);
+    container.innerHTML = renderedStagedDocument.Content;
   }
 
   document.addEventListener("astro:page-load", renderPreview);

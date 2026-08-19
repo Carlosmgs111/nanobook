@@ -32,17 +32,21 @@ const initialContent = document.rawFrontmatter + document.content;
     type CodeMirrorEditorInstance,
   } from "./code-mirror-editor";
   import { debounce } from "../../core/utils/debounce";
-  import {
-    getStagedDocument,
-    renderStagedDocument,
-  } from "../../services/render";
+  import { worker } from "../../workers";
   import { parse } from "yaml";
 
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
 
+  const channel = new BroadcastChannel("rendered-document");
+
   function getWrapper() {
     return document.querySelector<HTMLElement>(".editor-wrapper");
+  }
+
+  function getStagedDocument() {
+    const raw = sessionStorage.getItem("stagedDocument");
+    return raw ? (JSON.parse(raw) as Document) : null;
   }
 
   function getInitialContent(wrapper: HTMLElement) {
@@ -53,6 +57,9 @@ const initialContent = document.rawFrontmatter + document.content;
   }
 
   function ensureSessionState(baseDocument: Document) {
+    if (!sessionStorage.getItem("renderedStagedDocument")) {
+      updateRenderedDocument(baseDocument);
+    }
     if (!sessionStorage.getItem("stagedDocument")) {
       sessionStorage.setItem("stagedDocument", JSON.stringify(baseDocument));
     }
@@ -130,7 +137,9 @@ const initialContent = document.rawFrontmatter + document.content;
   }
 
   async function updateRenderedDocument(stagedDocument: Document) {
-    await renderStagedDocument(stagedDocument);
+    const result = await worker.render(stagedDocument);
+    sessionStorage.setItem("renderedStagedDocument", JSON.stringify(result));
+    channel.postMessage("");
   }
 
   const debouncedOnChange = debounce(async () => {
@@ -168,20 +177,8 @@ const initialContent = document.rawFrontmatter + document.content;
     }, 4000);
   }
 
-  function prepareRenderBeforeSwap() {
-    const wrapper = getWrapper();
-    if (wrapper && editor) {
-      const stagedDocument = updateDocument(
-        JSON.parse(wrapper.dataset.document!) as Document
-      );
-      sessionStorage.setItem("stagedDocument", JSON.stringify(stagedDocument));
-      renderStagedDocument(stagedDocument).catch(console.error);
-    }
-    destroyEditor();
-  }
-
   document.addEventListener("astro:page-load", initEditor);
-  document.addEventListener("astro:before-swap", prepareRenderBeforeSwap);
+  document.addEventListener("astro:before-swap", destroyEditor);
 </script>
 
 <style>
