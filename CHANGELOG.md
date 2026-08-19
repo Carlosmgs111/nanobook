@@ -49,6 +49,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Botones de toggle (ancho de contenido, tema, TOC, sidebar) y listeners globales ahora funcionan correctamente tras navegar con `ClientRouter` de Astro; se migraron a scripts tipo módulo bajo `astro:page-load` y se añadieron scripts de restauración de estado en `astro:after-swap`.
 - `DocumentEditor` ahora se reinicializa correctamente al volver de la vista preview con `ClientRouter`; se destruye la instancia de CodeMirror en `astro:before-swap` y se vuelve a crear en `astro:page-load` consultando el DOM actual.
 - Vista `preview` ahora se renderiza correctamente en cada transición de `ClientRouter` (editor → preview → editor → preview), escuchando `astro:page-load` y manejando el caso de `sessionStorage` vacío.
+- `MarkdownItRenderer` ahora usa el motor de regex de JavaScript de Shiki (`createJavaScriptRegexEngine`) en lugar del motor Oniguruma/WASM, evitando errores de carga dinámica de WASM dentro del Web Worker de preview.
 
 ## [0.1.0] - 2026-08-09
 

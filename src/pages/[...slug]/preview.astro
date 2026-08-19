@@ -10,8 +10,10 @@ const editHref = `/${Astro.params.slug}/edit`;
 </Layout>
 
 <script>
+  const channel = new BroadcastChannel("rendered-document");
+  const container = document.getElementById("preview-container");
+
   function renderPreview() {
-    const container = document.getElementById("preview-container");
     if (!container) return;
 
     const raw = sessionStorage.getItem("renderedStagedDocument");
@@ -25,4 +27,9 @@ const editHref = `/${Astro.params.slug}/edit`;
   }
 
   document.addEventListener("astro:page-load", renderPreview);
+
+  channel.addEventListener("message", (event) => {
+    console.log(event);
+    renderPreview();
+  });
 </script>

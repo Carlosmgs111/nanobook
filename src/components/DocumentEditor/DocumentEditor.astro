@@ -38,6 +38,8 @@ const initialContent = document.rawFrontmatter + document.content;
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
 
+  const channel = new BroadcastChannel("rendered-document");
+
   function getWrapper() {
     return document.querySelector<HTMLElement>(".editor-wrapper");
   }
@@ -138,6 +140,7 @@ const initialContent = document.rawFrontmatter + document.content;
     const result = await worker.render(stagedDocument);
     console.log(result);
     sessionStorage.setItem("renderedStagedDocument", JSON.stringify(result));
+    channel.postMessage("");
   }
 
   const debouncedOnChange = debounce(async () => {
@@ -147,7 +150,6 @@ const initialContent = document.rawFrontmatter + document.content;
       JSON.parse(wrapper.dataset.document!) as Document
     );
     sessionStorage.setItem("stagedDocument", JSON.stringify(stagedDocument));
-    console.log(stagedDocument);
     updateRenderedDocument(stagedDocument);
   }, 1000);
 

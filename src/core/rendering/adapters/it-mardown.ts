@@ -1,18 +1,33 @@
 import MarkdownIt from "markdown-it";
-import Shiki from "@shikijs/markdown-it";
+import { fromHighlighter } from "@shikijs/markdown-it";
+import { createBundledHighlighter } from "@shikijs/core";
+import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
+import { bundledLanguages } from "shiki/langs";
+import { bundledThemes } from "shiki/themes";
 import anchor from "markdown-it-anchor";
 
 import type { DocumentRenderer, RenderedDocument } from "../types";
 
-export class MarkdownItRenderer implements DocumentRenderer {
-  private processor: typeof MarkdownIt | null = null;
+const createHighlighter = createBundledHighlighter({
+  langs: bundledLanguages,
+  themes: bundledThemes,
+  engine: () => createJavaScriptRegexEngine({ forgiving: true }),
+});
 
-  private async getProcessor(): Promise<typeof MarkdownIt> {
+export class MarkdownItRenderer implements DocumentRenderer {
+  private processor: MarkdownIt | null = null;
+
+  private async getProcessor(): Promise<MarkdownIt> {
     if (this.processor) {
       return this.processor;
     }
 
-    const shiki = await Shiki({
+    const highlighter = await createHighlighter({
+      themes: ["github-light", "github-dark"],
+      langs: Object.keys(bundledLanguages),
+    });
+
+    const shiki = fromHighlighter(highlighter, {
       themes: {
         light: "github-light",
         dark: "github-dark",
@@ -32,7 +47,7 @@ export class MarkdownItRenderer implements DocumentRenderer {
             .replace(/[^\p{L}\p{N}\s-]/gu, "")
             .replace(/\s+/g, "-"),
       })
-      .use(shiki) as unknown as typeof MarkdownIt;
+      .use(shiki);
 
     return this.processor;
   }
