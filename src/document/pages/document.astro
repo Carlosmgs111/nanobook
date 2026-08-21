@@ -28,7 +28,7 @@ export async function getStaticPaths() {
   }));
 }
 
-const { documentId } = Astro.props;
+const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
 const entry = await repository.get(documentId);
 
 if (!entry) {
