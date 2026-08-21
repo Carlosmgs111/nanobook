@@ -1,0 +1,30 @@
+---
+import MenuSVG from "../../../icons/menu.svg";
+const { sidebarId, backdropId, buttonId = "sidebar-open" } = Astro.props;
+---
+
+<button
+  id={buttonId}
+  type="button"
+  class="flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--bg)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:hidden"
+  aria-label="Abrir navegación"
+  aria-expanded="false"
+  aria-controls="sidebar"
+>
+  <MenuSVG />
+</button>
+
+<script define:vars={{ sidebarId, backdropId, buttonId }}>
+  (function () {
+    const sidebarOpen = document.getElementById(buttonId);
+    if (!sidebarOpen) return;
+
+    sidebarOpen.addEventListener("click", () => {
+      const sidebar = document.getElementById(sidebarId);
+      const backdrop = document.getElementById(backdropId);
+      if (!sidebar || !backdrop) return;
+      sidebar.dataset.isHidden = "false";
+      backdrop.dataset.isHidden = "false";
+    });
+  })();
+</script>

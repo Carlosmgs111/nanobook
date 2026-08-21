@@ -1,0 +1,44 @@
+<script is:inline>
+  (function () {
+    if (window.__nanobookThemeRestored) return;
+    window.__nanobookThemeRestored = true;
+
+    function restoreTheme() {
+      const stored =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("theme")
+          : null;
+      const prefersLight =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: light)").matches;
+      const isLight = stored ? stored === "light" : prefersLight;
+      document.documentElement.classList.toggle("light", isLight);
+    }
+
+    restoreTheme();
+    document.addEventListener("astro:after-swap", restoreTheme);
+  })();
+</script>
+
+<script is:inline>
+  (function () {
+    if (window.__nanobookContentWidthRestored) return;
+    window.__nanobookContentWidthRestored = true;
+
+    function restoreContentWidth() {
+      const saved =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("content-width-mode")
+          : null;
+      if (saved !== "full" && saved !== "constrained") return;
+
+      const headerInner = document.getElementById("header-inner");
+      if (headerInner) {
+        headerInner.setAttribute("data-content-mode", saved);
+      }
+    }
+
+    restoreContentWidth();
+    document.addEventListener("astro:after-swap", restoreContentWidth);
+  })();
+</script>

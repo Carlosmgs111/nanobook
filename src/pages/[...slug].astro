@@ -1,8 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import IndexList from "../components/IndexList.astro";
-import { AstroCollectionRepository } from "../core/content/adapters/astro-collection-repository";
-import { UnifiedMarkdownRenderer } from "../core/rendering/adapters/unified-markdown";
+import IndexList from "../documentIndex/components/IndexList.astro";
+import { AstroCollectionRepository } from "../document/adapters/astro-collection-repository";
+import { UnifiedMarkdownRenderer } from "../rendering/adapters/unified-markdown";
 import {
   buildNavigationTree,
   getFolderPath,
@@ -10,8 +10,8 @@ import {
   getBreadcrumbs,
   getSidebarEntries,
   getParentEntry,
-} from "../core/navigation/builder";
-import { parseDocument } from "../lib/document";
+} from "../navigation/core/builder";
+import { parseDocument } from "../document/core/document";
 
 const repository = new AstroCollectionRepository();
 const renderer = new UnifiedMarkdownRenderer();

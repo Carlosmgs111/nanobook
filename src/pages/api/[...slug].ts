@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { AstroCollectionRepository } from "../../core/content/adapters/astro-collection-repository";
-import type { Document } from "../../core/content/types";
+import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
+import type { Document } from "../../document/core/types";
 
 export const prerender = (import.meta.env as any).OUTPUT_MODE !== "dynamic";
 export const getStaticPaths = () => [];

@@ -1,0 +1,74 @@
+---
+import ChevronLeftSVG from "../../../icons/chevron-left.svg";
+import ChevronRightSVG from "../../../icons/chevron-right.svg";
+const { toggleId } = Astro.props;
+---
+
+<button
+  id={toggleId}
+  type="button"
+  class="sidebar-mode-toggle hidden md:flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+  aria-label="Contraer navegación"
+  aria-pressed="false"
+  data-sidebar-mode="expanded"
+>
+  <span class="sidebar-toggle-icon-expanded" aria-hidden="true">
+    <ChevronLeftSVG />
+  </span>
+  <span class="sidebar-toggle-icon-collapsed" aria-hidden="true">
+    <ChevronRightSVG />
+  </span>
+</button>
+
+<script type="module" define:vars={{ toggleId }}>
+  document.addEventListener("astro:page-load", function () {
+    const sidebar = document.getElementById("sidebar");
+    const toggle = document.getElementById(toggleId);
+
+    function getSavedSidebarMode() {
+      if (typeof localStorage === "undefined") return "expanded";
+      const saved = localStorage.getItem("sidebar-mode");
+      return saved === "collapsed" ? "collapsed" : "expanded";
+    }
+
+    function setSidebarMode(root, button, mode) {
+      root.dataset.sidebarMode = mode;
+      button.dataset.sidebarMode = mode;
+      button.ariaPressed = String(mode === "collapsed");
+      button.ariaLabel =
+        mode === "expanded" ? "Contraer navegación" : "Expandir navegación";
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("sidebar-mode", mode);
+      }
+    }
+
+    function initSidebarMode(root, button) {
+      setSidebarMode(root, button, getSavedSidebarMode());
+
+      button.addEventListener("click", () => {
+        const current = root.getAttribute("data-sidebar-mode") || "expanded";
+        const next = current === "expanded" ? "collapsed" : "expanded";
+        setSidebarMode(root, button, next);
+        root.dispatchEvent(
+          new CustomEvent("sidebar:mode", { detail: { mode: next } })
+        );
+      });
+      root.addEventListener("sidebar:mode", (event) => {
+        const { mode } = event.detail;
+        setSidebarMode(root, toggle, mode);
+      });
+    }
+    if (sidebar && toggle) {
+      initSidebarMode(sidebar, toggle);
+    }
+  });
+</script>
+
+<style>
+  .sidebar-mode-toggle[data-sidebar-mode="collapsed"]
+    .sidebar-toggle-icon-expanded,
+  .sidebar-mode-toggle[data-sidebar-mode="expanded"]
+    .sidebar-toggle-icon-collapsed {
+    display: none;
+  }
+</style>

@@ -1,0 +1,99 @@
+---
+import HomeSVG from "../../../icons/home.svg";
+import FolderUpSVG from "../../../icons/folder-up.svg";
+import SidebarModeToggle from "./SidebarModeToggle.astro";
+import CloseSidebar from "./CloseSidebar.astro";
+import ToolTip from "./ToolTip.astro";
+
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
+}
+
+interface Props {
+  parentEntry?: ParentEntry | null;
+  toggleId: string;
+}
+
+const { parentEntry, toggleId } = Astro.props;
+
+function parentHref(parent: ParentEntry): string {
+  return parent.id === "index" ? "/" : `/${parent.id}/`;
+}
+---
+
+<div
+  id="sidebar-header"
+  class="sidebar-header z-10 mb-6 flex items-end justify-between border-b border-[var(--grid-line-strong)] pb-2"
+>
+  {
+    parentEntry && (
+      <a
+        href={parentHref(parentEntry)}
+        class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+        data-tooltip={parentEntry.data.title}
+      >
+        <ToolTip id={"tooltip-" + parentEntry.id}>
+          <i
+            class="sidebar-icon flex w-5 flex-shrink-0 justify-center"
+            slot="icon"
+          >
+            {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
+          </i>
+          <span class="sidebar-text truncate" slot="label">
+            {parentEntry.data.title}
+          </span>
+        </ToolTip>
+      </a>
+    )
+  }
+  <CloseSidebar
+    sidebarId="sidebar"
+    backdropId="sidebar-backdrop"
+    buttonId="sidebar-close"
+  />
+  <SidebarModeToggle toggleId={toggleId} />
+</div>
+
+<style>
+  .sidebar-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--grid-line-strong);
+    padding-bottom: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .sidebar-icon {
+    border-left: 2px solid transparent;
+    display: flex;
+    width: 2.5rem;
+    flex-shrink: 0;
+    justify-content: center;
+    padding: 0.5rem;
+    pointer-events: all;
+  }
+
+  .sidebar-text {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    padding: 0.5rem;
+    max-width: 18rem;
+    pointer-events: all;
+  }
+
+  @media screen and (min-width: 768px) {
+    :global(#sidebar[data-sidebar-mode="collapsed"]) .sidebar-header {
+      flex-direction: column-reverse;
+      align-items: center;
+      margin-bottom: 0;
+    }
+  }
+</style>

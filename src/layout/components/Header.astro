@@ -1,0 +1,50 @@
+---
+import Breadcrumb from "../../navigation/components/Breadcrumb.astro";
+import DocumentControls from "./DocumentControls.astro";
+import OpenSidebar from "../../navigation/components/SidebarNav/OpenSidebar.astro";
+import type { Crumb } from "../../navigation/components/Breadcrumb.astro";
+
+interface Props {
+  breadcrumbs?: Crumb[];
+  editHref?: string;
+  viewHref?: string;
+}
+
+const { breadcrumbs, editHref, viewHref } = Astro.props;
+---
+
+<header
+  class="sticky top-0 z-50 border-b border-[var(--grid-line-strong)] bg-[var(--bg)]/90 backdrop-blur-sm"
+>
+  <div
+    id="header-inner"
+    class="header-inner mx-auto flex w-full items-center justify-between gap-4 px-6 py-5"
+    data-content-mode="constrained"
+  >
+    <OpenSidebar
+      sidebarId="sidebar"
+      backdropId="sidebar-backdrop"
+      buttonId="sidebar-open"
+    />
+    <div class="min-w-0 flex-1">
+      <Breadcrumb crumbs={breadcrumbs} />
+    </div>
+    <div class="flex flex-shrink-0 items-center gap-2">
+      <DocumentControls editHref={editHref} viewHref={viewHref} />
+    </div>
+  </div>
+</header>
+
+<style>
+  .header-inner {
+    max-width: 72rem;
+  }
+  .header-inner[data-content-mode="full"] {
+    max-width: none;
+  }
+  @media (max-width: 1279px) {
+    :global(#content-width-toggle) {
+      display: none;
+    }
+  }
+</style>

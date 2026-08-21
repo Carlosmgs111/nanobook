@@ -1,0 +1,34 @@
+---
+import ThemeToggle from "../../theme/components/ThemeToggle.astro";
+import ContentWidthToggle from "../../contentWidth/components/ContentWidthToggle.astro";
+
+interface Props {
+  editHref?: string;
+  viewHref?: string;
+}
+
+const { editHref, viewHref } = Astro.props;
+---
+
+{
+  editHref && (
+    <a
+      href={editHref}
+      class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+    >
+      Editar
+    </a>
+  )
+}
+{
+  viewHref && (
+    <a
+      href={viewHref}
+      class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+    >
+      Ver
+    </a>
+  )
+}
+<ContentWidthToggle />
+<ThemeToggle />

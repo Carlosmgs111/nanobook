@@ -13,7 +13,7 @@ const editHref = `/${Astro.params.slug}/edit`;
   import {
     ensureRendered,
     getRenderedDocument,
-  } from "../../services/render";
+  } from "../../rendering/core/render-service";
 
   const channel = new BroadcastChannel("rendered-document");
 

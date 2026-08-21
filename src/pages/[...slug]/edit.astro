@@ -1,13 +1,13 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import DocumentEditor from "../../components/DocumentEditor/DocumentEditor.astro";
-import { AstroCollectionRepository } from "../../core/content/adapters/astro-collection-repository";
+import DocumentEditor from "../../editor/components/DocumentEditor/DocumentEditor.astro";
+import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
 import {
   buildNavigationTree,
   getBreadcrumbs,
   getSidebarEntries,
   getParentEntry,
-} from "../../core/navigation/builder";
+} from "../../navigation/core/builder";
 
 const repository = new AstroCollectionRepository();
 
