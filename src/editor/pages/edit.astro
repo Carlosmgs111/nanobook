@@ -1,0 +1,65 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import DocumentEditor from "@/editor/components/DocumentEditor/DocumentEditor.astro";
+import { AstroCollectionRepository } from "@/document/adapters/astro-collection-repository";
+import {
+  buildNavigationTree,
+  getBreadcrumbs,
+  getSidebarEntries,
+  getParentEntry,
+} from "@/navigation/core/builder";
+
+const repository = new AstroCollectionRepository();
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const repo = new AstroCollectionRepository();
+  const documents = await repo.list();
+
+  return documents
+    .filter((document) => !document.metadata.index)
+    .map((document) => ({
+      params: { slug: document.slug || undefined },
+      props: { documentId: document.id },
+    }));
+}
+
+const { documentId } = Astro.props;
+const entry = await repository.get(documentId);
+
+if (!entry) {
+  throw new Error(`Document not found: ${documentId}`);
+}
+const allDocuments = await repository.list();
+const { nodeMap } = buildNavigationTree(allDocuments);
+
+const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
+const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
+const parentNode = getParentEntry(nodeMap, entry.id);
+const previewHref = entry.metadata.index ? undefined : `/${entry.slug}/preview`;
+---
+
+<Layout
+  title={`Editar: ${entry.title}`}
+  description={entry.description}
+  label="Edit"
+  breadcrumbs={breadcrumbs}
+  sidebarEntries={sidebarEntries}
+  parentEntry={parentNode
+    ? { id: parentNode.id, data: { title: parentNode.title } }
+    : null}
+  hideToc={true}
+  viewHref={`/${entry.slug}`}
+>
+  <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+    <span class="tech-label mb-3 block">Editing document</span>
+    <h1
+      class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
+    >
+      {entry.title}
+    </h1>
+  </div>
+
+  <DocumentEditor document={entry} previewHref={previewHref} />
+</Layout>
