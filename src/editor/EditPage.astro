@@ -1,0 +1,48 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DocumentEditor from "./components/DocumentEditor/DocumentEditor.astro";
+import type { NavigationNode } from "../navigation/core/builder";
+import type { Crumb } from "../navigation/components/Breadcrumb.astro";
+import type { Document } from "../document/core/types";
+
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
+}
+
+interface Props {
+  entry: Document;
+  breadcrumbs: Crumb[];
+  sidebarEntries: NavigationNode[];
+  parentEntry: ParentEntry | null;
+  previewHref?: string;
+  viewHref: string;
+}
+
+const { entry, breadcrumbs, sidebarEntries, parentEntry, previewHref, viewHref } =
+  Astro.props;
+---
+
+<Layout
+  title={`Editar: ${entry.title}`}
+  description={entry.description}
+  label="Edit"
+  breadcrumbs={breadcrumbs}
+  sidebarEntries={sidebarEntries}
+  parentEntry={parentEntry}
+  hideToc={true}
+  viewHref={viewHref}
+>
+  <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+    <span class="tech-label mb-3 block">Editing document</span>
+    <h1
+      class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
+    >
+      {entry.title}
+    </h1>
+  </div>
+
+  <DocumentEditor document={entry} previewHref={previewHref} />
+</Layout>
