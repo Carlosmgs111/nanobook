@@ -1,8 +1,8 @@
 ---
-export { getStaticPaths, prerender } from "@/document/pages/document.astro";
-import DocumentPage from "@/document/pages/document.astro";
-import { AstroCollectionRepository } from "@/document/adapters/astro-collection-repository";
-import { UnifiedMarkdownRenderer } from "@/rendering/adapters/unified-markdown";
+import Layout from "../layouts/Layout.astro";
+import IndexList from "../documentIndex/components/IndexList.astro";
+import { AstroCollectionRepository } from "../document/adapters/astro-collection-repository";
+import { UnifiedMarkdownRenderer } from "../rendering/adapters/unified-markdown";
 import {
   buildNavigationTree,
   getFolderPath,
@@ -10,13 +10,25 @@ import {
   getBreadcrumbs,
   getSidebarEntries,
   getParentEntry,
-} from "@/navigation/core/builder";
-import { parseDocument } from "@/document/core/document";
-
-const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
+} from "../navigation/core/builder";
+import { parseDocument } from "../document/core/document";
 
 const repository = new AstroCollectionRepository();
 const renderer = new UnifiedMarkdownRenderer();
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const repo = new AstroCollectionRepository();
+  const documents = await repo.list();
+
+  return documents.map((document) => ({
+    params: { slug: document.slug || undefined },
+    props: { documentId: document.id },
+  }));
+}
+
+const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
 const entry = await repository.get(documentId);
 
 if (!entry) {
@@ -41,18 +53,48 @@ const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
 const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
 const parentNode = getParentEntry(nodeMap, entry.id);
 const { headings } = parseDocument({ body: entry.content });
-const editHref = entry.metadata.index ? undefined : `/${entry.slug}/edit`;
 ---
 
-<DocumentPage
-  entry={entry}
-  Content={Content}
-  headings={headings}
-  childEntries={childEntries}
+<Layout
+  title={entry.title}
+  description={entry.description}
+  label={entry.metadata.index ? "Index" : "Document"}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentNode
     ? { id: parentNode.id, data: { title: parentNode.title } }
     : null}
-  editHref={editHref}
-/>
+  headings={headings}
+  editHref={entry.metadata.index ? undefined : `/${entry.slug}/edit`}
+>
+  {
+    entry.metadata.index ? (
+      <IndexList
+        title={entry.title}
+        description={entry.description}
+        label="Index"
+        entries={childEntries}
+      />
+    ) : (
+      <>
+        <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+          <span class="tech-label mb-3 block">Document</span>
+          <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
+            {entry.title}
+          </h1>
+        </div>
+
+        <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
+          <span>ID: {entry.id}</span>
+          <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+          <span class="text-sm">
+            DATE: {entry.metadata.date.toISOString().slice(0, 10)}
+          </span>
+          <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+          <span>AUTHOR: {entry.metadata.author}</span>
+        </div>
+        <Fragment set:html={Content} />
+      </>
+    )
+  }
+</Layout>

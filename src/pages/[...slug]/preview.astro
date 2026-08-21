@@ -1,13 +1,46 @@
 ---
-export { prerender } from "@/editor/pages/preview.astro";
-import PreviewPage from "@/editor/pages/preview.astro";
-
-const slug = Astro.params.slug;
-if (!slug) {
-  throw new Error("Missing slug");
-}
-
-const editHref = `/${slug}/edit`;
+import Layout from "../../layouts/Layout.astro";
+export const prerender = false;
+const editHref = `/${Astro.params.slug}/edit`;
 ---
 
-<PreviewPage slug={slug} editHref={editHref} />
+<Layout editHref={editHref}>
+  <h1><mark>Preview de {Astro.params.slug}</mark></h1>
+  <div id="preview-container"></div>
+</Layout>
+
+<script>
+  import {
+    ensureRendered,
+    getRenderedDocument,
+  } from "../../rendering/core/render-service";
+
+  const channel = new BroadcastChannel("rendered-document");
+
+  async function renderPreview() {
+    const container = document.getElementById("preview-container");
+    if (!container) return;
+
+    const rendered = getRenderedDocument();
+    if (!rendered) {
+      container.innerHTML = "<p>Generando preview...</p>";
+      try {
+        await ensureRendered();
+        const fresh = getRenderedDocument();
+        container.innerHTML = fresh?.Content ?? "<p>No hay contenido para previsualizar.</p>";
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = "<p>Error al generar el preview.</p>";
+      }
+      return;
+    }
+
+    container.innerHTML = rendered.Content;
+  }
+
+  document.addEventListener("astro:page-load", renderPreview);
+
+  channel.addEventListener("message", () => {
+    renderPreview();
+  });
+</script>
