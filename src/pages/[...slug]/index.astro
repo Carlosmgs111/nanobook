@@ -1,0 +1,11 @@
+---
+export const prerender = true;
+export { getStaticPaths } from "../../document/core/document-page";
+import { loadDocumentPageProps } from "../../document/core/document-page";
+import DocumentPage from "../../document/DocumentPage.astro";
+
+const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
+const props = await loadDocumentPageProps({ documentId });
+---
+
+<DocumentPage {...props} />
