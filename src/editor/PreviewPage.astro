@@ -1,18 +1,13 @@
 ---
-import Layout from "../layouts/Layout.astro";
-
 interface Props {
   slug: string;
-  editHref: string;
 }
 
-const { slug, editHref } = Astro.props;
+const { slug } = Astro.props;
 ---
 
-<Layout editHref={editHref}>
-  <h1><mark>Preview de {slug}</mark></h1>
-  <div id="preview-container"></div>
-</Layout>
+<h1><mark>Preview de {slug}</mark></h1>
+<div id="preview-container"></div>
 
 <script>
   import {
@@ -32,7 +27,8 @@ const { slug, editHref } = Astro.props;
       try {
         await ensureRendered();
         const fresh = getRenderedDocument();
-        container.innerHTML = fresh?.Content ?? "<p>No hay contenido para previsualizar.</p>";
+        container.innerHTML =
+          fresh?.Content ?? "<p>No hay contenido para previsualizar.</p>";
       } catch (error) {
         console.error(error);
         container.innerHTML = "<p>Error al generar el preview.</p>";

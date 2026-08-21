@@ -1,10 +1,30 @@
 ---
-export const prerender = false;
-import { loadPreviewPageProps } from "../../editor/core/preview-page";
-import PreviewPage from "../../editor/PreviewPage.astro";
 
-const documentId = Astro.params.slug || "index";
-const props = await loadPreviewPageProps({ documentId });
+import Layout from "../../layouts/Layout.astro";
+import PreviewPage from "../../editor/PreviewPage.astro";
+import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
+
+export const prerender = true;
+
+export const getStaticPaths = async () => {
+  const repository = new AstroCollectionRepository();
+  const entries = await repository.list();
+
+  return entries.map((entry) => ({
+    params: {
+      slug: entry.slug,
+    },
+    props: {
+      editHref: `/${entry.slug}/edit`,
+    },
+  }));
+};
+
+const { slug } = Astro.params;
+const { editHref } = Astro.props;
+
 ---
 
-<PreviewPage {...props} />
+<Layout editHref={editHref}>
+  <PreviewPage slug={slug}/>
+</Layout>

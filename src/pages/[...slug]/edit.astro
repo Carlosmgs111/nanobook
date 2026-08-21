@@ -1,11 +1,58 @@
 ---
-export const prerender = true;
-export { getStaticPaths } from "../../editor/core/edit-page";
-import { loadEditPageProps } from "../../editor/core/edit-page";
+import Layout from "../../layouts/Layout.astro";
 import EditPage from "../../editor/EditPage.astro";
 
-const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
-const props = await loadEditPageProps({ documentId });
+import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
+import {
+  buildNavigationTree,
+  getBreadcrumbs,
+  getSidebarEntries,
+  getParentEntry,
+} from "../../navigation/core/builder";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const repository = new AstroCollectionRepository();
+  const documents = await repository.list();
+
+  return documents
+    .filter((document) => !document.metadata.index)
+    .map((document) => ({
+      params: { slug: document.slug || undefined },
+      props: { documentId: document.id },
+    }));
+}
+const { documentId } = Astro.props;
+
+const repository = new AstroCollectionRepository();
+const entry = await repository.get(documentId);
+
+if (!entry) {
+  throw new Error(`Document not found: ${documentId}`);
+}
+
+const allDocuments = await repository.list();
+const { nodeMap } = buildNavigationTree(allDocuments);
+const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
+const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
+const parentNode = getParentEntry(nodeMap, entry.id);
+const parentEntry = parentNode
+  ? { id: parentNode.id, data: { title: parentNode.title } }
+  : null;
+const viewHref = `/${entry.id}`;
+const previewHref = `/${entry.id}/preview`;
+
 ---
 
-<EditPage {...props} />
+<Layout
+  title={`Editar: ${entry.title}`}
+  description={entry.description}
+  breadcrumbs={breadcrumbs}
+  sidebarEntries={sidebarEntries}
+  parentEntry={parentEntry}
+  hideToc={true}
+  viewHref={viewHref}
+>
+  <EditPage entry={entry} previewHref={previewHref} />
+</Layout>
