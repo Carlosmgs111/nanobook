@@ -1,24 +1,40 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import IndexList from "@/documentIndex/components/IndexList.astro";
-import { AstroCollectionRepository } from "@/document/adapters/astro-collection-repository";
-import { UnifiedMarkdownRenderer } from "@/rendering/adapters/unified-markdown";
-import {
-  buildNavigationTree,
-  getFolderPath,
-  getImmediateChildren,
-  getBreadcrumbs,
-  getSidebarEntries,
-  getParentEntry,
-} from "@/navigation/core/builder";
-import { parseDocument } from "@/document/core/document";
+import type { NavigationNode } from "@/navigation/core/builder";
+import type { Crumb } from "@/navigation/components/Breadcrumb.astro";
+import type { Document } from "@/document/core/types";
 
-const repository = new AstroCollectionRepository();
-const renderer = new UnifiedMarkdownRenderer();
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
+}
+
+interface Props {
+  entry: Document;
+  Content: any;
+  headings: Heading[];
+  childEntries: { id: string; data: Document["metadata"] }[];
+  breadcrumbs: Crumb[];
+  sidebarEntries: NavigationNode[];
+  parentEntry: ParentEntry | null;
+  editHref?: string;
+}
 
 export const prerender = true;
 
 export async function getStaticPaths() {
+  const { AstroCollectionRepository } = await import(
+    "@/document/adapters/astro-collection-repository"
+  );
   const repo = new AstroCollectionRepository();
   const documents = await repo.list();
 
@@ -28,31 +44,16 @@ export async function getStaticPaths() {
   }));
 }
 
-const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
-const entry = await repository.get(documentId);
-
-if (!entry) {
-  throw new Error(`Document not found: ${documentId}`);
-}
-
-const { Content } = await renderer.render(entry);
-const allDocuments = await repository.list();
-const { nodeMap } = buildNavigationTree(allDocuments);
-
-const folderPath = getFolderPath(entry.id);
-const children = entry.metadata.index
-  ? getImmediateChildren(nodeMap, folderPath, entry.id)
-  : [];
-
-const childEntries = children.map((child) => ({
-  id: child.id,
-  data: child.metadata,
-}));
-
-const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
-const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
-const parentNode = getParentEntry(nodeMap, entry.id);
-const { headings } = parseDocument({ body: entry.content });
+const {
+  entry,
+  Content,
+  headings,
+  childEntries,
+  breadcrumbs,
+  sidebarEntries,
+  parentEntry,
+  editHref,
+} = Astro.props;
 ---
 
 <Layout
@@ -61,11 +62,9 @@ const { headings } = parseDocument({ body: entry.content });
   label={entry.metadata.index ? "Index" : "Document"}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
-  parentEntry={parentNode
-    ? { id: parentNode.id, data: { title: parentNode.title } }
-    : null}
+  parentEntry={parentEntry}
   headings={headings}
-  editHref={entry.metadata.index ? undefined : `/${entry.slug}/edit`}
+  editHref={editHref}
 >
   {
     entry.metadata.index ? (

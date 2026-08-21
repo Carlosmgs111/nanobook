@@ -1,19 +1,32 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import DocumentEditor from "@/editor/components/DocumentEditor/DocumentEditor.astro";
-import { AstroCollectionRepository } from "@/document/adapters/astro-collection-repository";
-import {
-  buildNavigationTree,
-  getBreadcrumbs,
-  getSidebarEntries,
-  getParentEntry,
-} from "@/navigation/core/builder";
+import type { NavigationNode } from "@/navigation/core/builder";
+import type { Crumb } from "@/navigation/components/Breadcrumb.astro";
+import type { Document } from "@/document/core/types";
 
-const repository = new AstroCollectionRepository();
+interface ParentEntry {
+  id: string;
+  data: {
+    title: string;
+  };
+}
+
+interface Props {
+  entry: Document;
+  breadcrumbs: Crumb[];
+  sidebarEntries: NavigationNode[];
+  parentEntry: ParentEntry | null;
+  previewHref?: string;
+  viewHref: string;
+}
 
 export const prerender = true;
 
 export async function getStaticPaths() {
+  const { AstroCollectionRepository } = await import(
+    "@/document/adapters/astro-collection-repository"
+  );
   const repo = new AstroCollectionRepository();
   const documents = await repo.list();
 
@@ -25,19 +38,8 @@ export async function getStaticPaths() {
     }));
 }
 
-const documentId = Astro.props.documentId ?? (Astro.params.slug || "index");
-const entry = await repository.get(documentId);
-
-if (!entry) {
-  throw new Error(`Document not found: ${documentId}`);
-}
-const allDocuments = await repository.list();
-const { nodeMap } = buildNavigationTree(allDocuments);
-
-const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
-const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
-const parentNode = getParentEntry(nodeMap, entry.id);
-const previewHref = entry.metadata.index ? undefined : `/${entry.slug}/preview`;
+const { entry, breadcrumbs, sidebarEntries, parentEntry, previewHref, viewHref } =
+  Astro.props;
 ---
 
 <Layout
@@ -46,11 +48,9 @@ const previewHref = entry.metadata.index ? undefined : `/${entry.slug}/preview`;
   label="Edit"
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
-  parentEntry={parentNode
-    ? { id: parentNode.id, data: { title: parentNode.title } }
-    : null}
+  parentEntry={parentEntry}
   hideToc={true}
-  viewHref={`/${entry.slug}`}
+  viewHref={viewHref}
 >
   <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
     <span class="tech-label mb-3 block">Editing document</span>

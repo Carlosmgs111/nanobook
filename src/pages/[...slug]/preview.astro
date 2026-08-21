@@ -1,6 +1,13 @@
 ---
 export { prerender } from "@/editor/pages/preview.astro";
 import PreviewPage from "@/editor/pages/preview.astro";
+
+const slug = Astro.params.slug;
+if (!slug) {
+  throw new Error("Missing slug");
+}
+
+const editHref = `/${slug}/edit`;
 ---
 
-<PreviewPage {...Astro.props} />
+<PreviewPage slug={slug} editHref={editHref} />

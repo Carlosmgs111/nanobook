@@ -1,11 +1,18 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+
+interface Props {
+  slug: string;
+  editHref: string;
+}
+
 export const prerender = false;
-const editHref = `/${Astro.params.slug}/edit`;
+
+const { slug, editHref } = Astro.props;
 ---
 
 <Layout editHref={editHref}>
-  <h1><mark>Preview de {Astro.params.slug}</mark></h1>
+  <h1><mark>Preview de {slug}</mark></h1>
   <div id="preview-container"></div>
 </Layout>
 
