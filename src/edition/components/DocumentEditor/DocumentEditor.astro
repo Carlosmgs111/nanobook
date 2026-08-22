@@ -1,5 +1,7 @@
 ---
 import type { Document } from "../../../document/core/types";
+import EditorToolbar from "../EditorToolbar.astro";
+import EditorStatus from "../EditorStatus.astro";
 
 interface Props {
   document: Document;
@@ -16,27 +18,27 @@ const initialContent = document.rawFrontmatter + document.content;
   data-document-id={document.id}
   data-initial-content={initialContent}
 >
-  <div class="editor-toolbar">
-    <button type="button" class="save-button" data-action="save">Guardar</button
-    >
-    <a class="preview-link" href={previewHref}>Preview</a>
-    <span class="status" role="status" aria-live="polite"></span>
-  </div>
+  <EditorToolbar previewHref={previewHref}>
+    <EditorStatus slot="status" />
+  </EditorToolbar>
   <div class="editor-container" data-editor-container></div>
 </div>
 
 <script>
-import type { Document } from "../../../document/core/types";
+  import type { Document } from "../../../document/core/types";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
-  } from "./code-mirror-editor";
+  } from "../../core/code-mirror-editor";
   import { debounce } from "../../../shared/utils/debounce";
+  import { renderStagedDocument } from "../../../rendering/core/render-service";
   import {
-    getStagedDocument,
-    renderStagedDocument,
-  } from "../../../rendering/core/render-service";
-  import { parse } from "yaml";
+    loadStagedDocument,
+    saveStagedDocument,
+    ensureStagedDocument,
+  } from "../../core/stage-document";
+  import { buildDocumentFromContent } from "../../core/parse-staged-document";
+  import { saveDocument } from "../../core/save-document";
 
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
@@ -46,16 +48,10 @@ import type { Document } from "../../../document/core/types";
   }
 
   function getInitialContent(wrapper: HTMLElement) {
-    const staged = getStagedDocument();
+    const staged = loadStagedDocument();
     return staged
       ? staged.rawFrontmatter + staged.content
       : wrapper.dataset.initialContent || "";
-  }
-
-  function ensureSessionState(baseDocument: Document) {
-    if (!sessionStorage.getItem("stagedDocument")) {
-      sessionStorage.setItem("stagedDocument", JSON.stringify(baseDocument));
-    }
   }
 
   function initEditor() {
@@ -75,7 +71,7 @@ import type { Document } from "../../../document/core/types";
     destroyEditor();
 
     const baseDocument = JSON.parse(wrapper.dataset.document!) as Document;
-    ensureSessionState(baseDocument);
+    ensureStagedDocument(baseDocument);
 
     editor = createCodeMirrorEditor({
       container,
@@ -97,20 +93,11 @@ import type { Document } from "../../../document/core/types";
 
     cleanButton.addEventListener("click", async () => {
       try {
-        const document = updateDocument(
-          JSON.parse(wrapper.dataset.document!) as Document
+        const document = buildDocumentFromContent(
+          JSON.parse(wrapper.dataset.document!) as Document,
+          editor!.getContent()
         );
-        const response = await fetch("/api/" + documentId, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(document),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Error al guardar");
-        }
-
+        await saveDocument(documentId, document);
         showStatus("Guardado correctamente");
       } catch (error) {
         console.error(error);
@@ -129,33 +116,16 @@ import type { Document } from "../../../document/core/types";
     }
   }
 
-  async function updateRenderedDocument(stagedDocument: Document) {
-    await renderStagedDocument(stagedDocument);
-  }
-
   const debouncedOnChange = debounce(async () => {
     const wrapper = getWrapper();
     if (!wrapper || !editor) return;
-    const stagedDocument = updateDocument(
-      JSON.parse(wrapper.dataset.document!) as Document
+    const stagedDocument = buildDocumentFromContent(
+      JSON.parse(wrapper.dataset.document!) as Document,
+      editor.getContent()
     );
-    sessionStorage.setItem("stagedDocument", JSON.stringify(stagedDocument));
-    updateRenderedDocument(stagedDocument);
+    saveStagedDocument(stagedDocument);
+    await renderStagedDocument(stagedDocument);
   }, 1000);
-
-  function updateDocument(oldDocument: Document): Document {
-    if (!editor) return oldDocument;
-    const fullContent = editor.getContent();
-    const rawFrontmatter = fullContent.match(/^---[\s\S]*?---\n?/)?.[0]!;
-    const data = parse(rawFrontmatter.replaceAll("---", "")!);
-    const content = fullContent.replace(/^---[\s\S]*?---\n?/g, "");
-    return {
-      ...oldDocument,
-      metadata: data,
-      content,
-      rawFrontmatter,
-    };
-  }
 
   function showStatus(message: string, isError = false) {
     if (!statusElement) return;
@@ -171,10 +141,11 @@ import type { Document } from "../../../document/core/types";
   function prepareRenderBeforeSwap() {
     const wrapper = getWrapper();
     if (wrapper && editor) {
-      const stagedDocument = updateDocument(
-        JSON.parse(wrapper.dataset.document!) as Document
+      const stagedDocument = buildDocumentFromContent(
+        JSON.parse(wrapper.dataset.document!) as Document,
+        editor.getContent()
       );
-      sessionStorage.setItem("stagedDocument", JSON.stringify(stagedDocument));
+      saveStagedDocument(stagedDocument);
       renderStagedDocument(stagedDocument).catch(console.error);
     }
     destroyEditor();
@@ -190,60 +161,6 @@ import type { Document } from "../../../document/core/types";
     flex-direction: column;
     gap: 1rem;
     min-height: 60vh;
-  }
-
-  .editor-toolbar {
-    display: flex;
-    align-items: center;
-    /* justify-content: space-between; */
-    gap: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--grid-line);
-  }
-
-  .save-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--grid-line-strong);
-    background: var(--text);
-    color: var(--bg);
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s ease;
-  }
-
-  .save-button:hover {
-    opacity: 0.9;
-  }
-
-  .preview-link {
-    color: var(--text);
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--text);
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  .preview-link:hover {
-    opacity: 0.9;
-  }
-
-  .status {
-    min-height: 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  .status-success {
-    color: #15803d;
-  }
-
-  .status-error {
-    color: #b91c1c;
   }
 
   .editor-container {

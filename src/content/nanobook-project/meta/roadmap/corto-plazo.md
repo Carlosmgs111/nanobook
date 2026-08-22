@@ -14,8 +14,8 @@ Horizonte: próximas 2–4 semanas. El objetivo es terminar de pulir la alpha pa
 
 ## Navegación y lectura
 
-- [ ] **TOC activo con resaltado**: hacer que la tabla de contenidos resalte la sección visible mientras se hace scroll.
-- [ ] **Sidebar mobile usable**: definir y implementar el comportamiento del sidebar en pantallas pequeñas (drawer, overlay, cierre al hacer click fuera).
+- [x] **TOC activo con resaltado**: hacer que la tabla de contenidos resalte la sección visible mientras se hace scroll.
+- [x] **Sidebar mobile usable**: definir y implementar el comportamiento del sidebar en pantallas pequeñas (drawer, overlay, cierre al hacer click fuera).
 - [ ] **Atajos de teclado básicos**: añadir navegación por teclado para abrir/cerrar sidebar (`Cmd/Ctrl + B`) y enfocar la búsqueda (`Cmd/Ctrl + K`).
 
 ## Contenido y organización

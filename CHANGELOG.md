@@ -30,6 +30,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Documentación de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 
 ### Changed
+- Refactor de `DocumentEditor` a una arquitectura componentizada:
+  - Extracción de `src/editor/core/stage-document.ts` para gestionar `sessionStorage` del documento en edición.
+  - Extracción de `src/editor/core/parse-staged-document.ts` para reconstruir `Document` desde el contenido del editor.
+  - Extracción de `src/editor/core/save-document.ts` para centralizar la llamada `PATCH` a `/api/:id`.
+  - Nuevos componentes visuales `EditorToolbar.astro` y `EditorStatus.astro` bajo `src/editor/components/`.
+  - `DocumentEditor.astro` ahora solo orquesta los módulos anteriores y la instancia de CodeMirror.
 - Reubicación de `TableOfContents` e `IndexList` dentro del dominio de documentos:
   - `src/tableOfContents/` → `src/document/components/TableOfContents/`
   - `src/documentIndex/` → `src/document/components/IndexList/`

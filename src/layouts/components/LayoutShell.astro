@@ -47,10 +47,7 @@ const {
 <body
   class="relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]"
 >
-  <!-- Grid overlay -->
   <div class="grid-overlay" aria-hidden="true"></div>
-
-  <!-- Top and bottom subtle rules -->
   <div
     class="fixed top-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]"
     aria-hidden="true"
@@ -61,14 +58,11 @@ const {
     aria-hidden="true"
   >
   </div>
-
   <Header
     breadcrumbs={breadcrumbs}
     editHref={editHref}
     viewHref={viewHref}
   />
-
-  <!-- Main content -->
   <div
     id="content-wrapper"
     class="content-wrapper z-10 mx-auto flex gap-6 md:px-6 md:py-12"
@@ -86,7 +80,6 @@ const {
     </main>
     <TableOfContents headings={headings} hide={hideToc} />
   </div>
-
   <Footer />
 
   <script type="module">

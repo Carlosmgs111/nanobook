@@ -1,0 +1,60 @@
+---
+interface Props {
+  previewHref?: string;
+}
+
+const { previewHref } = Astro.props;
+---
+
+<div class="editor-toolbar">
+  <button type="button" class="save-button" data-action="save">Guardar</button>
+  {
+    previewHref && (
+      <a class="preview-link" href={previewHref}>
+        Preview
+      </a>
+    )
+  }
+  <slot name="status" />
+</div>
+
+<style>
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--grid-line);
+  }
+
+  .save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--grid-line-strong);
+    background: var(--text);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .save-button:hover {
+    opacity: 0.9;
+  }
+
+  .preview-link {
+    color: var(--text);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--text);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .preview-link:hover {
+    opacity: 0.9;
+  }
+</style>

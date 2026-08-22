@@ -12,8 +12,6 @@ position: 0
 
 # Arquitectura de componentes basada en IDs
 
-Esta es un arquitectura para trabajar con Javascript Vanilla
-
 ## Resumen
 
 Este proyecto adopta un enfoque en el que cada componente Astro encapsula su propia lógica de presentación y comportamiento, y se comunica con otros componentes a través del DOM usando IDs explícitos. El patrón se aplica tanto al `SidebarNav` como al `TableOfContents`.

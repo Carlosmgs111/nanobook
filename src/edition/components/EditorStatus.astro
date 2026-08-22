@@ -1,0 +1,32 @@
+---
+interface Props {
+  message?: string;
+  variant?: "success" | "error";
+}
+
+const { message, variant } = Astro.props;
+---
+
+<span
+  class:list={["status", variant && `status-${variant}`]}
+  role="status"
+  aria-live="polite"
+>
+  {message}
+</span>
+
+<style>
+  .status {
+    min-height: 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .status-success {
+    color: #15803d;
+  }
+
+  .status-error {
+    color: #b91c1c;
+  }
+</style>
