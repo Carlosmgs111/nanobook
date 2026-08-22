@@ -1,0 +1,77 @@
+---
+import ListSVG from "../../../shared/icons/list.svg";
+import ListCompactSVG from "../../../shared/icons/list-compact.svg";
+
+interface Props {
+  toggleId: string;
+  tocRootId: string;
+}
+
+const { toggleId, tocRootId } = Astro.props;
+---
+
+<button
+  id={toggleId}
+  type="button"
+  class="toc-toggle hidden h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] md:flex aspect-square"
+  aria-label="Cambiar modo del índice"
+  aria-pressed="false"
+  data-toc-mode="standard"
+>
+  <span class="toc-toggle-icon-standard" aria-hidden="true">
+    <ListSVG />
+  </span>
+  <span class="toc-toggle-icon-compact" aria-hidden="true">
+    <ListCompactSVG />
+  </span>
+</button>
+
+<style>
+  .toc-toggle {
+    position: relative;
+  }
+
+  .toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-standard,
+  .toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-compact {
+    display: none;
+  }
+</style>
+
+<script type="module" define:vars={{ toggleId, tocRootId }}>
+  document.addEventListener("astro:page-load", function () {
+    const root = document.getElementById(tocRootId);
+    const toggle = document.getElementById(toggleId);
+    if (!root || !toggle) return;
+
+    function getSavedTocMode() {
+      if (typeof localStorage === "undefined") return "standard";
+      const saved = localStorage.getItem("toc-mode");
+      return saved === "compact" ? "compact" : "standard";
+    }
+
+    function setTocMode(mode) {
+      root.dataset.tocMode = mode;
+      toggle.dataset.tocMode = mode;
+      toggle.ariaPressed = String(mode === "compact");
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("toc-mode", mode);
+      }
+    }
+
+    setTocMode(getSavedTocMode());
+
+    root.addEventListener("toc:mode", (event) => {
+      const { mode } = event.detail;
+      setTocMode(mode);
+    });
+
+    toggle.addEventListener("click", function () {
+      const current = root.getAttribute("data-toc-mode") || "standard";
+      const next = current === "standard" ? "compact" : "standard";
+      setTocMode(next);
+      root.dispatchEvent(
+        new CustomEvent("toc:mode", { detail: { mode: next } })
+      );
+    });
+  });
+</script>

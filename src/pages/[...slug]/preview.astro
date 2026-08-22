@@ -1,34 +1,30 @@
 ---
+
 import Layout from "../../layouts/Layout.astro";
-export const prerender = false;
-const editHref = `/${Astro.params.slug}/edit`;
+import PreviewPage from "../../editor/PreviewPage.astro";
+import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
+
+export const prerender = true;
+
+export const getStaticPaths = async () => {
+  const repository = new AstroCollectionRepository();
+  const entries = await repository.list();
+
+  return entries.map((entry) => ({
+    params: {
+      slug: entry.slug,
+    },
+    props: {
+      editHref: `/${entry.slug}/edit`,
+    },
+  }));
+};
+
+const { slug } = Astro.params;
+const { editHref } = Astro.props;
+
 ---
 
 <Layout editHref={editHref}>
-  <h1><mark>Preview de {Astro.params.slug}</mark></h1>
-  <div id="preview-container"></div>
+  <PreviewPage slug={slug}/>
 </Layout>
-
-<script>
-  const channel = new BroadcastChannel("rendered-document");
-
-  function renderPreview() {
-    const container = document.getElementById("preview-container");
-    if (!container) return;
-
-    const raw = sessionStorage.getItem("renderedStagedDocument");
-    if (!raw) {
-      container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
-      return;
-    }
-
-    const renderedStagedDocument = JSON.parse(raw);
-    container.innerHTML = renderedStagedDocument.Content;
-  }
-
-  document.addEventListener("astro:page-load", renderPreview);
-
-  channel.addEventListener("message", () => {
-    renderPreview();
-  });
-</script>

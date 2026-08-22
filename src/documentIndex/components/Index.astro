@@ -1,0 +1,145 @@
+---
+import "../../shared/styles/components/index-card.css";
+import FolderSvg from "../../shared/icons/folder.svg";
+import FileSvg from "../../shared/icons/file.svg";
+const { page, index } = Astro.props;
+const coverVar = page.data.cover ? `url('${page.data.cover}')` : undefined;
+---
+
+<div class="index-card-wrapper" data-folder={String(page.data.index)}>
+  <a
+    href={`/${page.id}`}
+    class={`index-card ${page.data.index ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
+    data-title={page.data.title}
+    data-description={page.data.description}
+    data-draft={String(page.data.draft)}
+    data-cover={page.data.cover ? "true" : undefined}
+    style={coverVar ? `--card-cover: ${coverVar}` : undefined}
+  >
+    <div class="index-card-main">
+      <span class="index-card-number">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      {page.data.index ? <FolderSvg /> : <FileSvg />}
+      <div class="index-card-body">
+        <span class="index-card-title" data-title={page.data.title}></span>
+        <span class="index-card-desc" data-description={page.data.description}></span>
+      </div>
+    </div>
+
+    <span class="index-card-path" title={`/${page.id + (page.data.index ? "/" : ".md")}`}>
+      /{page.id + (page.data.index ? "/" : ".md")}
+    </span>
+  </a>
+</div>
+
+<style>
+  .index-card-wrapper {
+    position: relative;
+  }
+
+  .index-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--grid-line-strong);
+    padding: 1rem;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+
+  .index-card span{
+    backdrop-filter: blur(5px) brightness(0.9);
+    padding: 0.5rem 1rem;
+    color: var(--text);
+  }
+
+  .index-card:hover {
+    border-color: var(--accent);
+    background-color: rgba(var(--surface-rgb), 0.05);
+  }
+
+  .index-card-folder {
+    border-right-width: 2px;
+    border-right-color: var(--accent);
+  }
+
+  .index-card-main {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .index-card-number {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--muted);
+  }
+
+  .index-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .index-card-title {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 500;
+    color: var(--text);
+    transition: color 150ms ease;
+  }
+
+  .index-card:hover .index-card-title {
+    color: var(--accent);
+  }
+
+  .index-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--muted);
+  }
+
+  .index-card-path {
+    align-self: flex-end;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--muted);
+  }
+
+  @media (min-width: 768px) {
+    .index-card {
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem;
+    }
+
+    .index-card-body {
+      flex: 1 1 0%;
+    }
+
+    .index-card-title {
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+    }
+
+    .index-card-desc {
+      -webkit-line-clamp: unset;
+    }
+
+    .index-card-path {
+      align-self: auto;
+    }
+  }
+</style>

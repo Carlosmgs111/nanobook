@@ -1,0 +1,156 @@
+---
+import MaximizeSVG from "../../shared/icons/maximize.svg";
+import MinimizeSVG from "../../shared/icons/minimize.svg";
+---
+
+<button
+  id="content-width-toggle"
+  type="button"
+  class="group flex h-9 w-9 items-center justify-center border border-[var(--grid-line-strong)] text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+  aria-label="Expandir contenido"
+  aria-pressed="false"
+  data-content-mode="constrained"
+>
+  <span class="content-width-icon-constrained" aria-hidden="true">
+    <MaximizeSVG />
+  </span>
+  <span class="content-width-icon-full" aria-hidden="true">
+    <MinimizeSVG />
+  </span>
+</button>
+
+<style>
+  #content-width-toggle[data-content-mode="full"]
+    .content-width-icon-constrained,
+  #content-width-toggle[data-content-mode="constrained"]
+    .content-width-icon-full {
+    display: none;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    if (window.__nanobookContentWidthToggleRestored) return;
+    window.__nanobookContentWidthToggleRestored = true;
+
+    function restoreContentWidthToggle() {
+      const saved =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("content-width-mode")
+          : null;
+      if (saved !== "full" && saved !== "constrained") return;
+
+      const button = document.getElementById("content-width-toggle");
+      const wrapper = document.getElementById("content-wrapper");
+      if (!button || !wrapper) return;
+
+      button.setAttribute("data-content-mode", saved);
+      button.setAttribute("aria-pressed", String(saved === "full"));
+      button.setAttribute(
+        "aria-label",
+        saved === "constrained" ? "Expandir contenido" : "Restringir contenido"
+      );
+      wrapper.setAttribute("data-content-mode", saved);
+    }
+
+    restoreContentWidthToggle();
+    document.addEventListener("astro:after-swap", restoreContentWidthToggle);
+  })();
+</script>
+
+<script type="module">
+  document.addEventListener("astro:page-load", function () {
+    const button = document.getElementById("content-width-toggle");
+    const wrapper = document.getElementById("content-wrapper");
+    const sidebar = document.getElementById("sidebar");
+    const tocRoot = document.getElementById("toc-root");
+
+    if (!button || !wrapper || !sidebar) return;
+
+    function isUserEvent(event) {
+      return !event.detail || event.detail.source !== "content-width";
+    }
+
+    sidebar.addEventListener("sidebar:mode", function (event) {
+      if (!isUserEvent(event)) return;
+      let tocMode = "compact";
+      if (wrapper.dataset.contentMode !== "constrained") return;
+      if (event.detail.mode === "expanded") {
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("toc-mode", tocMode);
+        }
+        tocRoot.dispatchEvent(
+          new CustomEvent("toc:mode", {
+            detail: { mode: tocMode, source: "content-width" },
+          })
+        );
+      }
+    });
+
+    if (tocRoot)
+      tocRoot.addEventListener("toc:mode", function (event) {
+        if (!isUserEvent(event)) return;
+        if (wrapper.dataset.contentMode !== "constrained") return;
+        let sidebarMode = "collapsed";
+        if (event.detail.mode === "standard") {
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("sidebar-mode", sidebarMode);
+          }
+          sidebar.dispatchEvent(
+            new CustomEvent("sidebar:mode", {
+              detail: { mode: sidebarMode, source: "content-width" },
+            })
+          );
+        }
+      });
+
+    const saved =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("content-width-mode")
+        : null;
+
+    const mode = saved === "full" ? "full" : "constrained";
+    setContentMode(wrapper, button, mode);
+
+    function dispatchMode(root, eventName, mode) {
+      root.dataset[eventName === "sidebar:mode" ? "sidebarMode" : "tocMode"] =
+        mode;
+      root.dispatchEvent(
+        new CustomEvent(eventName, {
+          detail: { mode, source: "content-width" },
+        })
+      );
+    }
+
+    button.addEventListener("click", function () {
+      const current =
+        wrapper.getAttribute("data-content-mode") || "constrained";
+      const next = current === "constrained" ? "full" : "constrained";
+      setContentMode(wrapper, button, next);
+      if (next === "full") {
+        dispatchMode(sidebar, "sidebar:mode", "expanded");
+        if (tocRoot) dispatchMode(tocRoot, "toc:mode", "standard");
+      }
+      if (next === "constrained") {
+        dispatchMode(sidebar, "sidebar:mode", "collapsed");
+        if (tocRoot) dispatchMode(tocRoot, "toc:mode", "standard");
+      }
+    });
+
+    function setContentMode(wrapper, button, mode) {
+      wrapper.setAttribute("data-content-mode", mode);
+      button.setAttribute("data-content-mode", mode);
+      button.setAttribute("aria-pressed", String(mode === "full"));
+      button.setAttribute(
+        "aria-label",
+        mode === "constrained" ? "Expandir contenido" : "Restringir contenido"
+      );
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("content-width-mode", mode);
+      }
+      wrapper.dispatchEvent(
+        new CustomEvent("content:mode", { detail: { mode } })
+      );
+    }
+  });
+</script>

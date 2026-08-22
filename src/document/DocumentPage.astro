@@ -1,0 +1,43 @@
+---
+import IndexList from "../documentIndex/components/IndexList.astro";
+import type { Document } from "./core/types";
+
+interface Props {
+  entry: Document;
+  Content: any;
+  childEntries: { id: string; data: Document["metadata"] }[];
+}
+
+const { entry, Content, childEntries } = Astro.props;
+---
+
+{
+  entry.metadata.index ? (
+    <IndexList
+      title={entry.title}
+      description={entry.description}
+      label="Index"
+      entries={childEntries}
+    />
+  ) : (
+    <Fragment>
+      <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+        <span class="tech-label mb-3 block">Document</span>
+        <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
+          {entry.title}
+        </h1>
+      </div>
+
+      <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
+        <span>ID: {entry.id}</span>
+        <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+        <span class="text-sm">
+          DATE: {entry.metadata.date.toISOString().slice(0, 10)}
+        </span>
+        <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+        <span>AUTHOR: {entry.metadata.author}</span>
+      </div>
+      <Fragment set:html={Content} />
+    </Fragment>
+  )
+}

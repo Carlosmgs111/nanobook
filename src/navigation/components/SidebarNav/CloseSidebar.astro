@@ -1,0 +1,28 @@
+---
+import CloseSVG from "../../../shared/icons/x.svg";
+const { sidebarId, backdropId, buttonId = "sidebar-close" } = Astro.props;
+---
+
+<button
+  id={buttonId}
+  type="button"
+  class="w-10 aspect-square border border-[var(--grid-line-strong)] font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
+  aria-label="Cerrar navegación"
+>
+  <CloseSVG />
+</button>
+
+<script define:vars={{ sidebarId, backdropId, buttonId }}>
+  (function () {
+    const closeSidebar = document.getElementById(buttonId);
+    if (!closeSidebar) return;
+
+    closeSidebar.addEventListener("click", () => {
+      const sidebar = document.getElementById(sidebarId);
+      const backdrop = document.getElementById(backdropId);
+      if (!sidebar || !backdrop) return;
+      sidebar.dataset.isHidden = "true";
+      backdrop.dataset.isHidden = "true";
+    });
+  })();
+</script>

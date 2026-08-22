@@ -14,6 +14,17 @@ Nanobook incluye una vista de edición accesible desde `/{slug}/edit`. En ella s
 
 ## Componentes principales
 
+### `src/services/render.ts`
+
+Servicio compartido entre editor y preview. Es el único punto de contacto con el worker y con el `BroadcastChannel` de notificaciones.
+
+Responsabilidades:
+
+- Recibir peticiones de renderizado (`renderStagedDocument`).
+- Gestionar un flag `renderPendingDocument` en `sessionStorage` para evitar renders duplicados del mismo documento.
+- Escribir `renderedStagedDocument` solo cuando el documento que se renderizó sigue siendo el actual.
+- Notificar a través de `BroadcastChannel("rendered-document")` cuando el HTML está listo.
+
 ### `DocumentEditor.astro`
 
 Renderiza el editor con CodeMirror 6.
@@ -23,7 +34,8 @@ Responsabilidades:
 - Montar CodeMirror en el contenedor del editor.
 - Cargar el contenido inicial del documento (del prop de Astro o de `sessionStorage` si existe un borrador).
 - Escuchar cambios, actualizar el `Document` en memoria y guardar el borrador en `sessionStorage`.
-- Enviar el documento al worker para obtener el HTML renderizado.
+- Pedir al servicio de renderizado que convierta el borrador en HTML.
+- En `astro:before-swap`, capturar el contenido actual del editor y forzar un render, de modo que el preview pueda mostrarse aunque el usuario navegue antes de que termine el debounce.
 - Guardar cambios en disco mediante `PATCH /api/{id}`.
 
 Puntos clave para `ClientRouter`:
@@ -40,12 +52,14 @@ Página dinámica (`prerender = false`) que muestra el HTML previamente renderiz
 Responsabilidades:
 
 - Leer `renderedStagedDocument` de `sessionStorage`.
+- Si no hay contenido renderizado, pedir al servicio de renderizado que lo genere y mostrar un estado de carga mientras tanto.
 - Inyectar el HTML renderizado en `#preview-container`.
+- Escuchar el `BroadcastChannel("rendered-document")` para refrescarse cuando otro componente (el editor o el propio servicio) termine un render.
 
 Puntos clave para `ClientRouter`:
 
 - Al igual que el editor, el script de preview escucha `astro:page-load` para renderizar en cada transición.
-- Si `sessionStorage` está vacío, muestra un mensaje de fallback en lugar de lanzar un error.
+- Si `sessionStorage` está vacío, no falla: inicia el render desde el preview.
 
 ## Flujo de datos
 
@@ -65,6 +79,9 @@ updateDocument(editor.getContent())
 sessionStorage.setItem("stagedDocument", ...)
         │
         ▼
+renderService.renderStagedDocument(stagedDocument)
+        │
+        ▼
 worker.render(stagedDocument)
         │
         ▼
@@ -80,6 +97,8 @@ preview.astro lee renderedStagedDocument
 #preview-container.innerHTML = renderedContent
 ```
 
+Si el usuario navega a preview antes de que termine el debounce, `DocumentEditor` captura el contenido en `astro:before-swap` y también pide un render. Si el usuario navega antes de que el worker termine, `preview.astro` muestra "Generando preview..." y espera a que el servicio termine (ya sea porque el editor lo inició o porque el preview mismo lo inicia como respaldo).
+
 `BroadcastChannel` permite que la vista de preview se refresque automáticamente cuando el worker termina de renderizar, sin necesidad de que el usuario vuelva a cargar la página.
 
 ## Workers de renderizado
@@ -88,7 +107,8 @@ El renderizado del borrador se ejecuta en un Web Worker para mantener fluida la 
 
 ### Arquitectura
 
-- `src/workers/index.ts` — `MarkdownRenderClient`, una pequeña clase que envía peticiones al worker y devuelve una promesa con el resultado. Cada petición lleva un `id` (UUID) y las respuestas se resuelven mediante un `Map` de promesas pendientes, por lo que varios renders pueden solaparse sin perderse.
+- `src/services/render.ts` — Servicio compartido que coordina el renderizado entre editor y preview. Mantiene el estado en `sessionStorage`, evita duplicados y notifica por `BroadcastChannel`.
+- `src/workers/index.ts` — `MarkdownRenderClient`, una pequeña clase que envía peticiones numeradas al worker y devuelve una promesa por cada petición. Mantiene un `Map<id, resolve>` para poder resolver cada respuesta independientemente, incluso si llegan desordenadas.
 - `src/workers/work.ts` — El worker propiamente dicho. Recibe un `RenderRequest`, llama al renderer y responde con el `RenderedDocument` incluyendo el mismo `id`.
 - `src/core/rendering/adapters/it-mardown.ts` — Implementación basada en `markdown-it` + `@shikijs/markdown-it` + `markdown-it-anchor`. Usa el motor de regex de JavaScript de Shiki para evitar cargar WASM dentro del worker.
 - `src/core/rendering/adapters/astro-markdown.ts` — Implementación alternativa basada en `@astrojs/markdown-remark`.
@@ -128,8 +148,10 @@ La solución fue cambiar al **motor de regex de JavaScript** (`createJavaScriptR
 
 | Clave | Contenido | Quién lo escribe |
 |---|---|---|
-| `stagedDocument` | `Document` con el contenido editado | `DocumentEditor` (`debouncedOnChange`) |
-| `renderedStagedDocument` | `RenderedDocument` con el HTML y headings | `DocumentEditor` (`updateRenderedDocument`) |
+| `stagedDocument` | `Document` con el contenido editado | `DocumentEditor` (`debouncedOnChange`, `astro:before-swap`) |
+| `renderPendingDocument` | `Document` que se está renderizando en este momento | `src/services/render.ts` |
+| `renderedStagedDocumentSource` | `Document` fuente del último HTML renderizado | `src/services/render.ts` |
+| `renderedStagedDocument` | `RenderedDocument` con el HTML y headings | `src/services/render.ts` |
 
 Ambos valores se limpian al cerrar la pestaña. No son persistentes entre sesiones porque la edición es un borrador temporal; el guardado definitivo ocurre con el botón **Guardar**.
 
@@ -154,11 +176,13 @@ Ambos valores se limpian al cerrar la pestaña. No son persistentes entre sesion
 - **Editor vacío al volver de preview**: el script del editor capturaba el wrapper en el scope del módulo; tras una transición de `ClientRouter` apuntaba a un nodo desconectado. Se movió la consulta del DOM a `astro:page-load` y se añadió destrucción en `astro:before-swap`.
 - **Preview vacío en la segunda visita**: el script de preview era un IIFE que solo corría una vez. Se convirtió a listener de `astro:page-load`.
 - **Doble inicialización del editor**: se eliminó la llamada inmediata a `initEditor()`; `astro:page-load` ya dispara en la carga inicial.
-- **Worker perdía respuestas al gestionar peticiones solapadas**: una versión intermedia intentaba cancelar renders terminando y recreando el worker. Se volvió al modelo original de IDs con `crypto.randomUUID()` y un `Map` de promesas pendientes, sin terminar el worker.
+- **Worker perdía respuestas al cancelar renders**: una versión intermedia cancelaba renders terminando el worker y recreándolo, lo que perdía mensajes en tránsito. Se volvió a un modelo de IDs numéricos con un `Map` de promesas pendientes, sin terminar el worker.
+- **Renders obsoletos sobreescribiendo `sessionStorage`**: si un render anterior terminaba después de uno más reciente, podía dejar el preview desactualizado. El servicio de renderizado verifica que el `stagedDocument` de `sessionStorage` siga siendo el mismo que se renderizó antes de escribir el resultado.
+- **Preview vacío si se navegaba antes de que terminara el debounce**: si el usuario hacía click en preview dentro del segundo de debounce, el render nunca se iniciaba. Ahora `DocumentEditor` captura el contenido actual en `astro:before-swap` y pide un render, y `preview.astro` también puede iniciar el render si es necesario.
 
 ## Próximos pasos
 
 - Decidir cuál renderer se queda como principal (`markdown-it` vs `@astrojs/markdown-remark`).
 - Extraer headings del HTML renderizado para mantener el TOC en preview.
 - Añadir indicador de "guardando..." y manejo de errores de red en el botón de guardar.
-- Evaluar si el preview debe renderizar sincrónicamente justo antes de navegar, para evitar depender del debounce de 1 s.
+- Evaluar reducir el debounce de 1 s o renderizar incrementalmente mientras se escribe.
