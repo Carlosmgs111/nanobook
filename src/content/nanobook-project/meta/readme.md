@@ -139,7 +139,7 @@ Campos:
 - `src/rendering/` — Capa de renderizado de Markdown con múltiples adapters y workers.
 - `src/editor/` — Componentes y utilidades del editor integrado.
 - `src/theme/` — Componentes relacionados con el tema claro/oscuro.
-- `src/tableOfContents/` — Componentes y lógica de la tabla de contenidos.
+- `src/document/components/TableOfContents/` — Componentes y lógica de la tabla de contenidos.
 - `src/contentWidth/` — Componente de control de ancho de contenido.
 - `src/shared/` — Utilidades compartidas entre módulos.
 

@@ -41,7 +41,7 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
 </nav>
 
 <script type="module" define:vars={{ tocRootId, tocNavId }}>
-  import { findActiveIndex } from "../../core/scroll-spy.ts";
+  import { findActiveIndex } from "/src/document/core/scroll-spy";
 
   let abortController = null;
 

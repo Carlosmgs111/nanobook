@@ -30,6 +30,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Documentación de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 
 ### Changed
+- Reubicación de `TableOfContents` e `IndexList` dentro del dominio de documentos:
+  - `src/tableOfContents/` → `src/document/components/TableOfContents/`
+  - `src/documentIndex/` → `src/document/components/IndexList/`
+  - `src/tableOfContents/core/scroll-spy.ts` → `src/document/core/scroll-spy.ts`
 - Reorganización de `src/content/nanobook-project/` en subcarpetas temáticas (`general`, `arquitectura`, `layout`, `sidebar`, `table-of-contents`, `versionado`) con índices propios y referencias internas actualizadas.
 - Refactor de `src/lib/content.ts`: elimina `getHeadings()` y su dependencia del filesystem.
 - `src/pages/[...slug].astro` ahora consume headings a través de `parseDocument(entry)`.

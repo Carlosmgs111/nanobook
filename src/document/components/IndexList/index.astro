@@ -1,5 +1,5 @@
 ---
-import Index from "./Index.astro";
+import DocumentIndex from "./DocumentIndex.astro";
 
 interface Entry {
   id: string;
@@ -44,7 +44,7 @@ const sortedEntries = entries
 </div>
 
 <div class="index-panel relative space-y-4">
-  {sortedEntries.map((page, index) => <Index page={page} index={index} />)}
+  {sortedEntries.map((page, index) => <DocumentIndex page={page} index={index} />)}
 </div>
 
 {

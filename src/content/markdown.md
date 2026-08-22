@@ -1,195 +1,101 @@
 ---
-title: Guia markdown
-description: Guia para aprender markdown.
-date: 2026-07-30T00:00:00.000Z
-author: Astro
+title: Arquitectura de componentes basada en IDs
+description: Resumen de la arquitectura de componentes del SidebarNav y
+  TableOfContents de nanobook, basada en IDs del DOM.
+date: 2026-08-06T00:00:00.000Z
+author: Nanobook
 tags: []
 draft: false
 index: false
 position: 0
 ---
 
-# Markmap para modelar tus Mindmaps
+# Arquitectura de componentes basada en IDs
 
-## Markmap
+Esta es un arquitectura para trabajar con Javascript Vanilla
 
-**Markmap** es un formato para visualizar mapas mentales en una estructura de árbol interactiva, que utiliza la sintaxis Markdown para definir los nodos y sus relaciones.
+## Resumen
 
-Este formato es útil para representar ideas y conceptos de manera jerárquica, permitiendo una visualización clara y estructurada de la información. Markmap convierte el texto en una representación visual dinámica y navegable, facilitando la comprensión y exploración de la información.
+Este proyecto adopta un enfoque en el que cada componente Astro encapsula su propia lógica de presentación y comportamiento, y se comunica con otros componentes a través del DOM usando IDs explícitos. El patrón se aplica tanto al `SidebarNav` como al `TableOfContents`.
 
-## Sintaxis Markdown
+Este documento describe los principios generales, la estructura de alto nivel, las decisiones arquitectónicas compartidas y los documentos específicos de cada sistema.
 
-Markmap usa una sintaxis basada en Markdown para estructurar la información en forma de un mapa mental. Cada nodo y subnodo se define con encabezados y subencabezados, lo que permite organizar las ideas de manera jerárquica y clara.
+## Principios del enfoque
 
-1. **Encabezados**
+### 1. Atomización de la lógica
 
-   **Uso:** Los encabezados en Markdown (`#`, `##`, `###`, etc.) se utilizan para definir los nodos del mapa mental. Cada nivel de encabezado representa un nivel jerárquico en el mapa mental.
+Cada componente Astro es responsable de:
 
-   **Ejemplo:**
+- Renderizar su propio markup.
+- Adjuntar los listeners que necesita.
+- Mantener su estado local mediante atributos `data-*`.
 
-   ```markdown
-   # Título Principal
+### 2. Comunicación por IDs
 
-   ## Subtítulo 1
+Los componentes no reciben callbacks ni estado compartido mediante props complejas. En su lugar, reciben el `id` del elemento del DOM que necesitan manipular y usan `document.getElementById` para leer/escribir atributos.
 
-   ## Subtítulo 2
+### 3. Estado declarativo mediante `data-*`
 
-   ### Subtítulo 2.1
+El estado se expresa en el DOM como atributos de datos. El CSS responde a estos atributos, manteniendo separadas las reglas visuales de la lógica de JavaScript.
 
-   ### Subtítulo 2.2
-   ```
+Atributos comunes:
 
-2. **Listas**
+- `data-sidebar-mode="expanded | collapsed"`
+- `data-toc-mode="standard | compact"`
+- `data-is-hidden="true | false"`
+- `data-is-active="true | false"`
+- `data-is-visible="true | false"`
 
-   **Uso:** Las listas, tanto ordenadas (`1.`, `2.`, etc.) como desordenadas (`-`, `*`, `+`), pueden utilizarse para definir subnodos y elementos secundarios dentro de un nodo principal.
+### 4. Eventos custom para desacoplamiento
 
-   **Ejemplo:**
+Cuando un componente necesita notificar a otro sin conocerlo directamente, emite eventos custom sobre un elemento del DOM identificado por ID. Otro componente escucha ese evento y reacciona.
 
-   ```markdown
-   # Título Principal
+Esto se usa, por ejemplo, entre `TocNav` (emite `toc:headings` y `toc:active` sobre `#toc-root`) y `TocIndicator` (los escucha). Además, el emisor guarda el último estado en el propio elemento DOM, por lo que un receptor que se inicialice tarde puede leer el estado actual sin perder ningún evento.
 
-   - Elemento 1
+## Estructura de alto nivel
 
-     - Sub-elemento 1.1
-     - Sub-elemento 1.2
-
-   - Elemento 2
-   ```
-
-3. **Texto Enriquecido**
-
-   - **Negritas:** Utiliza `**texto**` o `__texto__`.
-   - **Cursivas:** Utiliza `*texto*` o `_texto_`.
-   - **Código:** Utiliza `` `código` `` para resaltar código en línea.
-   - **Bloques de código:** Utiliza tres comillas invertidas (` ``` `).
-   - **Enlaces:** Utiliza `[texto del enlace](URL)`.
-   - **Imágenes:** Utiliza `![texto alternativo](URL de la imagen)`.
-
-   **Ejemplo:**
-
-   ````markdown
-   # Título Principal
-
-   **Texto en negrita**
-
-   _Texto en cursiva_
-
-   ```javascript
-   // Código en línea
-   console.log("Hola, Markmap!");
-   ```
-   ````
-
-4. **Tareas**
-
-   **Uso:** Los elementos de lista pueden tener casillas de verificación para representar tareas.
-
-   **Ejemplo:**
-
-   ```markdown
-   # Lista de Tareas
-
-   - [ ] Tarea Pendiente
-   - [x] Tarea Completa
-   ```
-
-5. **Citas**
-
-   **Uso:** Utiliza `>` para incluir citas o bloques de texto citados.
-
-   **Ejemplo:**
-
-   ```markdown
-   > Esta es una cita.
-   ```
-
-6. **Tablas**
-
-   **Uso:** Las tablas se pueden definir utilizando la sintaxis de Markdown para organizar datos en filas y columnas.
-
-   **Ejemplo:**
-
-   ```markdown
-   | Encabezado 1 | Encabezado 2 |
-   | ------------ | ------------ |
-   | Dato 1       | Dato 2       |
-   | Dato 3       | Dato 4       |
-   ```
----
-
-## Ejemplo completo
-
-Un ejemplo completo de un documento Markdown que puede ser convertido a un mapa mental con Markmap:
-
-```markdown
-# Proyecto de Software
-
-## Fase de Planificación
-
-- Definición de Requisitos
-
-  - Requisitos Funcionales
-  - Requisitos No Funcionales
-
-- Análisis de Riesgos
-
-## Fase de Desarrollo
-
-### Diseño
-
-- Arquitectura del Sistema
-- Diseño de Base de Datos
-
-### Implementación
-
-- Desarrollo Frontend
-
-  - Uso de React
-  - Estilos con CSS
-
-- Desarrollo Backend
-  - API con Node.js
-  - Base de Datos con MongoDB
-
-## Fase de Pruebas
-
-- Pruebas Unitarias
-- Pruebas de Integración
-- Pruebas de Usuario
-
-## Fase de Despliegue
-
-- Preparación del Entorno
-- Despliegue en Servidores
-- Monitoreo y Mantenimiento
+```text
+Layout.astro
+├── OpenSidebar.astro
+├── SidebarNav/index.astro
+│   ├── SidebarHeader.astro
+│   │   ├── CloseSidebar.astro
+│   │   └── SidebarModeToggle.astro
+│   └── SidebarList.astro
+│       └── ToolTip.astro
+├── main
+└── TableOfContents/index.astro
+    ├── TocIndicator.astro
+    └── TocNav.astro
+        └── TocToggle.astro
 ```
 
----
+## Decisiones arquitectónicas
 
-## Visualización Interactiva
+### Layout como coordinador
 
-Ofrece una visualización interactiva en forma de árbol donde los usuarios pueden expandir y contraer nodos para explorar diferentes niveles de información. Esta interactividad facilita la navegación y comprensión de la estructura del contenido.
+La lógica que comparten el sidebar y la tabla de contenidos (`enforceSingleExpanded`, observers, etc.) permanece en `Layout.astro`. Esto es intencional: `Layout` actúa como contenedor de ambos componentes y como canal de comunicación entre ellos. Ninguno de los dos tiene autoridad directa sobre el otro; ambos leen y escriben atributos `data-*` que `Layout` observa y coordina.
 
-## Generación Dinámica
+### IDs fijos como contrato
 
-Los mapas mentales en Markmap se generan dinámicamente a partir de texto en formato Markdown. Esto permite una actualización rápida y fácil de los mapas mentales al modificar el texto fuente.
+Tanto `SidebarNav` como `TableOfContents` definen IDs fijos en su componente raíz y los propagan a sus hijos. Esto simplifica la depuración y el razonamiento sobre el DOM, a costa de que estos componentes no sean fácilmente reutilizables varias veces en la misma página. Para este proyecto, que usa un único sidebar y un único TOC por página, es una tradeoff aceptable.
 
-## Compatibilidad con Herramientas Markdown
+## Documentación específica
 
-Markmap es compatible con herramientas que soportan Markdown, permitiendo integrar mapas mentales en documentos y plataformas que ya utilizan Markdown para otras formas de documentación.
+- [`sidebar-architecture.md`](../sidebar/sidebar-architecture.md): estructura, contratos de IDs y flujo de datos del `SidebarNav`.
+- [`toc-architecture.md`](../table-of-contents/toc-architecture.md): estructura, scrollSpy, eventos custom y contratos de IDs del `TableOfContents`.
 
-## Integración con Aplicaciones Web
+## Fortalezas
 
-Markmap puede integrarse en aplicaciones web para proporcionar visualizaciones de mapas mentales en interfaces de usuario. Esto es útil para aplicaciones de gestión de conocimientos, educación y presentación de información.
+1. **Bajo acoplamiento superficial**: los componentes no dependen de la estructura interna de otros, solo de un contrato de IDs.
+2. **Fácil de leer**: cada archivo es pequeño y su responsabilidad está clara.
+3. **Estado visible y depurable**: los atributos `data-*` se pueden inspeccionar directamente en el DevTools.
+4. **CSS declarativo**: las transiciones y estilos condicionales están centralizados en las hojas de estilo.
+5. **Desacoplamiento con eventos**: los componentes pueden reaccionar a cambios sin importarse mutuamente.
 
-## Facilidad de Uso
+## Riesgos y recomendaciones
 
-La sintaxis de Markmap es simple y fácil de aprender para quienes ya están familiarizados con Markdown. Esto facilita la adopción y creación de mapas mentales sin necesidad de herramientas complejas.
-
-## Personalización de Estilo
-
-Ofrece opciones para personalizar el estilo y la apariencia de los mapas mentales, permitiendo ajustar el diseño para que se alinee con los requisitos estéticos o funcionales de un proyecto.
-
-## Exportación y Compartición
-
-Los mapas mentales creados en Markmap pueden exportarse en formatos compatibles con diversas plataformas y ser compartidos fácilmente, facilitando la colaboración y distribución de la información representada.
+1. **Acoplamiento por ID**: si cambia un ID, hay que actualizar múltiples lugares. Conviene documentar los contratos en cada componente.
+2. **Orden de inicialización**: cuando se usan eventos custom, el receptor debe estar inicializado antes de que el emisor envíe el evento. En la práctica esto funciona porque Astro inyecta los scripts en orden del DOM, pero es un punto a vigilar.
+3. **Guardas defensivas**: validar existencia de elementos antes de manipularlos en todos los scripts.
+4. **Store global**: si la coordinación crece, evaluar una pequeña utilidad de estado global basada en eventos personalizados en lugar de mutar atributos desde múltiples lugares.

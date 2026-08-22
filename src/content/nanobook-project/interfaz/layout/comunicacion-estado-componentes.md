@@ -351,9 +351,9 @@ El script del layout en `Layout.astro` es inline y se encarga de:
 
 - `src/layouts/Layout.astro` — script de coordinación del layout.
 - `src/navigation/components/SidebarNav/index.astro` — estado del sidebar y tooltips.
-- `src/tableOfContents/components/TableOfContents/index.astro` — estado del TOC y scroll spy.
+- `src/document/components/TableOfContents/index.astro` — estado del TOC y scroll spy.
 - `src/contentWidth/components/ContentWidthToggle.astro` — estado del modo de ancho.
-- `src/tableOfContents/core/scroll-spy.ts` — helper genérico de scroll spy.
+- `src/document/core/scroll-spy.ts` — helper genérico de scroll spy.
 - `src/content/nanobook-project/interfaz/layout/layout-evolution.md` — evolución del layout de Grid a Flex.
 
 ---

@@ -33,7 +33,7 @@ Cada componente mantiene su propio estado en atributos `data-*` y `localStorage`
 |---|---|
 | `src/contentWidth/components/ContentWidthToggle.astro` | Alterna `content-width-mode`; escucha `sidebar:mode` y `toc:mode`; sincroniza el panel opuesto en modo `constrained`. |
 | `src/navigation/components/SidebarNav/SidebarModeToggle.astro` | Alterna `sidebar-mode` al hacer click; emite `sidebar:mode`; actualiza su UI al escuchar `sidebar:mode`. |
-| `src/tableOfContents/components/TableOfContents/TocToggle.astro` | Alterna `toc-mode` al hacer click; emite `toc:mode`; actualiza su UI al escuchar `toc:mode`. |
+| `src/document/components/TableOfContents/TocToggle.astro` | Alterna `toc-mode` al hacer click; emite `toc:mode`; actualiza su UI al escuchar `toc:mode`. |
 | `src/layouts/Layout.astro` | Contenedor que aloja `SidebarNav`, `TableOfContents` y `ContentWidthToggle`. Ya no contiene lógica de coordinación. |
 
 ---
@@ -179,6 +179,6 @@ Si la prioridad es eliminar la complejidad por completo, la **Opción D** (elimi
 
 - `src/contentWidth/components/ContentWidthToggle.astro`
 - `src/navigation/components/SidebarNav/SidebarModeToggle.astro`
-- `src/tableOfContents/components/TableOfContents/TocToggle.astro`
+- `src/document/components/TableOfContents/TocToggle.astro`
 - `src/content/nanobook-project/interfaz/layout/comunicacion-estado-componentes.md` — evolución anterior basada en `MutationObserver`.
 - `src/content/nanobook-project/arquitectura/id-based-component-architecture.md` — principios de la arquitectura basada en IDs.
