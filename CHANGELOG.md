@@ -7,6 +7,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+- `resolveReference` en `src/document/core/proxy.ts` resolvía mal las referencias relativas de documentos no índice porque usaba el propio ID como directorio base. Ahora usa el directorio padre para archivos normales y el propio ID para índices, alineado con el campo `index` del frontmatter.
+- Editor cargaba siempre el documento staged anterior porque `sessionStorage` usaba una clave global compartida. Ahora el stage se valida por ID de documento y se limpia al salir del flujo edit/preview.
+
+### Added
+- Sistema extensible de resolutores de referencias en `src/document/core/reference/`.
+- `ref` ahora soporta referencias locales fuera de `src/content/` (`ref: /README.md` o `ref: { source: "local", path: "README.md" }`).
+- `ref` ahora soporta referencias a documentos en repositorios de GitHub (`ref: github:owner/repo/path.md` o `ref: { source: "github", owner, repo, path, branch? }`).
+- `parseFrontmatter` extraído a `src/document/core/frontmatter.ts` para compartirlo entre loaders y resolutores.
+
+### Docs
+- Nueva sección de documentación del módulo `src/rendering/` en `src/content/nanobook-project/editor/rendering/`.
+
+## [0.2.0-alpha.1] - 2026-08-22
+
 ### Added
 - Editor integrado por documento: vista de edición en `/{slug}/edit` usando CodeMirror 6.
 - `src/components/DocumentEditor/` con componente Astro y módulo de setup de CodeMirror, diseñado para permitir cambiar de editor en el futuro.
@@ -93,5 +108,6 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Comportamiento responsive del header, breadcrumb y TOC en mobile.
 - Sidebar en mobile: ahora muestra el texto completo en el drawer, independientemente del modo `collapsed` guardado.
 
-[Unreleased]: https://github.com/usuario/nanobook/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/usuario/nanobook/compare/v0.2.0-alpha.1...HEAD
+[0.2.0-alpha.1]: https://github.com/usuario/nanobook/compare/v0.1.0...v0.2.0-alpha.1
 [0.1.0]: https://github.com/usuario/nanobook/releases/tag/v0.1.0
