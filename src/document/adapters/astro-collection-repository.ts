@@ -1,62 +1,52 @@
-import type { CollectionEntry } from "astro:content";
 import { getAstroEntries } from "../core/astro-cache";
-import type { ContentRepository, Document, DocumentMetadata } from "../core/types";
-import { stringify } from "yaml";
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join, resolve, sep } from "node:path";
-
-const CONTENT_DIR = "./src/content";
-const ALLOWED_ID_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
-
-function idToFilePath(id: string): string {
-  if (!ALLOWED_ID_PATTERN.test(id)) {
-    throw new Error(`Id de documento inválido: ${id}`);
-  }
-
-  const filePath = resolve(join(CONTENT_DIR, `${id}.md`));
-  const contentRoot = resolve(CONTENT_DIR);
-
-  if (!filePath.startsWith(contentRoot + sep) && filePath !== contentRoot) {
-    throw new Error(`Id de documento fuera del directorio de contenido: ${id}`);
-  }
-
-  return filePath;
-}
-
-function getParentId(id: string): string | null {
-  if (id === "index") return null;
-  const lastSlash = id.lastIndexOf("/");
-  return lastSlash === -1 ? "index" : id.slice(0, lastSlash);
-}
-
-function toDocument(entry: CollectionEntry<"content">): Document {
-  const data = entry.data as DocumentMetadata;
-
-  return {
-    id: entry.id,
-    slug: entry.id === "index" ? "" : entry.id,
-    parentId: getParentId(entry.id),
-    position: data.position,
-    title: data.title,
-    description: data.description,
-    content: entry.body ?? "",
-    metadata: data,
-    rawFrontmatter: `---\n${stringify(entry.data)}---\n\n`,
-  };
-}
+import type { ContentRepository, Document } from "../core/types";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
+import { idToFilePath } from "../core/path";
+import { resolveProxy } from "../core/proxy";
+import { toDocument } from "../core/document";
+import { CompositeReferenceResolver } from "../core/reference/resolver";
+import { InternalReferenceResolver } from "../core/reference/internal-resolver";
+import { LocalFileReferenceResolver } from "../core/reference/local-file-resolver";
+import { GitHubReferenceResolver } from "./github-loader/reference-resolver";
 
 let cachedDocuments: Document[] | null = null;
+
+function createReferenceResolver(
+  entriesById: Map<string, import("astro:content").CollectionEntry<"content">>,
+) {
+  return new CompositeReferenceResolver(
+    [
+      new InternalReferenceResolver(entriesById),
+      new LocalFileReferenceResolver(),
+      new GitHubReferenceResolver(),
+    ],
+    {
+      projectRoot: process.cwd(),
+      githubToken: import.meta.env.GITHUB_TOKEN,
+      readFile: (path) => readFile(path, "utf-8"),
+    },
+  );
+}
 
 export class AstroCollectionRepository implements ContentRepository {
   async list(): Promise<Document[]> {
     if (cachedDocuments) return cachedDocuments;
 
     const entries = await getAstroEntries();
+    const entriesById = new Map(entries);
+    const resolver = createReferenceResolver(entriesById);
 
-    cachedDocuments = Array.from(entries.values())
-      .filter((entry) => !entry.data.draft)
-      .map((entry) => toDocument(entry));
+    const documents = await Promise.all(
+      Array.from(entries.values())
+        .filter((entry) => !entry.data.draft)
+        .map(async (entry) => {
+          const proxy = await resolveProxy(entry, resolver);
+          return proxy ?? toDocument(entry);
+        }),
+    );
 
+    cachedDocuments = documents;
     return cachedDocuments;
   }
 

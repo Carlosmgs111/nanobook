@@ -21,6 +21,31 @@ const dynamicLoader = github({
  * - Modo estático: solo archivos Markdown locales en `src/content/`.
  * - Modo dinámico: contenido remoto desde GitHub (fuente de verdad externa).
  */
+const githubRefSchema = z.object({
+  source: z.literal("github"),
+  owner: z.string(),
+  repo: z.string(),
+  path: z.string(),
+  branch: z.string().default("main"),
+});
+
+const localRefSchema = z.object({
+  source: z.literal("local"),
+  path: z.string(),
+});
+
+const urlRefSchema = z.object({
+  source: z.literal("url"),
+  url: z.string().url(),
+});
+
+const refSchema = z.union([
+  z.string(),
+  githubRefSchema,
+  localRefSchema,
+  urlRefSchema,
+]).optional();
+
 const content = defineCollection({
   loader: isDynamicMode ? dynamicLoader : staticLoader,
   schema: z.object({
@@ -33,6 +58,7 @@ const content = defineCollection({
     draft: z.boolean().default(false),
     index: z.boolean().default(false),
     position: z.number().default(0),
+    ref: refSchema,
   }),
 });
 

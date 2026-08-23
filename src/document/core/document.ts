@@ -3,15 +3,15 @@ import { slug } from "github-slugger";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Node } from "unist";
+import { stringify } from "yaml";
+import { getParentId } from "./path";
+import type { CollectionEntry } from "astro:content";
+import type { DocumentMetadata, Document } from "./types";
 
 export interface Heading {
   depth: number;
   slug: string;
   text: string;
-}
-
-export interface Document {
-  headings: Heading[];
 }
 
 export interface DocumentSource {
@@ -28,7 +28,11 @@ function extractHeadings(source: string): Heading[] {
 
   const visit = (node: Node) => {
     const anyNode = node as any;
-    if (anyNode.type === "heading" && anyNode.depth >= 2 && anyNode.depth <= 3) {
+    if (
+      anyNode.type === "heading" &&
+      anyNode.depth >= 2 &&
+      anyNode.depth <= 3
+    ) {
       const text = toString(anyNode);
       const headingSlug = slug(text);
       if (headingSlug) {
@@ -53,9 +57,25 @@ function extractHeadings(source: string): Heading[] {
  * underlying loader (glob, GitHub, CMS, etc.) and of file extensions like
  * `.md` or `.mdx`.
  */
-export function parseDocument(source: DocumentSource): Document {
+export function parseDocument(source: DocumentSource): { headings: Heading[] } {
   const raw = stripFrontmatter(source.body ?? "");
   return {
     headings: extractHeadings(raw),
+  };
+}
+
+export function toDocument(entry: CollectionEntry<"content">): Document {
+  const data = entry.data as DocumentMetadata;
+
+  return {
+    id: entry.id,
+    slug: entry.id === "index" ? "" : entry.id,
+    parentId: getParentId(entry.id),
+    position: data.position,
+    title: data.title,
+    description: data.description,
+    content: entry.body ?? "",
+    metadata: data,
+    rawFrontmatter: `---\n${stringify(entry.data)}---\n\n`,
   };
 }

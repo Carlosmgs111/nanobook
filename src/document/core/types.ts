@@ -6,6 +6,26 @@
  * tipos, no de Astro ni de ninguna fuente concreta.
  */
 
+export interface LocalRef {
+  source: "local";
+  path: string;
+}
+
+export interface GitHubRef {
+  source: "github";
+  owner: string;
+  repo: string;
+  path: string;
+  branch?: string;
+}
+
+export interface UrlRef {
+  source: "url";
+  url: string;
+}
+
+export type RefValue = string | LocalRef | GitHubRef | UrlRef;
+
 export interface DocumentMetadata {
   title: string;
   description: string;
@@ -16,6 +36,7 @@ export interface DocumentMetadata {
   draft: boolean;
   index: boolean;
   position: number;
+  ref?: RefValue;
 }
 
 export interface Document {
@@ -28,6 +49,7 @@ export interface Document {
   content: string;
   metadata: DocumentMetadata;
   rawFrontmatter: string;
+  proxyTargetId?: string;
 }
 
 /**
@@ -38,6 +60,7 @@ export interface ContentEntry {
   id: string;
   data: DocumentMetadata;
   body?: string;
+  rawFrontmatter?: string;
 }
 
 /**
