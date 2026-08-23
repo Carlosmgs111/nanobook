@@ -56,7 +56,7 @@ export function buildNavigationTree(documents: Document[]): NavigationTree {
   const nodeMap = new Map<string, NavigationNode>();
 
   for (const document of documents) {
-    if (document.metadata.draft) continue;
+    // if (document.metadata.draft) continue;
     nodeMap.set(document.id, toNavigationNode(document));
   }
 

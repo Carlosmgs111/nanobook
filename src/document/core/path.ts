@@ -25,6 +25,7 @@ export function idToFilePath(
   return filePath;
 }
 
+// TODO 🚮 remove this, is unused
 export function filePathToId(
   filePath: string,
   contentDir: string = DEFAULT_CONTENT_DIR,
@@ -44,5 +45,6 @@ export function filePathToId(
 export function getParentId(id: string): string | null {
   if (id === "index") return null;
   const lastSlash = id.lastIndexOf("/");
-  return lastSlash === -1 ? "index" : id.slice(0, lastSlash);
+  const parentId = lastSlash === -1 ? "index" : id.slice(0, lastSlash);
+  return parentId;
 }
