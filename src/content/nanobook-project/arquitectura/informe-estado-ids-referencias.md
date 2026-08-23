@@ -12,7 +12,7 @@ index: false
 
 ## 1. Resumen ejecutivo
 
-El proyecto ha documentado una arquitectura de componentes "basada en IDs" ([`id-based-component-architecture.md`](./id-based-component-architecture.md)) en la que cada pieza de UI se comunica con otras a través de referencias explícitas al DOM (IDs), atributos `data-*` y eventos personalizados. El objetivo implícito es que los componentes sean autónomos, agnósticos del contexto y reutilizables sin tener que conocer la estructura interna de otros.
+El proyecto ha documentado una arquitectura de componentes "basada en IDs" ([`id-based-component-architecture.md`](./id-based-component-architecture)) en la que cada pieza de UI se comunica con otras a través de referencias explícitas al DOM (IDs), atributos `data-*` y eventos personalizados. El objetivo implícito es que los componentes sean autónomos, agnósticos del contexto y reutilizables sin tener que conocer la estructura interna de otros.
 
 La realidad actual es **parcial**: existen buenas prácticas aisladas (TOC, sidebar móvil) pero también una cantidad significativa de **IDs hardcodeadas, selectores globales y responsabilidades mezcladas**. Esto genera acoplamiento accidental, dificulta la reutilización y deja la arquitectura a medio camino entre el ideal de referencias y un modelo clásico de componentes acoplados al DOM.
 
@@ -257,8 +257,8 @@ El ejemplo del botón es el mejor punto de partida: crear un `Button` agnóstico
 
 ## 8. Referencias
 
-- [`id-based-component-architecture.md`](./id-based-component-architecture.md)
-- [`../interfaz/sidebar/sidebar-architecture.md`](../interfaz/sidebar/sidebar-architecture.md)
-- [`../interfaz/tabla-de-contenidos/toc-architecture.md`](../interfaz/tabla-de-contenidos/toc-architecture.md)
-- [`../interfaz/layout/coordinacion-eventos-layout.md`](../interfaz/layout/coordinacion-eventos-layout.md)
-- [`../interfaz/layout/comunicacion-estado-componentes.md`](../interfaz/layout/comunicacion-estado-componentes.md)
+- [`id-based-component-architecture.md`](./id-based-component-architecture)
+- [`../interfaz/sidebar/sidebar-architecture.md`](../interfaz/sidebar/sidebar-architecture)
+- [`../interfaz/tabla-de-contenidos/toc-architecture.md`](../interfaz/tabla-de-contenidos/toc-architecture)
+- [`../interfaz/layout/coordinacion-eventos-layout.md`](../interfaz/layout/coordinacion-eventos-layout)
+- [`../interfaz/layout/comunicacion-estado-componentes.md`](../interfaz/layout/comunicacion-estado-componentes)

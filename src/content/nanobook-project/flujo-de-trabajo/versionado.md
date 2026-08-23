@@ -126,7 +126,7 @@ git show v0.2.0
 
 ### Estado actual
 
-El proyecto está desarrollando la versión `0.1.0` (alpha). Aún no se ha creado un tag de release porque la alpha no ha cerrado. Los cambios acumulados viven en `[Unreleased]` de `CHANGELOG.md` hasta que se decida taguear.
+El proyecto está desarrollando la versión `0.2.0-alpha.1`. La versión `0.1.0` ya fue tagueada y publicada; desde entonces se han acumulado nuevas funcionalidades significativas (editor integrado, preview en worker, modos de despliegue estático/dinámico, loader de GitHub, capa de dominio desacoplada). Los cambios recientes sin versionar viven en `[Unreleased]` de `CHANGELOG.md` hasta que se decida taguear `v0.2.0`.
 
 ## 7. Roadmap tentativo
 

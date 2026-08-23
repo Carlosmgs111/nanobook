@@ -14,7 +14,7 @@ Nanobook incluye una vista de edición accesible desde `/{slug}/edit`. En ella s
 
 ## Componentes principales
 
-### `src/services/render.ts`
+### `src/rendering/core/render-service.ts`
 
 Servicio compartido entre editor y preview. Es el único punto de contacto con el worker y con el `BroadcastChannel` de notificaciones.
 
@@ -24,6 +24,7 @@ Responsabilidades:
 - Gestionar un flag `renderPendingDocument` en `sessionStorage` para evitar renders duplicados del mismo documento.
 - Escribir `renderedStagedDocument` solo cuando el documento que se renderizó sigue siendo el actual.
 - Notificar a través de `BroadcastChannel("rendered-document")` cuando el HTML está listo.
+- Limpiar `renderedStagedDocument` y `renderedStagedDocumentSource` cuando el usuario sale del flujo de edición.
 
 ### `DocumentEditor.astro`
 
@@ -37,6 +38,7 @@ Responsabilidades:
 - Pedir al servicio de renderizado que convierta el borrador en HTML.
 - En `astro:before-swap`, capturar el contenido actual del editor y forzar un render, de modo que el preview pueda mostrarse aunque el usuario navegue antes de que termine el debounce.
 - Guardar cambios en disco mediante `PATCH /api/{id}`.
+- Limpiar `stagedDocument` y `renderedStagedDocument` cuando el usuario sale del flujo de edición (cualquier navegación que no sea `/{id}/edit` o `/{id}/preview`).
 
 Puntos clave para `ClientRouter`:
 
@@ -52,9 +54,10 @@ Página dinámica (`prerender = false`) que muestra el HTML previamente renderiz
 Responsabilidades:
 
 - Leer `renderedStagedDocument` de `sessionStorage`.
-- Si no hay contenido renderizado, pedir al servicio de renderizado que lo genere y mostrar un estado de carga mientras tanto.
+- Si no hay contenido renderizado, o si el contenido renderizado pertenece a otro documento, pedir al servicio de renderizado que lo genere y mostrar un estado de carga mientras tanto.
 - Inyectar el HTML renderizado en `#preview-container`.
 - Escuchar el `BroadcastChannel("rendered-document")` para refrescarse cuando otro componente (el editor o el propio servicio) termine un render.
+- Limpiar `stagedDocument` y `renderedStagedDocument` cuando el usuario sale del flujo de edición.
 
 Puntos clave para `ClientRouter`:
 
@@ -153,7 +156,9 @@ La solución fue cambiar al **motor de regex de JavaScript** (`createJavaScriptR
 | `renderedStagedDocumentSource` | `Document` fuente del último HTML renderizado | `src/services/render.ts` |
 | `renderedStagedDocument` | `RenderedDocument` con el HTML y headings | `src/services/render.ts` |
 
-Ambos valores se limpian al cerrar la pestaña. No son persistentes entre sesiones porque la edición es un borrador temporal; el guardado definitivo ocurre con el botón **Guardar**.
+Ambos valores se limpian al cerrar la pestaña. Además, se borran activamente cuando el usuario navega fuera del flujo de edición de un documento (cualquier URL que no sea `/{id}/edit` o `/{id}/preview`). Esto garantiza que abrir el editor de otro documento nunca cargue un borrador ajeno.
+
+No son persistentes entre sesiones porque la edición es un borrador temporal; el guardado definitivo ocurre con el botón **Guardar**.
 
 ## Decisiones y tradeoffs
 
@@ -179,6 +184,7 @@ Ambos valores se limpian al cerrar la pestaña. No son persistentes entre sesion
 - **Worker perdía respuestas al cancelar renders**: una versión intermedia cancelaba renders terminando el worker y recreándolo, lo que perdía mensajes en tránsito. Se volvió a un modelo de IDs numéricos con un `Map` de promesas pendientes, sin terminar el worker.
 - **Renders obsoletos sobreescribiendo `sessionStorage`**: si un render anterior terminaba después de uno más reciente, podía dejar el preview desactualizado. El servicio de renderizado verifica que el `stagedDocument` de `sessionStorage` siga siendo el mismo que se renderizó antes de escribir el resultado.
 - **Preview vacío si se navegaba antes de que terminara el debounce**: si el usuario hacía click en preview dentro del segundo de debounce, el render nunca se iniciaba. Ahora `DocumentEditor` captura el contenido actual en `astro:before-swap` y pide un render, y `preview.astro` también puede iniciar el render si es necesario.
+- **Editor mostraba siempre el mismo documento staged**: al usar una única clave global `stagedDocument`, editar cualquier documento después de haber editado otro cargaba el contenido del documento anterior. Se resolvió validando el `id` del documento staged al cargar el editor y borrando las claves de `sessionStorage` al salir del flujo de edición.
 
 ## Próximos pasos
 

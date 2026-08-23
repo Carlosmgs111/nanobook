@@ -1,11 +1,16 @@
 ---
-title: "Corto plazo"
-description: "Mejoras inmediatas para cerrar la fase alpha y estabilizar el día a día de Nanobook."
-date: 2026-08-21
-author: "Nanobook"
-tags: ["roadmap", "corto-plazo", "nanobook"]
+title: Corto plazo
+description: Mejoras inmediatas para cerrar la fase alpha y estabilizar el día a
+  día de Nanobook.
+date: 2026-08-21T00:00:00.000Z
+author: Nanobook
+tags:
+  - roadmap
+  - corto-plazo
+  - nanobook
 draft: false
 index: false
+position: 0
 ---
 
 # Corto plazo
@@ -24,6 +29,10 @@ Horizonte: próximas 2–4 semanas. El objetivo es terminar de pulir la alpha pa
 - [x] **Roadmap poblado**: crear fase 0, corto plazo, medio plazo y largo plazo.
 - [x] **`position` y descripciones**: revisar y asignar `position` a todos los `index.md` del proyecto.
 - [ ] **Guías iniciales**: terminar de pulir `guias/markdown.md` y evaluar si se añade una guía de frontmatter.
+- [ ] **Gestion de contenido**:
+  - [ ] **Creacion**
+  - [x] **Edicion**
+  - [ ] **Eliminacion**
 
 ## Calidad y build
 

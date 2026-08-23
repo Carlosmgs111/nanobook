@@ -154,4 +154,6 @@ En el futuro se pueden añadir loaders para CMS headless, S3, Notion u otras fue
 
 ## Licencia
 
-[Agregar licencia si aplica]
+Nanobook se distribuye bajo la [GNU Affero General Public License v3.0 (AGPL-3.0)](../../../../LICENSE).
+
+Esto significa que el código fuente está disponible públicamente, puede estudiarse, modificarse y redistribuirse, y cualquier versión modificada que se ponga a disposición del público como servicio web debe publicar su código fuente bajo la misma licencia.
