@@ -55,7 +55,7 @@ const {
     <link rel="icon" href="/favicon.ico" />
     {canonicalHref && <link rel="canonical" href={canonicalHref} />}
     <title>{title}</title>
-    <ClientRouter />
+    <ClientRouter transition:animate="none"/>
   </head>
   <LayoutShell
     description={description}

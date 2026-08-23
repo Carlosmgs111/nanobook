@@ -32,7 +32,7 @@ function parentHref(parent: ParentEntry): string {
     parentEntry && (
       <a
         href={parentHref(parentEntry)}
-        class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)]"
+        class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)] ellipsis"
         data-tooltip={parentEntry.data.title}
       >
         <ToolTip id={"tooltip-" + parentEntry.id}>
