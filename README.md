@@ -1,26 +1,66 @@
 # Nanobook
 
-Nanobook es un sitio estático construido con Astro para publicar contenido técnico organizado en libros, capítulos y artículos. Usa una estructura de carpetas y archivos Markdown con frontmatter para generar automáticamente índices de navegación.
-
-## Características
-
-- Índices jerárquicos generados automáticamente a partir de la estructura de carpetas.
-- Contenido en Markdown con frontmatter.
-- Renderizado de páginas estáticas con Astro.
-- Diseño con Tailwind CSS.
-- Soporte para temas claro y oscuro.
-
-## Stack
-
-![Astro](https://img.shields.io/badge/Astro-5-BC52EE?logo=astro&logoColor=white&style=plastic)
+![Versión](https://img.shields.io/badge/version-0.2.0--alpha.1-BC52EE?style=plastic)
+![Astro](https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white&style=plastic)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white&style=plastic)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=plastic)
 ![Node.js](https://img.shields.io/badge/Node.js-22+-339933?logo=nodedotjs&logoColor=white&style=plastic)
 ![Markdown](https://img.shields.io/badge/Markdown-000000?logo=markdown&logoColor=white&style=plastic)
 
+Nanobook es un sitio de documentación técnica construido con Astro. Organiza el contenido en libros, capítulos, guías, artículos y proyectos a partir de archivos Markdown con frontmatter, generando automáticamente índices, navegación y tablas de contenidos.
+
+> **Estado**: `v0.2.0-alpha.1`. El proyecto es funcional pero aún en fase alpha. La API de contenido, URLs y componentes puede cambiar hasta llegar a `v1.0.0`.
+
+## Características
+
+### Contenido y navegación
+
+- **Índices jerárquicos** generados automáticamente a partir de la estructura de carpetas en `src/content/`.
+- **Sidebar navegable** con modo expandido/colapsado, tooltips y drawer en mobile.
+- **Breadcrumbs** automáticos según la posición del documento en el árbol.
+- **Tabla de contenidos (TOC)** con scroll spy, indicador visual y modos estándar/compacto.
+- **Ordenamiento configurable** de documentos mediante el campo `position` en frontmatter.
+- **Soporte para borradores**: los documentos con `draft: true` no se generan.
+- **Etiquetas (`tags`)** y metadatos (`title`, `description`, `date`, `author`, `cover`).
+
+### Lectura y experiencia de usuario
+
+- **Temas claro y oscuro** con toggle y persistencia en `localStorage`.
+- **Ancho de contenido ajustable** (`constrained` / `full`) con persistencia.
+- **Diseño responsive** con header sticky y adaptación mobile.
+- **Renderizado Markdown** con soporte para GitHub Flavored Markdown, anclas en headings y resaltado de sintaxis con Shiki.
+- **Navegación fluida** mediante `ClientRouter` de Astro.
+
+### Edición y preview
+
+- **Editor integrado en desarrollo** accesible desde `/{slug}/edit`, basado en CodeMirror 6.
+- **Preview sin guardar** en `/{slug}/preview`: renderiza el borrador en el navegador usando un Web Worker.
+- **Renderizado en worker** con `markdown-it` + Shiki para no bloquear la UI del editor.
+- **Persistencia efímera** del borrador en `sessionStorage`, limpiada al salir del flujo edit/preview.
+
+### Arquitectura y despliegue
+
+- **Modos de despliegue configurables**:
+  - `OUTPUT_MODE=static` (default): sitio estático con contenido local.
+  - `OUTPUT_MODE=dynamic`: renderizado bajo demanda con contenido remoto desde GitHub.
+- **Capa de dominio desacoplada** en `src/document/`, `src/navigation/`, `src/rendering/`, `src/edition/` y `src/theme/`.
+- **Repositorios de contenido intercambiables**: `AstroCollectionRepository` (local), `MemoryRepository` (tests) y stub `DatabaseRepository`.
+- **Adapters de rendering** pluggables: `MarkdownItRenderer` (activo), `AstroMarkdownRenderer` y `UnifiedMarkdownRenderer`.
+
+## Stack
+
+- **Framework**: Astro 7
+- **Estilos**: Tailwind CSS 4 + `@tailwindcss/typography`
+- **Lenguaje**: TypeScript
+- **Runtime**: Node.js >= 22.12.0
+- **Editor**: CodeMirror 6
+- **Renderizado Markdown**: markdown-it, @shikijs/markdown-it, markdown-it-anchor
+- **Syntax highlighting**: Shiki con motor de regex JavaScript
+
 ## Requisitos
 
 - Node.js >= 22.12.0
+- npm
 
 ## Instalación
 
@@ -32,8 +72,19 @@ npm run dev
 ## Scripts
 
 - `npm run dev` — Inicia el servidor de desarrollo.
-- `npm run build` — Genera el sitio estático en `dist/`.
+- `npm run build` — Genera el sitio en `dist/`. Por defecto usa `OUTPUT_MODE=static`.
 - `npm run preview` — Previsualiza el sitio generado.
+- `npm run start` — Inicia el servidor Node.js en modo dinámico (requiere build previo).
+
+### Modos de despliegue
+
+```bash
+# Modo estático (default): genera HTML estático desde src/content/.
+OUTPUT_MODE=static npm run build
+
+# Modo dinámico: renderiza bajo demanda con contenido remoto desde GitHub.
+OUTPUT_MODE=dynamic npm run build
+```
 
 ## Estructura de contenido
 
@@ -45,12 +96,28 @@ src/content/
 ├── blog/
 │   ├── index.md                          → /blog/
 │   └── overthinking.md                   → /blog/overthinking/
-└── books/
-    ├── index.md                          → /books/
-    └── responsive-development/
-        ├── index.md                      → /books/responsive-development/
-        ├── overview.md                   → /books/responsive-development/overview/
-        └── chapter-1.md                  → /books/responsive-development/chapter-1/
+├── books/
+│   ├── index.md                          → /books/
+│   └── responsive-development/
+│       ├── index.md                      → /books/responsive-development/
+│       ├── overview.md                   → /books/responsive-development/overview/
+│       └── chapter-1.md                  → /books/responsive-development/chapter-1/
+├── guias/
+│   ├── index.md                          → /guias/
+│   └── markdown.md                       → /guias/markdown/
+├── nanobook-project/
+│   ├── index.md                          → /nanobook-project/
+│   ├── meta/                             → /nanobook-project/meta/
+│   ├── arquitectura/                     → /nanobook-project/arquitectura/
+│   ├── interfaz/                         → /nanobook-project/interfaz/
+│   ├── editor/                           → /nanobook-project/editor/
+│   └── flujo-de-trabajo/                 → /nanobook-project/flujo-de-trabajo/
+├── portfolio/
+│   ├── index.md                          → /portfolio/
+│   └── carlos-munoz.md                   → /portfolio/carlos-munoz/
+└── proyectos/
+    ├── index.md                          → /proyectos/
+    └── generador-demos.md                → /proyectos/generador-demos/
 ```
 
 ## Convenciones de frontmatter
@@ -64,7 +131,8 @@ author: "Autor"
 tags: ["tag1", "tag2"]
 draft: false
 index: true
-position: 1
+position: 0
+cover: "/images/portada.png"
 ---
 ```
 
@@ -77,7 +145,8 @@ Campos:
 - `tags` (obligatorio): Lista de etiquetas.
 - `draft` (opcional): Si es `true`, el documento no se genera.
 - `index` (obligatorio para `index.md`): Marca el archivo como representación de una carpeta.
-- `position` (opcional): Orden del documento dentro de su carpeta. Menor valor = primero. Por defecto `0`.
+- `position` (opcional): Orden del documento dentro de su índice. Menor número = primero.
+- `cover` (opcional): URL de imagen de portada para índices visuales.
 
 ## Reglas de indexado
 
@@ -89,15 +158,42 @@ Campos:
 ## Arquitectura del proyecto
 
 - `src/content/` — Contenido en Markdown.
-- `src/pages/[...slug].astro` — Ruta dinámica universal que decide si renderizar un índice o un documento.
-- `src/components/IndexList.astro` — Componente de listado de índices.
-- `src/layouts/Layout.astro` — Layout base del sitio.
+- `src/pages/[...slug]/index.astro` — Ruta dinámica universal para documentos e índices.
+- `src/pages/[...slug]/edit.astro` — Vista de edición integrada.
+- `src/pages/[...slug]/preview.astro` — Vista de preview del borrador.
+- `src/document/` — Dominio de documentos: tipos, repositorios y adapters (`AstroCollectionRepository`, `MemoryRepository`).
+- `src/document/components/IndexList/` — Listado de índices jerárquicos.
+- `src/document/components/TableOfContents/` — Componentes y lógica de la tabla de contenidos.
+- `src/navigation/` — Construcción del árbol de navegación, breadcrumbs, sidebar e índices.
+- `src/rendering/` — Capa de renderizado de Markdown con múltiples adapters y Web Worker.
+- `src/edition/` — Componentes y lógica del editor integrado (CodeMirror, stage, save).
+- `src/theme/` — Componentes relacionados con el tema claro/oscuro.
+- `src/layouts/` — Layouts base, incluyendo control de ancho de contenido.
+- `src/shared/` — Utilidades compartidas entre módulos.
 - `src/content.config.ts` — Configuración de la colección de contenido.
 
 ## Extensibilidad
 
-El sistema usa la API de loaders de Astro 5. Actualmente el contenido se carga desde el directorio local con `glob`, pero el loader puede reemplazarse por un loader custom que obtenga archivos desde GitHub, un CMS headless, S3, Notion u otra fuente externa.
+El sistema usa la API de loaders de Astro. El modo de despliegue se elige mediante `OUTPUT_MODE`:
+
+- **Modo estático**: el loader `glob` lee archivos Markdown locales desde `src/content/`.
+- **Modo dinámico**: el loader `github` obtiene contenido remoto desde un repositorio de GitHub.
+
+En el futuro se pueden añadir loaders para CMS headless, S3, Notion u otras fuentes sin modificar el dominio de Nanobook.
+
+## Versionado
+
+El proyecto sigue [Semantic Versioning](https://semver.org/lang/es/) y [Conventional Commits](https://www.conventionalcommits.org/). Consulta `CHANGELOG.md` y `src/content/nanobook-project/flujo-de-trabajo/versionado.md` para más detalles.
 
 ## Licencia
 
-[Agregar licencia si aplica]
+Nanobook se distribuye bajo la [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).
+
+Esto significa que:
+
+- El código fuente está disponible públicamente y puede estudiarse, modificarse y redistribuirse.
+- Cualquier versión modificada que se distribuya o ponga a disposición del público como servicio web debe publicar su código fuente bajo la misma licencia.
+- Se preserva la atribución al autor original.
+- No se permite convertir el proyecto o derivados en software propietario cerrado.
+
+Para más detalles, consulta el archivo [LICENSE](LICENSE) o <https://www.gnu.org/licenses/agpl-3.0.html>.
