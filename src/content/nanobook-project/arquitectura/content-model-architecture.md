@@ -1,11 +1,18 @@
 ---
-title: "Arquitectura del modelo de contenido"
-description: "Decisión de mantener filesystem-first pero storage-agnostic, separando Content Model de Storage y Astro como capa de publicación."
-date: 2026-08-13
-author: "Nanobook Team"
-tags: ["arquitectura", "contenido", "storage", "decision"]
+title: Arquitectura del modelo de contenido
+description: Decisión de mantener filesystem-first pero storage-agnostic,
+  separando Content Model de Storage, Navigation y Astro como capa de
+  publicación.
+date: 2026-08-23T00:00:00.000Z
+author: Nanobook Team
+tags:
+  - arquitectura
+  - contenido
+  - storage
+  - decision
 draft: false
 index: false
+position: 0
 ---
 
 ## Contexto
@@ -102,43 +109,173 @@ Por debajo:
 
 ## Conceptos del dominio
 
-- **Document**: unidad mínima de contenido. Tiene `id`, `slug`, `parentId`, `position`, `title`, `description`, `content` y `metadata`.
-- **ContentRepository**: interfaz para listar, obtener y buscar hijos de documentos. Responsabilidad única: persistencia/lectura.
-- **NavigationBuilder**: construye árboles de navegación a partir de una lista de documentos.
-- **DocumentRenderer**: interfaz para convertir el contenido crudo en HTML. Tiene su propio adapter (ej. `AstroMarkdownRenderer`).
+- **Document**: unidad mínima de contenido. Tiene `id`, `slug`, `parentId`, `position`, `title`, `description`, `content`, `metadata`, `rawFrontmatter` y opcionalmente `proxyTargetId`. Ver `src/document/core/types.ts`.
+- **ContentRepository**: interfaz para listar, obtener, buscar hijos y guardar documentos. Responsabilidad única: persistencia/lectura. Ver `src/document/core/types.ts`.
+- **NavigationBuilder**: construye árboles de navegación a partir de una lista de documentos. Ver [`src/navigation/core/builder.ts`](../../navigation-api).
+- **DocumentRenderer**: interfaz para convertir el contenido crudo en HTML. Ver `src/rendering/adapters/unified-markdown.ts`.
+
+## Flujo de carga y mapeo
+
+El punto de entrada de la carga es el adaptador de Astro. El flujo completo, desde los archivos Markdown hasta el árbol de navegación, es:
+
+```text
+src/content/**/*.md
+        │
+        ▼
+getCollection("content")  ──astro:content──►  getAstroEntries()
+        │                                         │
+        │                                         ▼
+        │                              Map<string, CollectionEntry<"content">>
+        │                                         │
+        │                                         ▼
+        │                           AstroCollectionRepository.list()
+        │                                         │
+        │                    ┌────────────────────┼────────────────────┐
+        │                    │                    │                    │
+        │                    ▼                    ▼                    ▼
+        │           filter(draft)      resolveProxy(ref)        toDocument(entry)
+        │                    │                    │                    │
+        │                    │                    ▼                    │
+        │                    │         CompositeReferenceResolver       │
+        │                    │         (internal / local / GitHub)      │
+        │                    │                    │                    │
+        │                    └────────────────────┴────────────────────┘
+        │                                         │
+        │                                         ▼
+        │                                  Document[]
+        │                                         │
+        │                                         ▼
+        │                              buildNavigationTree(documents)
+        │                                         │
+        │                                         ▼
+        │                           NavigationTree { roots, nodeMap }
+        │                                         │
+        ▼                                         ▼
+   Rendering                            Breadcrumb / Sidebar / Índice
+```
+
+### 1. Entradas crudas de Astro: `getAstroEntries`
+
+`src/document/core/astro-cache.ts` abstrae la llamada a `getCollection("content")` de Astro:
+
+```typescript
+import { getCollection } from "astro:content";
+
+export async function getAstroEntries() {
+  const collection = await getCollection("content");
+  return new Map(collection.map((entry) => [entry.id, entry]));
+}
+```
+
+Astro genera el `id` de cada entrada a partir de su ruta relativa dentro de `src/content/`:
+
+- `src/content/index.md` → `id: "index"`
+- `src/content/blog/overthinking.md` → `id: "blog/overthinking"`
+- `src/content/nanobook-project/arquitectura/index.md` → `id: "nanobook-project/arquitectura"`
+
+Este `id` es la base sobre la que se calculan `slug`, `parentId` y toda la jerarquía de navegación.
+
+### 2. Repositorio: `AstroCollectionRepository`
+
+`src/document/adapters/astro-collection-repository.ts` implementa `ContentRepository`. Su `list()`:
+
+1. Llama a `getAstroEntries()`.
+2. Construye un `CompositeReferenceResolver` para resolver referencias `ref` (internas, locales o de GitHub).
+3. Filtra los documentos marcados como `draft: true`.
+4. Para cada entrada:
+   - Si tiene `ref`, intenta resolver el proxy.
+   - Si no, convierte la entrada a `Document` mediante `toDocument()`.
+
+```typescript
+const repository = new AstroCollectionRepository();
+const documents = await repository.list();
+```
+
+### 3. Mapeo a `Document`
+
+`src/document/core/document.ts` contiene `toDocument()`:
+
+```typescript
+export function toDocument(entry: CollectionEntry<"content">): Document {
+  return {
+    id: entry.id,
+    slug: entry.id === "index" ? "" : entry.id,
+    parentId: getParentId(entry.id),
+    position: data.position,
+    title: data.title,
+    description: data.description,
+    content: entry.body ?? "",
+    metadata: data,
+    rawFrontmatter: `---\n${stringify(entry.data)}---\n\n`,
+  };
+}
+```
+
+El `parentId` se calcula en `src/document/core/path.ts`:
+
+```typescript
+export function getParentId(id: string): string | null {
+  if (id === "index") return null;
+  const lastSlash = id.lastIndexOf("/");
+  return lastSlash === -1 ? "index" : id.slice(0, lastSlash);
+}
+```
+
+Esto convierte la ruta del archivo en una jerarquía lógica:
+
+| Archivo | `id` | `parentId` |
+| --- | --- | --- |
+| `index.md` | `index` | `null` |
+| `blog/index.md` | `blog` | `index` |
+| `blog/overthinking.md` | `blog/overthinking` | `blog` |
+| `nanobook-project/arquitectura/api-de-navegacion.md` | `nanobook-project/arquitectura/api-de-navegacion` | `nanobook-project/arquitectura` |
+
+### 4. Construcción del árbol de navegación
+
+Una vez que la página tiene `Document[]`, construye la navegación con [`buildNavigationTree()`](../../navigation-api):
+
+```typescript
+import { buildNavigationTree } from "../navigation/core/builder";
+
+const { nodeMap } = buildNavigationTree(documents);
+```
+
+La construcción del árbol no ocurre dentro del repositorio. `ContentRepository` devuelve datos; `NavigationBuilder` deriva estructuras de navegación. Esta separación mantiene el dominio storage-agnostic y permite cambiar la estrategia de navegación sin tocar la carga de contenido.
+
+Ver también:
+
+- [API de navegación](../api-de-navegacion) para el contrato completo de `NavigationBuilder`.
+- [Storage adapters](../storage-adapters) para los adapters disponibles y cómo añadir uno nuevo.
 
 ## Estado actual
 
 ### Fase 0 completada
 
-- Se creó `src/core/content/types.ts` con los tipos base del dominio.
+- Se creó `src/document/core/types.ts` con los tipos base del dominio.
 - Se consolidó `DocumentEntry` en el mismo módulo.
-- Se tipó `src/lib/content.ts` para dejar de usar `any[]`.
 - El build sigue funcionando igual.
 
 ### Fase 1 completada
 
-- Se creó `src/core/content/repository.ts` con la interfaz `ContentRepository` y el adapter `AstroCollectionRepository`, cacheando la colección a nivel de módulo.
-- Se creó `src/core/navigation/builder.ts` con `NavigationNode`, `NavigationTree`, `buildNavigationTree`, `getBreadcrumbs`, `getImmediateChildren`, `getSidebarEntries` y `getParentEntry`, cacheando el árbol por el array de documentos.
-- Se actualizó `src/pages/[...slug].astro` para construir el árbol de navegación y derivar breadcrumb, sidebar e índices del `nodeMap`.
-- Se eliminó `src/lib/content.ts` porque toda su lógica ahora vive en `src/core/`.
+- Se creó `src/document/adapters/astro-collection-repository.ts` con `AstroCollectionRepository`, cacheando la colección a nivel de módulo.
+- Se creó `src/navigation/core/builder.ts` con `NavigationNode`, `NavigationTree`, `buildNavigationTree`, `getBreadcrumbs`, `getImmediateChildren`, `getSidebarEntries` y `getParentEntry`, cacheando el árbol por el array de documentos.
+- Se actualizó `src/pages/[...slug]/index.astro` para construir el árbol de navegación y derivar breadcrumb, sidebar e índices del `nodeMap`.
 - Los componentes `Layout.astro`, `SidebarNav/index.astro` y `SidebarList.astro` ahora usan `NavigationNode`.
 
 ### Fase 2 completada
 
 - Se añadió `position` al schema de Astro (`src/content.config.ts`) y a `DocumentMetadata`.
 - `NavigationBuilder` ordena por `position` con fallback por título.
-- Se creó `src/core/rendering/types.ts` con la interfaz `DocumentRenderer`.
-- Se creó `src/core/rendering/adapters/astro-markdown.ts` con `AstroMarkdownRenderer`, el encargado exclusivo de renderizar Markdown mediante Astro.
+- Se creó `src/rendering/core/types.ts` con la interfaz `DocumentRenderer`.
+- Se creó `src/rendering/adapters/unified-markdown.ts` como renderer principal de Markdown.
 - `AstroCollectionRepository` ya no se encarga del renderizado; su responsabilidad es solo la lectura de documentos.
-- Se creó `src/core/content/astro-cache.ts` para compartir las entradas crudas de Astro entre repository y renderer sin acoplarlos.
-- `src/pages/[...slug].astro` crea `repository` y `renderer` como objetos separados.
-- El build genera 37 páginas en modo estático (solo contenido local).
+- Se creó `src/document/core/astro-cache.ts` para compartir las entradas crudas de Astro entre repository y renderer sin acoplarlos.
+- `src/pages/[...slug]/index.astro` crea `repository` y `renderer` como objetos separados.
 
 ### Fase 3 completada
 
-- Se creó `src/core/content/adapters/memory-repository.ts` para tests y desarrollo.
-- Se creó `src/core/content/adapters/database-repository.ts` como stub del adapter de base de datos.
+- Se creó `src/document/adapters/memory-repository.ts` para tests y desarrollo.
+- Se creó `src/document/adapters/database-repository.ts` como stub del adapter de base de datos.
 - Se documentó la arquitectura de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 - El build sigue usando `AstroCollectionRepository`; los nuevos adapters demuestran que el dominio es storage-agnostic.
 
@@ -160,7 +297,7 @@ Por debajo:
 
 ### Árbol completo vs. rama parcial
 
-En el modo SSG actual, `NavigationBuilder` construye el árbol de navegación completo a partir de todos los documentos. Esto es correcto porque:
+En el modo SSG actual, `NavigationBuilder` construye el árbol de navegación completo a partir of all documents. Esto es correcto porque:
 
 - Astro genera cada página de forma independiente en build time.
 - El contenido ya está en memoria.

@@ -1,7 +1,7 @@
 ---
 title: "API de navegación"
-description: "Documentación de la API de NavigationBuilder: funciones disponibles, contratos y ejemplos de uso."
-date: 2026-08-13
+description: "Documentación de la API de NavigationBuilder: funciones disponibles, contratos, ejemplos de uso y por qué vive separada del repositorio de contenido."
+date: 2026-08-23
 author: "Nanobook Team"
 tags: ["arquitectura", "navegación", "api", "navigation-builder"]
 draft: false
@@ -27,8 +27,22 @@ getBreadcrumbs() / getSidebarEntries() / getImmediateChildren() / getParentEntry
 ## Ubicación
 
 ```text
-src/core/navigation/builder.ts
+src/navigation/core/builder.ts
 ```
+
+## ¿Por qué no está en el repositorio?
+
+El repositorio (`ContentRepository`) se encarga de obtener y persistir documentos. Su contrato es `Document[]`. La construcción del árbol de navegación es una **proyección derivada** de esos documentos: ordenarlos, agruparlos por `parentId` y exponer consultas como breadcrumb o sidebar.
+
+Mantener `buildNavigationTree` fuera del repositorio preserva la separación de responsabilidades:
+
+```text
+ContentRepository          NavigationBuilder           Páginas / UI
+      │                            │                         │
+  Document[] ──────────────► NavigationTree ────────► breadcrumbs, sidebar, índices
+```
+
+Esto permite, por ejemplo, cambiar la estrategia de navegación o construir solo una rama parcial en SSR sin tocar la capa de almacenamiento. Ver [Arquitectura del modelo de contenido](./content-model-architecture#escalabilidad-y-ssr) para la evolución futura.
 
 ## Tipos
 
@@ -88,10 +102,11 @@ buildNavigationTree(documents: Document[]): NavigationTree
 - Ordena primero por `position`, luego por título.
 - Agrupa los nodos bajo su `parentId`.
 - Los documentos sin padre visible aparecen como raíces.
-- Excluye documentos marcados como `draft: true`.
 - Cachea el resultado por el array de documentos para no reconstruirlo en cada página durante el build.
 
 Devuelve `{ roots, nodeMap }`. `roots` sirve para menús globales; `nodeMap` para resolver breadcrumb, sidebar e hijos en O(1).
+
+> Nota: `buildNavigationTree` asume que los documentos ya están filtrados (por ejemplo, sin `draft: true`). En la práctica, `AstroCollectionRepository.list()` filtra los borradores antes de devolver `Document[]`.
 
 ### getBreadcrumbs
 
@@ -155,13 +170,13 @@ getParentEntry(
 ## Ejemplo de uso
 
 ```typescript
-import { AstroCollectionRepository } from "../document/adapters/astro-collection-repository";
+import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
 import {
   buildNavigationTree,
   getBreadcrumbs,
   getSidebarEntries,
   getImmediateChildren,
-} from "../navigation/core/builder";
+} from "../../navigation/core/builder";
 
 const repository = new AstroCollectionRepository();
 const documents = await repository.list();
@@ -202,7 +217,7 @@ position: 2
 - `folder = hierarchy`: la estructura física de carpetas se proyecta en la jerarquía de navegación.
 - `index.md` con `index: true` representa una carpeta.
 - Los documentos se listan en el índice de su carpeta padre inmediata.
-- Los documentos marcados como `draft: true` se excluyen de navegación e índices.
+- Los documentos marcados como `draft: true` se excluyen de navegación e índices (filtrados por el repositorio).
 - El orden de los documentos se controla mediante `position`.
 
 ## Relación con otros módulos
@@ -210,3 +225,9 @@ position: 2
 - Recibe `Document[]` desde `ContentRepository`.
 - Devuelve `NavigationTree`, `NavigationNode[]` y `Crumb[]` a los componentes de UI (`Layout`, `SidebarNav`, `Breadcrumb`, `IndexList`).
 - No depende de Astro ni de ningún storage concreto.
+- Los `id` de los documentos, generados por Astro a partir de la ruta del archivo, son la base para relacionar padres e hijos. Ver [Arquitectura del modelo de contenido](./content-model-architecture#flujo-de-carga-y-mapeo).
+
+## Documentación relacionada
+
+- [Arquitectura del modelo de contenido](./content-model-architecture)
+- [Storage adapters](./storage-adapters)

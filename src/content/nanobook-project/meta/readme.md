@@ -129,19 +129,29 @@ Campos:
 ## Arquitectura del proyecto
 
 - `src/content/` — Contenido en Markdown.
-- `src/pages/[...slug].astro` — Ruta dinámica universal que decide si renderizar un índice o un documento.
+- `src/pages/[...slug]/index.astro` — Ruta dinámica universal que decide si renderizar un índice o un documento.
 - `src/pages/[...slug]/edit.astro` — Vista de edición integrada.
 - `src/documentIndex/components/IndexList.astro` — Componente de listado de índices.
 - `src/layouts/Layout.astro` — Layout base del sitio.
 - `src/content.config.ts` — Configuración de la colección de contenido.
-- `src/document/` — Dominio de documentos: tipos, repositorios y adapters (`AstroCollectionRepository`, `MemoryRepository`, `DatabaseRepository`).
-- `src/navigation/` — Construcción del árbol de navegación, breadcrumbs, sidebar e índices.
+- `src/document/core/` — Tipos y utilidades del dominio de documentos (`Document`, `ContentRepository`, `toDocument`, `getParentId`, `getAstroEntries`).
+- `src/document/adapters/` — Implementaciones de `ContentRepository`: `AstroCollectionRepository`, `MemoryRepository`, `DatabaseRepository`.
+- `src/navigation/core/builder.ts` — Construcción del árbol de navegación, breadcrumbs, sidebar e índices.
 - `src/rendering/` — Capa de renderizado de Markdown con múltiples adapters y workers.
 - `src/editor/` — Componentes y utilidades del editor integrado.
 - `src/theme/` — Componentes relacionados con el tema claro/oscuro.
 - `src/document/components/TableOfContents/` — Componentes y lógica de la tabla de contenidos.
 - `src/contentWidth/` — Componente de control de ancho de contenido.
 - `src/shared/` — Utilidades compartidas entre módulos.
+
+## Documentación del proyecto
+
+La documentación interna del proyecto vive en `src/content/nanobook-project/`:
+
+- [Arquitectura](../arquitectura) — decisiones arquitectónicas.
+- [Arquitectura del modelo de contenido](../arquitectura/content-model-architecture) — carga, mapeo y separación con navegación.
+- [API de navegación](../arquitectura/api-de-navegacion) — árbol de navegación, breadcrumbs y sidebar.
+- [Storage adapters](../arquitectura/storage-adapters) — adapters de `ContentRepository`.
 
 ## Extensibilidad
 
