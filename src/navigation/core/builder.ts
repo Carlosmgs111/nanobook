@@ -1,4 +1,4 @@
-import type { Document, DocumentMetadata } from "../content/types";
+import type { Document, DocumentMetadata } from "../../document/core/types";
 
 export interface NavigationNode {
   id: string;

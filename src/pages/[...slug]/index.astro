@@ -60,6 +60,11 @@ const childEntries = entry.metadata.index
     )
   : [];
 const editHref = entry.metadata.index ? undefined : `/${entry.slug}/edit`;
+const canonicalHref = entry.proxyTargetId
+  ? entry.proxyTargetId === "index"
+    ? "/"
+    : `/${entry.proxyTargetId}/`
+  : undefined;
 const { Content } = await new UnifiedMarkdownRenderer().render(entry);
 ---
 
@@ -71,6 +76,7 @@ const { Content } = await new UnifiedMarkdownRenderer().render(entry);
   parentEntry={parentEntry}
   headings={headings}
   editHref={editHref}
+  canonicalHref={canonicalHref}
 >
   <DocumentPage entry={entry} Content={Content} childEntries={childEntries} />
 </Layout>
