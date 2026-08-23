@@ -59,6 +59,15 @@ export function getRenderedDocument(): RenderedDocument | null {
   return read<RenderedDocument>(RENDERED_KEY);
 }
 
+export function getRenderedDocumentSource(): Document | null {
+  return read<Document>(RENDERED_SOURCE_KEY);
+}
+
+export function clearRenderedDocument(): void {
+  remove(RENDERED_KEY);
+  remove(RENDERED_SOURCE_KEY);
+}
+
 export async function renderStagedDocument(
   stagedDocument: Document
 ): Promise<RenderedDocument | null> {

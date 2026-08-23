@@ -31,11 +31,12 @@ const initialContent = document.rawFrontmatter + document.content;
     type CodeMirrorEditorInstance,
   } from "../../core/code-mirror-editor";
   import { debounce } from "../../../shared/utils/debounce";
-  import { renderStagedDocument } from "../../../rendering/core/render-service";
+  import { renderStagedDocument, clearRenderedDocument } from "../../../rendering/core/render-service";
   import {
     loadStagedDocument,
     saveStagedDocument,
     ensureStagedDocument,
+    clearStagedDocument,
   } from "../../core/stage-document";
   import { buildDocumentFromContent } from "../../core/parse-staged-document";
   import { saveDocument } from "../../core/save-document";
@@ -52,6 +53,19 @@ const initialContent = document.rawFrontmatter + document.content;
     return staged
       ? staged.rawFrontmatter + staged.content
       : wrapper.dataset.initialContent || "";
+  }
+
+  function clearEditionStorage(): void {
+    clearStagedDocument();
+    clearRenderedDocument();
+  }
+
+  function isInsideEditionFlow(url: URL, documentId: string): boolean {
+    const path = url.pathname.replace(/\/$/, "");
+    if (documentId === "index") {
+      return path === "/edit" || path === "/preview";
+    }
+    return path === `/${documentId}/edit` || path === `/${documentId}/preview`;
   }
 
   function initEditor() {
@@ -71,6 +85,10 @@ const initialContent = document.rawFrontmatter + document.content;
     destroyEditor();
 
     const baseDocument = JSON.parse(wrapper.dataset.document!) as Document;
+    const staged = loadStagedDocument();
+    if (staged && staged.id !== baseDocument.id) {
+      clearEditionStorage();
+    }
     ensureStagedDocument(baseDocument);
 
     editor = createCodeMirrorEditor({
@@ -138,8 +156,11 @@ const initialContent = document.rawFrontmatter + document.content;
     }, 4000);
   }
 
-  function prepareRenderBeforeSwap() {
+  function prepareRenderBeforeSwap(event: Event) {
     const wrapper = getWrapper();
+    const documentId = wrapper?.dataset.documentId;
+    const destination = (event as unknown as { to?: URL }).to;
+
     if (wrapper && editor) {
       const stagedDocument = buildDocumentFromContent(
         JSON.parse(wrapper.dataset.document!) as Document,
@@ -148,6 +169,11 @@ const initialContent = document.rawFrontmatter + document.content;
       saveStagedDocument(stagedDocument);
       renderStagedDocument(stagedDocument).catch(console.error);
     }
+
+    if (documentId && destination && !isInsideEditionFlow(destination, documentId)) {
+      clearEditionStorage();
+    }
+
     destroyEditor();
   }
 

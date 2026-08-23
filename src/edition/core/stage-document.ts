@@ -17,3 +17,7 @@ export function ensureStagedDocument(base: Document): Document {
   saveStagedDocument(base);
   return base;
 }
+
+export function clearStagedDocument(): void {
+  sessionStorage.removeItem(STAGED_KEY);
+}
