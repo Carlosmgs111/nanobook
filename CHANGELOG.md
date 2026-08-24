@@ -18,7 +18,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `parseFrontmatter` extraído a `src/document/core/frontmatter.ts` para compartirlo entre loaders y resolutores.
 
 ### Docs
+- Actualizada la documentación de carga, mapeo y navegación en `src/content/nanobook-project/arquitectura/content-model-architecture.md`, `src/content/nanobook-project/arquitectura/api-de-navegacion.md` y `src/content/nanobook-project/arquitectura/storage-adapters.md`.
+- `src/content/nanobook-project/navigation-api.md` ahora enlaza al documento canónico en `arquitectura/api-de-navegacion.md`.
 - Nueva sección de documentación del módulo `src/rendering/` en `src/content/nanobook-project/editor/rendering/`.
+- Nueva documentación de documentos proxy en `src/content/nanobook-project/arquitectura/proxy-documents.md`.
+
+### Changed
+- `src/navigation/core/builder.ts` ya no filtra borradores; el filtrado es responsabilidad de `ContentRepository`.
+
+### Fixed
+- `src/content/nanobook-project/meta/readme.md` restaurado como proxy a `README.md` de la raíz del proyecto.
 
 ## [0.2.0-alpha.1] - 2026-08-22
 
