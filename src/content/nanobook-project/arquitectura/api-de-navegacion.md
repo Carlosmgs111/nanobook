@@ -27,7 +27,7 @@ getBreadcrumbs() / getSidebarEntries() / getImmediateChildren() / getParentEntry
 ## Ubicación
 
 ```text
-src/navigation/core/builder.ts
+src/navigation/graph/builder.ts
 ```
 
 ## ¿Por qué no está en el repositorio?
@@ -170,13 +170,13 @@ getParentEntry(
 ## Ejemplo de uso
 
 ```typescript
-import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
+import { AstroCollectionRepository } from "../../document/adapters/repository/astro-collection-repository";
 import {
   buildNavigationTree,
   getBreadcrumbs,
   getSidebarEntries,
   getImmediateChildren,
-} from "../../navigation/core/builder";
+} from "../../navigation/graph/builder";
 
 const repository = new AstroCollectionRepository();
 const documents = await repository.list();

@@ -25,7 +25,7 @@ Este informe describe el estado actual, identifica los puntos de fricción y pro
 | **Comunicación por eventos custom** | Aplicado en TOC y coordinación layout | `toc:mode`, `sidebar:mode`, `toc:active`, `toc:headings`, `content:mode` |
 | **Estado declarativo con `data-*`** | Consistente en sidebar, TOC y ancho de contenido | `data-sidebar-mode`, `data-toc-mode`, `data-content-mode`, `data-is-active` |
 | **IDs parametrizadas en componentes atómicos** | Parcial | `OpenSidebar.astro`, `CloseSidebar.astro`, `SidebarModeToggle.astro`, `TocToggle.astro`, `TocNav.astro`, `TocIndicator.astro` |
-| **Separación scroll-spy/helper genérico** | Correcto | `src/document/core/scroll-spy.ts` no toca el DOM |
+| **Separación scroll-spy/helper genérico** | Correcto | `src/shared/utils/scroll-spy.ts` no toca el DOM |
 | **Documentación de decisiones** | Buena | Docs en `src/content/nanobook-project/` |
 
 ## 3. Hallazgos: dónde la implementación se desvía del ideal

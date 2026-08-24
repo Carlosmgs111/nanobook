@@ -38,7 +38,7 @@ Reorganizar `src/` para que cada pieza de código resida junto a su dominio y re
 
 ### 1. `core` usado como cajón de sastre
 
-`src/document/core/` mezcla:
+`src/document/` mezcla:
 
 - Tipos puros: `types.ts`
 - Parsing: `frontmatter.ts`, `document.ts`
@@ -51,19 +51,19 @@ Reorganizar `src/` para que cada pieza de código resida junto a su dominio y re
 
 ### 2. Rendering mezcla renderizado con edición
 
-- `src/rendering/core/render-service.ts` gestiona `sessionStorage` y `BroadcastChannel` solo para el flujo de edición; no es un servicio de renderizado genérico.
-- `src/rendering/workers/` son workers de Markdown usados exclusivamente por la edición en cliente.
-- `rendering/core/` contiene tanto el modelo (`types.ts`) como la lógica de página (`page-renderer.ts`, `page-cache.ts`).
+- `src/edition/client/render-service.ts` gestiona `sessionStorage` y `BroadcastChannel` solo para el flujo de edición; no es un servicio de renderizado genérico.
+- `src/rendering/client/workers/` son workers de Markdown usados exclusivamente por la edición en cliente.
+- `rendering/core/` mezcla el modelo (`types.ts`) y la lógica de página (`page-renderer.ts`, `page-cache.ts`).
 
 ### 3. Referencias con side effects escondidas en `core`
 
-- `document/core/reference/internal-resolver.ts` depende de `astro:content`.
-- `document/core/reference/local-file-resolver.ts` depende de `node:fs`.
+- `document/reference/internal-resolver.ts` depende de `astro:content`.
+- `document/reference/local-file-resolver.ts` depende de `node:fs`.
 - Ambos son adapters, no lógica de dominio pura.
 
 ### 4. Duplicación en navegación
 
-- `navigation/core/builder.ts` y `navigation/core/service.ts` tienen funciones casi idénticas (`getBreadcrumbs`, `getSidebarEntries`, `getImmediateChildren`).
+- `navigation/graph/builder.ts` y `navigation/service/service.ts` tienen funciones casi idénticas (`getBreadcrumbs`, `getSidebarEntries`, `getImmediateChildren`).
 - El builder construye un `NavigationTree` que luego se mapea a `DocumentGraph`; hay dos abstraciones superpuestas.
 
 ### 5. Snapshot persistence en scripts
@@ -211,11 +211,11 @@ src/
 
 **Qué mover**:
 
-- `src/document/core/scroll-spy.ts` → `src/shared/utils/scroll-spy.ts`
-- `src/document/core/astro-cache.ts` → `src/document/adapters/astro-cache.ts`
-- `src/rendering/core/render-service.ts` → `src/edition/client/render-service.ts`
-- `src/rendering/workers/` → `src/rendering/client/workers/`
-- `src/document/core/document.ts` → `src/document/parse/document.ts`
+- `src/shared/utils/scroll-spy.ts` → `src/shared/utils/scroll-spy.ts`
+- `src/document/core/astro-cache.ts` → `src/document/adapters/cache/astro-cache.ts`
+- `src/edition/client/render-service.ts` → `src/edition/client/render-service.ts`
+- `src/rendering/client/workers/` → `src/rendering/client/workers/`
+- `src/document/parse/document.ts` → `src/document/parse/document.ts`
 
 **Por qué**:
 
@@ -241,16 +241,16 @@ src/
   - `src/document/change/`
   - `src/document/reference/`
 - Mover:
-  - `src/document/core/types.ts` → `src/document/model/types.ts`
-  - `src/document/core/frontmatter.ts` → `src/document/parse/frontmatter.ts`
+  - `src/document/model/types.ts` → `src/document/model/types.ts`
+  - `src/document/parse/frontmatter.ts` → `src/document/parse/frontmatter.ts`
   - `src/document/parse/document.ts` (desde Fase 2)
-  - `src/document/core/path.ts` → `src/document/parse/path.ts`
-  - `src/document/core/proxy.ts` → `src/document/parse/proxy.ts`
+  - `src/document/parse/path.ts` → `src/document/parse/path.ts`
+  - `src/document/parse/proxy.ts` → `src/document/parse/proxy.ts`
   - `src/document/change/snapshot.ts` (desde Fase 1)
-  - `src/document/core/change-service.ts` → `src/document/change/change-service.ts`
-  - `src/document/core/reference/types.ts` → `src/document/reference/types.ts`
-  - `src/document/core/reference/path-resolver.ts` → `src/document/reference/path-resolver.ts`
-  - `src/document/core/reference/resolver.ts` → `src/document/reference/resolver.ts`
+  - `src/document/change/change-service.ts` → `src/document/change/change-service.ts`
+  - `src/document/reference/types.ts` → `src/document/reference/types.ts`
+  - `src/document/reference/path-resolver.ts` → `src/document/reference/path-resolver.ts`
+  - `src/document/reference/resolver.ts` → `src/document/reference/resolver.ts`
 - Reorganizar `src/document/adapters/` en subcarpetas semánticas:
   - `src/document/adapters/repository/` para `astro-collection-repository.ts`, `file-system-repository.ts`, `memory-repository.ts`, `database-repository.ts`
   - `src/document/adapters/cache/` para `astro-cache.ts`
@@ -265,11 +265,11 @@ src/
   - `src/navigation/graph/`
   - `src/navigation/service/`
 - Mover:
-  - `src/navigation/core/types.ts` → `src/navigation/model/types.ts`
-  - `src/navigation/core/graph.ts` → `src/navigation/graph/graph.ts`
-  - `src/navigation/core/invalidation.ts` → `src/navigation/graph/invalidation.ts`
-  - `src/navigation/core/builder.ts` → `src/navigation/graph/builder.ts`
-  - `src/navigation/core/service.ts` → `src/navigation/service/service.ts`
+  - `src/navigation/model/types.ts` → `src/navigation/model/types.ts`
+  - `src/navigation/graph/graph.ts` → `src/navigation/graph/graph.ts`
+  - `src/navigation/graph/invalidation.ts` → `src/navigation/graph/invalidation.ts`
+  - `src/navigation/graph/builder.ts` → `src/navigation/graph/builder.ts`
+  - `src/navigation/service/service.ts` → `src/navigation/service/service.ts`
 - Actualizar imports.
 
 **Rendering**:
@@ -281,13 +281,13 @@ src/
   - `src/rendering/adapters/cache/`
   - `src/rendering/client/workers/`
 - Mover:
-  - `src/rendering/core/types.ts` → `src/rendering/model/types.ts`
-  - `src/rendering/core/page-renderer.ts` → `src/rendering/page/page-renderer.ts`
-  - `src/rendering/core/page-cache.ts` → `src/rendering/page/page-cache.ts`
-  - `src/rendering/adapters/unified-markdown.ts` → `src/rendering/adapters/markdown/unified-markdown.ts`
-  - `src/rendering/adapters/it-mardown.ts` → `src/rendering/adapters/markdown/markdown-it.ts`
-  - `src/rendering/adapters/astro-markdown.ts` → `src/rendering/adapters/markdown/astro-markdown.ts`
-  - `src/rendering/adapters/file-system-page-cache.ts` → `src/rendering/adapters/cache/file-system-page-cache.ts`
+  - `src/rendering/model/types.ts` → `src/rendering/model/types.ts`
+  - `src/rendering/page/page-renderer.ts` → `src/rendering/page/page-renderer.ts`
+  - `src/rendering/page/page-cache.ts` → `src/rendering/page/page-cache.ts`
+  - `src/rendering/adapters/markdown/unified-markdown.ts` → `src/rendering/adapters/markdown/unified-markdown.ts`
+  - `src/rendering/adapters/markdown/markdown-it.ts` → `src/rendering/adapters/markdown/markdown-it.ts`
+  - `src/rendering/adapters/markdown/astro-markdown.ts` → `src/rendering/adapters/markdown/astro-markdown.ts`
+  - `src/rendering/adapters/cache/file-system-page-cache.ts` → `src/rendering/adapters/cache/file-system-page-cache.ts`
   - `src/rendering/client/workers/` (desde Fase 2)
 - Actualizar imports.
 
@@ -297,14 +297,14 @@ src/
   - `src/edition/client/`
   - `src/edition/ui/`
 - Mover:
-  - `src/edition/core/stage-document.ts` → `src/edition/client/stage-document.ts`
-  - `src/edition/core/save-document.ts` → `src/edition/client/save-document.ts`
-  - `src/edition/core/parse-staged-document.ts` → `src/edition/client/parse-staged-document.ts`
+  - `src/edition/client/stage-document.ts` → `src/edition/client/stage-document.ts`
+  - `src/edition/client/save-document.ts` → `src/edition/client/save-document.ts`
+  - `src/edition/client/parse-staged-document.ts` → `src/edition/client/parse-staged-document.ts`
   - `src/edition/client/render-service.ts` (desde Fase 2)
-  - `src/edition/core/code-mirror-editor.ts` → `src/edition/client/code-mirror-editor.ts`
+  - `src/edition/client/code-mirror-editor.ts` → `src/edition/client/code-mirror-editor.ts`
   - `src/edition/EditPage.astro` → `src/edition/ui/EditPage.astro`
   - `src/edition/PreviewPage.astro` → `src/edition/ui/PreviewPage.astro`
-  - `src/edition/components/` → `src/edition/ui/components/`
+  - `src/edition/ui/components/` → `src/edition/ui/components/`
 - Actualizar imports.
 
 ### Fase 4: Consolidar navigation builder/service

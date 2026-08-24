@@ -20,7 +20,7 @@ La documentación completa de la API de navegación vive en:
 
 Allí se describe:
 
-- La ubicación de `NavigationBuilder` (`src/navigation/core/builder.ts`).
+- La ubicación de `NavigationBuilder` (`src/navigation/graph/builder.ts`).
 - Los tipos `NavigationNode`, `NavigationTree` y `Crumb`.
 - Las funciones `buildNavigationTree`, `getBreadcrumbs`, `getSidebarEntries`, `getImmediateChildren` y `getParentEntry`.
 - Por qué la construcción del árbol no vive en el repositorio de contenido.

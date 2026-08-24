@@ -134,7 +134,7 @@ Responsabilidades:
 Responsabilidades:
 
 - Exportar funciones puras para el scroll spy.
-- Importar `findActiveIndex` desde `src/lib/scroll-spy.ts`.
+- Importar `findActiveIndex` desde `src/shared/utils/scroll-spy.ts`.
 - Importar `collectHeadings` desde `./TableOfContents.logic.ts`.
 - No tener side effects fuera de los listeners registrados por `initScrollSpy`.
 - Exportar `initScrollSpy` y `updateActiveState`.
@@ -390,7 +390,7 @@ Para mantener la estabilidad del sistema:
 - El contrato de `data-toc-mode` (`standard`/`compact`).
 - La clave de `localStorage`: `toc-mode`.
 - El uso de `data-is-active` para marcar links y líneas activas.
-- La función `findActiveIndex` en `src/lib/scroll-spy.ts`.
+- La función `findActiveIndex` en `src/shared/utils/scroll-spy.ts`.
 - El renderizado de ambos iconos en el toggle y la ocultación por CSS.
 - El script de coordinación del `Layout.astro` se mantiene en esta iteración.
 

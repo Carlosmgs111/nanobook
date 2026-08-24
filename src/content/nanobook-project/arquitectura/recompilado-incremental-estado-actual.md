@@ -29,13 +29,13 @@ Este documento describe el estado actual del trabajo de preparación para el **r
 
 ### Fase 1 — `DocumentGraph`
 
-- Se introdujo la abstracción `DocumentGraph` en `src/navigation/core/graph.ts`.
+- Se introdujo la abstracción `DocumentGraph` en `src/navigation/graph/graph.ts`.
 - `buildNavigationTree` se refactorizó para delegar en `buildDocumentGraph`, manteniendo la misma API pública.
 - El grafo expone métodos de relación: `getRoots`, `getNode`, `getParent`, `getChildren`, `getSiblings`, `getAncestors`, `getAllNodes`.
 
 ### Fase 2 — `NavigationService`
 
-- Se creó `NavigationService` en `src/navigation/core/service.ts`.
+- Se creó `NavigationService` en `src/navigation/service/service.ts`.
 - Las páginas Astro (`src/pages/[...slug]/index.astro` y `edit.astro`) dejaron de construir el árbol global manualmente y ahora consumen el servicio.
 - Esto redujo el acoplamiento global de cada página al árbol completo.
 
@@ -47,30 +47,30 @@ Este documento describe el estado actual del trabajo de preparación para el **r
   - `proxy-target`: proxy → documento destino.
   - `internal-link`: documento origen → documento destino por link Markdown.
 - Se añadieron `getDependencies(id)` y `getDependents(id)`.
-- Se creó `src/document/core/link-extractor.ts` para extraer links internos del cuerpo Markdown.
-- Se extrajo la lógica de resolución de referencias a `src/document/core/reference/path-resolver.ts` para reutilizarla.
+- Se creó `src/document/reference/link-extractor.ts` para extraer links internos del cuerpo Markdown.
+- Se extrajo la lógica de resolución de referencias a `src/document/reference/path-resolver.ts` para reutilizarla.
 
 ### Fase 4 — Motor de invalidación
 
-- Se implementó `computeInvalidatedIds()` en `src/navigation/core/invalidation.ts`.
+- Se implementó `computeInvalidatedIds()` en `src/navigation/graph/invalidation.ts`.
 - Soporta `DocumentChange` con `kind` (`added`, `modified`, `removed`, `renamed`) y `scope` (`content`, `metadata`, `all`).
 - Propaga invalidaciones por BFS sobre el grafo, evitando ciclos.
 - Un cambio de contenido solo invalida el documento y sus proxies; un cambio estructural invalida también dependientes.
 
 ### Fase 5 — Detección de cambios por snapshot
 
-- Se creó `src/document/core/snapshot.ts` con `hashDocument()` y `computeDocumentChanges()`.
+- Se creó `src/document/change/snapshot.ts` con `hashDocument()` y `computeDocumentChanges()`.
 - Cada documento tiene dos hashes: `contentHash` y `metadataHash`.
-- Se creó `ContentChangeService` en `src/document/core/change-service.ts` para orquestar detección, grafo e invalidación.
-- Se creó `FileSystemRepository` en `src/document/adapters/file-system-repository.ts` para leer contenido sin depender de Astro.
-- Se añadió el script `pnpm content:changes` (`scripts/detect-content-changes.ts`) que compara contra `.nanobook/content-snapshot.json`.
+- Se creó `ContentChangeService` en `src/document/change/change-service.ts` para orquestar detección, grafo e invalidación.
+- Se creó `FileSystemRepository` en `src/document/adapters/repository/file-system-repository.ts` para leer contenido sin depender de Astro.
+- Se añadió el subcomando `pnpm content:status` (`scripts/content.ts status`) que compara contra `.nanobook/content-snapshot.json`.
 
 ### Fase 6 — Cache de renders y renderizador aislado
 
-- Se creó `RenderedPageCache` en `src/rendering/core/page-cache.ts`.
-- Se implementó cache en filesystem en `src/rendering/adapters/file-system-page-cache.ts`.
-- Se creó `PageRenderer` en `src/rendering/core/page-renderer.ts` para renderizar cuerpos de documentos fuera del pipeline de Astro.
-- Se añadió el script `pnpm content:render` (`scripts/render-invalidated.ts`) que detecta cambios y regenera solo los cuerpos invalidados.
+- Se creó `RenderedPageCache` en `src/rendering/page/page-cache.ts`.
+- Se implementó cache en filesystem en `src/rendering/adapters/cache/file-system-page-cache.ts`.
+- Se creó `PageRenderer` en `src/rendering/page/page-renderer.ts` para renderizar cuerpos de documentos fuera del pipeline de Astro.
+- Se añadió el subcomando `pnpm content:render` (`scripts/content.ts render`) que detecta cambios y regenera solo los cuerpos invalidados.
 
 ## Arquitectura resultante
 
@@ -148,10 +148,10 @@ El cambio puede ser:
 
 ### 2. Detección de cambios
 
-El script `pnpm content:changes` lee el snapshot anterior y compara hashes:
+El script `pnpm content:status` lee el snapshot anterior y compara hashes:
 
 ```text
-$ pnpm content:changes
+$ pnpm content:status
 Changes detected:
   [modified] nanobook-project/arquitectura/proxy-documents (content)
 
@@ -247,15 +247,16 @@ Hasta ahora, el flujo se detiene en el cuerpo renderizado. El layout completo si
 pnpm test
 ```
 
-Actualmente hay **54 tests** distribuidos en:
+Actualmente hay **49 tests** distribuidos en:
 
-- `src/navigation/core/__tests__/builder.test.ts` — 20 tests.
-- `src/navigation/core/__tests__/graph.test.ts` — 9 tests.
-- `src/navigation/core/__tests__/invalidation.test.ts` — 9 tests.
-- `src/document/core/__tests__/snapshot.test.ts` — 8 tests.
-- `src/document/core/__tests__/change-service.test.ts` — 2 tests.
-- `src/rendering/core/__tests__/page-cache.test.ts` — 4 tests.
-- `src/rendering/core/__tests__/page-renderer.test.ts` — 2 tests.
+- `src/navigation/graph/__tests__/builder.test.ts` — 9 tests.
+- `src/navigation/graph/__tests__/graph.test.ts` — 8 tests.
+- `src/navigation/graph/__tests__/invalidation.test.ts` — 11 tests.
+- `src/navigation/service/__tests__/service.test.ts` — 5 tests.
+- `src/document/change/__tests__/snapshot.test.ts` — 8 tests.
+- `src/document/change/__tests__/change-service.test.ts` — 2 tests.
+- `src/rendering/page/__tests__/page-cache.test.ts` — 4 tests.
+- `src/rendering/page/__tests__/page-renderer.test.ts` — 2 tests.
 
 ### Scripts de utilidad
 

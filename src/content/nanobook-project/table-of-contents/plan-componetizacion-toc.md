@@ -94,7 +94,7 @@ src/
 
 #### Compromiso recomendado (enfoque híbrido)
 
-Extraer **solo la lógica pura y genérica** a `src/lib/scroll-spy.ts` (por ejemplo `findActiveIndex`), manteniendo en el orquestador Astro las funciones que interactúan directamente con el DOM y que son específicas del TOC:
+Extraer **solo la lógica pura y genérica** a `src/shared/utils/scroll-spy.ts` (por ejemplo `findActiveIndex`), manteniendo en el orquestador Astro las funciones que interactúan directamente con el DOM y que son específicas del TOC:
 
 - `initTocMode`, `setTocMode` — modo del TOC.
 - `collectHeadings` — resolución de links con hash a headings.
@@ -141,7 +141,7 @@ Responsabilidades:
 - Importar y usar `TocIndicator`, `TocNav` y `TocToggle`.
 - Contener el script que inicializa:
   - Modo del TOC (`standard` / `compact`).
-  - Scroll spy (importando `findActiveIndex` desde `src/lib/scroll-spy.ts`).
+  - Scroll spy (importando `findActiveIndex` desde `src/shared/utils/scroll-spy.ts`).
   - Posicionamiento de líneas.
   - Persistencia en `localStorage`.
 
@@ -331,7 +331,7 @@ Estilos **co-localizados** en cada subcomponente, excepto reglas compartidas o d
 
 ### 6.1 Estructura sugerida dentro del orquestador
 
-Organizar el IIFE en funciones con una sola responsabilidad, importando desde `src/lib/scroll-spy.ts` la lógica pura y genérica:
+Organizar el IIFE en funciones con una sola responsabilidad, importando desde `src/shared/utils/scroll-spy.ts` la lógica pura y genérica:
 
 ```js
 import { findActiveIndex } from "../../lib/scroll-spy.ts";
@@ -355,7 +355,7 @@ function updateActiveState(root) { ... }
 
 ### 6.2 Posible mejora futura: módulo externo
 
-Si la lógica del TOC crece, se puede mover helpers específicos a `src/lib/toc.ts`, manteniendo la lógica genérica en `src/lib/scroll-spy.ts`.
+Si la lógica del TOC crece, se puede mover helpers específicos a `src/lib/toc.ts`, manteniendo la lógica genérica en `src/shared/utils/scroll-spy.ts`.
 
 Para integrarlo con Astro sin perder la ejecución inmediata, se puede usar un script de módulo:
 
@@ -377,7 +377,7 @@ Esto requiere verificar que Vite resuelva correctamente la ruta en el cliente. E
 5. **Actualizar** `TableOfContents/index.astro` para importar y usar los subcomponentes.
 6. **Refactorizar** el script en funciones con responsabilidad única.
 7. **Actualizar** todas las importaciones que referencian el componente antiguo (actualmente solo `Layout.astro` importa `TableOfContents`).
-8. **Extraer** a `src/lib/scroll-spy.ts` la lógica pura y genérica (por ejemplo `findActiveIndex`).
+8. **Extraer** a `src/shared/utils/scroll-spy.ts` la lógica pura y genérica (por ejemplo `findActiveIndex`).
 9. **Ejecutar build** y verificar visualmente ambos modos, scroll spy y persistencia.
 10. **Opcional**: extraer helpers específicos del TOC a `src/lib/toc.ts` si el script sigue siendo muy largo.
 
@@ -393,4 +393,4 @@ Para mantener la estabilidad del componente, se recomienda conservar:
 
 ## 9. Conclusión
 
-La componetización del TOC no requiere una reescritura profunda. La opción más pragmática es dividirlo en **tres subcomponentes de presentación** (`TocIndicator`, `TocNav`, `TocToggle`) y mantener un **orquestador principal** con el script refactorizado. Además, la lógica pura y genérica del scroll spy se extrae a `src/lib/scroll-spy.ts`, lo que permite testearla y reutilizarla en otros componentes. Esto reduce la complejidad del archivo principal, mejora la mantenibilidad y conserva la arquitectura declarativa basada en `data-*` y CSS que ya se estableció.
+La componetización del TOC no requiere una reescritura profunda. La opción más pragmática es dividirlo en **tres subcomponentes de presentación** (`TocIndicator`, `TocNav`, `TocToggle`) y mantener un **orquestador principal** con el script refactorizado. Además, la lógica pura y genérica del scroll spy se extrae a `src/shared/utils/scroll-spy.ts`, lo que permite testearla y reutilizarla en otros componentes. Esto reduce la complejidad del archivo principal, mejora la mantenibilidad y conserva la arquitectura declarativa basada en `data-*` y CSS que ya se estableció.

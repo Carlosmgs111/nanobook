@@ -25,7 +25,7 @@ Es un singleton (`export const worker`) que actúa como cliente del worker desde
 ### Uso
 
 ```ts
-import { worker } from "../rendering/workers";
+import { worker } from "../rendering/client/workers";
 
 const rendered = await worker.render(stagedDocument);
 ```

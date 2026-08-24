@@ -129,7 +129,7 @@ ref: /README.md
 
 ## Implementación
 
-El flujo de resolución está en `src/document/core/reference/`:
+El flujo de resolución está en `src/document/reference/`:
 
 ```text
 AstroCollectionRepository.list()

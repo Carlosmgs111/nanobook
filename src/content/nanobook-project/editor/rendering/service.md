@@ -9,7 +9,7 @@ index: false
 position: 42
 ---
 
-`src/rendering/core/render-service.ts` es el único punto de contacto entre el editor, el preview y el Web Worker. Vive en el hilo principal y gestiona el estado compartido en `sessionStorage`.
+`src/edition/client/render-service.ts` es el único punto de contacto entre el editor, el preview y el Web Worker. Vive en el hilo principal y gestiona el estado compartido en `sessionStorage`.
 
 ## Responsabilidades
 
@@ -31,7 +31,7 @@ renderStagedDocument(stagedDocument: Document): Promise<RenderedDocument | null>
 ensureRendered(): Promise<RenderedDocument | null>
 ```
 
-> `clearStagedDocument()` vive en `src/edition/core/stage-document.ts` porque es quien controla la clave `stagedDocument`.
+> `clearStagedDocument()` vive en `src/edition/client/stage-document.ts` porque es quien controla la clave `stagedDocument`.
 
 ## Estado en `sessionStorage`
 

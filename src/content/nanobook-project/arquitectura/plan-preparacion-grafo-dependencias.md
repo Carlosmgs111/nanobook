@@ -65,7 +65,7 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 ### Fase 0 — Cimientos: tests de contrato y snapshot del árbol
 
-**Objetivo**: poder refactorizar `src/navigation/core/builder.ts` con seguridad.
+**Objetivo**: poder refactorizar `src/navigation/graph/builder.ts` con seguridad.
 
 **Tareas**:
 
@@ -85,13 +85,13 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 **Criterios de aceptación**:
 
 - `npm test` existe y pasa.
-- Los tests cubren al menos el 80 % de `src/navigation/core/builder.ts`.
+- Los tests cubren al menos el 80 % de `src/navigation/graph/builder.ts`.
 - Un cambio que altere el árbol de navegación falla explícitamente en CI.
 
 **Archivos afectados**:
 
 - `package.json` (nuevo script `test` y dependencias).
-- Nuevos archivos bajo `src/navigation/core/__tests__/`.
+- Nuevos archivos bajo `src/navigation/graph/__tests__/`.
 - Posiblemente `tsconfig.json` para incluir paths de test.
 
 ### Fase 1 — Introducir `DocumentGraph` como abstracción
@@ -100,7 +100,7 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Tareas**:
 
-1. Crear el tipo `DocumentGraph` en `src/navigation/core/graph.ts`:
+1. Crear el tipo `DocumentGraph` en `src/navigation/graph/graph.ts`:
    ```ts
    export interface DocumentGraph {
      getRoots(): NavigationNode[];
@@ -135,8 +135,8 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Archivos afectados**:
 
-- `src/navigation/core/graph.ts` (nuevo).
-- `src/navigation/core/builder.ts` (refactorizado).
+- `src/navigation/graph/graph.ts` (nuevo).
+- `src/navigation/graph/builder.ts` (refactorizado).
 - `src/pages/[...slug]/*.astro` (posiblemente adaptados para recibir `graph` en lugar de `nodeMap`).
 
 ### Fase 2 — Desacoplar las páginas del árbol global
@@ -145,7 +145,7 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Tareas**:
 
-1. Introducir `NavigationService` en `src/navigation/core/service.ts`:
+1. Introducir `NavigationService` en `src/navigation/service/service.ts`:
    ```ts
    export interface NavigationService {
      getBreadcrumbs(documentId: string): Crumb[];
@@ -168,7 +168,7 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Archivos afectados**:
 
-- `src/navigation/core/service.ts` (nuevo).
+- `src/navigation/service/service.ts` (nuevo).
 - `src/pages/[...slug]/index.astro`.
 - `src/pages/[...slug]/edit.astro`.
 - `src/pages/[...slug]/preview.astro`.
@@ -217,9 +217,9 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Archivos afectados**:
 
-- `src/navigation/core/graph.ts`.
-- `src/navigation/core/types.ts` (nuevo archivo de tipos compartidos).
-- `src/document/core/document.ts` (posiblemente reutilizar `parseDocument` para extraer links).
+- `src/navigation/graph/graph.ts`.
+- `src/navigation/model/types.ts` (nuevo archivo de tipos compartidos).
+- `src/document/parse/document.ts` (posiblemente reutilizar `parseDocument` para extraer links).
 - Tests correspondientes.
 
 ### Fase 4 — Sistema de invalidación por cambio
@@ -261,7 +261,7 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Archivos afectados**:
 
-- `src/navigation/core/invalidation.ts` (nuevo).
+- `src/navigation/graph/invalidation.ts` (nuevo).
 - Tests correspondientes.
 
 ### Fase 5 — Integrar con `ContentRepository`
@@ -287,7 +287,7 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
    - Guardar un snapshot JSON con hashes de cada documento.
    - Comparar snapshot anterior vs actual para detectar `DocumentChange[]`.
 4. Añadir utilidad CLI (opcional en esta fase):
-   - `node scripts/detect-content-changes.mjs` que imprima el `ChangeSet` y las páginas invalidadas.
+   - `pnpm content:status` (`scripts/content.ts status`) que imprima el `ChangeSet` y las páginas invalidadas.
 
 **Criterios de aceptación**:
 
@@ -297,11 +297,11 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Archivos afectados**:
 
-- `src/document/core/types.ts`.
-- `src/document/adapters/astro-collection-repository.ts`.
-- `src/document/adapters/memory-repository.ts`.
-- `src/document/adapters/database-repository.ts`.
-- `scripts/detect-content-changes.mjs` (nuevo).
+- `src/document/model/types.ts`.
+- `src/document/adapters/repository/astro-collection-repository.ts`.
+- `src/document/adapters/repository/memory-repository.ts`.
+- `src/document/adapters/repository/database-repository.ts`.
+- `scripts/content.ts` con subcomandos `status` y `render` (nuevo).
 
 ### Fase 6 — Cachear renders por dependencias (preparación)
 
@@ -329,8 +329,8 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 
 **Archivos afectados**:
 
-- `src/rendering/core/page-cache.ts` (nuevo).
-- `src/rendering/core/page-renderer.ts` (nuevo).
+- `src/rendering/page/page-cache.ts` (nuevo).
+- `src/rendering/page/page-renderer.ts` (nuevo).
 - Posiblemente un nuevo adapter de `ContentRepository` orientado a cache.
 
 ### Fase 7 — ISR con modo dinámico (largo plazo)

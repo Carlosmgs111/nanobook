@@ -14,7 +14,7 @@ Nanobook incluye una vista de edición accesible desde `/{slug}/edit`. En ella s
 
 ## Componentes principales
 
-### `src/rendering/core/render-service.ts`
+### `src/edition/client/render-service.ts`
 
 Servicio compartido entre editor y preview. Es el único punto de contacto con el worker y con el `BroadcastChannel` de notificaciones.
 
@@ -113,8 +113,8 @@ El renderizado del borrador se ejecuta en un Web Worker para mantener fluida la 
 - `src/services/render.ts` — Servicio compartido que coordina el renderizado entre editor y preview. Mantiene el estado en `sessionStorage`, evita duplicados y notifica por `BroadcastChannel`.
 - `src/workers/index.ts` — `MarkdownRenderClient`, una pequeña clase que envía peticiones numeradas al worker y devuelve una promesa por cada petición. Mantiene un `Map<id, resolve>` para poder resolver cada respuesta independientemente, incluso si llegan desordenadas.
 - `src/workers/work.ts` — El worker propiamente dicho. Recibe un `RenderRequest`, llama al renderer y responde con el `RenderedDocument` incluyendo el mismo `id`.
-- `src/core/rendering/adapters/it-mardown.ts` — Implementación basada en `markdown-it` + `@shikijs/markdown-it` + `markdown-it-anchor`. Usa el motor de regex de JavaScript de Shiki para evitar cargar WASM dentro del worker.
-- `src/core/rendering/adapters/astro-markdown.ts` — Implementación alternativa basada en `@astrojs/markdown-remark`.
+- `src/rendering/adapters/markdown/markdown-it.ts` — Implementación basada en `markdown-it` + `@shikijs/markdown-it` + `markdown-it-anchor`. Usa el motor de regex de JavaScript de Shiki para evitar cargar WASM dentro del worker.
+- `src/rendering/adapters/markdown/astro-markdown.ts` — Implementación alternativa basada en `@astrojs/markdown-remark`.
 
 ### Contrato
 
