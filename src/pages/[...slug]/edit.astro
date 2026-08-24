@@ -1,14 +1,9 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditPage from "../../edition/EditPage.astro";
+import EditPage from "../../edition/ui/EditPage.astro";
 
-import { AstroCollectionRepository } from "../../document/adapters/astro-collection-repository";
-import {
-  buildNavigationTree,
-  getBreadcrumbs,
-  getSidebarEntries,
-  getParentEntry,
-} from "../../navigation/core/builder";
+import { AstroCollectionRepository } from "../../document/adapters/repository/astro-collection-repository";
+import { createNavigationService } from "../../navigation/service/service";
 
 export const prerender = true;
 
@@ -33,13 +28,10 @@ if (!entry) {
 }
 
 const allDocuments = await repository.list();
-const { nodeMap } = buildNavigationTree(allDocuments);
-const breadcrumbs = getBreadcrumbs(nodeMap, entry.id);
-const sidebarEntries = getSidebarEntries(nodeMap, entry.id);
-const parentNode = getParentEntry(nodeMap, entry.id);
-const parentEntry = parentNode
-  ? { id: parentNode.id, data: { title: parentNode.title } }
-  : null;
+const navigation = createNavigationService(allDocuments);
+const breadcrumbs = navigation.getBreadcrumbs(entry.id);
+const sidebarEntries = navigation.getSidebarEntries(entry.id);
+const parentEntry = navigation.getParentEntry(entry.id);
 const viewHref = `/${entry.id}`;
 const previewHref = `/${entry.id}/preview`;
 

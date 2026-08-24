@@ -3,6 +3,9 @@ dist/
 # generated types
 .astro/
 
+# incremental build cache and snapshots
+.nanobook/
+
 # dependencies
 node_modules/
 

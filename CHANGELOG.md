@@ -16,15 +16,42 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `ref` ahora soporta referencias locales fuera de `src/content/` (`ref: /README.md` o `ref: { source: "local", path: "README.md" }`).
 - `ref` ahora soporta referencias a documentos en repositorios de GitHub (`ref: github:owner/repo/path.md` o `ref: { source: "github", owner, repo, path, branch? }`).
 - `parseFrontmatter` extraído a `src/document/core/frontmatter.ts` para compartirlo entre loaders y resolutores.
+- Vitest como runner de tests con scripts `test` y `test:watch`.
+- Suite inicial de tests de contrato para `src/navigation/core/builder.ts` y sus helpers (`getBreadcrumbs`, `getSidebarEntries`, `getImmediateChildren`, `getParentEntry`).
 
 ### Docs
 - Actualizada la documentación de carga, mapeo y navegación en `src/content/nanobook-project/arquitectura/content-model-architecture.md`, `src/content/nanobook-project/arquitectura/api-de-navegacion.md` y `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 - `src/content/nanobook-project/navigation-api.md` ahora enlaza al documento canónico en `arquitectura/api-de-navegacion.md`.
 - Nueva sección de documentación del módulo `src/rendering/` en `src/content/nanobook-project/editor/rendering/`.
 - Nueva documentación de documentos proxy en `src/content/nanobook-project/arquitectura/proxy-documents.md`.
+- Nuevo informe de factibilidad sobre recompilado incremental en `src/content/nanobook-project/arquitectura/informe-factibilidad-recompilado-incremental.md`.
+- Nuevo plan de preparación para el grafo de dependencias en `src/content/nanobook-project/arquitectura/plan-preparacion-grafo-dependencias.md`.
 
 ### Changed
 - `src/navigation/core/builder.ts` ya no filtra borradores; el filtrado es responsabilidad de `ContentRepository`.
+- `src/navigation/core/builder.ts` ahora delega la construcción del árbol en `buildDocumentGraph()` de `src/navigation/core/graph.ts`; `NavigationTree` sigue siendo la interfaz pública.
+- `src/pages/[...slug]/index.astro` y `src/pages/[...slug]/edit.astro` ahora usan `NavigationService` en lugar de construir `nodeMap` manualmente.
+- `DocumentGraph` ahora modela aristas de dependencia: `parent-child`, `sibling-order`, `proxy-target` e `internal-link`, con métodos `getDependencies(id)` y `getDependents(id)`.
+- Nuevo extractor de links internos en `src/document/core/link-extractor.ts`.
+- Lógica de resolución de referencias relativas extraída a `src/document/core/reference/path-resolver.ts` y reutilizada por `InternalReferenceResolver`.
+- Nuevo motor de invalidación en `src/navigation/core/invalidation.ts` con `computeInvalidatedIds()`; soporta scopes `content`, `metadata` y `all` para `DocumentChange`.
+- `DocumentGraph` expone `getIncomingEdges(id)` para permitir la propagación de invalidaciones.
+- Nuevo `ContentChangeService` en `src/document/core/change-service.ts` que orquesta detección de cambios, grafo de dependencias e invalidación.
+- Nuevo `FileSystemRepository` en `src/document/adapters/file-system-repository.ts` para leer contenido sin depender de Astro.
+- Nuevo sistema de snapshots con hashes (`src/document/core/snapshot.ts`): `hashDocument()` y `computeDocumentChanges()` detectan `added`, `removed` y `modified` con scope `content`/`metadata`/`all`.
+- Nuevo script `pnpm content:changes` (`scripts/detect-content-changes.ts`) que compara contra `.nanobook/content-snapshot.json` e imprime el `ChangeSet` y los documentos invalidados.
+- Nuevo `RenderedPageCache` en `src/rendering/core/page-cache.ts` e implementación filesystem en `src/rendering/adapters/file-system-page-cache.ts`.
+- Nuevo `PageRenderer` en `src/rendering/core/page-renderer.ts` para renderizar cuerpos de documentos fuera del pipeline de Astro.
+- Nuevo script `pnpm content:render` (`scripts/render-invalidated.ts`) que detecta cambios y regenera solo los cuerpos de los documentos invalidados, guardándolos en cache.
+- `.nanobook/` añadido a `.gitignore` para excluir snapshots y caches locales.
+- Nueva documentación del estado actual del recompilado incremental en `src/content/nanobook-project/arquitectura/recompilado-incremental-estado-actual.md`, incluyendo flujo de principio a fin.
+- Unificación de scripts `content:changes` y `content:render` bajo `scripts/content.ts` con subcomandos `status` y `render`; `content:changes` pasa a ser `content:status`.
+- Nueva utilidad `shouldRebuildNavigationTree()` en `src/navigation/graph/invalidation.ts` para decidir si un cambio requiere recalcular el árbol de navegación o solo re-renderizar contenido.
+- Reorganización estructural de `src/` por dominios: `document/`, `navigation/`, `rendering/`, `edition/` divididos en `model/`, `parse/`, `change/`, `reference/`, `graph/`, `service/`, `page/`, `adapters/`, `client/` y `ui/`.
+- Consolidación de persistencia de snapshots en `src/document/change/snapshot.ts`.
+- Agrupación de implementaciones de `ContentRepository` en `src/document/adapters/repository/`.
+- Agrupación de resolutores de referencias en `src/document/adapters/reference/`.
+- Reubicación de utilidades de cliente (`scroll-spy`, `render-service`, workers, CodeMirror) a `shared/client` o `edition/client` según corresponda.
 
 ### Fixed
 - `src/content/nanobook-project/meta/readme.md` restaurado como proxy a `README.md` de la raíz del proyecto.

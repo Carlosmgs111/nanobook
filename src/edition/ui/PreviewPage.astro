@@ -1,0 +1,85 @@
+---
+interface Props {
+  slug: string | undefined;
+}
+
+const { slug } = Astro.props;
+const documentId = slug || "index";
+---
+
+<h1><mark>Preview de {slug || "index"}</mark></h1>
+<div id="preview-container" data-document-id={documentId}></div>
+
+<script>
+  import {
+    ensureRendered,
+    getRenderedDocument,
+    getRenderedDocumentSource,
+    clearRenderedDocument,
+  } from "../client/render-service";
+  import { clearStagedDocument } from "../client/stage-document";
+
+  const channel = new BroadcastChannel("rendered-document");
+
+  function getDocumentId(): string {
+    const container = document.getElementById("preview-container");
+    return container?.dataset.documentId ?? "index";
+  }
+
+  function clearEditionStorage(): void {
+    clearStagedDocument();
+    clearRenderedDocument();
+  }
+
+  function isInsideEditionFlow(url: URL, documentId: string): boolean {
+    const path = url.pathname.replace(/\/$/, "");
+    if (documentId === "index") {
+      return path === "/edit" || path === "/preview";
+    }
+    return path === `/${documentId}/edit` || path === `/${documentId}/preview`;
+  }
+
+  async function renderPreview() {
+    const container = document.getElementById("preview-container");
+    if (!container) return;
+
+    const documentId = getDocumentId();
+    const rendered = getRenderedDocument();
+    const source = getRenderedDocumentSource();
+
+    if (!rendered || !source || source.id !== documentId) {
+      container.innerHTML = "<p>Generando preview...</p>";
+      try {
+        await ensureRendered();
+        const fresh = getRenderedDocument();
+        const freshSource = getRenderedDocumentSource();
+        if (!fresh || !freshSource || freshSource.id !== documentId) {
+          container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
+          return;
+        }
+        container.innerHTML = fresh.Content;
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = "<p>Error al generar el preview.</p>";
+      }
+      return;
+    }
+
+    container.innerHTML = rendered.Content;
+  }
+
+  function handleBeforeSwap(event: Event) {
+    const documentId = getDocumentId();
+    const destination = (event as unknown as { to?: URL }).to;
+    if (destination && !isInsideEditionFlow(destination, documentId)) {
+      clearEditionStorage();
+    }
+  }
+
+  document.addEventListener("astro:page-load", renderPreview);
+  document.addEventListener("astro:before-swap", handleBeforeSwap);
+
+  channel.addEventListener("message", () => {
+    renderPreview();
+  });
+</script>

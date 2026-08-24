@@ -11,7 +11,11 @@
     "build": "astro build",
     "preview": "astro preview",
     "start": "node ./dist/server/entry.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "content:status": "tsx scripts/content.ts status",
+    "content:render": "tsx scripts/content.ts render"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.2",
@@ -50,6 +54,8 @@
     "@types/node": "^26.2.0",
     "@types/picomatch": "^4.0.3",
     "@types/unist": "^3.0.3",
-    "vite": "^8.2.1"
+    "tsx": "^4.23.12",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.11"
   }
 }

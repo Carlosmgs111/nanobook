@@ -1,0 +1,22 @@
+---
+import DocumentEditor from "./components/DocumentEditor/DocumentEditor.astro";
+import type { Document } from "../document/model/types";
+
+interface Props {
+  entry: Document;
+  previewHref: string;
+}
+
+const { entry, previewHref } = Astro.props;
+---
+
+<div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+  <span class="tech-label mb-3 block">Editing document</span>
+  <h1
+    class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
+  >
+    {entry.title}
+  </h1>
+</div>
+
+<DocumentEditor document={entry} previewHref={previewHref} />
