@@ -1,27 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import PreviewPage from "../../edition/ui/PreviewPage.astro";
-import { createContentRepository } from "../../document/adapters/repository/factory";
 
-export const prerender = true;
-
-export const getStaticPaths = async () => {
-  const repository = await createContentRepository();
-  const entries = await repository.list();
-
-  return entries.map((entry) => ({
-    params: {
-      slug: entry.slug,
-    },
-    props: {
-      editHref: `/${entry.slug}/edit`,
-    },
-  }));
-};
+export const prerender = false;
 
 const { slug } = Astro.params;
-const { editHref } = Astro.props;
-
+const editHref = slug ? `/${slug}/edit` : "/edit";
 ---
 
 <Layout editHref={editHref}>

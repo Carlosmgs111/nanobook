@@ -1,37 +1,11 @@
-import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { Document, DocumentHash } from "../model/types";
+import type { DocumentHash } from "../model/types";
+import { hashDocument } from "../model/hash";
 import type { DocumentChange } from "../../navigation/model/types";
 
-function hashString(input: string): string {
-  return createHash("sha256").update(input).digest("hex");
-}
-
-function serializeMetadata(document: Document): string {
-  const { metadata } = document;
-  return JSON.stringify({
-    title: metadata.title,
-    description: metadata.description,
-    position: metadata.position,
-    draft: metadata.draft,
-    index: metadata.index,
-    ref: metadata.ref,
-    cover: metadata.cover,
-    tags: metadata.tags,
-    author: metadata.author,
-    date: metadata.date?.toISOString(),
-  });
-}
-
-export function hashDocument(document: Document): DocumentHash {
-  return {
-    id: document.id,
-    contentHash: hashString(document.content),
-    metadataHash: hashString(serializeMetadata(document)),
-  };
-}
+export { hashDocument };
 
 function buildHashMap(hashes: DocumentHash[]): Map<string, DocumentHash> {
   return new Map(hashes.map((hash) => [hash.id, hash]));

@@ -1,67 +1,36 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-export const prerender = true;
 import DocumentPage from "../../document/DocumentPage.astro";
-import { createContentRepository } from "../../document/adapters/repository/factory";
-import { UnifiedMarkdownRenderer } from "../../rendering/adapters/markdown/unified-markdown";
-import { createNavigationService } from "../../navigation/service/service";
-import type { ParentEntry } from "../../navigation/model/types";
-import { parseDocument } from "../../document/parse/document";
-import type { Document } from "../../document/model/types";
+import { renderDocumentPage } from "../../rendering/page/render-document-page";
 
-export interface DocumentPageProps {
-  entry: Document;
-  Content: string;
-  headings: ReturnType<typeof parseDocument>["headings"];
-  childEntries: { id: string; data: Document["metadata"] }[];
-  breadcrumbs: ReturnType<typeof createNavigationService>["getBreadcrumbs"];
-  sidebarEntries: ReturnType<typeof createNavigationService>["getSidebarEntries"];
-  parentEntry: ParentEntry | null;
-  editHref?: string;
+export const prerender = false;
+
+const { slug } = Astro.params;
+const result = await renderDocumentPage(slug ?? "");
+
+if (!result) {
+  return new Response("Document not found", { status: 404 });
 }
 
-export async function getStaticPaths() {
-  const repository = await createContentRepository();
-  const documents = await repository.list();
+const { rendered } = result;
+const { document, renderedBody, headings, breadcrumbs, sidebarEntries, parentEntry, childEntries } = rendered;
 
-  return documents.map((document) => ({
-    params: { slug: document.slug || undefined },
-    props: { documentId: document.id },
-  }));
-}
-const { documentId } = Astro.props;
-
-const repository = await createContentRepository();
-const entry = await repository.get(documentId);
-
-if (!entry) {
-  throw new Error(`Document not found: ${documentId}`);
-}
-
-const allDocuments = await repository.list();
-const navigation = createNavigationService(allDocuments);
-const breadcrumbs = navigation.getBreadcrumbs(entry.id);
-const sidebarEntries = navigation.getSidebarEntries(entry.id);
-const parentEntry = navigation.getParentEntry(entry.id);
-
-const headings = parseDocument({ body: entry.content }).headings;
-const childEntries = entry.metadata.index
-  ? navigation.getImmediateChildren(entry.id, entry.id).map(
-      (child) => ({ id: child.id, data: child.metadata })
-    )
-  : [];
-const editHref = entry.metadata.index ? undefined : `/${entry.slug}/edit`;
-const canonicalHref = entry.proxyTargetId
-  ? entry.proxyTargetId === "index"
+const editHref = document.metadata.index ? undefined : `/${document.slug}/edit`;
+const canonicalHref = document.proxyTargetId
+  ? document.proxyTargetId === "index"
     ? "/"
-    : `/${entry.proxyTargetId}/`
+    : `/${document.proxyTargetId}/`
   : undefined;
-const { Content } = await new UnifiedMarkdownRenderer().render(entry);
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=60, stale-while-revalidate=600",
+);
 ---
 
 <Layout
-  title={entry.title}
-  description={entry.description}
+  title={document.title}
+  description={document.description}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentEntry}
@@ -69,5 +38,9 @@ const { Content } = await new UnifiedMarkdownRenderer().render(entry);
   editHref={editHref}
   canonicalHref={canonicalHref}
 >
-  <DocumentPage entry={entry} Content={Content} childEntries={childEntries} />
+  <DocumentPage
+    entry={document}
+    Content={renderedBody}
+    childEntries={childEntries.map((child) => ({ id: child.id, data: child.metadata }))}
+  />
 </Layout>
