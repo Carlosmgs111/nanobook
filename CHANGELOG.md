@@ -15,6 +15,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Docs
 - Actualizada guía de despliegue en Vercel (`despliegue-vercel.md`) para recomendar Upstash Redis en lugar de Vercel KV (deprecado).
 - Actualizado `plan-fase-7-isr-modo-dinamico.md` con el backend Redis y variables de entorno.
+- Añadida sección de pruebas locales con `vercel dev` y Redis en `despliegue-vercel.md`.
 
 ## [0.3.0] - 2026-08-25
 

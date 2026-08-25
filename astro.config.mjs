@@ -24,6 +24,6 @@ export default defineConfig({
     rehypePlugins: [rehypeSlug],
   },
   server: ({ command }) => ({
-    port: command === "dev" ? 4321 : 4320,
+    port: command === "dev" ? 4322 : 4320,
   }),
 });

@@ -95,6 +95,70 @@ Esto significa:
 - Después de esos 60 segundos, sigue sirviendo la versión cacheada mientras regenera en background durante 600 segundos.
 - El cache de cuerpos (RenderedPageCache) acelera la regeneración.
 
+## Pruebas locales con `vercel dev`
+
+Para probar el comportamiento de Vercel localmente sin hacer deploy:
+
+### 1. Levantar Redis local con Docker
+
+```bash
+docker run -d --name nanobook-redis -p 6379:6379 redis:7-alpine
+```
+
+### 2. Configurar variables de entorno
+
+Asegúrate de tener `.env.local` con:
+
+```text
+CACHE_BACKEND=redis
+REDIS_URL=redis://localhost:6379
+CONTENT_SOURCE=github
+GITHUB_OWNER=Carlosmgs111
+GITHUB_REPO=nanobook-content
+GITHUB_BRANCH=main
+GITHUB_PATH=
+GITHUB_TOKEN=ghp_...
+INVALIDATE_TOKEN=...
+GITHUB_WEBHOOK_SECRET=...
+VERCEL_DEPLOY=true
+```
+
+Este archivo está en `.gitignore` y no debe commitearse.
+
+### 3. Iniciar `vercel dev`
+
+```bash
+vercel dev --listen 3000 --yes
+```
+
+### 4. Verificar cache en Redis
+
+```bash
+docker exec nanobook-redis redis-cli keys '*nanobook*'
+```
+
+### 5. Probar invalidación manual
+
+```bash
+curl -X POST http://localhost:3000/api/invalidate \
+  -H "Authorization: Bearer $INVALIDATE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"changes": [{"id": "index", "kind": "modified", "scope": "content"}]}'
+```
+
+### 6. Probar webhook de GitHub
+
+Generar firma HMAC-SHA256 y enviar:
+
+```bash
+PAYLOAD='{"ref":"refs/heads/main","commits":[{"added":[],"removed":[],"modified":["markdown.md"]}]}'
+SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$GITHUB_WEBHOOK_SECRET" | sed 's/^.* //')
+curl -X POST http://localhost:3000/api/webhook/github \
+  -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+  -H "Content-Type: application/json" \
+  -d "$PAYLOAD"
+```
+
 ## Limitaciones conocidas
 
 - El build local con `@astrojs/vercel` puede fallar en Windows sin permisos de desarrollador por symlinks. Por eso el adapter de Vercel solo se activa con `VERCEL_DEPLOY=true`.
