@@ -4,6 +4,7 @@ import {
   type RepositorySource,
 } from "../factory";
 import { FileSystemRepository } from "../file-system-repository";
+import { GitHubRepository } from "../github-repository";
 
 describe("createContentRepository", () => {
   it("devuelve FileSystemRepository cuando la fuente es filesystem", async () => {
@@ -11,10 +12,39 @@ describe("createContentRepository", () => {
     expect(repository).toBeInstanceOf(FileSystemRepository);
   });
 
-  it("lanza error cuando la fuente es github", async () => {
-    await expect(
-      createContentRepository("github" as RepositorySource),
-    ).rejects.toThrow("GitHubRepository is not implemented yet");
+  it("devuelve GitHubRepository cuando la fuente es github y hay credenciales", async () => {
+    const originalOwner = process.env.GITHUB_OWNER;
+    const originalRepo = process.env.GITHUB_REPO;
+
+    process.env.GITHUB_OWNER = "test-owner";
+    process.env.GITHUB_REPO = "test-repo";
+
+    try {
+      const repository = await createContentRepository("github");
+      expect(repository).toBeInstanceOf(GitHubRepository);
+    } finally {
+      process.env.GITHUB_OWNER = originalOwner;
+      process.env.GITHUB_REPO = originalRepo;
+    }
+  });
+
+  it("lanza error cuando la fuente es github pero faltan credenciales", async () => {
+    const originalOwner = process.env.GITHUB_OWNER;
+    const originalRepo = process.env.GITHUB_REPO;
+
+    delete process.env.GITHUB_OWNER;
+    delete process.env.GITHUB_REPO;
+
+    try {
+      await expect(
+        createContentRepository("github" as RepositorySource),
+      ).rejects.toThrow(
+        "GitHubRepository requires GITHUB_OWNER and GITHUB_REPO",
+      );
+    } finally {
+      process.env.GITHUB_OWNER = originalOwner;
+      process.env.GITHUB_REPO = originalRepo;
+    }
   });
 
   it("lanza error para fuentes desconocidas", async () => {

@@ -82,7 +82,7 @@ export function github(options: GitHubLoaderOptions): Loader {
   };
 }
 
-function filterContentFiles(
+export function filterContentFiles(
   tree: GitHubTreeItem[],
   basePath: string,
   pattern: GitHubLoaderOptions["pattern"]

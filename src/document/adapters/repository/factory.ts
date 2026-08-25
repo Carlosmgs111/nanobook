@@ -1,4 +1,5 @@
 import { FileSystemRepository } from "./file-system-repository";
+import { GitHubRepository } from "./github-repository";
 import type { ContentRepository } from "../../model/types";
 
 export type RepositorySource = "astro" | "filesystem" | "github";
@@ -11,15 +12,17 @@ export type RepositorySource = "astro" | "filesystem" | "github";
  * - `filesystem`: usa FileSystemRepository, que lee directamente desde
  *   src/content. Funciona en runtime y en scripts standalone, pero aún no
  *   resuelve proxies.
- * - `github`: no implementado todavía. Se añadirá en una fase posterior.
+ * - `github`: usa GitHubRepository, que lee Markdown desde un repo remoto.
+ *   Requiere GITHUB_OWNER, GITHUB_REPO y opcionalmente GITHUB_BRANCH,
+ *   GITHUB_TOKEN y GITHUB_PATH.
  *
  * La fuente se lee de la variable de entorno CONTENT_SOURCE. Si no está
  * definida, se usa `astro` para mantener compatibilidad con el comportamiento
  * previo.
  *
  * La función es asíncrona porque AstroCollectionRepository se importa de forma
- * perezosa; esto permite que los tests y scripts que usan filesystem no
- * dependan de "astro:content".
+ * perezosa; esto permite que los tests y scripts que usan filesystem o github
+ * no dependan de "astro:content".
  */
 export async function createContentRepository(
   source: RepositorySource = getConfiguredSource(),
@@ -34,9 +37,7 @@ export async function createContentRepository(
     case "filesystem":
       return new FileSystemRepository();
     case "github":
-      throw new Error(
-        "GitHubRepository is not implemented yet. Use CONTENT_SOURCE=astro or filesystem.",
-      );
+      return createGitHubRepository();
     default:
       throw new Error(`Unsupported content source: ${source}`);
   }
@@ -51,4 +52,23 @@ function getConfiguredSource(): RepositorySource {
   }
 
   return "astro";
+}
+
+function createGitHubRepository(): ContentRepository {
+  const owner = process.env.GITHUB_OWNER;
+  const repo = process.env.GITHUB_REPO;
+
+  if (!owner || !repo) {
+    throw new Error(
+      "GitHubRepository requires GITHUB_OWNER and GITHUB_REPO environment variables.",
+    );
+  }
+
+  return new GitHubRepository({
+    owner,
+    repo,
+    branch: process.env.GITHUB_BRANCH,
+    token: process.env.GITHUB_TOKEN,
+    path: process.env.GITHUB_PATH,
+  });
 }
