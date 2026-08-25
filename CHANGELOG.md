@@ -14,9 +14,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 - `GitHubRepository` ahora acepta un `pattern` opcional y excluye `README.md` por defecto, alineándose con el comportamiento del `github-loader` de Astro.
+- `GitHubRepository` cachea la lista de documentos en memoria compartida con TTL configurable (default 60s), reduciendo drásticamente las llamadas a la API de GitHub por petición.
 
 ### Fixed
 - Eliminados los warnings `Missing required field "title" in document "readme"` al usar `CONTENT_SOURCE=github` con un repo que contiene `README.md` sin frontmatter.
+- Reducida la latencia de navegación cuando `CONTENT_SOURCE=github` evitando múltiples fetches del árbol y contenido de GitHub en cada petición.
 
 ### Docs
 - Actualizada guía de despliegue en Vercel (`despliegue-vercel.md`) para recomendar Upstash Redis en lugar de Vercel KV (deprecado).

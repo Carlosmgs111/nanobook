@@ -14,6 +14,22 @@ export interface GitHubRepositoryOptions {
   path?: string;
   /** Patrón de archivos a incluir/excluir. Por defecto excluye README.md. */
   pattern?: GitHubLoaderOptions["pattern"];
+  /** TTL del cache de lista de documentos en milisegundos. Por defecto 60s. */
+  cacheTtl?: number;
+}
+
+interface GitHubRepositoryCache {
+  documents: Document[];
+  expiresAt: number;
+}
+
+const globalCache = new Map<string, GitHubRepositoryCache>();
+
+function buildCacheKey(options: GitHubRepositoryOptions): string {
+  const pattern = Array.isArray(options.pattern)
+    ? options.pattern.join(",")
+    : options.pattern ?? "default";
+  return `${options.owner}:${options.repo}:${options.branch ?? "main"}:${options.path ?? ""}:${pattern}`;
 }
 
 /**
@@ -23,6 +39,10 @@ export interface GitHubRepositoryOptions {
  * redeploy. No implementa save() porque el proyecto no escribe de vuelta a
  * GitHub.
  *
+ * Cachea la lista de documentos en memoria compartida durante un TTL
+ * configurable para evitar múltiples llamadas a la API de GitHub por
+ * petición. El cache se invalida automáticamente al expirar el TTL.
+ *
  * Por defecto excluye README.md para alinearse con el comportamiento del
  * github-loader de Astro, que también lo excluye del pattern por defecto.
  */
@@ -30,14 +50,33 @@ export class GitHubRepository implements ContentRepository {
   private branch: string;
   private path: string;
   private pattern: GitHubLoaderOptions["pattern"];
+  private cacheTtl: number;
+  private cacheKey: string;
 
   constructor(private options: GitHubRepositoryOptions) {
     this.branch = options.branch ?? "main";
     this.path = options.path ?? "";
     this.pattern = options.pattern ?? ["**/*.md", "!README.md"];
+    this.cacheTtl = options.cacheTtl ?? 60_000;
+    this.cacheKey = buildCacheKey(options);
   }
 
   async list(): Promise<Document[]> {
+    const now = Date.now();
+    const cached = globalCache.get(this.cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.documents;
+    }
+
+    const documents = await this.fetchDocuments();
+    globalCache.set(this.cacheKey, {
+      documents,
+      expiresAt: now + this.cacheTtl,
+    });
+    return documents;
+  }
+
+  private async fetchDocuments(): Promise<Document[]> {
     const { owner, repo, token } = this.options;
 
     const tree = await fetchGitHubTree({
@@ -83,5 +122,15 @@ export class GitHubRepository implements ContentRepository {
 
   async save(): Promise<void> {
     throw new Error("GitHubRepository does not support saving documents.");
+  }
+
+  /** Invalida el cache de documentos de esta instancia. */
+  clearCache(): void {
+    globalCache.delete(this.cacheKey);
+  }
+
+  /** Invalida todo el cache global de GitHubRepository. */
+  static clearAllCache(): void {
+    globalCache.clear();
   }
 }

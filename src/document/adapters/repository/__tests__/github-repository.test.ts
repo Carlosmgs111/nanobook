@@ -16,10 +16,12 @@ describe("GitHubRepository", () => {
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
+    GitHubRepository.clearAllCache();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    GitHubRepository.clearAllCache();
   });
 
   it("lista documentos desde GitHub excluyendo README.md por defecto", async () => {
@@ -87,6 +89,44 @@ describe("GitHubRepository", () => {
     expect(documents).toHaveLength(2);
     expect(documents.some((doc) => doc.id === "blog/post")).toBe(true);
     expect(documents.some((doc) => doc.id === "readme")).toBe(true);
+  });
+
+  it("cachea la lista de documentos globalmente entre instancias", async () => {
+    const fetchMock = vi.fn(async (url) => {
+      const urlString = url.toString();
+
+      if (urlString.includes("/git/trees/")) {
+        return createMockResponse({
+          tree: [{ path: "blog/post.md", type: "blob" }],
+        });
+      }
+
+      return createMockResponse({
+        content: Buffer.from(
+          "---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post",
+        ).toString("base64"),
+        encoding: "base64",
+      });
+    });
+    globalThis.fetch = fetchMock;
+
+    const repositoryA = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+      cacheTtl: 60_000,
+    });
+
+    await repositoryA.list();
+    expect(fetchMock).toHaveBeenCalledTimes(2); // tree + file
+
+    const repositoryB = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+      cacheTtl: 60_000,
+    });
+
+    await repositoryB.list();
+    expect(fetchMock).toHaveBeenCalledTimes(2); // no nuevas llamadas
   });
 
   it("obtiene un documento por id", async () => {
