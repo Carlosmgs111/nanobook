@@ -3,6 +3,9 @@ dist/
 # generated types
 .astro/
 
+# platform-specific build output
+.vercel/
+
 # incremental build cache and snapshots
 .nanobook/
 
