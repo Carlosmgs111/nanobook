@@ -29,8 +29,6 @@ export class AstroMarkdownRenderer implements DocumentRenderer {
 
     return {
       Content: result,
-      headings: [],
-      remarkPluginFrontmatter: {},
-    } as RenderedDocument;
+    };
   }
 }

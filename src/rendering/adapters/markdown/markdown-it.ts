@@ -62,8 +62,6 @@ export class MarkdownItRenderer implements DocumentRenderer {
 
     return {
       Content,
-      headings: [],
-      remarkPluginFrontmatter: {},
-    } as RenderedDocument;
+    };
   }
 }

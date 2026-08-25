@@ -37,8 +37,6 @@ export class UnifiedMarkdownRenderer implements DocumentRenderer {
 
     return {
       Content: String(result),
-      headings: [], // Los headings se extraen en el consumer con parseDocument()
-      remarkPluginFrontmatter: {},
-    } as unknown as RenderedDocument;
+    };
   }
 }

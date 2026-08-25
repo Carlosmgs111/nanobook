@@ -12,8 +12,15 @@ if (!result) {
   return new Response("Document not found", { status: 404 });
 }
 
-const { rendered } = result;
-const { document, renderedBody, headings, breadcrumbs, sidebarEntries, parentEntry, childEntries } = rendered;
+const { rendered, headings } = result;
+const {
+  document,
+  renderedBody,
+  breadcrumbs,
+  sidebarEntries,
+  parentEntry,
+  childEntries,
+} = rendered;
 
 const editHref = document.metadata.index ? undefined : `/${document.slug}/edit`;
 const canonicalHref = document.proxyTargetId
@@ -24,7 +31,7 @@ const canonicalHref = document.proxyTargetId
 
 Astro.response.headers.set(
   "Cache-Control",
-  "public, max-age=60, stale-while-revalidate=600",
+  "public, max-age=60, stale-while-revalidate=600"
 );
 ---
 
@@ -41,6 +48,9 @@ Astro.response.headers.set(
   <DocumentPage
     entry={document}
     Content={renderedBody}
-    childEntries={childEntries.map((child) => ({ id: child.id, data: child.metadata }))}
+    childEntries={childEntries.map((child) => ({
+      id: child.id,
+      data: child.metadata,
+    }))}
   />
 </Layout>

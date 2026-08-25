@@ -6,13 +6,11 @@ import type {
 } from "../../navigation/model/types";
 import type { ContentRepository, Document } from "../../document/model/types";
 import type { DocumentRenderer, RenderedPageCache } from "../model/types";
-import type { Heading } from "../../document/parse/document";
 
 export interface RenderedPageData {
   pageId: string;
   document: Document;
   renderedBody: string;
-  headings: Heading[];
   breadcrumbs: Crumb[];
   sidebarEntries: NavigationNode[];
   parentEntry: ParentEntry | null;
@@ -48,7 +46,7 @@ export class PageRenderer {
     const allDocuments = await this.repository.list();
     const navigation = createNavigationService(allDocuments);
 
-    const { renderedBody, headings } = await this.resolveRenderedBody(
+    const renderedBody = await this.resolveRenderedBody(
       document,
       documentId,
       contentHash,
@@ -58,7 +56,6 @@ export class PageRenderer {
       pageId: documentId,
       document,
       renderedBody,
-      headings,
       breadcrumbs: navigation.getBreadcrumbs(document.id),
       sidebarEntries: navigation.getSidebarEntries(document.id),
       parentEntry: navigation.getParentEntry(document.id),
@@ -72,14 +69,11 @@ export class PageRenderer {
     document: { id: string; content: string },
     documentId: string,
     contentHash?: string,
-  ): Promise<{ renderedBody: string; headings: Heading[] }> {
+  ): Promise<string> {
     if (this.cache && contentHash) {
       const cached = await this.cache.get(documentId, contentHash);
       if (cached) {
-        // Los headings no se almacenan en cache; se re-parsean del documento.
-        // Esto es barato y garantiza que coincidan con el documento actual.
-        const reRendered = await this.markdownRenderer.render(document);
-        return { renderedBody: cached.html, headings: reRendered.headings };
+        return cached.html;
       }
     }
 
@@ -89,6 +83,6 @@ export class PageRenderer {
       await this.cache.set(documentId, contentHash, rendered.Content);
     }
 
-    return { renderedBody: rendered.Content, headings: rendered.headings };
+    return rendered.Content;
   }
 }

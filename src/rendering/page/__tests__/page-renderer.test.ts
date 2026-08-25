@@ -12,7 +12,6 @@ class FakeRenderer implements DocumentRenderer {
   async render(): Promise<RenderedDocument> {
     return {
       Content: "<p>rendered</p>",
-      headings: [{ depth: 1, slug: "heading", text: "Heading" }],
     };
   }
 }
