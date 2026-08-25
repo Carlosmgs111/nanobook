@@ -52,7 +52,12 @@ Página Astro SSR (prerender = false)
 
 ### Fase 7.1 — Configurar modo server canónico
 
-Actualizar astro.config.mjs a output: "server" con un adapter base como @astrojs/node para desarrollo local. Las plataformas específicas (Vercel, Netlify, Cloudflare) se configuran al final como capa de despliegue, no como lógica de negocio.
+Actualizar astro.config.mjs a output: "server". El adapter se selecciona mediante la variable de entorno VERCEL_DEPLOY:
+
+- Local/Node: @astrojs/node con mode standalone (por defecto).
+- Vercel: @astrojs/vercel cuando VERCEL_DEPLOY=true.
+
+Esto mantiene el build local funcional en entornos donde Vercel no puede crear symlinks (Windows sin permisos de desarrollador), mientras que el despliegue en Vercel usa su adapter nativo.
 
 ### Fase 7.2 — Refactorizar RenderedPageCache como interfaz
 
@@ -76,7 +81,7 @@ Crear src/document/adapters/repository/github-repository.ts que implemente Conte
 
 ### Fase 7.6 — Prerender condicional
 
-Marcar prerender true en src/pages/index.astro y páginas legales. Marcar prerender false en src/pages/[...slug]/index.astro, edit.astro y preview.astro.
+Marcar prerender false en src/pages/[...slug]/index.astro, edit.astro y preview.astro. Dado que el home comparte la ruta dinámica [...slug]/index.astro, también se sirve bajo demanda. En una fase posterior se puede separar el home en src/pages/index.astro si se necesita que sea estático.
 
 ### Fase 7.7 — SSR de páginas de contenido
 
@@ -92,19 +97,19 @@ Crear src/pages/api/webhook/github.ts que verifique firma con GITHUB_WEBHOOK_SEC
 
 ### Fase 7.10 — Adaptadores de despliegue
 
-Al final, configurar el adapter específico según la plataforma elegida:
+Configurar el adapter específico según la plataforma elegida. Implementado para Vercel y Node:
 
-- Vercel: @astrojs/vercel con output server
-- Netlify: @astrojs/netlify con output server
-- Cloudflare: @astrojs/cloudflare con output server
-- Node propio: @astrojs/node con output server
+- Vercel: @astrojs/vercel con output server. Activar con VERCEL_DEPLOY=true.
+- Node propio: @astrojs/node con mode standalone (por defecto).
 
-La lógica de negocio no cambia entre plataformas.
+La lógica de negocio no cambia entre plataformas. Para Netlify o Cloudflare bastaría con instalar su adapter y añadir una rama más en el selector de astro.config.mjs.
 
 ## Variables de entorno
 
+- VERCEL_DEPLOY: true para usar @astrojs/vercel, omitir para @astrojs/node
 - CONTENT_SOURCE: local o github
 - GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH, GITHUB_TOKEN
+- GITHUB_PATH: ruta base del contenido en el repo de GitHub
 - INVALIDATE_TOKEN
 - GITHUB_WEBHOOK_SECRET
 - CACHE_BACKEND: filesystem | memory | redis | kv
