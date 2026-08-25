@@ -2,13 +2,13 @@
 import Layout from "../../layouts/Layout.astro";
 import EditPage from "../../edition/ui/EditPage.astro";
 
-import { AstroCollectionRepository } from "../../document/adapters/repository/astro-collection-repository";
+import { createContentRepository } from "../../document/adapters/repository/factory";
 import { createNavigationService } from "../../navigation/service/service";
 
 export const prerender = true;
 
 export async function getStaticPaths() {
-  const repository = new AstroCollectionRepository();
+  const repository = await createContentRepository();
   const documents = await repository.list();
 
   return documents
@@ -20,7 +20,7 @@ export async function getStaticPaths() {
 }
 const { documentId } = Astro.props;
 
-const repository = new AstroCollectionRepository();
+const repository = await createContentRepository();
 const entry = await repository.get(documentId);
 
 if (!entry) {

@@ -1,25 +1,25 @@
-import { FileSystemRepository } from "../../src/document/adapters/repository/file-system-repository";
+import { createContentRepository } from "../../src/document/adapters/repository/factory";
 import { ContentChangeService } from "../../src/document/change/change-service";
 import { hashDocument } from "../../src/document/change/snapshot";
 import {
   loadSnapshot,
   saveSnapshot,
 } from "../../src/document/change/snapshot";
-import type { DocumentHash } from "../../src/document/model/types";
+import type { ContentRepository, DocumentHash } from "../../src/document/model/types";
 import { PageRenderer } from "../../src/rendering/page/page-renderer";
 import { UnifiedMarkdownRenderer } from "../../src/rendering/adapters/markdown/unified-markdown";
 import { createRenderedPageCache } from "../../src/rendering/adapters/cache/factory";
 import type { RenderedPageCache } from "../../src/rendering/model/types";
 
 export interface WorkflowContext {
-  repository: FileSystemRepository;
+  repository: ContentRepository;
   changeService: ContentChangeService;
   cache: RenderedPageCache;
   renderer: PageRenderer;
 }
 
-export function createWorkflowContext(): WorkflowContext {
-  const repository = new FileSystemRepository();
+export async function createWorkflowContext(): Promise<WorkflowContext> {
+  const repository = await createContentRepository("filesystem");
   const changeService = new ContentChangeService(repository);
   const cache = createRenderedPageCache();
   const renderer = new PageRenderer(

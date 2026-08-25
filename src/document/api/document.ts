@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { AstroCollectionRepository } from "../adapters/repository/astro-collection-repository";
+import { createContentRepository } from "../adapters/repository/factory";
 import type { Document } from "../model/types";
 
 export const prerender = (import.meta.env as any).OUTPUT_MODE !== "dynamic";
@@ -11,7 +11,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     if (!slug) {
       return new Response("Falta el parámetro slug", { status: 400 });
     }
-    const repository = new AstroCollectionRepository();
+    const repository = await createContentRepository();
     const document: Document = JSON.parse(await request.text());
     await repository.save(document);
     return new Response("Save Successfully", { status: 200 });

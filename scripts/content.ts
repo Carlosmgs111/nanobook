@@ -25,7 +25,7 @@ function showUsage(): void {
 }
 
 async function runStatus() {
-  const context = createWorkflowContext();
+  const context = await createWorkflowContext();
   const { changes } = await detectWorkflowChanges(context);
 
   printChanges(changes);
@@ -37,7 +37,7 @@ async function runStatus() {
 }
 
 async function runRender() {
-  const context = createWorkflowContext();
+  const context = await createWorkflowContext();
   const { changes, currentHashes } = await detectWorkflowChanges(context);
 
   printChanges(changes);

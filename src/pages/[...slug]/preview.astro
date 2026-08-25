@@ -1,12 +1,12 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import PreviewPage from "../../edition/ui/PreviewPage.astro";
-import { AstroCollectionRepository } from "../../document/adapters/repository/astro-collection-repository";
+import { createContentRepository } from "../../document/adapters/repository/factory";
 
 export const prerender = true;
 
 export const getStaticPaths = async () => {
-  const repository = new AstroCollectionRepository();
+  const repository = await createContentRepository();
   const entries = await repository.list();
 
   return entries.map((entry) => ({

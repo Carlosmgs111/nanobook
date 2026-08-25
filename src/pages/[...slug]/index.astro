@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 export const prerender = true;
 import DocumentPage from "../../document/DocumentPage.astro";
-import { AstroCollectionRepository } from "../../document/adapters/repository/astro-collection-repository";
+import { createContentRepository } from "../../document/adapters/repository/factory";
 import { UnifiedMarkdownRenderer } from "../../rendering/adapters/markdown/unified-markdown";
 import { createNavigationService } from "../../navigation/service/service";
 import type { ParentEntry } from "../../navigation/model/types";
@@ -21,7 +21,7 @@ export interface DocumentPageProps {
 }
 
 export async function getStaticPaths() {
-  const repository = new AstroCollectionRepository();
+  const repository = await createContentRepository();
   const documents = await repository.list();
 
   return documents.map((document) => ({
@@ -31,7 +31,7 @@ export async function getStaticPaths() {
 }
 const { documentId } = Astro.props;
 
-const repository = new AstroCollectionRepository();
+const repository = await createContentRepository();
 const entry = await repository.get(documentId);
 
 if (!entry) {
