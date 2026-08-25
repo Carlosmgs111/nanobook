@@ -1,12 +1,4 @@
-export interface CachedPage {
-  pageId: string;
-  contentHash: string;
-  html: string;
-  renderedAt: string;
-}
+// Re-exportado desde el modelo para mantener compatibilidad.
+// El contrato central vive en src/rendering/model/types.ts.
+export type { CachedPage, RenderedPageCache } from "../model/types";
 
-export interface RenderedPageCache {
-  get(pageId: string, contentHash: string): Promise<CachedPage | null>;
-  set(pageId: string, contentHash: string, html: string): Promise<void>;
-  invalidate(pageIds: string[]): Promise<void>;
-}

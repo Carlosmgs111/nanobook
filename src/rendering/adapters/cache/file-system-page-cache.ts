@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { CachedPage, RenderedPageCache } from "../../page/page-cache";
+import type { CachedPage, RenderedPageCache } from "../../model/types";
 
 function hashPageId(pageId: string): string {
   return createHash("sha256").update(pageId).digest("hex");

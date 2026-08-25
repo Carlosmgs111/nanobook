@@ -8,20 +8,25 @@ import {
 import type { DocumentHash } from "../../src/document/model/types";
 import { PageRenderer } from "../../src/rendering/page/page-renderer";
 import { UnifiedMarkdownRenderer } from "../../src/rendering/adapters/markdown/unified-markdown";
-import { FileSystemRenderedPageCache } from "../../src/rendering/adapters/cache/file-system-page-cache";
+import { createRenderedPageCache } from "../../src/rendering/adapters/cache/factory";
+import type { RenderedPageCache } from "../../src/rendering/model/types";
 
 export interface WorkflowContext {
   repository: FileSystemRepository;
   changeService: ContentChangeService;
-  cache: FileSystemRenderedPageCache;
+  cache: RenderedPageCache;
   renderer: PageRenderer;
 }
 
 export function createWorkflowContext(): WorkflowContext {
   const repository = new FileSystemRepository();
   const changeService = new ContentChangeService(repository);
-  const cache = new FileSystemRenderedPageCache();
-  const renderer = new PageRenderer(repository, new UnifiedMarkdownRenderer());
+  const cache = createRenderedPageCache();
+  const renderer = new PageRenderer(
+    repository,
+    new UnifiedMarkdownRenderer(),
+    cache,
+  );
 
   return { repository, changeService, cache, renderer };
 }
@@ -99,29 +104,21 @@ export async function renderInvalidatedPages(
   console.log(`\nRendering ${invalidatedIds.length} invalidated page(s)...`);
 
   for (const pageId of invalidatedIds) {
-    const document = await context.repository.get(pageId);
-    if (!document) {
-      console.log(`  - skipped (not found): ${pageId}`);
-      continue;
-    }
-
-    const rendered = await context.renderer.render(pageId);
-    if (!rendered) {
-      console.log(`  - failed to render: ${pageId}`);
-      continue;
-    }
-
     const documentHash = currentHashes.find((hash) => hash.id === pageId);
     if (!documentHash) {
       console.log(`  - skipped (no hash): ${pageId}`);
       continue;
     }
 
-    await context.cache.set(
+    const rendered = await context.renderer.render(
       pageId,
       documentHash.contentHash,
-      rendered.renderedBody,
     );
+    if (!rendered) {
+      console.log(`  - failed to render: ${pageId}`);
+      continue;
+    }
+
     renderedIds.push(pageId);
     console.log(`  - rendered: ${pageId}`);
   }
