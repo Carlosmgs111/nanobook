@@ -1,6 +1,6 @@
 ---
-title: "Plan de implementación — Fase 7: ISR con modo dinámico en Vercel"
-description: "Plan de implementación — Fase 7: ISR con modo dinámico en Vercel"
+title: "Plan de implementación — Fase 7: ISR isomórfico con cache abstracto"
+description: "Plan de implementación — Fase 7: ISR isomórfico con cache abstracto"
 date: 2026-08-23
 author: "Nanobook Team"
 tags:
@@ -10,64 +10,96 @@ tags:
   - refactoring
   - roadmap
   - decision
-  - vercel
+  - isr
+  - cache
 draft: false
 index: false
 ---
 
-# Plan de implementación — Fase 7: ISR con modo dinámico en Vercel
+# Plan de implementación — Fase 7: ISR isomórfico con cache abstracto
 
 ## Objetivo
 
-Completar la integración del recompilado incremental en el flujo de ejecución real del proyecto, desplegando en Vercel con ISR nativo.
+Completar la integración del recompilado incremental en el flujo de ejecución real del proyecto de forma isomórfica: el mismo código debe poder desplegarse en Vercel, Netlify, Cloudflare, Node o cualquier entorno serverless con mínimos cambios de configuración.
 
-## Por qué Vercel
+## Lección aprendida del debate
 
-Vercel es la opción recomendada porque @astrojs/vercel soporta ISR nativo: revalidación automática por TTL, revalidación bajo demanda mediante revalidate(), despliegue serverless sin gestionar servidor Node, y CDN global integrada.
+El primer borrador de esta fase proponía usar ISR nativo de Vercel como mecanismo principal. Se descartó porque crearía una arquitectura no portable: revalidate() solo existe en Vercel, FileSystemRenderedPageCache no persiste en serverless, y cambiar de plataforma requeriría reescribir lógica.
+
+La decisión final es: el cache de cuerpos propio es el mecanismo central, con backends intercambiables. El ISR de plataforma y las cabeceras Cache-Control son una capa opcional de aceleración, no un requisito.
 
 ## Principios rectores
 
-1. Server como modo canónico: output server con @astrojs/vercel.
-2. Prerender selectivo: páginas que no cambian usan prerender true.
-3. Storage-agnostic: las páginas no saben la fuente del contenido.
-4. Cache en dos niveles: ISR de Vercel para HTML + cache propio para cuerpos.
-5. Reutilizar PageRenderer, FileSystemRenderedPageCache, ContentChangeService y DocumentGraph.
+1. Isomorfismo: el mismo código funciona en cualquier entorno serverless o tradicional.
+2. Contrato central: RenderedPageCache define como se cachean los cuerpos renderizados.
+3. Backends intercambiables: filesystem, memoria, Redis, KV sin cambiar el resto del código.
+4. Cache de página completa mediante cabeceras HTTP estándar (stale-while-revalidate).
+5. Invalidación genérica: endpoint /api/invalidate limpia el cache de cuerpos sin depender de APIs propietarias.
+
+## Arquitectura objetivo
+
+```text
+Página Astro SSR (prerender = false)
+  └─ Cache-Control: stale-while-revalidate
+  └─ PageRenderer
+        └─ RenderedPageCache (interfaz)
+              ├─ FileSystemRenderedPageCache (local, Node, CI)
+              ├─ MemoryRenderedPageCache (serverless efimero)
+              └─ RedisRenderedPageCache / KVRenderedPageCache (persistente)
+```
 
 ## Sub-fases de implementación
 
-### Fase 7.1 — Instalar y configurar @astrojs/vercel
+### Fase 7.1 — Configurar modo server canónico
 
-Ejecutar pnpm add @astrojs/vercel y actualizar astro.config.mjs para usar output server, adapter vercel con isr expiration y bypassToken. OUTPUT_MODE deja de ser selector de modo; puede usarse como legacy para CONTENT_SOURCE.
+Actualizar astro.config.mjs a output: "server" con un adapter base como @astrojs/node para desarrollo local. Las plataformas específicas (Vercel, Netlify, Cloudflare) se configuran al final como capa de despliegue, no como lógica de negocio.
 
-### Fase 7.2 — Factory de ContentRepository
+### Fase 7.2 — Refactorizar RenderedPageCache como interfaz
+
+Definir el contrato RenderedPageCache con get, set e invalidate. Mover FileSystemRenderedPageCache a ser una implementación del contrato. Crear MemoryRenderedPageCache para entornos serverless donde el filesystem no persiste.
+
+### Fase 7.3 — Factory de ContentRepository
 
 Crear src/document/adapters/repository/factory.ts que devuelva FileSystemRepository o GitHubRepository según CONTENT_SOURCE. Reemplazar instanciaciones directas de AstroCollectionRepository en páginas Astro.
 
-### Fase 7.3 — GitHubRepository
+### Fase 7.4 — Factory de RenderedPageCache
+
+Crear src/rendering/adapters/cache/factory.ts que seleccione la implementación según el entorno:
+
+- local/dev → FileSystemRenderedPageCache
+- serverless sin Redis → MemoryRenderedPageCache
+- con Redis/KV → RedisRenderedPageCache o KVRenderedPageCache
+
+### Fase 7.5 — GitHubRepository
 
 Crear src/document/adapters/repository/github-repository.ts que implemente ContentRepository usando la API de GitHub. Reutilizar github-loader/api.ts y parser.ts. Implementar list, get y listChildren. Cachear lista de documentos en memoria con TTL.
 
-### Fase 7.4 — Prerender condicional
+### Fase 7.6 — Prerender condicional
 
 Marcar prerender true en src/pages/index.astro y páginas legales. Marcar prerender false en src/pages/[...slug]/index.astro, edit.astro y preview.astro.
 
-### Fase 7.5 — SSR de páginas de contenido
+### Fase 7.7 — SSR de páginas de contenido
 
-Refactorizar src/pages/[...slug]/index.astro para obtener slug de Astro.params, crear createContentRepository, obtener documento por ID, usar PageRenderer para cuerpo y navegación, y pasar todo a Layout y DocumentPage.
+Refactorizar src/pages/[...slug]/index.astro para obtener slug de Astro.params, crear ContentRepository y RenderedPageCache mediante factories, obtener documento por ID, usar PageRenderer para cuerpo y navegación, y pasar todo a Layout y DocumentPage. Inyectar cabecera Cache-Control: public, max-age=60, stale-while-revalidate=600.
 
-Consideraciones de Vercel: timeout de funciones serverless y cold start. El cache de cuerpos mitiga cold starts en requests subsiguientes.
+### Fase 7.8 — Endpoint de invalidación genérico
 
-### Fase 7.6 — Endpoint de invalidación on-demand
+Crear src/pages/api/invalidate.ts que reciba un ChangeSet, calcule invalidatedIds con ContentChangeService, construya las claves de cache y llame a RenderedPageCache.invalidate(). No depende de revalidate() de Vercel. Requerir INVALIDATE_TOKEN en header Authorization.
 
-Crear src/pages/api/invalidate.ts que use revalidate de @vercel/functions. Recibir un ChangeSet, calcular invalidatedIds con ContentChangeService, revalidar cada ruta afectada y limpiar FileSystemRenderedPageCache. Requerir INVALIDATE_TOKEN en header Authorization.
-
-### Fase 7.7 — Webhook de GitHub
+### Fase 7.9 — Webhook de GitHub
 
 Crear src/pages/api/webhook/github.ts que verifique firma con GITHUB_WEBHOOK_SECRET, parse el payload de push, mapee archivos a IDs y llame al endpoint de invalidación internamente.
 
-### Fase 7.8 — Testing y documentación
+### Fase 7.10 — Adaptadores de despliegue
 
-Tests de GitHubRepository, factory, endpoint de invalidación e integración. Actualizar recompilado-incremental-estado-actual.md y crear documento de despliegue en Vercel.
+Al final, configurar el adapter específico según la plataforma elegida:
+
+- Vercel: @astrojs/vercel con output server
+- Netlify: @astrojs/netlify con output server
+- Cloudflare: @astrojs/cloudflare con output server
+- Node propio: @astrojs/node con output server
+
+La lógica de negocio no cambia entre plataformas.
 
 ## Variables de entorno
 
@@ -75,12 +107,14 @@ Tests de GitHubRepository, factory, endpoint de invalidación e integración. Ac
 - GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH, GITHUB_TOKEN
 - INVALIDATE_TOKEN
 - GITHUB_WEBHOOK_SECRET
-- VERCEL_ISR_BYPASS_TOKEN
+- CACHE_BACKEND: filesystem | memory | redis | kv
+- REDIS_URL (opcional)
 
 ## Criterios de éxito
 
 - output server es el modo canónico.
-- Las páginas de contenido se sirven bajo demanda con ISR.
-- PageRenderer consulta y guarda cache de cuerpos.
-- El endpoint /api/invalidate revalida correctamente en Vercel.
-- pnpm test y pnpm build pasan.
+- RenderedPageCache es una abstracción con múltiples implementaciones.
+- Las páginas de contenido se sirven bajo demanda con Cache-Control stale-while-revalidate.
+- El endpoint /api/invalidate funciona sin APIs propietarias.
+- pnpm test y pnpm build pasan en modo server.
+- Migrar de Vercel a Netlify, Cloudflare o Node solo requiere cambiar adapter y CACHE_BACKEND.
