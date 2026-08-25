@@ -1,8 +1,10 @@
+import { createClient } from "redis";
 import type { RenderedPageCache } from "../../model/types";
 import { FileSystemRenderedPageCache } from "./file-system-page-cache";
 import { MemoryRenderedPageCache } from "./memory-page-cache";
+import { RedisRenderedPageCache } from "./redis-page-cache";
 
-export type CacheBackend = "filesystem" | "memory";
+export type CacheBackend = "filesystem" | "memory" | "redis";
 
 /**
  * Crea una implementación de RenderedPageCache según la configuración del
@@ -15,6 +17,8 @@ export function createRenderedPageCache(
   switch (backend) {
     case "memory":
       return new MemoryRenderedPageCache();
+    case "redis":
+      return createRedisRenderedPageCache();
     case "filesystem":
       return new FileSystemRenderedPageCache();
     default:
@@ -25,9 +29,21 @@ export function createRenderedPageCache(
 function getConfiguredBackend(): CacheBackend {
   const env = process.env.CACHE_BACKEND;
 
-  if (env === "memory" || env === "filesystem") {
+  if (env === "memory" || env === "filesystem" || env === "redis") {
     return env;
   }
 
   return "filesystem";
+}
+
+function createRedisRenderedPageCache(): RedisRenderedPageCache {
+  const url = process.env.REDIS_URL;
+  if (!url) {
+    throw new Error(
+      "REDIS_URL is required when CACHE_BACKEND=redis",
+    );
+  }
+
+  const client = createClient({ url });
+  return new RedisRenderedPageCache(client);
 }

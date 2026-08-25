@@ -43,7 +43,21 @@ Localmente el build usa `@astrojs/node` para evitar problemas de symlinks en Win
 | `GITHUB_PATH` | `src/content` | Ruta base del contenido en el repo. |
 | `INVALIDATE_TOKEN` | `secreto` | Token para /api/invalidate. |
 | `GITHUB_WEBHOOK_SECRET` | `secreto` | Secreto del webhook de GitHub. |
-| `CACHE_BACKEND` | `memory` | Cache de cuerpos en serverless. |
+| `CACHE_BACKEND` | `memory` / `redis` | Cache de cuerpos. En producción se recomienda `redis`. |
+| `REDIS_URL` | `redis://...` o `rediss://...` | URL de conexión Redis (requerida si `CACHE_BACKEND=redis`). |
+
+## Cache de cuerpos en producción
+
+En Vercel, `CACHE_BACKEND=memory` es efímero: cada invocación serverless tiene su propia memoria, por lo que el cache no se comparte y se pierde al terminar la request. Para que el cache de cuerpos persista y la invalidación por webhook funcione correctamente, se recomienda usar **Redis**.
+
+Vercel KV está deprecado. La opción recomendada es **Upstash Redis** desde el Vercel Marketplace:
+
+1. Ve a Vercel Dashboard → Marketplace → Redis → Upstash.
+2. Crea una base de datos y conecta el proyecto.
+3. Vercel inyectará automáticamente `REDIS_URL`, `REDIS_REST_URL`, etc.
+4. Configura `CACHE_BACKEND=redis`.
+
+También funciona con cualquier otro proveedor Redis (Redis Cloud, etc.) añadiendo `REDIS_URL` manualmente.
 
 ## Webhook de GitHub
 

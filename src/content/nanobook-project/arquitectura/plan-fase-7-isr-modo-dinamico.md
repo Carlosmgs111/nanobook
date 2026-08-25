@@ -73,7 +73,7 @@ Crear src/rendering/adapters/cache/factory.ts que seleccione la implementación 
 
 - local/dev → FileSystemRenderedPageCache
 - serverless sin Redis → MemoryRenderedPageCache
-- con Redis/KV → RedisRenderedPageCache o KVRenderedPageCache
+- con Redis → RedisRenderedPageCache (funciona en Vercel con Upstash Redis, Netlify, Cloudflare, Node, etc.)
 
 ### Fase 7.5 — GitHubRepository
 
@@ -112,8 +112,8 @@ La lógica de negocio no cambia entre plataformas. Para Netlify o Cloudflare bas
 - GITHUB_PATH: ruta base del contenido en el repo de GitHub
 - INVALIDATE_TOKEN
 - GITHUB_WEBHOOK_SECRET
-- CACHE_BACKEND: filesystem | memory | redis | kv
-- REDIS_URL (opcional)
+- CACHE_BACKEND: filesystem | memory | redis
+- REDIS_URL: URL de conexión Redis (requerida cuando CACHE_BACKEND=redis)
 
 ## Criterios de éxito
 

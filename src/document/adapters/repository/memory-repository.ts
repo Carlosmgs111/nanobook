@@ -1,41 +1,33 @@
 import type { ContentRepository, Document } from "../../model/types";
 
 /**
- * Adapter de ContentRepository que trabaja con un array de documentos en memoria.
+ * Implementación en memoria de ContentRepository.
  *
- * Útil para:
- * - Tests unitarios sin depender de Astro ni del filesystem.
- * - Prototipado rápido.
- * - Escenarios donde el contenido se genera dinámicamente en runtime.
+ * Útil para tests y para desarrollo rápido sin depender del filesystem ni de
+ * una colección de Astro.
  */
 export class MemoryRepository implements ContentRepository {
-  constructor(private documents: Document[]) {}
+  private documents: Map<string, Document>;
+
+  constructor(documents: Document[] = []) {
+    this.documents = new Map(documents.map((doc) => [doc.id, doc]));
+  }
 
   async list(): Promise<Document[]> {
-    return this.documents.filter((document) => !document.metadata.draft);
+    return Array.from(this.documents.values());
   }
 
   async get(id: string): Promise<Document | null> {
-    const document = this.documents.find((document) => document.id === id);
-    if (!document || document.metadata.draft) return null;
-    return document;
+    return this.documents.get(id) ?? null;
   }
 
   async listChildren(parentId: string | null): Promise<Document[]> {
-    return this.documents.filter(
-      (document) =>
-        document.parentId === parentId && !document.metadata.draft,
+    return Array.from(this.documents.values()).filter(
+      (doc) => doc.parentId === parentId,
     );
   }
+
   async save(document: Document): Promise<void> {
-    const { id } = document;
-    const index = this.documents.findIndex(
-      (doc) => doc.id === id,
-    );
-    if (index === -1) {
-      this.documents.push(document);
-    } else {
-      this.documents[index] = document;
-    }
+    this.documents.set(document.id, document);
   }
 }

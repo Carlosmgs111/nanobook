@@ -7,6 +7,15 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+- `RedisRenderedPageCache` en `src/rendering/adapters/cache/redis-page-cache.ts` para persistir cuerpos renderizados en cualquier servidor Redis compatible.
+- Soporte de `CACHE_BACKEND=redis` en `src/rendering/adapters/cache/factory.ts`.
+- `MemoryRepository` en `src/document/adapters/repository/memory-repository.ts` para tests y desarrollo.
+
+### Docs
+- Actualizada guía de despliegue en Vercel (`despliegue-vercel.md`) para recomendar Upstash Redis en lugar de Vercel KV (deprecado).
+- Actualizado `plan-fase-7-isr-modo-dinamico.md` con el backend Redis y variables de entorno.
+
 ## [0.3.0] - 2026-08-25
 
 ### Fixed
