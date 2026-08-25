@@ -6,7 +6,7 @@ import type { Node } from "unist";
 import { stringify } from "yaml";
 import { getParentId } from "./path";
 import type { CollectionEntry } from "astro:content";
-import type { DocumentMetadata, Document } from "./types";
+import type { DocumentMetadata, Document } from "../model/types";
 
 export interface Heading {
   depth: number;

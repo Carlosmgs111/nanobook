@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-25
+
 ### Fixed
 - `resolveReference` en `src/document/core/proxy.ts` resolvía mal las referencias relativas de documentos no índice porque usaba el propio ID como directorio base. Ahora usa el directorio padre para archivos normales y el propio ID para índices, alineado con el campo `index` del frontmatter.
 - Editor cargaba siempre el documento staged anterior porque `sessionStorage` usaba una clave global compartida. Ahora el stage se valida por ID de documento y se limpia al salir del flujo edit/preview.
@@ -144,6 +146,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Comportamiento responsive del header, breadcrumb y TOC en mobile.
 - Sidebar en mobile: ahora muestra el texto completo en el drawer, independientemente del modo `collapsed` guardado.
 
-[Unreleased]: https://github.com/usuario/nanobook/compare/v0.2.0-alpha.1...HEAD
+[Unreleased]: https://github.com/usuario/nanobook/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/usuario/nanobook/compare/v0.2.0-alpha.1...v0.3.0
 [0.2.0-alpha.1]: https://github.com/usuario/nanobook/compare/v0.1.0...v0.2.0-alpha.1
 [0.1.0]: https://github.com/usuario/nanobook/releases/tag/v0.1.0
