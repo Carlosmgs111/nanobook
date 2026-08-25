@@ -22,7 +22,7 @@ describe("GitHubRepository", () => {
     globalThis.fetch = originalFetch;
   });
 
-  it("lista documentos desde GitHub", async () => {
+  it("lista documentos desde GitHub excluyendo README.md por defecto", async () => {
     globalThis.fetch = vi.fn(async (url) => {
       const urlString = url.toString();
 
@@ -46,6 +46,40 @@ describe("GitHubRepository", () => {
     const repository = new GitHubRepository({
       owner: "test-owner",
       repo: "test-repo",
+    });
+
+    const documents = await repository.list();
+
+    expect(documents).toHaveLength(1);
+    expect(documents.some((doc) => doc.id === "blog/post")).toBe(true);
+    expect(documents.some((doc) => doc.id === "readme")).toBe(false);
+  });
+
+  it("permite incluir README.md con un pattern personalizado", async () => {
+    globalThis.fetch = vi.fn(async (url) => {
+      const urlString = url.toString();
+
+      if (urlString.includes("/git/trees/")) {
+        return createMockResponse({
+          tree: [
+            { path: "blog/post.md", type: "blob" },
+            { path: "README.md", type: "blob" },
+          ],
+        });
+      }
+
+      return createMockResponse({
+        content: Buffer.from(
+          "---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post",
+        ).toString("base64"),
+        encoding: "base64",
+      });
+    });
+
+    const repository = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+      pattern: ["**/*.md"],
     });
 
     const documents = await repository.list();

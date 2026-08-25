@@ -4,12 +4,16 @@ import { filterContentFiles } from "../github-loader";
 import type { ContentRepository, Document } from "../../model/types";
 import { buildDocument } from "./document-builder";
 
+import type { GitHubLoaderOptions } from "../github-loader/types";
+
 export interface GitHubRepositoryOptions {
   owner: string;
   repo: string;
   branch?: string;
   token?: string;
   path?: string;
+  /** Patrón de archivos a incluir/excluir. Por defecto excluye README.md. */
+  pattern?: GitHubLoaderOptions["pattern"];
 }
 
 /**
@@ -18,14 +22,19 @@ export interface GitHubRepositoryOptions {
  * Útil cuando el contenido vive en un repo separado y se actualiza sin
  * redeploy. No implementa save() porque el proyecto no escribe de vuelta a
  * GitHub.
+ *
+ * Por defecto excluye README.md para alinearse con el comportamiento del
+ * github-loader de Astro, que también lo excluye del pattern por defecto.
  */
 export class GitHubRepository implements ContentRepository {
   private branch: string;
   private path: string;
+  private pattern: GitHubLoaderOptions["pattern"];
 
   constructor(private options: GitHubRepositoryOptions) {
     this.branch = options.branch ?? "main";
     this.path = options.path ?? "";
+    this.pattern = options.pattern ?? ["**/*.md", "!README.md"];
   }
 
   async list(): Promise<Document[]> {
@@ -38,7 +47,7 @@ export class GitHubRepository implements ContentRepository {
       token,
     });
 
-    const contentFiles = filterContentFiles(tree, this.path, undefined);
+    const contentFiles = filterContentFiles(tree, this.path, this.pattern);
     const documents: Document[] = [];
 
     for (const file of contentFiles) {
