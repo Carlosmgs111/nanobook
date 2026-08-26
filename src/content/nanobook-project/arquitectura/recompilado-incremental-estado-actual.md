@@ -301,17 +301,18 @@ const cache = new FileSystemRenderedPageCache();
 1. **No se renderiza el layout Astro completo**: `PageRenderer` solo genera el cuerpo del documento y los metadatos de navegación. El layout sigue siendo responsabilidad del build de Astro.
 2. **Los renombramientos se detectan como removed + added**: no se reconocen automáticamente como `renamed` con `previousId`.
 3. **FileSystemRepository no resuelve proxies**: en esta etapa lee documentos Markdown tal cual; no aplica la lógica de `ref`/`proxyTargetId`.
+   - *Actualización*: en SSR puro ambos repositorios (`FileSystemRepository` y `GitHubRepository`) aplican `resolveProxies()` en `list()`.
 4. **Modo dinámico incompleto**: `OUTPUT_MODE=dynamic` aún no permite SSR real de las páginas de contenido.
+   - *Actualización*: `OUTPUT_MODE` fue eliminado; `output: "server"` es el modo canónico. Ver [plan de transición a SSR puro](../plan-transicion-ssr-puro).
 5. **La invalidación es conservadora**: algunos cambios de metadata podrían propagarse a más documentos de lo estrictamente necesario; es seguro pero no óptimo.
 6. **El árbol de navegación sigue reconstruyéndose en build time**: aunque está cacheado en memoria por `WeakMap`, Astro aún genera todas las páginas. `shouldRebuildNavigationTree()` es la utilidad que en el futuro permitirá decidir si es necesario recalcular el árbol o solo re-renderizar contenido.
+   - *Actualización*: con SSR puro el árbol se reconstruye en runtime por request, pero el repositorio y el renderizado se cachean.
 
 ## Próximos pasos
 
-La Fase 7 consiste en completar el **modo dinámico con ISR**:
+La Fase 7 (modo dinámico con ISR) fue completada y posteriormente consolidada como **SSR puro**. Ver:
 
-1. Hacer que las rutas de contenido respeten `OUTPUT_MODE` para `prerender`.
-2. Implementar `ContentRepository` que funcione en runtime sin `getCollection` en build time.
-3. Añadir capa de cacheo HTTP o en memoria (Redis/filesystem) con claves basadas en `slug + contentHash`.
-4. Exponer endpoint de invalidación (webhook) que reciba `ChangeSet` y limpie cache.
+- [Plan de implementación — Fase 7: ISR isomórfico con cache abstracto](../plan-fase-7-isr-modo-dinamico)
+- [Plan de transición a SSR puro](../plan-transicion-ssr-puro)
 
-Hasta entonces, el build completo sigue siendo el mecanismo de producción recomendado.
+El build completo ya no es el mecanismo de producción; el sitio se sirve bajo demanda con cache.

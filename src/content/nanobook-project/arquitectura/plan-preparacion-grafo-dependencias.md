@@ -333,24 +333,25 @@ Este plan describe los pasos para preparar a Nanobook a un modelo de **recompila
 - `src/rendering/page/page-renderer.ts` (nuevo).
 - Posiblemente un nuevo adapter de `ContentRepository` orientado a cache.
 
-### Fase 7 — ISR con modo dinámico (largo plazo)
+### Fase 7 — SSR puro con cache isomórfico (completado)
 
 **Objetivo**: habilitar actualizaciones en producción sin build completo.
 
-**Tareas**:
+**Tareas realizadas**:
 
-1. Completar `OUTPUT_MODE=dynamic`:
-   - Hacer que las rutas de contenido usen `prerender = OUTPUT_MODE !== "dynamic"`.
-   - Implementar `ContentRepository` que lea contenido en runtime (GitHub, DB, etc.).
-2. Usar `NavigationService` y `DocumentGraph` en runtime.
-3. Añadir capa de cacheo HTTP o en memoria (Redis/filesystem) con claves basadas en `slug + contentHash`.
-4. Exponer endpoint de invalidación (webhook) que reciba `ChangeSet` y limpie cache.
+1. Consolidar `output: "server"` como único modo; eliminar `OUTPUT_MODE`.
+2. Implementar `ContentRepository` que lea contenido en runtime (`FileSystemRepository`, `GitHubRepository`).
+3. Usar `NavigationService` y `DocumentGraph` en runtime.
+4. Añadir capa de cacheo HTTP (`Cache-Control`) y cache de cuerpos (`RenderedPageCache`) con backends intercambiables (memory, filesystem, Redis).
+5. Exponer endpoint de invalidación (`/api/invalidate`) y webhook de GitHub (`/api/webhook/github`).
 
 **Criterios de aceptación**:
 
-- En modo dinámico, una petición a una URL no generada previamente renderiza correctamente.
+- Una petición a cualquier URL renderiza correctamente bajo demanda.
 - El cache se invalida cuando cambia el contenido fuente.
-- El modo estático sigue funcionando igual.
+- `pnpm test` y `pnpm build` pasan.
+
+Ver [plan de transición a SSR puro](../plan-transicion-ssr-puro) para el detalle completo.
 
 ## Roadmap tentativo
 

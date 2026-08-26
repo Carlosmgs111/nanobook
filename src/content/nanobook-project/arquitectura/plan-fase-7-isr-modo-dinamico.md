@@ -59,6 +59,8 @@ Actualizar astro.config.mjs a output: "server". El adapter se selecciona mediant
 
 Esto mantiene el build local funcional en entornos donde Vercel no puede crear symlinks (Windows sin permisos de desarrollador), mientras que el despliegue en Vercel usa su adapter nativo.
 
+> Nota: `OUTPUT_MODE` fue eliminado posteriormente; `output: "server"` es el único modo. Ver [plan de transición a SSR puro](../plan-transicion-ssr-puro).
+
 ### Fase 7.2 — Refactorizar RenderedPageCache como interfaz
 
 Definir el contrato RenderedPageCache con get, set e invalidate. Mover FileSystemRenderedPageCache a ser una implementación del contrato. Crear MemoryRenderedPageCache para entornos serverless donde el filesystem no persiste.
@@ -66,6 +68,8 @@ Definir el contrato RenderedPageCache con get, set e invalidate. Mover FileSyste
 ### Fase 7.3 — Factory de ContentRepository
 
 Crear src/document/adapters/repository/factory.ts que devuelva FileSystemRepository o GitHubRepository según CONTENT_SOURCE. Reemplazar instanciaciones directas de AstroCollectionRepository en páginas Astro.
+
+> Nota: `AstroCollectionRepository` fue eliminado en la transición a SSR puro; `ContentRepository` es ahora la única fuente de verdad.
 
 ### Fase 7.4 — Factory de RenderedPageCache
 
@@ -107,7 +111,7 @@ La lógica de negocio no cambia entre plataformas. Para Netlify o Cloudflare bas
 ## Variables de entorno
 
 - VERCEL_DEPLOY: true para usar @astrojs/vercel, omitir para @astrojs/node
-- CONTENT_SOURCE: local o github
+- CONTENT_SOURCE: filesystem o github
 - GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH, GITHUB_TOKEN
 - GITHUB_PATH: ruta base del contenido en el repo de GitHub
 - INVALIDATE_TOKEN

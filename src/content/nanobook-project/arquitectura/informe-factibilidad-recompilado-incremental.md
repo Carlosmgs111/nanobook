@@ -9,6 +9,8 @@ draft: false
 index: false
 ---
 
+> **Nota histórica**: este informe fue redactado cuando Nanobook aún mantenía modos `OUTPUT_MODE=static` y `OUTPUT_MODE=dynamic`. El modo estático fue eliminado en favor de SSR puro; ver [plan de transición a SSR puro](../plan-transicion-ssr-puro). La mayoría del análisis de dependencias sigue siendo válido.
+
 ## Resumen ejecutivo
 
 Este informe evalúa la factibilidad de dotar a Nanobook de **recompilado incremental** en producción: la capacidad de regenerar solo las partes del sitio afectadas ante la adición, edición, renombramiento o eliminación de documentos y directorios, sin ejecutar un build completo.
@@ -28,13 +30,12 @@ Este informe evalúa la factibilidad de dotar a Nanobook de **recompilado increm
 ### Stack y modo de build
 
 - Astro 7 con `output: "server"` y adapter `@astrojs/node` en modo `standalone`.
-- Modo estático por defecto (`OUTPUT_MODE=static`): usa el loader `glob` sobre `src/content/`.
-- Modo dinámico opcional (`OUTPUT_MODE=dynamic`): usa un loader custom `github` que lee de un repositorio remoto.
+- La fuente de contenido se elige con `CONTENT_SOURCE` (`filesystem` o `github`).
 - Las rutas de contenido viven en `src/pages/[...slug]/`:
   - `index.astro`: vista de lectura.
   - `edit.astro`: editor integrado.
   - `preview.astro`: preview del borrador.
-- Todas estas rutas declaran `export const prerender = true` y generan sus paths en `getStaticPaths()`.
+- Todas estas rutas declaran `export const prerender = false` y se renderizan bajo demanda.
 
 ### Métricas actuales del build
 

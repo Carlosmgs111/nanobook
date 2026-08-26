@@ -18,11 +18,13 @@ Horizonte: próximos 2–3 meses. El objetivo es pasar de "proyecto usable" a "p
 - [ ] Soporte para edición directa de frontmatter con validación.
 - [ ] Flujo de guardado claro: local, remoto (GitHub) o ambos modos.
 
-## Modos de despliegue
+## Modelo SSR puro
 
-- [ ] Estabilizar el modo estático (`OUTPUT_MODE=static`).
-- [ ] Estabilizar el modo dinámico (`OUTPUT_MODE=dynamic`) con contenido desde GitHub.
-- [ ] Documentar cuándo usar cada modo y cómo migrar entre ellos.
+- [x] Consolidar `output: "server"` como único modo.
+- [x] Eliminar `OUTPUT_MODE` y las bifurcaciones estático/dinámico.
+- [x] Documentar el modelo server-first y `CONTENT_SOURCE`.
+- [ ] Estabilizar `FileSystemRepository` y `GitHubRepository` en producción.
+- [ ] Definir flujo de escritura de vuelta a GitHub para el editor.
 
 ## Experiencia de contenido
 
