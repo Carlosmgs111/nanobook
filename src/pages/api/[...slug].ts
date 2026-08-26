@@ -1,1 +1,1 @@
-export { prerender, getStaticPaths, PATCH } from "../../document/api/document.ts";
+export { prerender, PATCH } from "../../document/api/document.ts";

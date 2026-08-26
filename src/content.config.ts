@@ -1,25 +1,12 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
-import { github } from "./document/adapters/github-loader";
-
-const outputMode = process.env.OUTPUT_MODE || "static";
-const isDynamicMode = outputMode === "dynamic";
-
-const staticLoader = glob({ pattern: "**/*.md", base: "./src/content/" });
-const dynamicLoader = github({
-  owner: import.meta.env.GITHUB_OWNER || "",
-  repo: "nanobook-content",
-  path: "",
-  branch: "main",
-  pattern: ["**/*.md", "!README.md"],
-  token: import.meta.env.GITHUB_TOKEN,
-});
 
 /**
- * Colección de contenido condicional según el modo de despliegue.
+ * Colección local de contenido del proyecto.
  *
- * - Modo estático: solo archivos Markdown locales en `src/content/`.
- * - Modo dinámico: contenido remoto desde GitHub (fuente de verdad externa).
+ * En el modelo SSR puro, Astro Content Collections solo gestiona los archivos
+ * Markdown locales de `src/content/`. El contenido remoto (GitHub) se carga en
+ * runtime mediante `ContentRepository`, no por el loader de Astro.
  */
 const githubRefSchema = z.object({
   source: z.literal("github"),
@@ -47,7 +34,7 @@ const refSchema = z.union([
 ]).optional();
 
 const content = defineCollection({
-  loader: isDynamicMode ? dynamicLoader : staticLoader,
+  loader: glob({ pattern: "**/*.md", base: "./src/content/" }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
