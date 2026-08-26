@@ -7,6 +7,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-26
+
+### Fixed
+- `GitHubRepository` ahora descarga archivos Markdown desde `raw.githubusercontent.com` en lugar de la API de GitHub, evitando errores 403 por rate limit en producción.
+- Actualizados tests de `GitHubRepository` para reflejar el nuevo formato de respuesta de archivos raw.
+
 ## [0.4.0] - 2026-08-26
 
 ### Added
