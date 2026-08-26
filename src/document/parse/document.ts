@@ -3,9 +3,6 @@ import { slug } from "github-slugger";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Node } from "unist";
-import { stringify } from "yaml";
-import { getParentId } from "./path";
-import type { CollectionEntry } from "astro:content";
 import type { DocumentMetadata, Document } from "../model/types";
 
 export interface Heading {
@@ -61,21 +58,5 @@ export function parseDocument(source: DocumentSource): { headings: Heading[] } {
   const raw = stripFrontmatter(source.body ?? "");
   return {
     headings: extractHeadings(raw),
-  };
-}
-
-export function toDocument(entry: CollectionEntry<"content">): Document {
-  const data = entry.data as DocumentMetadata;
-
-  return {
-    id: entry.id,
-    slug: entry.id === "index" ? "" : entry.id,
-    parentId: getParentId(entry.id),
-    position: data.position,
-    title: data.title,
-    description: data.description,
-    content: entry.body ?? "",
-    metadata: data,
-    rawFrontmatter: `---\n${stringify(entry.data)}---\n\n`,
   };
 }

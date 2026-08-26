@@ -1,5 +1,4 @@
-import type { CollectionEntry } from "astro:content";
-import type { DocumentMetadata, RefValue } from "../model/types";
+import type { Document, DocumentMetadata, RefValue } from "../model/types";
 import type {
   ReferenceResolutionContext,
   ReferenceResolver,
@@ -28,11 +27,11 @@ export class CompositeReferenceResolver implements ReferenceResolver {
 
   async resolve(
     ref: RefValue,
-    sourceEntry: CollectionEntry<"content">,
+    sourceDocument: Document,
   ): Promise<import("../types").ContentEntry | null> {
     const context: ReferenceResolutionContext = {
-      sourceId: sourceEntry.id,
-      sourceData: sourceEntry.data as DocumentMetadata,
+      sourceId: sourceDocument.id,
+      sourceData: sourceDocument.metadata,
       projectRoot: this.options.projectRoot ?? process.cwd(),
       readFile: this.options.readFile,
       githubToken: this.options.githubToken,
@@ -45,7 +44,7 @@ export class CompositeReferenceResolver implements ReferenceResolver {
     }
 
     console.warn(
-      `No resolver found for reference ${JSON.stringify(ref)} in ${sourceEntry.id}`,
+      `No resolver found for reference ${JSON.stringify(ref)} in ${sourceDocument.id}`,
     );
     return null;
   }

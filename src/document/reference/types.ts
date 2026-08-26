@@ -1,5 +1,4 @@
-import type { CollectionEntry } from "astro:content";
-import type { ContentEntry, DocumentMetadata, RefValue } from "../model/types";
+import type { ContentEntry, Document, DocumentMetadata, RefValue } from "../model/types";
 
 /**
  * Contexto que recibe cada resolutor de referencias.
@@ -41,6 +40,6 @@ export interface ReferenceResolverPlugin {
 export interface ReferenceResolver {
   resolve(
     ref: RefValue,
-    sourceEntry: CollectionEntry<"content">,
+    sourceDocument: Document,
   ): Promise<ContentEntry | null>;
 }

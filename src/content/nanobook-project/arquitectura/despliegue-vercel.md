@@ -1,6 +1,6 @@
 ---
 title: "Despliegue en Vercel"
-description: "Guía de despliegue de Nanobook en Vercel con ISR isomórfico"
+description: "Guía de despliegue de Nanobook en Vercel con SSR puro y cache isomórfico"
 date: 2026-08-25
 author: "Nanobook Team"
 tags:
@@ -35,7 +35,7 @@ Localmente el build usa `@astrojs/node` para evitar problemas de symlinks en Win
 | Variable | Valor ejemplo | Descripción |
 |----------|---------------|-------------|
 | `VERCEL_DEPLOY` | `true` | Activa el adapter de Vercel. |
-| `CONTENT_SOURCE` | `local` / `github` | Fuente de contenido. |
+| `CONTENT_SOURCE` | `filesystem` / `github` | Fuente de contenido. |
 | `GITHUB_OWNER` | `usuario` | Owner del repo de contenido (solo si CONTENT_SOURCE=github). |
 | `GITHUB_REPO` | `nanobook-content` | Repo de contenido. |
 | `GITHUB_BRANCH` | `main` | Rama del contenido. |

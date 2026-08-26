@@ -3,6 +3,7 @@ import { createParsedEntry } from "../github-loader/parser";
 import { filterContentFiles } from "../github-loader";
 import type { ContentRepository, Document } from "../../model/types";
 import { buildDocument } from "./document-builder";
+import { resolveProxies } from "../../parse/proxy";
 
 import type { GitHubLoaderOptions } from "../github-loader/types";
 
@@ -107,7 +108,7 @@ export class GitHubRepository implements ContentRepository {
       }
     }
 
-    return documents;
+    return resolveProxies(documents);
   }
 
   async get(id: string): Promise<Document | null> {

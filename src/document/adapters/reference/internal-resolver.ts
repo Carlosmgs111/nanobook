@@ -1,7 +1,6 @@
-import type { CollectionEntry } from "astro:content";
 import type {
   ContentEntry,
-  DocumentMetadata,
+  Document,
   RefValue,
 } from "../../model/types";
 import type { ReferenceResolutionContext, ReferenceResolverPlugin } from "../../reference/types";
@@ -18,7 +17,7 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
   name = "internal";
 
   constructor(
-    private entriesById: Map<string, CollectionEntry<"content">>,
+    private documentsById: Map<string, Document>,
   ) {}
 
   canResolve(ref: RefValue): boolean {
@@ -39,14 +38,15 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
       context.sourceId,
       context.sourceData.index,
     );
-    const targetEntry = this.entriesById.get(targetId);
+    const targetDocument = this.documentsById.get(targetId);
 
-    if (!targetEntry) return null;
+    if (!targetDocument) return null;
 
     return {
-      id: targetEntry.id,
-      data: targetEntry.data as DocumentMetadata,
-      body: targetEntry.body,
+      id: targetDocument.id,
+      data: targetDocument.metadata,
+      body: targetDocument.content,
+      rawFrontmatter: targetDocument.rawFrontmatter,
     };
   }
 }

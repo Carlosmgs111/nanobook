@@ -2,6 +2,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { parseFrontmatter } from "../../parse/frontmatter";
 import { idToFilePath } from "../../parse/path";
+import { resolveProxies } from "../../parse/proxy";
 import type { ContentRepository, Document } from "../../model/types";
 import { buildDocument } from "./document-builder";
 
@@ -62,7 +63,7 @@ export class FileSystemRepository implements ContentRepository {
       documents.push(buildDocument(id, data, body, raw));
     }
 
-    return documents;
+    return resolveProxies(documents);
   }
 
   async get(id: string): Promise<Document | null> {

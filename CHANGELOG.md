@@ -11,10 +11,23 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `RedisRenderedPageCache` en `src/rendering/adapters/cache/redis-page-cache.ts` para persistir cuerpos renderizados en cualquier servidor Redis compatible.
 - Soporte de `CACHE_BACKEND=redis` en `src/rendering/adapters/cache/factory.ts`.
 - `MemoryRepository` en `src/document/adapters/repository/memory-repository.ts` para tests y desarrollo.
+- `resolveProxies()` en `src/document/parse/proxy.ts` para resolver referencias `ref` sobre listas de `Document` sin depender de `astro:content`.
 
 ### Changed
-- `GitHubRepository` ahora acepta un `pattern` opcional y excluye `README.md` por defecto, alineándose con el comportamiento del `github-loader` de Astro.
+- **SSR puro**: Astro siempre usa `output: "server"`; eliminado `OUTPUT_MODE` y el modo estático/dinámico.
+- `content.config.ts` carga solo archivos locales de `src/content/`; GitHub ya no pasa por Astro Content Collections.
+- `createContentRepository()` ahora usa `CONTENT_SOURCE` (`filesystem` default, `github`) y eliminó la opción `astro`.
+- Eliminados `AstroCollectionRepository` y `astro-cache.ts`; la carga pasa exclusivamente por `ContentRepository`.
+- `ReferenceResolver`, `CompositeReferenceResolver` e `InternalReferenceResolver` trabajan con `Document` en lugar de `CollectionEntry`.
+- `FileSystemRepository` y `GitHubRepository` resuelven proxies en `list()`.
+- `GitHubRepository` ahora acepta un `pattern` opcional y excluye `README.md` por defecto.
 - `GitHubRepository` cachea la lista de documentos en memoria compartida con TTL configurable (default 60s), reduciendo drásticamente las llamadas a la API de GitHub por petición.
+
+### Removed
+- Variable de entorno `OUTPUT_MODE` y modos `static`/`dynamic`.
+- `src/document/adapters/repository/astro-collection-repository.ts`.
+- `src/document/adapters/cache/astro-cache.ts`.
+- `toDocument()` basado en `CollectionEntry` de `src/document/parse/document.ts`.
 
 ### Fixed
 - Eliminados los warnings `Missing required field "title" in document "readme"` al usar `CONTENT_SOURCE=github` con un repo que contiene `README.md` sin frontmatter.
@@ -24,6 +37,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Actualizada guía de despliegue en Vercel (`despliegue-vercel.md`) para recomendar Upstash Redis en lugar de Vercel KV (deprecado).
 - Actualizado `plan-fase-7-isr-modo-dinamico.md` con el backend Redis y variables de entorno.
 - Añadida sección de pruebas locales con `vercel dev` y Redis en `despliegue-vercel.md`.
+- Actualizado `content-model-architecture.md` para reflejar el modelo SSR puro y `ContentRepository` como única fuente de verdad.
+- Actualizado `README.md` con el modelo SSR puro y `CONTENT_SOURCE`.
+- Nuevo plan de transición a SSR puro en `src/content/nanobook-project/arquitectura/plan-transicion-ssr-puro.md`.
 
 ## [0.3.0] - 2026-08-25
 

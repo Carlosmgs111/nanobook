@@ -17,51 +17,42 @@ position: 0
 
 ## Contexto
 
-Nanobook nació como un generador estático que carga Markdown desde `src/content/` mediante el loader `glob` de Astro. Con el tiempo surgió la necesidad de poder actualizar contenido en producción sin generar un nuevo build, pero sin perder la capacidad de que cualquiera clone el repo, guarde contenido local y genere un sitio estático.
-
-Este documento define la arquitectura actual: dos modos de despliegue excluyentes, cada uno con una sola fuente de verdad y edición directa de archivos.
+Nanobook nació como un generador estático que carga Markdown desde `src/content/` mediante el loader `glob` de Astro. Con el tiempo surgió la necesidad de poder actualizar contenido en producción sin generar un nuevo build. Tras evaluar las alternativas, se decidió consolidar el proyecto como una aplicación SSR pura: una única arquitectura que sirve tanto contenido local como remoto en runtime, sin bifurcaciones de build.
 
 ## Decisión
 
-**No migrar a base de datos en esta etapa.**
+**SSR puro con `ContentRepository` como fuente de verdad.**
 
-Seguimos con:
+- Astro siempre usa `output: "server"`.
+- El contenido se carga en runtime a través de implementaciones de `ContentRepository`:
+  - `FileSystemRepository`: archivos locales en `src/content/`.
+  - `GitHubRepository`: archivos remotos en un repositorio de GitHub.
+  - Futuros: `DatabaseRepository`, CMS, S3, etc.
+- No hay modos de despliegue mutuamente excluyentes; se elige la fuente con `CONTENT_SOURCE`.
+- La edición se hace directamente sobre la fuente de verdad; no hay overrides ni manifest.
 
-```text
-Markdown + Astro
-```
+> **Nota histórica**: versiones anteriores usaban `OUTPUT_MODE` (`static` / `dynamic`) para elegir entre SSG y SSR. Esa bifurcación fue eliminada en favor de SSR puro. Ver [plan de transición a SSR puro](../plan-transicion-ssr-puro).
 
-Pero la fuente de los Markdown depende del modo de despliegue:
+## Fuente de contenido
 
-- **Modo estático**: archivos locales en `src/content/`.
-- **Modo dinámico**: archivos remotos en GitHub (por defecto), renderizados bajo demanda.
-
-En ambos casos la edición se hace directamente sobre la fuente de verdad; no hay overrides ni manifest.
-
-## Modos de despliegue
-
-Los modos son **mutuamente excluyentes**. Se eligen mediante la variable de entorno `OUTPUT_MODE`:
+Se elige mediante la variable de entorno `CONTENT_SOURCE`:
 
 ```text
-OUTPUT_MODE=static   # default
-OUTPUT_MODE=dynamic
+CONTENT_SOURCE=filesystem   # default
+CONTENT_SOURCE=github
 ```
 
-### Modo estático
+### Filesystem (default)
 
-- `output: "static"` en Astro.
 - Fuente de verdad: archivos Markdown en `src/content/`.
-- El build genera HTML estático en `dist/`.
-- La edición solo puede ocurrir en modo desarrollo, antes del build de producción.
-- En desarrollo se desplegará un editor integrado para modificar los archivos Markdown sin salir del navegador.
+- Funciona en desarrollo, build y tests.
+- El editor integrado puede escribir directamente sobre estos archivos.
 
-### Modo dinámico
+### GitHub
 
-- `output: "server"` en Astro + adapter `@astrojs/node`.
-- Fuente de verdad: repositorio de GitHub (configurable en el futuro).
-- El servidor renderiza las páginas bajo demanda.
-- Permite edición en vivo sobre la fuente remota.
-- Todos los archivos viven fuera del build.
+- Fuente de verdad: archivos Markdown en un repositorio de GitHub.
+- Requiere `GITHUB_OWNER`, `GITHUB_REPO` y opcionalmente `GITHUB_BRANCH`, `GITHUB_TOKEN` y `GITHUB_PATH`.
+- Útil cuando el contenido vive en un repo separado y se actualiza sin redeploy.
 
 ## Principio rector
 
@@ -71,40 +62,40 @@ OUTPUT_MODE=dynamic
 
 ```text
               Nanobook Core
-                   │
-        ┌──────────┴──────────┐
-        │                     │
-   Content Model        Navigation Model
-        │                     │
-        └──────────┬──────────┘
-                   │
-            Rendering Layer
-                   │
-        ┌──────────┴──────────┐
-        │                     │
-   Static Build            Runtime
-        │                     │
-     Astro SSG            Astro SSR
-        │                     │
-     HTML/CDN              Server
-        │                     │
-   src/content/           GitHub (default)
+                    │
+         ┌──────────┴──────────┐
+         │                     │
+    Content Model        Navigation Model
+         │                     │
+         └──────────┬──────────┘
+                    │
+             Rendering Layer
+                    │
+                    ▼
+               Astro SSR
+                    │
+                 Server
+                    │
+         ┌──────────┴──────────┐
+         │                     │
+    Filesystem            GitHub
+    src/content/          (remoto)
 ```
 
 Por debajo:
 
 ```text
-           Storage Adapter
+           ContentRepository
                   │
-        ┌─────────┴─────────┐
-        │                   │
-    Filesystem           GitHub
-        │                   │
-      Markdown          Markdown
-        │                   │
-        └──────────┬──────────┘
-                   │
-             Content Tree
+         ┌─────────┴─────────┐
+         │                   │
+     Filesystem           GitHub
+         │                   │
+       Markdown          Markdown
+         │                   │
+         └──────────┬──────────┘
+                    │
+              Document[]
 ```
 
 ## Conceptos del dominio
@@ -116,97 +107,78 @@ Por debajo:
 
 ## Flujo de carga y mapeo
 
-El punto de entrada de la carga es el adaptador de Astro. El flujo completo, desde los archivos Markdown hasta el árbol de navegación, es:
+El punto de entrada de la carga es `ContentRepository`, no Astro Content Collections. El flujo completo, desde los archivos Markdown hasta el árbol de navegación, es:
 
 ```text
-src/content/**/*.md
+src/content/**/*.md  (o GitHub tree)
         │
         ▼
-getCollection("content")  ──astro:content──►  getAstroEntries()
-        │                                         │
-        │                                         ▼
-        │                              Map<string, CollectionEntry<"content">>
-        │                                         │
-        │                                         ▼
-        │                           AstroCollectionRepository.list()
-        │                                         │
-        │                    ┌────────────────────┼────────────────────┐
-        │                    │                    │                    │
-        │                    ▼                    ▼                    ▼
-        │           filter(draft)      resolveProxy(ref)        toDocument(entry)
-        │                    │                    │                    │
-        │                    │                    ▼                    │
-        │                    │         CompositeReferenceResolver       │
-        │                    │         (internal / local / GitHub)      │
-        │                    │                    │                    │
-        │                    └────────────────────┴────────────────────┘
-        │                                         │
-        │                                         ▼
-        │                                  Document[]
-        │                                         │
-        │                                         ▼
-        │                              buildNavigationTree(documents)
-        │                                         │
-        │                                         ▼
-        │                           NavigationTree { roots, nodeMap }
-        │                                         │
-        ▼                                         ▼
-   Rendering                            Breadcrumb / Sidebar / Índice
+              ContentRepository
+              (FileSystemRepository / GitHubRepository)
+        │
+        ▼
+              Document[]
+        │
+        ▼
+    resolveProxies(ref) usando CompositeReferenceResolver
+        │
+        ▼
+              Document[]  (proxies resueltos)
+        │
+        ▼
+              buildNavigationTree(documents)
+        │
+        ▼
+        NavigationTree { roots, nodeMap }
+        │
+        ▼
+   Breadcrumb / Sidebar / Índice
 ```
 
-### 1. Entradas crudas de Astro: `getAstroEntries`
+### 1. Repositorio: `ContentRepository`
 
-`src/document/adapters/cache/astro-cache.ts` abstrae la llamada a `getCollection("content")` de Astro:
-
-```typescript
-import { getCollection } from "astro:content";
-
-export async function getAstroEntries() {
-  const collection = await getCollection("content");
-  return new Map(collection.map((entry) => [entry.id, entry]));
-}
-```
-
-Astro genera el `id` de cada entrada a partir de su ruta relativa dentro de `src/content/`:
-
-- `src/content/index.md` → `id: "index"`
-- `src/content/blog/overthinking.md` → `id: "blog/overthinking"`
-- `src/content/nanobook-project/arquitectura/index.md` → `id: "nanobook-project/arquitectura"`
-
-Este `id` es la base sobre la que se calculan `slug`, `parentId` y toda la jerarquía de navegación.
-
-### 2. Repositorio: `AstroCollectionRepository`
-
-`src/document/adapters/repository/astro-collection-repository.ts` implementa `ContentRepository`. Su `list()`:
-
-1. Llama a `getAstroEntries()`.
-2. Construye un `CompositeReferenceResolver` para resolver referencias `ref` (internas, locales o de GitHub).
-3. Filtra los documentos marcados como `draft: true`.
-4. Para cada entrada:
-   - Si tiene `ref`, intenta resolver el proxy.
-   - Si no, convierte la entrada a `Document` mediante `toDocument()`.
+`src/document/adapters/repository/factory.ts` crea la implementación según `CONTENT_SOURCE`:
 
 ```typescript
-const repository = new AstroCollectionRepository();
+const repository = await createContentRepository();
 const documents = await repository.list();
 ```
 
-### 3. Mapeo a `Document`
+Implementaciones actuales:
 
-`src/document/parse/document.ts` contiene `toDocument()`:
+- `FileSystemRepository`: escanea `src/content/**/*.md` y construye `Document` con `buildDocument()`.
+- `GitHubRepository`: obtiene el tree del repo, filtra archivos Markdown y construye `Document` con `buildDocument()`.
+
+### 2. Resolución de proxies
+
+`src/document/parse/proxy.ts` resuelve documentos con `ref` en frontmatter:
 
 ```typescript
-export function toDocument(entry: CollectionEntry<"content">): Document {
+const resolvedDocuments = await resolveProxies(documents);
+```
+
+El resolver es un `CompositeReferenceResolver` con tres plugins:
+
+- `InternalReferenceResolver`: referencias relativas a otros documentos cargados.
+- `LocalFileReferenceResolver`: archivos locales fuera de `src/content/` (ej. `/README.md`).
+- `GitHubReferenceResolver`: archivos en repositorios de GitHub (`github:owner/repo/path.md`).
+
+### 3. Mapeo a `Document`
+
+`src/document/adapters/repository/document-builder.ts` contiene `buildDocument()`:
+
+```typescript
+export function buildDocument(id, data, body, raw): Document {
   return {
-    id: entry.id,
-    slug: entry.id === "index" ? "" : entry.id,
-    parentId: getParentId(entry.id),
-    position: data.position,
-    title: data.title,
-    description: data.description,
-    content: entry.body ?? "",
-    metadata: data,
-    rawFrontmatter: `---\n${stringify(entry.data)}---\n\n`,
+    id,
+    slug: id === "index" ? "" : id,
+    parentId: getParentId(id),
+    position: metadata.position,
+    title: metadata.title,
+    description: metadata.description,
+    content: body,
+    metadata,
+    rawFrontmatter: extractFrontmatter(raw),
   };
 }
 ```
@@ -279,11 +251,13 @@ Ver también:
 - Se documentó la arquitectura de storage adapters en `src/content/nanobook-project/arquitectura/storage-adapters.md`.
 - El build sigue usando `AstroCollectionRepository`; los nuevos adapters demuestran que el dominio es storage-agnostic.
 
-### Configuración de modos completada
+### Transición a SSR puro
 
-- `astro.config.mjs` ahora usa `OUTPUT_MODE` para elegir entre `output: "static"` y `output: "server"` + `@astrojs/node`.
-- `src/content.config.ts` ahora carga solo archivos locales en modo estático y solo archivos de GitHub en modo dinámico.
-- El build pasa en ambos modos.
+- `astro.config.mjs` siempre usa `output: "server"` + `@astrojs/node` (o `@astrojs/vercel` cuando `VERCEL_DEPLOY=true`).
+- `src/content.config.ts` carga solo archivos locales de `src/content/`; GitHub ya no pasa por Astro Content Collections.
+- Se eliminó `OUTPUT_MODE`; la fuente se elige con `CONTENT_SOURCE`.
+- `AstroCollectionRepository` y `astro-cache.ts` fueron eliminados; la resolución de proxies se mudó a `src/document/parse/proxy.ts`.
+- El build pasa con `CONTENT_SOURCE=filesystem` y `CONTENT_SOURCE=github`.
 
 ### Editor integrado por documento
 
@@ -297,15 +271,15 @@ Ver también:
 
 ### Árbol completo vs. rama parcial
 
-En el modo SSG actual, `NavigationBuilder` construye el árbol de navegación completo a partir of all documents. Esto es correcto porque:
+En el modelo SSR puro, `NavigationBuilder` construye el árbol de navegación completo a partir de todos los documentos devueltos por `ContentRepository`. Esto es correcto porque:
 
-- Astro genera cada página de forma independiente en build time.
-- El contenido ya está en memoria.
+- El contenido se cachea a nivel de repositorio (TTL configurable en `GitHubRepository`).
+- El renderizado de página se cachea con `Cache-Control` y/o backends como Redis.
 - Un árbol de cientos o miles de nodos es trivial de construir y cachear.
 
 ### Cuándo cambiar el enfoque
 
-Si Nanobook escala a **decenas o cientos de miles de documentos** con SSR, construir el árbol completo por request se vuelve costoso en CPU y memoria. En ese escenario, el `DatabaseRepository` debería cargar solo la rama necesaria:
+Si Nanobook escala a **decenas o cientos de miles de documentos**, construir el árbol completo por request se vuelve costoso. En ese escenario, `DatabaseRepository` debería cargar solo la rama necesaria:
 
 ```text
 /nanobook-project/arquitectura/content-model-architecture/
@@ -320,17 +294,17 @@ La separación entre `ContentRepository` y `NavigationBuilder` permite esta evol
 ```text
 ContentRepository              NavigationBuilder
      │                                │
-  get(id)                      buildNavigationTree()
-  getAncestors(id)             getBreadcrumbs()
-  getSiblings(id)              getSidebarEntries()
-  getChildren(id)              getImmediateChildren()
+   get(id)                      buildNavigationTree()
+   getAncestors(id)             getBreadcrumbs()
+   getSiblings(id)              getSidebarEntries()
+   getChildren(id)              getImmediateChildren()
 ```
 
-En SSR, `DatabaseRepository` puede implementar consultas puntuales. `NavigationBuilder` puede evolucionar para aceptar una rama parcial o funciones de consulta en lugar de `Document[]`.
+`NavigationBuilder` puede evolucionar para aceptar una rama parcial o funciones de consulta en lugar de `Document[]`.
 
 ### Regla
 
-No optimizar prematuramente. Hoy el árbol completo es la solución pragmática. Cuando el modo dinámico escale, se añadirá una estrategia de rama parcial sobre la misma arquitectura.
+No optimizar prematuramente. Hoy el árbol completo es la solución pragmática. Cuando escale, se añadirá una estrategia de rama parcial sobre la misma arquitectura.
 
 ## Editor integrado
 
@@ -353,13 +327,14 @@ Preguntas abiertas:
 ## Próximos pasos documentados
 
 1. **Editor integrado**: mejorar UX, añadir atajos de teclado y decidir si se amplía a CRUD completo.
-2. **Edición en modo dinámico**: definir el flujo de escritura de vuelta a GitHub (u otra fuente externa) en producción.
+2. **Edición en fuente remota**: definir el flujo de escritura de vuelta a GitHub (u otra fuente externa) en producción.
 3. **SSR a gran escala**: evolucionar `NavigationBuilder` para soportar ramas parciales cuando haya un `DatabaseRepository` y miles de documentos.
+4. **Directivas de contenido**: explorar sintaxis Markdown para insertar componentes reutilizables sin depender de MDX.
 
 ## Lo que NO se hará ahora
 
 - No se implementa un adapter de base de datos real.
-- No se cambia el flujo de build estático.
+- No se vuelve a SSG como modo principal.
 - No se añaden overrides ni manifest.
 
 Todo eso se documenta y se deja listo para continuar sin reescribir el core.

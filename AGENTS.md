@@ -41,7 +41,7 @@ src/
     reference/       # Contratos y lógica pura de referencias
     adapters/        # Implementaciones concretas
       repository/    # ContentRepository implementations
-      cache/         # Cachés (astro-cache)
+      cache/         # Cachés de repositorio y páginas renderizadas
       loader/        # Loaders (github-loader)
       reference/     # Resolutores de referencias con side effects
     api/             # API routes

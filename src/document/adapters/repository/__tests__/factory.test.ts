@@ -12,6 +12,11 @@ describe("createContentRepository", () => {
     expect(repository).toBeInstanceOf(FileSystemRepository);
   });
 
+  it("devuelve FileSystemRepository por defecto", async () => {
+    const repository = await createContentRepository();
+    expect(repository).toBeInstanceOf(FileSystemRepository);
+  });
+
   it("devuelve GitHubRepository cuando la fuente es github y hay credenciales", async () => {
     const originalOwner = process.env.GITHUB_OWNER;
     const originalRepo = process.env.GITHUB_REPO;
@@ -52,8 +57,4 @@ describe("createContentRepository", () => {
       createContentRepository("unknown" as RepositorySource),
     ).rejects.toThrow("Unsupported content source");
   });
-
-  // Nota: el caso "astro" no se testea aquí porque AstroCollectionRepository
-  // se importa de forma perezosa y requiere el entorno de build de Astro.
-  // Ese caso se valida mediante pnpm build.
 });

@@ -9,7 +9,7 @@
 
 Nanobook es un sitio de documentación técnica construido con Astro. Organiza el contenido en libros, capítulos, guías, artículos y proyectos a partir de archivos Markdown con frontmatter, generando automáticamente índices, navegación y tablas de contenidos.
 
-> **Estado**: `v0.2.0-alpha.1`. El proyecto es funcional pero aún en fase alpha. La API de contenido, URLs y componentes puede cambiar hasta llegar a `v1.0.0`.
+> **Estado**: `v0.3.0`. El proyecto es funcional pero aún en fase alpha. La API de contenido, URLs y componentes puede cambiar hasta llegar a `v1.0.0`.
 
 ## Características
 
@@ -40,11 +40,9 @@ Nanobook es un sitio de documentación técnica construido con Astro. Organiza e
 
 ### Arquitectura y despliegue
 
-- **Modos de despliegue configurables**:
-  - `OUTPUT_MODE=static` (default): sitio estático con contenido local.
-  - `OUTPUT_MODE=dynamic`: renderizado bajo demanda con contenido remoto desde GitHub.
+- **SSR puro con Astro**: todas las rutas se renderizan bajo demanda (`output: "server"`) y se cachean con `Cache-Control`.
+- **Fuentes de contenido intercambiables**: `FileSystemRepository` (local), `GitHubRepository` (remoto) y `MemoryRepository` (tests). Se eligen mediante `CONTENT_SOURCE`.
 - **Capa de dominio desacoplada** en `src/document/`, `src/navigation/`, `src/rendering/`, `src/edition/` y `src/theme/`.
-- **Repositorios de contenido intercambiables**: `AstroCollectionRepository` (local), `MemoryRepository` (tests) y stub `DatabaseRepository`.
 - **Adapters de rendering** pluggables: `MarkdownItRenderer` (activo), `AstroMarkdownRenderer` y `UnifiedMarkdownRenderer`.
 
 ## Stack
@@ -72,18 +70,21 @@ npm run dev
 ## Scripts
 
 - `npm run dev` — Inicia el servidor de desarrollo.
-- `npm run build` — Genera el sitio en `dist/`. Por defecto usa `OUTPUT_MODE=static`.
+- `npm run build` — Genera el sitio SSR en `dist/`.
 - `npm run preview` — Previsualiza el sitio generado.
-- `npm run start` — Inicia el servidor Node.js en modo dinámico (requiere build previo).
+- `npm run start` — Inicia el servidor Node.js (requiere build previo).
 
-### Modos de despliegue
+### Fuentes de contenido
+
+Por defecto se lee desde `src/content/`. Para usar GitHub como fuente:
 
 ```bash
-# Modo estático (default): genera HTML estático desde src/content/.
-OUTPUT_MODE=static npm run build
-
-# Modo dinámico: renderiza bajo demanda con contenido remoto desde GitHub.
-OUTPUT_MODE=dynamic npm run build
+CONTENT_SOURCE=github \
+  GITHUB_OWNER=owner \
+  GITHUB_REPO=repo \
+  GITHUB_BRANCH=main \
+  GITHUB_TOKEN=token \
+  npm run dev
 ```
 
 ## Estructura de contenido
@@ -161,7 +162,7 @@ Campos:
 - `src/pages/[...slug]/index.astro` — Ruta dinámica universal para documentos e índices.
 - `src/pages/[...slug]/edit.astro` — Vista de edición integrada.
 - `src/pages/[...slug]/preview.astro` — Vista de preview del borrador.
-- `src/document/` — Dominio de documentos: tipos, repositorios y adapters (`AstroCollectionRepository`, `MemoryRepository`).
+- `src/document/` — Dominio de documentos: tipos, repositorios y adapters (`FileSystemRepository`, `GitHubRepository`, `MemoryRepository`).
 - `src/document/components/IndexList/` — Listado de índices jerárquicos.
 - `src/document/components/TableOfContents/` — Componentes y lógica de la tabla de contenidos.
 - `src/navigation/` — Construcción del árbol de navegación, breadcrumbs, sidebar e índices.
@@ -174,12 +175,12 @@ Campos:
 
 ## Extensibilidad
 
-El sistema usa la API de loaders de Astro. El modo de despliegue se elige mediante `OUTPUT_MODE`:
+El sistema usa `ContentRepository` como contrato. La fuente de contenido se elige mediante `CONTENT_SOURCE`:
 
-- **Modo estático**: el loader `glob` lee archivos Markdown locales desde `src/content/`.
-- **Modo dinámico**: el loader `github` obtiene contenido remoto desde un repositorio de GitHub.
+- **FileSystemRepository**: lee archivos Markdown locales desde `src/content/`.
+- **GitHubRepository**: obtiene contenido remoto desde un repositorio de GitHub.
 
-En el futuro se pueden añadir loaders para CMS headless, S3, Notion u otras fuentes sin modificar el dominio de Nanobook.
+En el futuro se pueden añadir repositorios para CMS headless, S3, Notion u otras fuentes implementando `ContentRepository` sin modificar el dominio de Nanobook.
 
 ## Versionado
 

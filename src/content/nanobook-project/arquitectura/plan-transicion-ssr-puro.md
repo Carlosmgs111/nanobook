@@ -39,7 +39,7 @@ La transición a **SSR puro** consolida el proyecto como aplicación server-firs
 
 ## Fases
 
-### Fase 1 — Preparación y auditoría
+### ✅ Fase 1 — Preparación y auditoría
 
 **Objetivo**: tener una foto clara de todo lo que depende del modo híbrido.
 
@@ -50,47 +50,13 @@ La transición a **SSR puro** consolida el proyecto como aplicación server-firs
 - Revisar documentación obsoleta que mencione `OUTPUT_MODE` o modos estático/dinámico.
 - Ejecutar tests y build como línea base.
 
-**Archivos a revisar**:
-- `src/content.config.ts`
-- `src/document/api/document.ts`
-- `src/document/adapters/repository/astro-collection-repository.ts`
-- `src/document/adapters/cache/astro-cache.ts`
-- `src/document/parse/document.ts`
-- `src/document/parse/proxy.ts`
-- `src/document/reference/types.ts`
-- `src/document/reference/resolver.ts`
-- `src/document/adapters/reference/internal-resolver.ts`
-- `src/document/adapters/repository/factory.ts`
-- `src/pages/**/*.astro`
-- Documentación en `src/content/nanobook-project/`
-
 **Criterios de éxito**:
 - Inventario completo de dependencias.
 - Tests y build pasan antes de tocar código.
 
-**Inventario confirmado (línea base)**:
+**Inventario confirmado (línea base)**: ver historial del commit `033bca9`.
 
-Dependencias de `astro:content`:
-- `src/content.config.ts` — define colección usando `defineCollection` y `z`.
-- `src/document/adapters/repository/astro-collection-repository.ts` — `AstroCollectionRepository`, usa `getAstroEntries()` y `CollectionEntry`.
-- `src/document/adapters/cache/astro-cache.ts` — envuelve `getCollection("content")`.
-- `src/document/parse/document.ts` — `toDocument` recibe `CollectionEntry`.
-- `src/document/parse/proxy.ts` — `resolveProxy` recibe `CollectionEntry`.
-- `src/document/reference/types.ts` — `ReferenceResolver.resolve` recibe `CollectionEntry`.
-- `src/document/reference/resolver.ts` — `CompositeReferenceResolver.resolve` recibe `CollectionEntry`.
-- `src/document/adapters/reference/internal-resolver.ts` — usa `Map<string, CollectionEntry>`.
-
-Usos de `OUTPUT_MODE`:
-- `src/content.config.ts` — selecciona loader `github` vs `glob`.
-- `src/document/api/document.ts` — `prerender` condicional.
-- Documentación en `src/content/nanobook-project/`.
-
-Páginas Astro que usan `createContentRepository()` (no requieren cambio):
-- `src/pages/[...slug]/index.astro`
-- `src/pages/[...slug]/edit.astro`
-- `src/pages/[...slug]/preview.astro`
-
-### Fase 2 — Eliminar `OUTPUT_MODE`
+### ✅ Fase 2 — Eliminar `OUTPUT_MODE`
 
 **Objetivo**: quitar la variable `OUTPUT_MODE` y asumir `output: "server"` siempre.
 
@@ -105,57 +71,41 @@ Páginas Astro que usan `createContentRepository()` (no requieren cambio):
 - No quedan referencias a `OUTPUT_MODE` en código fuente.
 - `pnpm build` y `pnpm test` pasan.
 
-### Fase 3 — Simplificar `content.config.ts`
+### ✅ Fase 3 — Simplificar `content.config.ts`
 
-**Objetivo**: que `content.config.ts` solo gestione la colección local de `src/content/` (documentación del proyecto), sin fetch de GitHub.
+**Objetivo**: que `content.config.ts` solo gestione la colección local de `src/content/`, sin fetch de GitHub.
 
-**Tareas**:
-- Dejar `content.config.ts` con un solo loader `glob` sobre `./src/content/`.
-- Eliminar el loader `github` de Astro (o dejarlo como adapter interno si se quiere reusar, pero no en `content.config.ts`).
-- Actualizar el schema si es necesario.
-- Asegurar que `astro dev` y `astro build` no intenten cargar contenido de GitHub.
+**Tareas realizadas**:
+- `content.config.ts` usa solo un loader `glob` sobre `./src/content/`.
+- Eliminado el loader `github` de Astro.
+- `astro dev` y `astro build` ya no hacen fetch a GitHub por el loader.
 
-**Criterios de éxito**:
-- `astro dev` arranca sin hacer fetch a GitHub por el loader.
-- `astro build` completa.
-- `src/content/` sigue siendo una colección válida de Astro.
-
-### Fase 4 — Migrar dependencias de `astro:content`
+### ✅ Fase 4 — Migrar dependencias de `astro:content`
 
 **Objetivo**: eliminar imports de `astro:content` del dominio del documento.
 
-**Tareas**:
-- `src/document/adapters/repository/astro-collection-repository.ts`: eliminar.
-- `src/document/adapters/cache/astro-cache.ts`: eliminar.
-- `src/document/parse/document.ts`: eliminar `toDocument` basado en `CollectionEntry`; si es necesario, mover a un adapter o eliminar si no se usa.
-- `src/document/parse/proxy.ts`: reemplazar `CollectionEntry` por `Document`.
-- `src/document/reference/types.ts` y `src/document/reference/resolver.ts`: reemplazar `CollectionEntry` por `Document`.
-- `src/document/adapters/reference/internal-resolver.ts`: reemplazar `CollectionEntry` por `Document`.
-- Actualizar `createContentRepository` en `factory.ts` para quitar la opción `astro`.
+**Tareas realizadas**:
+- Eliminados `astro-collection-repository.ts` y `astro-cache.ts`.
+- Eliminado `toDocument` basado en `CollectionEntry` de `src/document/parse/document.ts`.
+- `src/document/parse/proxy.ts` trabaja con `Document` y exporta `createReferenceResolver` y `resolveProxies`.
+- `src/document/reference/types.ts`, `resolver.ts` e `internal-resolver.ts` usan `Document` en lugar de `CollectionEntry`.
+- `factory.ts` ya no ofrece la opción `astro`; el default es `filesystem`.
+- `FileSystemRepository` y `GitHubRepository` aplican `resolveProxies()` en `list()`.
 
-**Criterios de éxito**:
-- No quedan imports de `astro:content` en `src/document/` ni `src/navigation/` ni `src/rendering/`.
-- Tests pasan.
-
-### Fase 5 — Limpiar páginas Astro
+### ✅ Fase 5 — Limpiar páginas Astro
 
 **Objetivo**: asegurar que todas las páginas usan `createContentRepository()` y no `getCollection` ni `AstroCollectionRepository`.
 
-**Tareas**:
-- Revisar `src/pages/**/*.astro` y `src/pages/**/*.ts`.
-- Reemplazar cualquier uso residual de `getCollection` o `CollectionEntry`.
-- Asegurar que `prerender` sea `false` donde corresponda.
-- Eliminar `src/document/api/document.ts` si ya no aporta valor (o simplificarlo).
+**Tareas realizadas**:
+- Revisadas todas las páginas en `src/pages/`.
+- Ninguna usa `getCollection` ni `CollectionEntry`.
+- `src/document/api/document.ts` se mantiene como endpoint PATCH con `prerender = false`.
 
-**Criterios de éxito**:
-- No quedan imports de `astro:content` en `src/pages/`.
-- `vercel dev` funciona con `CONTENT_SOURCE=github` o `local`.
-
-### Fase 6 — Actualizar documentación
+### 🔄 Fase 6 — Actualizar documentación
 
 **Objetivo**: que la documentación refleje el modelo SSR puro.
 
-**Tareas**:
+**Tareas en progreso**:
 - Actualizar `content-model-architecture.md`.
 - Actualizar `informe-factibilidad-recompilado-incremental.md`.
 - Actualizar `recompilado-incremental-estado-actual.md`.
@@ -163,41 +113,40 @@ Páginas Astro que usan `createContentRepository()` (no requieren cambio):
 - Actualizar `despliegue-vercel.md`.
 - Actualizar `AGENTS.md` si menciona modos estáticos.
 - Actualizar `CHANGELOG.md`.
+- Actualizar `README.md`.
 
 **Criterios de éxito**:
 - Ningún documento menciona `OUTPUT_MODE` o modo estático como opción vigente.
 - El modelo server-first está explicado claramente.
 
-### Fase 7 — Verificación final
+### 🔄 Fase 7 — Verificación final
 
 **Objetivo**: consolidar y asegurar que todo funciona.
 
-**Tareas**:
-- Ejecutar `pnpm test`.
-- Ejecutar `pnpm build`.
+**Tareas pendientes**:
+- Ejecutar `pnpm test` y `pnpm build` tras cada cambio.
 - Probar `vercel dev` con `CONTENT_SOURCE=local`.
-- Probar `vercel dev` con `CONTENT_SOURCE=github` (si no hay rate limit).
-- Probar invalidación manual y webhook.
+- Probar `vercel dev` con `CONTENT_SOURCE=github`.
 - Revisar que no queden imports muertos ni archivos huérfanos.
 - Actualizar versión en `package.json` y `CHANGELOG.md` si corresponde.
 
 **Criterios de éxito**:
 - 0 imports de `astro:content` fuera de `content.config.ts`.
-- 0 referencias a `OUTPUT_MODE`.
+- 0 referencias a `OUTPUT_MODE` en código fuente.
 - Tests y build verdes.
 - `vercel dev` funciona en ambos modos de contenido.
 
 ## Riesgos y mitigaciones
 
-| Riesgo | Mitigación |
-|--------|------------|
-| Se rompe resolución de proxies | Migrar `parse/proxy.ts` y `reference/resolver.ts` con cuidado, manteniendo tests. |
-| Se pierde funcionalidad de edición | `FileSystemRepository` sigue disponible para `CONTENT_SOURCE=local`. |
-| Build de Vercel sigue fallando | El build de Vercel requiere symlinks en Windows; esto no cambia. Usar `vercel dev` o CI/Linux. |
-| `src/content/` deja de funcionar | `content.config.ts` sigue cargando archivos locales. |
+| Riesgo | Estado | Mitigación |
+|--------|--------|------------|
+| Se rompe resolución de proxies | Resuelto | Migrada a `parse/proxy.ts` con `Document`; `FileSystemRepository` y `GitHubRepository` la aplican en `list()`. |
+| Se pierde funcionalidad de edición | Resuelto | `FileSystemRepository` sigue disponible para `CONTENT_SOURCE=local`. |
+| Build de Vercel en Windows | Vigente | El build de Vercel requiere symlinks; usar `VERCEL_DEPLOY=true` solo en CI/Linux o Vercel. |
+| `src/content/` deja de funcionar | Resuelto | `content.config.ts` sigue cargando archivos locales de `src/content/`. |
 
 ## Próximos pasos
 
-1. Revisar y aprobar este plan.
-2. Ejecutar Fase 1 para confirmar el inventario.
-3. Avanzar fase por fase, commit por fase.
+1. Completar Fase 6 (documentación).
+2. Ejecutar Fase 7 (verificación final).
+3. Decidir si se publica como `v0.4.0`.
