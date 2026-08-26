@@ -30,4 +30,6 @@ pnpm-debug.log*
 .idea/
 
 .vercel
-.env*
+.env
+.env.*
+!.env.example
