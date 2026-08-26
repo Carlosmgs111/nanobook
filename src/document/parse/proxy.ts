@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { stringify } from "yaml";
 import type { Document, DocumentMetadata } from "./types";
 import type { ReferenceResolver } from "../reference/types";
 import { CompositeReferenceResolver } from "../reference/resolver";

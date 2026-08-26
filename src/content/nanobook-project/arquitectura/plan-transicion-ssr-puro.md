@@ -101,34 +101,27 @@ La transición a **SSR puro** consolida el proyecto como aplicación server-firs
 - Ninguna usa `getCollection` ni `CollectionEntry`.
 - `src/document/api/document.ts` se mantiene como endpoint PATCH con `prerender = false`.
 
-### 🔄 Fase 6 — Actualizar documentación
+### ✅ Fase 6 — Actualizar documentación
 
-**Objetivo**: que la documentación refleje el modelo SSR puro.
+**Tareas realizadas**:
+- Actualizado `content-model-architecture.md`.
+- Actualizado `informe-factibilidad-recompilado-incremental.md`.
+- Actualizado `recompilado-incremental-estado-actual.md`.
+- Actualizado `plan-fase-7-isr-modo-dinamico.md`.
+- Actualizado `despliegue-vercel.md`.
+- Actualizado `AGENTS.md`.
+- Actualizado `CHANGELOG.md`.
+- Actualizado `README.md`.
 
-**Tareas en progreso**:
-- Actualizar `content-model-architecture.md`.
-- Actualizar `informe-factibilidad-recompilado-incremental.md`.
-- Actualizar `recompilado-incremental-estado-actual.md`.
-- Actualizar `plan-fase-7-isr-modo-dinamico.md` si es necesario.
-- Actualizar `despliegue-vercel.md`.
-- Actualizar `AGENTS.md` si menciona modos estáticos.
-- Actualizar `CHANGELOG.md`.
-- Actualizar `README.md`.
+### ✅ Fase 7 — Verificación final
 
-**Criterios de éxito**:
-- Ningún documento menciona `OUTPUT_MODE` o modo estático como opción vigente.
-- El modelo server-first está explicado claramente.
-
-### 🔄 Fase 7 — Verificación final
-
-**Objetivo**: consolidar y asegurar que todo funciona.
-
-**Tareas pendientes**:
-- Ejecutar `pnpm test` y `pnpm build` tras cada cambio.
-- Probar `vercel dev` con `CONTENT_SOURCE=local`.
-- Probar `vercel dev` con `CONTENT_SOURCE=github`.
-- Revisar que no queden imports muertos ni archivos huérfanos.
-- Actualizar versión en `package.json` y `CHANGELOG.md` si corresponde.
+**Tareas realizadas**:
+- `pnpm test`: 78 passed.
+- `pnpm build`: OK.
+- `vercel dev` con `CONTENT_SOURCE=filesystem`: OK (HTTP 200 en `/`).
+- `vercel dev` con `CONTENT_SOURCE=github`: OK (HTTP 200 en `/`).
+- Eliminados imports muertos (`stringify`, `DocumentMetadata`, `Document` en `parse/document.ts`).
+- Versión actualizada a `0.4.0` en `package.json` y `CHANGELOG.md`.
 
 **Criterios de éxito**:
 - 0 imports de `astro:content` fuera de `content.config.ts`.

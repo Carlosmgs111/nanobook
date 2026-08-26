@@ -3,7 +3,7 @@ import { slug } from "github-slugger";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Node } from "unist";
-import type { DocumentMetadata, Document } from "../model/types";
+
 
 export interface Heading {
   depth: number;

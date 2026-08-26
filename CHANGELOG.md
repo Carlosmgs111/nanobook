@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-26
+
 ### Added
 - `RedisRenderedPageCache` en `src/rendering/adapters/cache/redis-page-cache.ts` para persistir cuerpos renderizados en cualquier servidor Redis compatible.
 - Soporte de `CACHE_BACKEND=redis` en `src/rendering/adapters/cache/factory.ts`.
