@@ -7,6 +7,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-08-26
+
+### Fixed
+- `GitHubRepository` ahora cachea el tree de GitHub en Redis con TTL de 5 minutos, reduciendo las llamadas a la API de GitHub a una cada 5 minutos.
+- Aumentado el TTL del cache en memoria de documentos de `GitHubRepository` a 5 minutos.
+- Creado helper compartido `src/shared/utils/redis.ts` para conexiones Redis.
+
 ## [0.4.1] - 2026-08-26
 
 ### Fixed
