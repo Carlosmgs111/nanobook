@@ -1,14 +1,33 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { GitHubRepository } from "../github-repository";
 
+const SAMPLE_MARKDOWN = `---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post`;
+
 function createMockResponse(body: unknown, ok = true): Response {
   return {
     ok,
     status: ok ? 200 : 404,
     statusText: ok ? "OK" : "Not Found",
     json: async () => body,
-    text: async () => JSON.stringify(body),
+    text: async () => (typeof body === "string" ? body : JSON.stringify(body)),
   } as Response;
+}
+
+function mockFetch(body: string): typeof globalThis.fetch {
+  return vi.fn(async (url) => {
+    const urlString = url.toString();
+
+    if (urlString.includes("/git/trees/")) {
+      return createMockResponse({
+        tree: [
+          { path: "blog/post.md", type: "blob" },
+          { path: "README.md", type: "blob" },
+        ],
+      });
+    }
+
+    return createMockResponse(body);
+  });
 }
 
 describe("GitHubRepository", () => {
@@ -25,25 +44,7 @@ describe("GitHubRepository", () => {
   });
 
   it("lista documentos desde GitHub excluyendo README.md por defecto", async () => {
-    globalThis.fetch = vi.fn(async (url) => {
-      const urlString = url.toString();
-
-      if (urlString.includes("/git/trees/")) {
-        return createMockResponse({
-          tree: [
-            { path: "blog/post.md", type: "blob" },
-            { path: "README.md", type: "blob" },
-          ],
-        });
-      }
-
-      return createMockResponse({
-        content: Buffer.from(
-          "---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post",
-        ).toString("base64"),
-        encoding: "base64",
-      });
-    });
+    globalThis.fetch = mockFetch(SAMPLE_MARKDOWN);
 
     const repository = new GitHubRepository({
       owner: "test-owner",
@@ -58,25 +59,7 @@ describe("GitHubRepository", () => {
   });
 
   it("permite incluir README.md con un pattern personalizado", async () => {
-    globalThis.fetch = vi.fn(async (url) => {
-      const urlString = url.toString();
-
-      if (urlString.includes("/git/trees/")) {
-        return createMockResponse({
-          tree: [
-            { path: "blog/post.md", type: "blob" },
-            { path: "README.md", type: "blob" },
-          ],
-        });
-      }
-
-      return createMockResponse({
-        content: Buffer.from(
-          "---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post",
-        ).toString("base64"),
-        encoding: "base64",
-      });
-    });
+    globalThis.fetch = mockFetch(SAMPLE_MARKDOWN);
 
     const repository = new GitHubRepository({
       owner: "test-owner",
@@ -92,22 +75,7 @@ describe("GitHubRepository", () => {
   });
 
   it("cachea la lista de documentos globalmente entre instancias", async () => {
-    const fetchMock = vi.fn(async (url) => {
-      const urlString = url.toString();
-
-      if (urlString.includes("/git/trees/")) {
-        return createMockResponse({
-          tree: [{ path: "blog/post.md", type: "blob" }],
-        });
-      }
-
-      return createMockResponse({
-        content: Buffer.from(
-          "---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post",
-        ).toString("base64"),
-        encoding: "base64",
-      });
-    });
+    const fetchMock = mockFetch(SAMPLE_MARKDOWN);
     globalThis.fetch = fetchMock;
 
     const repositoryA = new GitHubRepository({
@@ -117,7 +85,7 @@ describe("GitHubRepository", () => {
     });
 
     await repositoryA.list();
-    expect(fetchMock).toHaveBeenCalledTimes(2); // tree + file
+    expect(fetchMock).toHaveBeenCalledTimes(2); // tree + 1 file (README.md excluido)
 
     const repositoryB = new GitHubRepository({
       owner: "test-owner",
@@ -139,12 +107,7 @@ describe("GitHubRepository", () => {
         });
       }
 
-      return createMockResponse({
-        content: Buffer.from(
-          "---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post",
-        ).toString("base64"),
-        encoding: "base64",
-      });
+      return createMockResponse(SAMPLE_MARKDOWN);
     });
 
     const repository = new GitHubRepository({

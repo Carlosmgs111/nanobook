@@ -40,13 +40,20 @@ export async function fetchFileContent(
   options: Required<Pick<GitHubLoaderOptions, "owner" | "repo" | "branch">> &
     Pick<GitHubLoaderOptions, "token"> & { path: string },
 ): Promise<string> {
-  const { owner, repo, branch, token, path } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`;
-  const data = await fetchJson<{ content: string; encoding: string }>(url, token);
+  const { owner, repo, branch, path } = options;
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeURIComponent(path)}`;
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "nanobook-github-loader",
+    },
+  });
 
-  if (data.encoding !== "base64") {
-    throw new Error(`Unexpected encoding for ${path}: ${data.encoding}`);
+  if (!response.ok) {
+    const text = await response.text().catch(() => "Unknown error");
+    throw new Error(
+      `GitHub raw error ${response.status} ${response.statusText}: ${text}`,
+    );
   }
 
-  return Buffer.from(data.content, "base64").toString("utf-8");
+  return response.text();
 }
