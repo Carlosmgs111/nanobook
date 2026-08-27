@@ -31,6 +31,7 @@ export function verifyGitHubWebhookSignature(
   signature: string,
   body: string,
 ): boolean {
+  console.log({ signature, secret, body });
   const expected = `sha256=${createHmac("sha256", secret).update(body).digest("hex")}`;
   return signature === expected;
 }
@@ -65,6 +66,7 @@ export async function handleGitHubPushWebhook(
   removedIds: string[];
   message?: string;
 }> {
+  console.log(payload)
   const branchName = options.branch.replace(/^refs\/heads\//, "");
   const expectedRef = `refs/heads/${branchName}`;
 

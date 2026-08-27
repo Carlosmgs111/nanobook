@@ -5,18 +5,13 @@ import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import rehypeSlug from "rehype-slug";
 
-const isVercelDeploy = process.env.VERCEL_DEPLOY === "true";
+const isVercelDeploy = Boolean(process.env.VERCEL_DEPLOY);
+
+const adapter = isVercelDeploy ? vercel({}) : node({ mode: "standalone" });
 
 export default defineConfig({
   output: "server",
-  adapter: isVercelDeploy
-    ? vercel({
-        webAnalytics: false,
-        imageService: false,
-      })
-    : node({
-        mode: "standalone",
-      }),
+  adapter: adapter,
   vite: {
     plugins: [tailwindcss()],
   },
