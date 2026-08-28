@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+- `scripts/push-content-to-github.mjs` ahora migra **todos** los archivos dentro de `src/content/` (no solo `.md`) y crea el tree de GitHub sin `base_tree`, de modo que el repositorio remoto sea un reflejo exacto del contenido local: todo archivo local se sube y cualquier archivo remoto que no exista localmente se elimina.
+
 ## [0.4.2] - 2026-08-26
 
 ### Fixed

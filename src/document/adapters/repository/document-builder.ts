@@ -38,7 +38,7 @@ export function toDocumentMetadata(
 
 export function extractFrontmatter(raw: string): string {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  return match ? `---\n${match[1]}---\n\n` : "";
+  return match ? `---\n${match[1]}\n---\n` : "";
 }
 
 export function buildDocument(

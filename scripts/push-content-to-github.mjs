@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
- * Pushes the local Markdown content in src/content/ to the
- * nanobook-content repository on GitHub using the Git Data API.
+ * Pushes the local content in src/content/ to the nanobook-content repository
+ * on GitHub using the Git Data API.
+ *
+ * The remote repository becomes an exact mirror of the local content directory:
+ * every local file is pushed, and any remote file not present locally is removed.
  *
  * Usage:
  *   node --env-file=.env scripts/push-content-to-github.mjs
@@ -111,7 +114,7 @@ async function scanContentFiles(dir) {
 
       if (entry.isDirectory()) {
         await walk(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+      } else if (entry.isFile()) {
         const relativePath = relative(CONTENT_DIR, fullPath);
         files.push(relativePath);
       }
@@ -122,27 +125,46 @@ async function scanContentFiles(dir) {
   return files.sort();
 }
 
-async function createTree(commitSha, fileEntries) {
+function isBinary(buffer) {
+  if (buffer.includes(0)) {
+    return true;
+  }
+
+  try {
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    decoder.decode(buffer);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+async function createBlob(buffer) {
+  return fetchJson(
+    `${GITHUB_API_BASE}/repos/${owner}/${REPO_NAME}/git/blobs`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        content: buffer.toString("base64"),
+        encoding: "base64",
+      }),
+    },
+  );
+}
+
+async function createTree(fileEntries) {
   const tree = fileEntries.map((file) => ({
     path: toPosixPath(file.path),
     mode: "100644",
     type: "blob",
-    content: file.content,
+    ...(file.sha ? { sha: file.sha } : { content: file.content }),
   }));
-
-  const body = {
-    tree,
-  };
-
-  if (commitSha) {
-    body.base_tree = commitSha;
-  }
 
   return fetchJson(
     `${GITHUB_API_BASE}/repos/${owner}/${REPO_NAME}/git/trees`,
     {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify({ tree }),
     },
   );
 }
@@ -183,29 +205,33 @@ async function main() {
   await ensureRepo();
 
   const localFiles = await scanContentFiles(CONTENT_DIR);
-  console.log(`Found ${localFiles.length} Markdown file(s) in ${CONTENT_DIR}.`);
-
-  if (localFiles.length === 0) {
-    console.log("Nothing to push.");
-    return;
-  }
+  console.log(`Found ${localFiles.length} file(s) in ${CONTENT_DIR}.`);
 
   const fileEntries = await Promise.all(
     localFiles.map(async (file) => {
-      const content = await readFile(join(CONTENT_DIR, file), "utf-8");
-      return { path: file, content };
+      const fullPath = join(CONTENT_DIR, file);
+      const buffer = await readFile(fullPath);
+
+      if (isBinary(buffer)) {
+        const blob = await createBlob(buffer);
+        console.log(`  - binary blob: ${file}`);
+        return { path: file, sha: blob.sha };
+      }
+
+      console.log(`  - text: ${file}`);
+      return { path: file, content: buffer.toString("utf-8") };
     }),
   );
 
   const latestCommitSha = await getLatestCommitSha();
   console.log(
     latestCommitSha
-      ? `Latest commit on ${BRANCH}: ${latestCommitSha}`
-      : `Branch ${BRANCH} is empty or does not exist yet.`,
+      ? `\nLatest commit on ${BRANCH}: ${latestCommitSha}`
+      : `\nBranch ${BRANCH} is empty or does not exist yet.`,
   );
 
   console.log("Creating tree...");
-  const tree = await createTree(latestCommitSha, fileEntries);
+  const tree = await createTree(fileEntries);
 
   console.log("Creating commit...");
   const commit = await createCommit(

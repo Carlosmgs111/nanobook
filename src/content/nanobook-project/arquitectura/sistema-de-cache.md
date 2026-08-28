@@ -101,6 +101,11 @@ nanobook:page:{pageId}
 nanobook:github:tree:{owner}:{repo}:{branch}:{path}:{pattern}
 ```
 
+**Mecanismo**: Una funcion auxiliar compartida, `withRedisClient` que invoca una instancia del cliente `redis`, ubicada en:
+```text
+src/shared/utils/redis.ts
+```
+
 **TTL**: 5 minutos (300.000 ms), configurable por `treeCacheTtl`.
 
 **Flujo**:
