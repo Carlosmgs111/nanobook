@@ -1,4 +1,9 @@
-import { fetchFileContent, fetchGitHubTree } from "../github-loader/api";
+import {
+  fetchFileContent,
+  fetchFileSha,
+  fetchGitHubTree,
+  updateFileContent,
+} from "../github-loader/api";
 import { createParsedEntry } from "../github-loader/parser";
 import { filterContentFiles } from "../github-loader";
 import type { ContentRepository, Document } from "../../model/types";
@@ -34,7 +39,9 @@ function buildCacheKey(options: GitHubRepositoryOptions): string {
   const pattern = Array.isArray(options.pattern)
     ? options.pattern.join(",")
     : options.pattern ?? "default";
-  return `${options.owner}:${options.repo}:${options.branch ?? "main"}:${options.path ?? ""}:${pattern}`;
+  return `${options.owner}:${options.repo}:${options.branch ?? "main"}:${
+    options.path ?? ""
+  }:${pattern}`;
 }
 
 function buildTreeCacheKey(options: GitHubRepositoryOptions): string {
@@ -42,15 +49,18 @@ function buildTreeCacheKey(options: GitHubRepositoryOptions): string {
 }
 
 /**
- * Repositorio de contenido que lee Markdown desde un repositorio de GitHub.
+ * Repositorio de contenido que lee y escribe Markdown desde un repositorio de
+ * GitHub.
  *
  * Útil cuando el contenido vive en un repo separado y se actualiza sin
- * redeploy. No implementa save() porque el proyecto no escribe de vuelta a
- * GitHub.
+ * redeploy. Implementa save() a través de la GitHub Contents API, creando o
+ * actualizando el archivo correspondiente y commiteando directamente en la
+ * rama configurada.
  *
  * Cachea la lista de documentos en memoria compartida y el tree de GitHub en
  * Redis durante un TTL configurable para minimizar las llamadas a la API de
- * GitHub. El cache se invalida automáticamente al expirar el TTL.
+ * GitHub. El cache se invalida automáticamente al expirar el TTL y también se
+ * invalida de forma proactiva después de guardar un documento.
  *
  * Por defecto excluye README.md para alinearse con el comportamiento del
  * github-loader de Astro, que también lo excluye del pattern por defecto.
@@ -108,11 +118,9 @@ export class GitHubRepository implements ContentRepository {
     });
 
     await withRedisClient(async (client) => {
-      await client.set(
-        this.treeCacheKey,
-        JSON.stringify(tree),
-        { PX: this.treeCacheTtl },
-      );
+      await client.set(this.treeCacheKey, JSON.stringify(tree), {
+        PX: this.treeCacheTtl,
+      });
     });
 
     return tree;
@@ -155,8 +163,40 @@ export class GitHubRepository implements ContentRepository {
     return documents.filter((document) => document.parentId === parentId);
   }
 
-  async save(): Promise<void> {
-    throw new Error("GitHubRepository does not support saving documents.");
+  private idToGitHubPath(id: string): string {
+    const base = this.path ? `${this.path}/` : "";
+    const filePath = id === "index" ? `${base}index.md` : `${base}${id}.md`;
+    return filePath.replace(/^\/+/, "");
+  }
+
+  async save(document: Document): Promise<void> {
+    const path = this.idToGitHubPath(document.id);
+    try {
+      const { owner, repo, token } = this.options;
+
+      const sha = await fetchFileSha({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+      });
+
+      await updateFileContent({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+        content: document.rawFrontmatter + document.content,
+        sha: sha ?? undefined,
+        message: `Update ${path}`,
+      });
+
+      this.clearCache();
+    } catch (error) {
+      console.error(`Error al guardar el documento ${path}:`, error);
+    }
   }
 
   /** Invalida el cache de documentos de esta instancia. */

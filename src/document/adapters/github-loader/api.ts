@@ -57,3 +57,76 @@ export async function fetchFileContent(
 
   return response.text();
 }
+
+interface GitHubContentResponse {
+  sha: string;
+}
+
+export async function fetchFileSha(
+  options: Required<Pick<GitHubLoaderOptions, "owner" | "repo" | "branch">> &
+    Pick<GitHubLoaderOptions, "token"> & { path: string },
+): Promise<string | null> {
+  const { owner, repo, branch, path, token } = options;
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`;
+
+  const response = await fetch(url, { headers: getHeaders(token) });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "Unknown error");
+    throw new Error(
+      `GitHub API error ${response.status} ${response.statusText}: ${text}`,
+    );
+  }
+
+  const data = (await response.json()) as GitHubContentResponse;
+  return data.sha;
+}
+
+export async function updateFileContent(
+  options: Required<Pick<GitHubLoaderOptions, "owner" | "repo" | "branch">> &
+    Pick<GitHubLoaderOptions, "token"> & {
+      path: string;
+      content: string;
+      sha?: string;
+      message?: string;
+    },
+): Promise<void> {
+  const {
+    owner,
+    repo,
+    branch,
+    path,
+    content,
+    sha,
+    token,
+    message = `Update ${path}`,
+  } = options;
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+
+  const body: Record<string, string> = {
+    message,
+    content: Buffer.from(content, "utf-8").toString("base64"),
+    branch,
+  };
+
+  if (sha) {
+    body.sha = sha;
+  }
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: getHeaders(token),
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "Unknown error");
+    throw new Error(
+      `GitHub API error ${response.status} ${response.statusText}: ${text}`,
+    );
+  }
+}

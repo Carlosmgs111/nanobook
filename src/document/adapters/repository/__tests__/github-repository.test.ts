@@ -1,7 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { GitHubRepository } from "../github-repository";
+import { buildDocument } from "../document-builder";
+import { parseFrontmatter } from "../../../parse/frontmatter";
 
 const SAMPLE_MARKDOWN = `---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post`;
+
+function createSampleDocument(id = "blog/post") {
+  const { data, body } = parseFrontmatter(SAMPLE_MARKDOWN);
+  return buildDocument(id, data, body, SAMPLE_MARKDOWN);
+}
+
+function urlMatchesPath(url: unknown, path: string): boolean {
+  const urlString = url?.toString() ?? "";
+  const urlPath = urlString.split("?")[0];
+  return urlPath.endsWith(path);
+}
 
 function createMockResponse(body: unknown, ok = true): Response {
   return {
@@ -138,16 +151,144 @@ describe("GitHubRepository", () => {
     expect(document).toBeNull();
   });
 
-  it("lanza error al intentar guardar", async () => {
-    globalThis.fetch = vi.fn();
+  it("actualiza un documento existente en GitHub", async () => {
+    const fetchMock = vi.fn(async (url, init) => {
+      if (urlMatchesPath(url, "/contents/blog%2Fpost.md")) {
+        if (init?.method === "PUT") {
+          return createMockResponse({ commit: { sha: "abc123" } });
+        }
+        return createMockResponse({ sha: "existing-sha" });
+      }
+
+      return createMockResponse({}, false);
+    });
+    globalThis.fetch = fetchMock;
 
     const repository = new GitHubRepository({
       owner: "test-owner",
       repo: "test-repo",
     });
 
-    await expect(repository.save({} as any)).rejects.toThrow(
-      "GitHubRepository does not support saving documents.",
+    await repository.save(createSampleDocument());
+
+    const putCall = fetchMock.mock.calls.find((call) => {
+      const init = call[1] as RequestInit | undefined;
+      return init?.method === "PUT";
+    });
+    expect(putCall).toBeDefined();
+
+    const putInit = putCall![1] as RequestInit;
+    const body = JSON.parse(putInit.body as string);
+    expect(body.sha).toBe("existing-sha");
+    expect(body.branch).toBe("main");
+    expect(body.message).toBe("Update blog/post.md");
+    expect(Buffer.from(body.content, "base64").toString("utf-8")).toBe(
+      SAMPLE_MARKDOWN,
+    );
+  });
+
+  it("crea un documento nuevo en GitHub cuando no existe", async () => {
+    const fetchMock = vi.fn(async (url, init) => {
+      if (urlMatchesPath(url, "/contents/blog%2Fpost.md")) {
+        if (init?.method === "PUT") {
+          return createMockResponse({ commit: { sha: "abc123" } });
+        }
+        return createMockResponse({ message: "Not Found" }, false);
+      }
+
+      return createMockResponse({}, false);
+    });
+    globalThis.fetch = fetchMock;
+
+    const repository = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+    });
+
+    await repository.save(createSampleDocument());
+
+    const putCall = fetchMock.mock.calls.find((call) => {
+      const init = call[1] as RequestInit | undefined;
+      return init?.method === "PUT";
+    });
+    expect(putCall).toBeDefined();
+
+    const putInit = putCall![1] as RequestInit;
+    const body = JSON.parse(putInit.body as string);
+    expect(body.sha).toBeUndefined();
+    expect(body.branch).toBe("main");
+    expect(Buffer.from(body.content, "base64").toString("utf-8")).toBe(
+      SAMPLE_MARKDOWN,
+    );
+  });
+
+  it("usa el path base configurado al guardar", async () => {
+    const fetchMock = vi.fn(async (url, init) => {
+      if (urlMatchesPath(url, "/contents/docs%2Fblog%2Fpost.md")) {
+        if (init?.method === "PUT") {
+          return createMockResponse({ commit: { sha: "abc123" } });
+        }
+        return createMockResponse({ sha: "existing-sha" });
+      }
+
+      return createMockResponse({}, false);
+    });
+    globalThis.fetch = fetchMock;
+
+    const repository = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+      path: "docs",
+    });
+
+    await repository.save(createSampleDocument());
+
+    const putCall = fetchMock.mock.calls.find((call) => {
+      const init = call[1] as RequestInit | undefined;
+      return init?.method === "PUT";
+    });
+    expect(putCall).toBeDefined();
+    expect(putCall![0].toString()).toContain("/contents/docs%2Fblog%2Fpost.md");
+  });
+
+  it("invalida el cache de documentos después de guardar", async () => {
+    globalThis.fetch = vi.fn(async (url, init) => {
+      const urlString = url.toString();
+
+      if (urlString.includes("/git/trees/")) {
+        return createMockResponse({
+          tree: [{ path: "blog/post.md", type: "blob" }],
+        });
+      }
+
+      if (urlMatchesPath(url, "/contents/blog%2Fpost.md")) {
+        if (init?.method === "PUT") {
+          return createMockResponse({ commit: { sha: "abc123" } });
+        }
+        return createMockResponse({ sha: "existing-sha" });
+      }
+
+      if (urlString.includes("raw.githubusercontent.com")) {
+        return createMockResponse(SAMPLE_MARKDOWN);
+      }
+
+      return createMockResponse({}, false);
+    });
+
+    const repository = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+      cacheTtl: 60_000,
+    });
+
+    await repository.list();
+    await repository.save(createSampleDocument());
+
+    // Después de guardar, el cache debe estar invalidado.
+    const fetchCallsBeforeReList = (globalThis.fetch as any).mock.calls.length;
+    await repository.list();
+    expect((globalThis.fetch as any).mock.calls.length).toBeGreaterThan(
+      fetchCallsBeforeReList,
     );
   });
 });

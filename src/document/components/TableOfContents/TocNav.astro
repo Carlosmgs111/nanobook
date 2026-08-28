@@ -17,7 +17,7 @@ interface Props {
 const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
 ---
 
-<nav id={tocNavId} class="toc-nav" aria-label="En esta página">
+<nav id={tocNavId} data-toc-root-id={tocRootId} class="toc-nav" aria-label="En esta página">
   <div class="toc-nav-header">
     <span class="tech-label block w-full">En esta página</span>
     <TocToggle toggleId={toggleId} tocRootId={tocRootId} />
@@ -40,105 +40,111 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
   </ul>
 </nav>
 
-<script type="module" define:vars={{ tocRootId, tocNavId }}>
-  import { findActiveIndex } from "/src/shared/utils/scroll-spy";
+<script type="module">
+  import { findActiveIndex } from "../../../shared/utils/scroll-spy";
 
-  let abortController = null;
+  let abortControllers = new Map();
+
+  function collectHeadings(links) {
+    const headings = [];
+    links.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href || !href.startsWith("#")) return;
+      const heading = document.getElementById(href.slice(1));
+      if (heading) {
+        headings.push({ id: heading.id, element: heading });
+      }
+    });
+    return headings;
+  }
+
+  function updateActiveState(
+    links,
+    headings,
+    offsets,
+    offset,
+    activeIndexRef,
+    root
+  ) {
+    const newIndex = findActiveIndex(window.scrollY, offsets, offset);
+    if (newIndex === activeIndexRef.current) return;
+    activeIndexRef.current = newIndex;
+
+    const activeId = headings[newIndex].id;
+
+    links.forEach((link) => {
+      link.dataset.isActive = String(
+        link.getAttribute("href") === "#" + activeId
+      );
+    });
+
+    root._tocActiveId = activeId;
+    root.dispatchEvent(new CustomEvent("toc:active", { detail: { activeId } }));
+  }
+
+  function initScrollSpy(links, root, signal, offset = 120) {
+    if (links.length === 0) return;
+
+    const headings = collectHeadings(links);
+
+    root._tocHeadings = headings;
+    root.dispatchEvent(
+      new CustomEvent("toc:headings", { detail: { headings } })
+    );
+    if (headings.length === 0) return;
+
+    let offsets = [];
+    const activeIndex = { current: -1 };
+
+    function measure() {
+      offsets = headings.map((heading) => heading.element.offsetTop);
+      updateActiveState(links, headings, offsets, offset, activeIndex, root);
+    }
+
+    function onScroll() {
+      updateActiveState(links, headings, offsets, offset, activeIndex, root);
+    }
+
+    let ticking = false;
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            onScroll();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      },
+      { signal }
+    );
+
+    window.addEventListener("resize", measure, { signal });
+    window.addEventListener("orientationchange", measure, { signal });
+
+    measure();
+  }
 
   document.addEventListener("astro:page-load", function () {
-    const root = document.getElementById(tocRootId);
-    const tocNav = document.getElementById(tocNavId);
-    if (!root || !tocNav) return;
+    document.querySelectorAll(".toc-nav").forEach((tocNav) => {
+      const tocRootId = tocNav.dataset.tocRootId;
+      const tocNavId = tocNav.id;
+      if (!tocRootId || !tocNavId) return;
 
-    if (abortController) abortController.abort();
-    abortController = new AbortController();
-    const { signal } = abortController;
+      const root = document.getElementById(tocRootId);
+      if (!root || !tocNav) return;
 
-    const tocLinks = tocNav.querySelectorAll('.toc-item a[href^="#"]');
+      const key = `${tocRootId}:${tocNavId}`;
+      const previous = abortControllers.get(key);
+      if (previous) previous.abort();
+      const abortController = new AbortController();
+      abortControllers.set(key, abortController);
+      const { signal } = abortController;
 
-    function collectHeadings(links) {
-      const headings = [];
-      links.forEach((link) => {
-        const href = link.getAttribute("href");
-        if (!href || !href.startsWith("#")) return;
-        const heading = document.getElementById(href.slice(1));
-        if (heading) {
-          headings.push({ id: heading.id, element: heading });
-        }
-      });
-      return headings;
-    }
-
-    function updateActiveState(
-      links,
-      headings,
-      offsets,
-      offset,
-      activeIndexRef
-    ) {
-      const newIndex = findActiveIndex(window.scrollY, offsets, offset);
-      if (newIndex === activeIndexRef.current) return;
-      activeIndexRef.current = newIndex;
-
-      const activeId = headings[newIndex].id;
-
-      links.forEach((link) => {
-        link.dataset.isActive = String(
-          link.getAttribute("href") === "#" + activeId
-        );
-      });
-
-      root._tocActiveId = activeId;
-      root.dispatchEvent(
-        new CustomEvent("toc:active", { detail: { activeId } })
-      );
-    }
-
-    function initScrollSpy(links, offset = 120) {
-      if (links.length === 0) return;
-
-      const headings = collectHeadings(links);
-
-      root._tocHeadings = headings;
-      root.dispatchEvent(
-        new CustomEvent("toc:headings", { detail: { headings } })
-      );
-      if (headings.length === 0) return;
-
-      let offsets = [];
-      const activeIndex = { current: -1 };
-
-      function measure() {
-        offsets = headings.map((heading) => heading.element.offsetTop);
-        updateActiveState(links, headings, offsets, offset, activeIndex);
-      }
-
-      function onScroll() {
-        updateActiveState(links, headings, offsets, offset, activeIndex);
-      }
-
-      let ticking = false;
-      window.addEventListener(
-        "scroll",
-        () => {
-          if (!ticking) {
-            window.requestAnimationFrame(() => {
-              onScroll();
-              ticking = false;
-            });
-            ticking = true;
-          }
-        },
-        { signal }
-      );
-
-      window.addEventListener("resize", measure, { signal });
-      window.addEventListener("orientationchange", measure, { signal });
-
-      measure();
-    }
-
-    initScrollSpy(tocLinks);
+      const tocLinks = tocNav.querySelectorAll('.toc-item a[href^="#"]');
+      initScrollSpy(tocLinks, root, signal);
+    });
   });
 </script>
 

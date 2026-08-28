@@ -1,5 +1,5 @@
 ---
-import type { Document } from "../../../document/model/types";
+import type { Document } from "../../../../document/model/types";
 import EditorToolbar from "../EditorToolbar.astro";
 import EditorStatus from "../EditorStatus.astro";
 
@@ -25,7 +25,7 @@ const initialContent = document.rawFrontmatter + document.content;
 </div>
 
 <script>
-  import type { Document } from "../../../document/model/types";
+  import type { Document } from "../../../../document/model/types";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
