@@ -4,9 +4,7 @@ interface Props {
 }
 
 const { baseId } = Astro.props;
-console.log({ baseId });
 const basePath = baseId === "index" ? "" : `${baseId}/`;
-console.log({ basePath });
 ---
 
 <div class="new-document-form" data-base-path={basePath}>
@@ -210,7 +208,7 @@ console.log({ basePath });
 
     if (type === "directory") {
       const id = `${prefix}${name}/index`;
-      const document = await createDocument({ id, ...metadata });
+      const document = await createDocument({ id, ...metadata, index: true });
       return document.id;
     }
 
