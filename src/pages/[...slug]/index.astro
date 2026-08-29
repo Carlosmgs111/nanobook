@@ -22,7 +22,15 @@ const {
   childEntries,
 } = rendered;
 
-const editHref = document.metadata.index ? undefined : `/${document.slug}/edit`;
+const editHref = document.slug
+  ? `/${document.slug}/edit`
+  : `${Astro.request.url}edit`;
+
+const newHref = document.metadata.index
+  ? document.id === "index"
+    ? `${Astro.request.url}new`
+    : `/${document.id}/new`
+  : "/new";
 const canonicalHref = document.proxyTargetId
   ? document.proxyTargetId === "index"
     ? "/"
@@ -43,6 +51,7 @@ Astro.response.headers.set(
   parentEntry={parentEntry}
   headings={headings}
   editHref={editHref}
+  newHref={newHref}
   canonicalHref={canonicalHref}
 >
   <DocumentPage

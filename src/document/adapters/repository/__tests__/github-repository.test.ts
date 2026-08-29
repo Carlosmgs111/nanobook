@@ -169,7 +169,7 @@ describe("GitHubRepository", () => {
       repo: "test-repo",
     });
 
-    await repository.save(createSampleDocument());
+    await repository.update(createSampleDocument());
 
     const putCall = fetchMock.mock.calls.find((call) => {
       const init = call[1] as RequestInit | undefined;
@@ -187,7 +187,7 @@ describe("GitHubRepository", () => {
     );
   });
 
-  it("crea un documento nuevo en GitHub cuando no existe", async () => {
+  it("crea un documento nuevo en GitHub", async () => {
     const fetchMock = vi.fn(async (url, init) => {
       if (urlMatchesPath(url, "/contents/blog%2Fpost.md")) {
         if (init?.method === "PUT") {
@@ -205,7 +205,7 @@ describe("GitHubRepository", () => {
       repo: "test-repo",
     });
 
-    await repository.save(createSampleDocument());
+    await repository.create(createSampleDocument());
 
     const putCall = fetchMock.mock.calls.find((call) => {
       const init = call[1] as RequestInit | undefined;
@@ -217,12 +217,47 @@ describe("GitHubRepository", () => {
     const body = JSON.parse(putInit.body as string);
     expect(body.sha).toBeUndefined();
     expect(body.branch).toBe("main");
+    expect(body.message).toBe("Create blog/post.md");
     expect(Buffer.from(body.content, "base64").toString("utf-8")).toBe(
       SAMPLE_MARKDOWN,
     );
   });
 
-  it("usa el path base configurado al guardar", async () => {
+  it("rechaza create cuando el documento ya existe", async () => {
+    const fetchMock = vi.fn(async (url) => {
+      if (urlMatchesPath(url, "/contents/blog%2Fpost.md")) {
+        return createMockResponse({ sha: "existing-sha" });
+      }
+      return createMockResponse({}, false);
+    });
+    globalThis.fetch = fetchMock;
+
+    const repository = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+    });
+
+    await expect(repository.create(createSampleDocument())).rejects.toThrow();
+  });
+
+  it("rechaza update cuando el documento no existe", async () => {
+    const fetchMock = vi.fn(async (url) => {
+      if (urlMatchesPath(url, "/contents/blog%2Fpost.md")) {
+        return createMockResponse({ message: "Not Found" }, false);
+      }
+      return createMockResponse({}, false);
+    });
+    globalThis.fetch = fetchMock;
+
+    const repository = new GitHubRepository({
+      owner: "test-owner",
+      repo: "test-repo",
+    });
+
+    await expect(repository.update(createSampleDocument())).rejects.toThrow();
+  });
+
+  it("usa el path base configurado al actualizar", async () => {
     const fetchMock = vi.fn(async (url, init) => {
       if (urlMatchesPath(url, "/contents/docs%2Fblog%2Fpost.md")) {
         if (init?.method === "PUT") {
@@ -241,7 +276,7 @@ describe("GitHubRepository", () => {
       path: "docs",
     });
 
-    await repository.save(createSampleDocument());
+    await repository.update(createSampleDocument());
 
     const putCall = fetchMock.mock.calls.find((call) => {
       const init = call[1] as RequestInit | undefined;
@@ -282,9 +317,9 @@ describe("GitHubRepository", () => {
     });
 
     await repository.list();
-    await repository.save(createSampleDocument());
+    await repository.update(createSampleDocument());
 
-    // Después de guardar, el cache debe estar invalidado.
+    // Después de actualizar, el cache debe estar invalidado.
     const fetchCallsBeforeReList = (globalThis.fetch as any).mock.calls.length;
     await repository.list();
     expect((globalThis.fetch as any).mock.calls.length).toBeGreaterThan(

@@ -1,0 +1,43 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import NewPage from "../../edition/ui/pages/NewPage.astro";
+import { createContentRepository } from "../../document/adapters/repository/factory";
+import { createNavigationService } from "../../navigation/service/service";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const baseId = slug || "index";
+const repository = await createContentRepository();
+const baseEntry = await repository.get(baseId);
+
+if (!baseEntry) {
+  return new Response("Document not found", { status: 404 });
+}
+
+const allDocuments = await repository.list();
+const navigation = createNavigationService(allDocuments);
+const breadcrumbs = navigation.getBreadcrumbs(baseEntry.id);
+const sidebarEntries = navigation.getSidebarEntries(baseEntry.id);
+const parentEntry = navigation.getParentEntry(baseEntry.id);
+---
+
+<Layout
+  title={`Nuevo documento en ${baseEntry.title}`}
+  description="Crear un nuevo documento"
+  breadcrumbs={breadcrumbs}
+  sidebarEntries={sidebarEntries}
+  parentEntry={parentEntry}
+  hideToc={true}
+>
+  <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+    <span class="tech-label mb-3 block">Nuevo documento</span>
+    <h1
+      class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
+    >
+      Crear documento
+    </h1>
+  </div>
+
+  <NewPage baseId={baseEntry.id} />
+</Layout>

@@ -1,4 +1,8 @@
 import type { ContentRepository, Document } from "../../model/types";
+import {
+  DocumentAlreadyExistsError,
+  DocumentNotFoundError,
+} from "../../model/errors";
 
 /**
  * Implementación en memoria de ContentRepository.
@@ -27,7 +31,17 @@ export class MemoryRepository implements ContentRepository {
     );
   }
 
-  async save(document: Document): Promise<void> {
+  async create(document: Document): Promise<void> {
+    if (this.documents.has(document.id)) {
+      throw new DocumentAlreadyExistsError(document.id);
+    }
+    this.documents.set(document.id, document);
+  }
+
+  async update(document: Document): Promise<void> {
+    if (!this.documents.has(document.id)) {
+      throw new DocumentNotFoundError(document.id);
+    }
     this.documents.set(document.id, document);
   }
 }

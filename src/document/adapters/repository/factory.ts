@@ -1,8 +1,14 @@
 import { FileSystemRepository } from "./file-system-repository";
 import { GitHubRepository } from "./github-repository";
+import { MemoryRepository } from "./memory-repository";
 import type { ContentRepository } from "../../model/types";
 
-export type RepositorySource = "filesystem" | "github";
+export type RepositorySource = "filesystem" | "github" | "memory";
+
+export interface CreateContentRepositoryOptions {
+  source?: RepositorySource;
+  initialDocuments?: import("../../model/types").Document[];
+}
 
 /**
  * Crea una implementación de ContentRepository según la fuente configurada.
@@ -12,20 +18,27 @@ export type RepositorySource = "filesystem" | "github";
  * - `github`: usa GitHubRepository, que lee Markdown desde un repo remoto.
  *   Requiere GITHUB_OWNER, GITHUB_REPO y opcionalmente GITHUB_BRANCH,
  *   GITHUB_TOKEN y GITHUB_PATH.
+ * - `memory`: usa MemoryRepository. Pensado para tests y desarrollo rápido.
  *
  * La fuente se lee de la variable de entorno CONTENT_SOURCE. Si no está
  * definida, se usa `filesystem`.
  */
+
 export async function createContentRepository(
-  source: RepositorySource = getConfiguredSource(),
+  sourceOrOptions: RepositorySource | CreateContentRepositoryOptions = getConfiguredSource(),
 ): Promise<ContentRepository> {
-  switch (source) {
+  const options: CreateContentRepositoryOptions =
+    typeof sourceOrOptions === "string" ? { source: sourceOrOptions } : sourceOrOptions;
+
+  switch (options.source ?? getConfiguredSource()) {
     case "filesystem":
       return new FileSystemRepository();
     case "github":
       return createGitHubRepository();
+    case "memory":
+      return new MemoryRepository(options.initialDocuments);
     default:
-      throw new Error(`Unsupported content source: ${source}`);
+      throw new Error(`Unsupported content source: ${options.source}`);
   }
 }
 

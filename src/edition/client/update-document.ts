@@ -1,8 +1,8 @@
 import type { Document } from "../../document/model/types";
 
-export async function saveDocument(
+export async function updateDocument(
   documentId: string,
-  document: Document
+  document: Document,
 ): Promise<void> {
   const response = await fetch("/api/" + documentId, {
     method: "PATCH",
@@ -12,6 +12,6 @@ export async function saveDocument(
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || "Error al guardar");
+    throw new Error(payload.error || "Error al actualizar");
   }
 }

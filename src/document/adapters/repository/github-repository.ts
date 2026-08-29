@@ -7,6 +7,10 @@ import {
 import { createParsedEntry } from "../github-loader/parser";
 import { filterContentFiles } from "../github-loader";
 import type { ContentRepository, Document } from "../../model/types";
+import {
+  DocumentAlreadyExistsError,
+  DocumentNotFoundError,
+} from "../../model/errors";
 import { buildDocument } from "./document-builder";
 import { resolveProxies } from "../../parse/proxy";
 import { withRedisClient } from "../../../shared/utils/redis";
@@ -163,40 +167,74 @@ export class GitHubRepository implements ContentRepository {
     return documents.filter((document) => document.parentId === parentId);
   }
 
-  private idToGitHubPath(id: string): string {
+  private idToGitHubPath(id: string, isIndex: boolean): string {
     const base = this.path ? `${this.path}/` : "";
-    const filePath = id === "index" ? `${base}index.md` : `${base}${id}.md`;
+    if (id === "index") {
+      return `${base}index.md`.replace(/^\/+/, "");
+    }
+    const filePath = isIndex
+      ? `${base}${id}/index.md`
+      : `${base}${id}.md`;
     return filePath.replace(/^\/+/, "");
   }
 
-  async save(document: Document): Promise<void> {
-    const path = this.idToGitHubPath(document.id);
-    try {
-      const { owner, repo, token } = this.options;
+  async create(document: Document): Promise<void> {
+    const path = this.idToGitHubPath(document.id, document.metadata.index);
+    const { owner, repo, token } = this.options;
 
-      const sha = await fetchFileSha({
-        owner,
-        repo,
-        branch: this.branch,
-        token,
-        path,
-      });
+    const sha = await fetchFileSha({
+      owner,
+      repo,
+      branch: this.branch,
+      token,
+      path,
+    });
 
-      await updateFileContent({
-        owner,
-        repo,
-        branch: this.branch,
-        token,
-        path,
-        content: document.rawFrontmatter + document.content,
-        sha: sha ?? undefined,
-        message: `Update ${path}`,
-      });
-
-      this.clearCache();
-    } catch (error) {
-      console.error(`Error al guardar el documento ${path}:`, error);
+    if (sha) {
+      throw new DocumentAlreadyExistsError(document.id);
     }
+
+    await updateFileContent({
+      owner,
+      repo,
+      branch: this.branch,
+      token,
+      path,
+      content: document.rawFrontmatter + document.content,
+      message: `Create ${path}`,
+    });
+
+    this.clearCache();
+  }
+
+  async update(document: Document): Promise<void> {
+    const path = this.idToGitHubPath(document.id, document.metadata.index);
+    const { owner, repo, token } = this.options;
+
+    const sha = await fetchFileSha({
+      owner,
+      repo,
+      branch: this.branch,
+      token,
+      path,
+    });
+
+    if (!sha) {
+      throw new DocumentNotFoundError(document.id);
+    }
+
+    await updateFileContent({
+      owner,
+      repo,
+      branch: this.branch,
+      token,
+      path,
+      content: document.rawFrontmatter + document.content,
+      sha,
+      message: `Update ${path}`,
+    });
+
+    this.clearCache();
   }
 
   /** Invalida el cache de documentos de esta instancia. */

@@ -16,8 +16,8 @@ const documentId = slug || "index";
     getRenderedDocument,
     getRenderedDocumentSource,
     clearRenderedDocument,
-  } from "../client/render-service";
-  import { clearStagedDocument } from "../client/stage-document";
+  } from "../../client/render-service";
+  import { clearStagedDocument } from "../../client/stage-document";
 
   const channel = new BroadcastChannel("rendered-document");
 

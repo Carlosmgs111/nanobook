@@ -5,11 +5,22 @@ import ContentWidthToggle from "./ContentWidthToggle.astro";
 interface Props {
   editHref?: string;
   viewHref?: string;
+  newHref?: string;
 }
 
-const { editHref, viewHref } = Astro.props;
+const { editHref, viewHref, newHref } = Astro.props;
 ---
 
+{
+  newHref && (
+    <a
+      href={newHref}
+      class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+    >
+      Nuevo
+    </a>
+  )
+}
 {
   editHref && (
     <a

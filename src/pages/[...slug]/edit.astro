@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import EditPage from "../../edition/ui/EditPage.astro";
+import EditPage from "../../edition/ui/pages/EditPage.astro";
 import { createContentRepository } from "../../document/adapters/repository/factory";
 import { createNavigationService } from "../../navigation/service/service";
 
@@ -8,12 +8,11 @@ export const prerender = false;
 
 const { slug } = Astro.params;
 const documentId = slug || "index";
-
 const repository = await createContentRepository();
 const entry = await repository.get(documentId);
 
-if (!entry || entry.metadata.index) {
-  return new Response("Document not found", { status: 404 });
+if (!entry) {
+  return new Response("Document not found!", { status: 404 });
 }
 
 const allDocuments = await repository.list();
@@ -23,6 +22,7 @@ const sidebarEntries = navigation.getSidebarEntries(entry.id);
 const parentEntry = navigation.getParentEntry(entry.id);
 const viewHref = `/${entry.id}`;
 const previewHref = `/${entry.id}/preview`;
+const newHref = entry.metadata.index ? `/${entry.id}/new` : "/new";
 ---
 
 <Layout
@@ -33,6 +33,7 @@ const previewHref = `/${entry.id}/preview`;
   parentEntry={parentEntry}
   hideToc={true}
   viewHref={viewHref}
+  newHref={newHref}
 >
   <EditPage entry={entry} previewHref={previewHref} />
 </Layout>

@@ -79,5 +79,6 @@ export interface ContentRepository {
   list(): Promise<Document[]>;
   get(id: string): Promise<Document | null>;
   listChildren(parentId: string | null): Promise<Document[]>;
-  save(document: Document): Promise<void>;
+  create(document: Document): Promise<void>;
+  update(document: Document): Promise<void>;
 }

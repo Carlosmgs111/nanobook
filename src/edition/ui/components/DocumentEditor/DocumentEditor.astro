@@ -39,7 +39,7 @@ const initialContent = document.rawFrontmatter + document.content;
     clearStagedDocument,
   } from "../../../client/stage-document";
   import { buildDocumentFromContent } from "../../../client/parse-staged-document";
-  import { saveDocument } from "../../../client/save-document";
+  import { updateDocument } from "../../../client/update-document";
 
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
@@ -115,7 +115,7 @@ const initialContent = document.rawFrontmatter + document.content;
           JSON.parse(wrapper.dataset.document!) as Document,
           editor!.getContent()
         );
-        await saveDocument(documentId, document);
+        await updateDocument(documentId, document);
         showStatus("Guardado correctamente");
       } catch (error) {
         console.error(error);

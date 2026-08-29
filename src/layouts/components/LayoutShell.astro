@@ -30,6 +30,7 @@ interface Props {
   hideToc?: boolean;
   editHref?: string;
   viewHref?: string;
+  newHref?: string;
 }
 
 const {
@@ -41,6 +42,7 @@ const {
   hideToc = false,
   editHref,
   viewHref,
+  newHref,
 } = Astro.props;
 ---
 
@@ -62,6 +64,7 @@ const {
     breadcrumbs={breadcrumbs}
     editHref={editHref}
     viewHref={viewHref}
+    newHref={newHref}
   />
   <div
     id="content-wrapper"

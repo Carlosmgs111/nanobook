@@ -1,1 +1,1 @@
-export { prerender, PATCH } from "../../document/api/document.ts";
+export { prerender, PATCH, POST } from "../../document/api/document.ts";

@@ -1,0 +1,221 @@
+---
+interface Props {
+  baseId: string;
+}
+
+const { baseId } = Astro.props;
+console.log({ baseId });
+const basePath = baseId === "index" ? "" : `${baseId}/`;
+console.log({ basePath });
+---
+
+<div class="new-document-form" data-base-path={basePath}>
+  <form class="space-y-6" data-new-document-form>
+    <div class="space-y-2">
+      <label class="block text-sm font-medium" for="new-doc-type">Tipo</label>
+      <select
+        id="new-doc-type"
+        name="type"
+        class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+        data-type-select
+      >
+        <option value="document" selected>Documento</option>
+        <option value="directory">Directorio</option>
+      </select>
+      <p class="text-xs text-[var(--text-muted)]" data-type-help>
+        Crea un archivo Markdown directamente bajo la ruta actual.
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-sm font-medium" for="new-doc-name">Nombre</label>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-[var(--text-muted)] whitespace-nowrap"
+          >/{basePath}</span
+        >
+        <input
+          id="new-doc-name"
+          name="name"
+          type="text"
+          required
+          placeholder="nuevo-elemento"
+          pattern="[\p{L}\p{N}_-]+"
+          class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+          data-name-input
+        />
+      </div>
+      <p class="text-xs text-[var(--text-muted)]">
+        Solo letras, números, guiones y guiones bajos. Sin barras ni espacios.
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-sm font-medium" for="new-doc-title">Título</label
+      >
+      <input
+        id="new-doc-title"
+        name="title"
+        type="text"
+        required
+        class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+      />
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-sm font-medium" for="new-doc-description"
+        >Descripción</label
+      >
+      <input
+        id="new-doc-description"
+        name="description"
+        type="text"
+        required
+        class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+      />
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-sm font-medium" for="new-doc-position"
+        >Posición</label
+      >
+      <input
+        id="new-doc-position"
+        name="position"
+        type="number"
+        class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+        value="0"
+      />
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input id="new-doc-draft" name="draft" type="checkbox" class="h-4 w-4" />
+      <label class="text-sm" for="new-doc-draft">Borrador</label>
+    </div>
+
+    <div data-error class="text-sm text-red-500 hidden"></div>
+
+    <div class="flex gap-3">
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--text)] px-4 py-2 text-sm font-medium text-[var(--bg)] hover:opacity-90"
+      >
+        Crear y editar
+      </button>
+      <a
+        href={baseId === "index" ? "/" : `/${baseId}/`}
+        class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-4 py-2 text-sm font-medium hover:bg-[var(--grid-line)]"
+      >
+        Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+  import { createDocument } from "../../client/create-document";
+
+  const TYPE_HELP: Record<string, string> = {
+    document: "Crea un archivo Markdown directamente bajo la ruta actual.",
+    directory:
+      "Crea un directorio con un archivo index.md que actúa como índice.",
+  };
+
+  function initForm() {
+    const form = document.querySelector<HTMLFormElement>(
+      "[data-new-document-form]"
+    );
+    if (!form) return;
+
+    const wrapper = form.closest<HTMLElement>("[data-base-path]");
+    const typeSelect =
+      form.querySelector<HTMLSelectElement>("[data-type-select]");
+    const helpText = form.querySelector<HTMLElement>("[data-type-help]");
+    const errorContainer = form.querySelector<HTMLElement>("[data-error]");
+    const basePath = wrapper?.dataset.basePath ?? "";
+
+    typeSelect?.addEventListener("change", () => {
+      if (helpText && typeSelect) {
+        helpText.textContent = TYPE_HELP[typeSelect.value] ?? "";
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!errorContainer) return;
+      errorContainer.classList.add("hidden");
+
+      const formData = new FormData(form);
+      const type = String(formData.get("type") ?? "document");
+      const name = String(formData.get("name") ?? "").trim();
+      const title = String(formData.get("title") ?? "").trim();
+      const description = String(formData.get("description") ?? "").trim();
+      const position = Number(formData.get("position") ?? 0);
+      const draft = formData.get("draft") === "on";
+
+      if (!isValidName(name)) {
+        errorContainer.textContent =
+          "El nombre solo puede contener letras, números, guiones y guiones bajos.";
+        errorContainer.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const redirectId = await createFromType(
+          type,
+          name,
+          {
+            title,
+            description,
+            position,
+            draft,
+          },
+          basePath
+        );
+
+        window.location.href =
+          redirectId === "index" ? "/edit" : `/${redirectId}/edit`;
+      } catch (error) {
+        errorContainer.textContent =
+          error instanceof Error
+            ? error.message
+            : "Error al crear el documento";
+        errorContainer.classList.remove("hidden");
+      }
+    });
+  }
+
+  function isValidName(name: string): boolean {
+    return /^[\p{L}\p{N}_-]+$/u.test(name);
+  }
+
+  async function createFromType(
+    type: string,
+    name: string,
+    metadata: {
+      title: string;
+      description: string;
+      position: number;
+      draft: boolean;
+    },
+    basePath: string
+  ): Promise<string> {
+    const base = basePath ? `${basePath.replace(/\/$/, "")}` : "";
+    const prefix = base ? `${base}/` : "";
+
+    if (type === "document") {
+      const id = `${prefix}${name}`;
+      const document = await createDocument({ id, ...metadata });
+      return document.id;
+    }
+
+    if (type === "directory") {
+      const id = `${prefix}${name}/index`;
+      const document = await createDocument({ id, ...metadata });
+      return document.id;
+    }
+
+    throw new Error(`Tipo desconocido: ${type}`);
+  }
+
+  document.addEventListener("astro:page-load", initForm);
+</script>

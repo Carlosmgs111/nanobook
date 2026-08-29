@@ -1,9 +1,19 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
+import {
+  access,
+  mkdir,
+  readdir,
+  readFile,
+  writeFile,
+} from "node:fs/promises";
+import { dirname, join, relative, resolve } from "node:path";
 import { parseFrontmatter } from "../../parse/frontmatter";
 import { idToFilePath } from "../../parse/path";
 import { resolveProxies } from "../../parse/proxy";
 import type { ContentRepository, Document } from "../../model/types";
+import {
+  DocumentAlreadyExistsError,
+  DocumentNotFoundError,
+} from "../../model/errors";
 import { buildDocument } from "./document-builder";
 
 const CONTENT_DIR = "./src/content";
@@ -51,7 +61,7 @@ export class FileSystemRepository implements ContentRepository {
   constructor(private contentDir: string = CONTENT_DIR) {}
 
   async list(): Promise<Document[]> {
-    const contentRoot = join(process.cwd(), this.contentDir);
+    const contentRoot = resolve(this.contentDir);
     const files = await scanMarkdownFiles(contentRoot);
     const documents: Document[] = [];
 
@@ -62,7 +72,7 @@ export class FileSystemRepository implements ContentRepository {
 
       documents.push(buildDocument(id, data, body, raw));
     }
-
+    
     return resolveProxies(documents);
   }
 
@@ -76,13 +86,46 @@ export class FileSystemRepository implements ContentRepository {
     return documents.filter((document) => document.parentId === parentId);
   }
 
-  async save(document: Document): Promise<void> {
-    const filePath = idToFilePath(document.id, this.contentDir);
+  async create(document: Document): Promise<void> {
+    const filePath = idToFilePath(
+      document.id,
+      document.metadata.index,
+      this.contentDir,
+    );
+    if (await fileExists(filePath)) {
+      throw new DocumentAlreadyExistsError(document.id);
+    }
     await mkdir(dirname(filePath), { recursive: true });
     await writeFile(
       filePath,
       document.rawFrontmatter + document.content,
       "utf-8",
     );
+  }
+
+  async update(document: Document): Promise<void> {
+    const filePath = idToFilePath(
+      document.id,
+      document.metadata.index,
+      this.contentDir,
+    );
+    if (!(await fileExists(filePath))) {
+      throw new DocumentNotFoundError(document.id);
+    }
+    await mkdir(dirname(filePath), { recursive: true });
+    await writeFile(
+      filePath,
+      document.rawFrontmatter + document.content,
+      "utf-8",
+    );
+  }
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
   }
 }

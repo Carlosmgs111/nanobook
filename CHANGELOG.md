@@ -7,9 +7,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+- `ContentRepository` ahora expone `create(document)` y `update(document)` en lugar del ambiguo `save(document)`.
+- Errores de dominio para operaciones de escritura: `DocumentAlreadyExistsError`, `DocumentNotFoundError`, `InvalidDocumentIdError` y `ParentNotFoundError` en `src/document/model/errors.ts`.
+- `FileSystemRepository.create()` y `GitHubRepository.create()` para crear documentos nuevos con validación de duplicados.
+- `FileSystemRepository.update()` y `GitHubRepository.update()` para actualizar documentos existentes; devuelven error si el documento no existe.
+- `POST /api/documents` para crear documentos con validación de ids, padres y conflictos.
+- `PATCH /api/[...slug]` ahora actualiza documentos existentes y devuelve 404 cuando no existen.
+- `buildNewDocument()` en `src/document/adapters/repository/document-builder.ts` para construir documentos nuevos con frontmatter por defecto e inferencia de `index` desde el `id`.
+- `isIndexId()` y `validateDocumentId()` en `src/document/parse/path.ts`.
+- UI de creación de documentos: formulario `NewDocumentForm.astro` y página `/{slug}/new` con redirección al editor tras crear.
+- Botón "Nuevo" en el header para crear documentos desde cualquier página.
+- `MemoryRepository` como fuente `memory` en `createContentRepository()` para facilitar tests.
+
 ### Fixed
 - `TocNav` ya no usa `define:vars` ni importa `/src/shared/utils/scroll-spy` con ruta absoluta en el cliente. En producción Astro no expone `src/` al navegador, lo que provocaba el error `GET https://nanobook-five.vercel.app/src/shared/utils/scroll-spy` 404. Ahora se leen los IDs desde atributos `data-*` y el helper se importa con ruta relativa dentro de un `<script type="module">` procesado por Vite.
-- `GitHubRepository.save()` ahora funciona a través de la GitHub Contents API en lugar de lanzar un error. Soporta tanto la creación de nuevos documentos como la actualización de documentos existentes, invalida el cache de documentos tras guardar y respeta el `path` base configurado.
 
 ### Changed
 - `scripts/push-content-to-github.mjs` ahora migra **todos** los archivos dentro de `src/content/` (no solo `.md`) y crea el tree de GitHub sin `base_tree`, de modo que el repositorio remoto sea un reflejo exacto del contenido local: todo archivo local se sube y cualquier archivo remoto que no exista localmente se elimina.
