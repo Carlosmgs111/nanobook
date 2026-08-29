@@ -88,7 +88,7 @@ describe("path utilities", () => {
 
     it("devuelve el prefijo para documentos anidados", () => {
       expect(getParentId("blog/post")).toBe("blog");
-      expect(getParentId("blog/posts/index")).toBe("blog/posts");
+      expect(getParentId("blog/posts/index")).toBe("blog");
     });
   });
 });

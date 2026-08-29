@@ -23,6 +23,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Fixed
 - `TocNav` ya no usa `define:vars` ni importa `/src/shared/utils/scroll-spy` con ruta absoluta en el cliente. En producción Astro no expone `src/` al navegador, lo que provocaba el error `GET https://nanobook-five.vercel.app/src/shared/utils/scroll-spy` 404. Ahora se leen los IDs desde atributos `data-*` y el helper se importa con ruta relativa dentro de un `<script type="module">` procesado por Vite.
 - Corregida la creación de directorios en `NewPage.astro`: al seleccionar "Directorio" se usaba siempre el id `index` en lugar de `{ruta}/index`, lo que sobreescribía el índice raíz. Ahora se construye el id `{base}/{nombre}/index` y se marca `index: true`.
+- Corregida la normalización de ids en `POST /api/documents`: la API normalizaba el id antes de `buildNewDocument`, lo que provocaba "Inconsistencia de índice" al crear directorios. Ahora se pasa el id original al builder y `getParentId()` normaliza antes de calcular el padre.
 
 ### Changed
 - `scripts/push-content-to-github.mjs` ahora migra **todos** los archivos dentro de `src/content/` (no solo `.md`) y crea el tree de GitHub sin `base_tree`, de modo que el repositorio remoto sea un reflejo exacto del contenido local: todo archivo local se sube y cualquier archivo remoto que no exista localmente se elimina.

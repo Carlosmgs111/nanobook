@@ -101,8 +101,9 @@ export function filePathToId(
 }
 
 export function getParentId(id: string): string | null {
-  if (id === "index") return null;
-  const lastSlash = id.lastIndexOf("/");
-  const parentId = lastSlash === -1 ? "index" : id.slice(0, lastSlash);
+  const normalizedId = normalizeDocumentId(id);
+  if (normalizedId === "index") return null;
+  const lastSlash = normalizedId.lastIndexOf("/");
+  const parentId = lastSlash === -1 ? "index" : normalizedId.slice(0, lastSlash);
   return parentId;
 }

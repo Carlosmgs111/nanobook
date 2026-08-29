@@ -30,6 +30,33 @@ describe("document API handlers", () => {
       expect(document.id).toBe("blog/post");
     });
 
+    it("crea un directorio nuevo con su índice y devuelve 201", async () => {
+      const repository = new MemoryRepository([
+        buildNewDocument("index", {
+          title: "Inicio",
+          description: "Raíz",
+        }),
+      ]);
+      const handler = createPostHandler(repository);
+
+      const response = await handler({
+        request: new Request("http://localhost/api/documents", {
+          method: "POST",
+          body: JSON.stringify({
+            id: "nuevo-dir/index",
+            title: "Nuevo directorio",
+            description: "Descripción",
+            index: true,
+          }),
+        }),
+      } as any);
+
+      expect(response.status).toBe(201);
+      const document = await response.json();
+      expect(document.id).toBe("nuevo-dir");
+      expect(document.metadata.index).toBe(true);
+    });
+
     it("rechaza ids inválidos con 400", async () => {
       const repository = new MemoryRepository();
       const handler = createPostHandler(repository);

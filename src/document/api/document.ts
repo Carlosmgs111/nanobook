@@ -66,29 +66,25 @@ export function createPostHandler(
     try {
       const rawPayload = (await request.json()) as CreateDocumentPayload;
       const isIndex = isIndexId(rawPayload.id);
-      const payload: CreateDocumentPayload = {
-        ...rawPayload,
-        id: normalizeDocumentId(rawPayload.id),
-        index: rawPayload.index ?? isIndex,
-      };
 
-      validateDocumentId(payload.id);
+      validateDocumentId(rawPayload.id);
 
-      if (isIndex && payload.index === false) {
+      if (isIndex && rawPayload.index === false) {
         return jsonResponse(
           {
-            error: `El id "${payload.id}" es de índice, no se puede forzar index: false`,
+            error: `El id "${rawPayload.id}" es de índice, no se puede forzar index: false`,
           },
           400,
         );
       }
 
-      const existing = await repository.get(payload.id);
+      const normalizedId = normalizeDocumentId(rawPayload.id);
+      const existing = await repository.get(normalizedId);
       if (existing) {
-        throw new DocumentAlreadyExistsError(payload.id);
+        throw new DocumentAlreadyExistsError(normalizedId);
       }
 
-      const parentId = getParentId(payload.id);
+      const parentId = getParentId(rawPayload.id);
       if (parentId !== null) {
         const parent = await repository.get(parentId);
         if (!parent) {
@@ -102,15 +98,15 @@ export function createPostHandler(
         }
       }
 
-      const document = buildNewDocument(payload.id, {
-        title: payload.title,
-        description: payload.description,
-        author: payload.author,
-        date: payload.date ? new Date(payload.date) : undefined,
-        index: payload.index,
-        position: payload.position,
-        draft: payload.draft,
-        tags: payload.tags,
+      const document = buildNewDocument(rawPayload.id, {
+        title: rawPayload.title,
+        description: rawPayload.description,
+        author: rawPayload.author,
+        date: rawPayload.date ? new Date(rawPayload.date) : undefined,
+        index: rawPayload.index,
+        position: rawPayload.position,
+        draft: rawPayload.draft,
+        tags: rawPayload.tags,
       });
 
       await repository.create(document);
