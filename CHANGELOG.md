@@ -14,7 +14,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `FileSystemRepository.update()` y `GitHubRepository.update()` para actualizar documentos existentes; devuelven error si el documento no existe.
 - `POST /api/documents` para crear documentos con validación de ids, padres y conflictos.
 - `PATCH /api/[...slug]` ahora actualiza documentos existentes y devuelve 404 cuando no existen.
-- `buildNewDocument()` en `src/document/adapters/repository/document-builder.ts` para construir documentos nuevos con frontmatter por defecto e inferencia de `index` desde el `id`.
+- `buildNewDocument()` en `src/document/adapters/utils/document-builder.ts` para construir documentos nuevos con frontmatter por defecto e inferencia de `index` desde el `id`.
+- `Result<T, E>` con helpers `ok()` y `err()` en `src/shared/utils/result.ts`.
+- `DocumentService` en `src/document/service/document-service.ts` para encapsular la lógica de negocio de creación y actualización de documentos.
 - `isIndexId()` y `validateDocumentId()` en `src/document/parse/path.ts`.
 - UI de creación de documentos: formulario `NewDocumentForm.astro` y página `/{slug}/new` con redirección al editor tras crear.
 - Botón "Nuevo" en el header para crear documentos desde cualquier página.
@@ -27,6 +29,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 - `scripts/push-content-to-github.mjs` ahora migra **todos** los archivos dentro de `src/content/` (no solo `.md`) y crea el tree de GitHub sin `base_tree`, de modo que el repositorio remoto sea un reflejo exacto del contenido local: todo archivo local se sube y cualquier archivo remoto que no exista localmente se elimina.
+- Los handlers de `src/document/api/document.ts` ya no contienen lógica de negocio; ahora reciben `DocumentService` por inyección y solo adaptan el patrón `Result` a respuestas HTTP.
+- `src/pages/api/[...slug].ts` compone e inyecta `DocumentService` (con repositorio y cache) a nivel de módulo, eliminando el uso de factories dentro de los controladores.
+- `document-builder.ts` se movió de `src/document/adapters/repository/` a `src/document/adapters/utils/` para separar utilidades puras de construcción de documentos de las implementaciones de repositorio.
 
 ## [0.4.2] - 2026-08-26
 

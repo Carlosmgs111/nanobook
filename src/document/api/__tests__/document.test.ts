@@ -1,18 +1,23 @@
 import { describe, it, expect } from "vitest";
 import { createPatchHandler, createPostHandler } from "../document";
 import { MemoryRepository } from "../../adapters/repository/memory-repository";
-import { buildNewDocument } from "../../adapters/repository/document-builder";
+import { buildNewDocument } from "../../adapters/utils/document-builder";
+import { DocumentService } from "../../service/document-service";
+
+function createService(initialDocuments: import("../../model/types").Document[] = []) {
+  return new DocumentService(new MemoryRepository(initialDocuments));
+}
 
 describe("document API handlers", () => {
   describe("POST create", () => {
     it("crea un documento nuevo y devuelve 201", async () => {
-      const repository = new MemoryRepository([
+      const service = createService([
         buildNewDocument("blog/index", {
           title: "Blog",
           description: "Índice",
         }),
       ]);
-      const handler = createPostHandler(repository);
+      const handler = createPostHandler(service);
 
       const response = await handler({
         request: new Request("http://localhost/api/documents", {
@@ -31,13 +36,13 @@ describe("document API handlers", () => {
     });
 
     it("crea un directorio nuevo con su índice y devuelve 201", async () => {
-      const repository = new MemoryRepository([
+      const service = createService([
         buildNewDocument("index", {
           title: "Inicio",
           description: "Raíz",
         }),
       ]);
-      const handler = createPostHandler(repository);
+      const handler = createPostHandler(service);
 
       const response = await handler({
         request: new Request("http://localhost/api/documents", {
@@ -58,8 +63,8 @@ describe("document API handlers", () => {
     });
 
     it("rechaza ids inválidos con 400", async () => {
-      const repository = new MemoryRepository();
-      const handler = createPostHandler(repository);
+      const service = createService();
+      const handler = createPostHandler(service);
 
       const response = await handler({
         request: new Request("http://localhost/api/documents", {
@@ -76,13 +81,13 @@ describe("document API handlers", () => {
     });
 
     it("devuelve 409 si el documento ya existe", async () => {
-      const repository = new MemoryRepository([
+      const service = createService([
         buildNewDocument("blog/post", {
           title: "Post",
           description: "Desc",
         }),
       ]);
-      const handler = createPostHandler(repository);
+      const handler = createPostHandler(service);
 
       const response = await handler({
         request: new Request("http://localhost/api/documents", {
@@ -99,8 +104,8 @@ describe("document API handlers", () => {
     });
 
     it("devuelve 400 si el padre no existe", async () => {
-      const repository = new MemoryRepository();
-      const handler = createPostHandler(repository);
+      const service = createService();
+      const handler = createPostHandler(service);
 
       const response = await handler({
         request: new Request("http://localhost/api/documents", {
@@ -117,13 +122,13 @@ describe("document API handlers", () => {
     });
 
     it("devuelve 400 si el padre no es un índice", async () => {
-      const repository = new MemoryRepository([
+      const service = createService([
         buildNewDocument("blog/post", {
           title: "Post",
           description: "Desc",
         }),
       ]);
-      const handler = createPostHandler(repository);
+      const handler = createPostHandler(service);
 
       const response = await handler({
         request: new Request("http://localhost/api/documents", {
@@ -142,13 +147,13 @@ describe("document API handlers", () => {
 
   describe("PATCH update", () => {
     it("actualiza un documento existente", async () => {
-      const repository = new MemoryRepository([
+      const service = createService([
         buildNewDocument("blog/post", {
           title: "Post",
           description: "Desc",
         }),
       ]);
-      const handler = createPatchHandler(repository);
+      const handler = createPatchHandler(service);
       const updated = buildNewDocument("blog/post", {
         title: "Post actualizado",
         description: "Desc actualizada",
@@ -167,8 +172,8 @@ describe("document API handlers", () => {
     });
 
     it("devuelve 404 si el documento no existe", async () => {
-      const repository = new MemoryRepository();
-      const handler = createPatchHandler(repository);
+      const service = createService();
+      const handler = createPatchHandler(service);
       const document = buildNewDocument("blog/post", {
         title: "Post",
         description: "Desc",
@@ -186,8 +191,8 @@ describe("document API handlers", () => {
     });
 
     it("devuelve 400 si el slug no coincide con el id", async () => {
-      const repository = new MemoryRepository();
-      const handler = createPatchHandler(repository);
+      const service = createService();
+      const handler = createPatchHandler(service);
       const document = buildNewDocument("blog/post", {
         title: "Post",
         description: "Desc",

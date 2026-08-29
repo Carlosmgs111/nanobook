@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildNewDocument } from "../document-builder";
+import { buildNewDocument } from "../../utils/document-builder";
 
 describe("buildNewDocument", () => {
   it("crea un documento con valores por defecto", () => {

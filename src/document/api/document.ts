@@ -1,20 +1,12 @@
 import type { APIRoute } from "astro";
-import { createContentRepository } from "../adapters/repository/factory";
-import { buildNewDocument } from "../adapters/repository/document-builder";
-import {
-  getParentId,
-  isIndexId,
-  normalizeDocumentId,
-  validateDocumentId,
-} from "../parse/path";
-import type { ContentRepository, Document } from "../model/types";
+import type { DocumentService } from "../service/document-service";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
   InvalidDocumentIdError,
   ParentNotFoundError,
 } from "../model/errors";
-import { createRenderedPageCache } from "../../rendering/adapters/cache/factory";
+import type { Document } from "../model/types";
 
 export const prerender = false;
 
@@ -30,9 +22,7 @@ export interface CreateDocumentPayload {
   tags?: string[];
 }
 
-export function createPatchHandler(
-  repository: ContentRepository,
-): APIRoute {
+export function createPatchHandler(service: DocumentService): APIRoute {
   return async ({ params, request }) => {
     try {
       const { slug } = params;
@@ -49,106 +39,49 @@ export function createPatchHandler(
         );
       }
 
-      await repository.update(document);
-      await invalidateRenderedCache(document.id);
+      const result = await service.update(document);
+      if (!result.ok) {
+        return handleServiceError(result.error);
+      }
 
       return jsonResponse({ ok: true }, 200);
     } catch (error) {
-      return handleApiError(error);
+      console.error(error);
+      return jsonResponse({ error: "Error interno del servidor" }, 500);
     }
   };
 }
 
-export function createPostHandler(
-  repository: ContentRepository,
-): APIRoute {
+export function createPostHandler(service: DocumentService): APIRoute {
   return async ({ request }) => {
     try {
-      const rawPayload = (await request.json()) as CreateDocumentPayload;
-      const isIndex = isIndexId(rawPayload.id);
+      const payload = (await request.json()) as CreateDocumentPayload;
 
-      validateDocumentId(rawPayload.id);
-
-      if (isIndex && rawPayload.index === false) {
-        return jsonResponse(
-          {
-            error: `El id "${rawPayload.id}" es de índice, no se puede forzar index: false`,
-          },
-          400,
-        );
-      }
-
-      const normalizedId = normalizeDocumentId(rawPayload.id);
-      const existing = await repository.get(normalizedId);
-      if (existing) {
-        throw new DocumentAlreadyExistsError(normalizedId);
-      }
-
-      const parentId = getParentId(rawPayload.id);
-      if (parentId !== null) {
-        const parent = await repository.get(parentId);
-        if (!parent) {
-          throw new ParentNotFoundError(parentId);
-        }
-        if (!parent.metadata.index) {
-          return jsonResponse(
-            { error: `El padre "${parentId}" no es un índice` },
-            400,
-          );
-        }
-      }
-
-      const document = buildNewDocument(rawPayload.id, {
-        title: rawPayload.title,
-        description: rawPayload.description,
-        author: rawPayload.author,
-        date: rawPayload.date ? new Date(rawPayload.date) : undefined,
-        index: rawPayload.index,
-        position: rawPayload.position,
-        draft: rawPayload.draft,
-        tags: rawPayload.tags,
+      const result = await service.create({
+        id: payload.id,
+        title: payload.title,
+        description: payload.description,
+        author: payload.author,
+        date: payload.date ? new Date(payload.date) : undefined,
+        index: payload.index,
+        position: payload.position,
+        draft: payload.draft,
+        tags: payload.tags,
       });
 
-      await repository.create(document);
-      await invalidateRenderedCache(document.id);
-      if (parentId !== null) {
-        await invalidateRenderedCache(parentId);
+      if (!result.ok) {
+        return handleServiceError(result.error);
       }
 
-      return jsonResponse(document, 201);
+      return jsonResponse(result.value, 201);
     } catch (error) {
-      return handleApiError(error);
+      console.error(error);
+      return jsonResponse({ error: "Error interno del servidor" }, 500);
     }
   };
 }
 
-export const PATCH: APIRoute = async (context) => {
-  const repository = await createContentRepository();
-  return createPatchHandler(repository)(context);
-};
-
-export const POST: APIRoute = async (context) => {
-  const repository = await createContentRepository();
-  return createPostHandler(repository)(context);
-};
-
-async function invalidateRenderedCache(documentId: string): Promise<void> {
-  try {
-    const cache = createRenderedPageCache();
-    await cache.invalidate([documentId]);
-  } catch {
-    // El cache es opcional; no debe fallar la operación de escritura.
-  }
-}
-
-function jsonResponse(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-function handleApiError(error: unknown): Response {
+function handleServiceError(error: DocumentServiceError): Response {
   if (error instanceof InvalidDocumentIdError) {
     return jsonResponse({ error: error.message }, 400);
   }
@@ -167,4 +100,11 @@ function handleApiError(error: unknown): Response {
 
   console.error(error);
   return jsonResponse({ error: "Error interno del servidor" }, 500);
+}
+
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }

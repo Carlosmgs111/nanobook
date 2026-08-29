@@ -11,7 +11,7 @@ import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
 } from "../../model/errors";
-import { buildDocument } from "./document-builder";
+import { buildDocument } from "../utils/document-builder";
 import { resolveProxies } from "../../parse/proxy";
 import { withRedisClient } from "../../../shared/utils/redis";
 

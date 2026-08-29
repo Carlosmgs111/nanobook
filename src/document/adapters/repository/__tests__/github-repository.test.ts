@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { GitHubRepository } from "../github-repository";
-import { buildDocument } from "../document-builder";
+import { buildDocument } from "../../utils/document-builder";
 import { parseFrontmatter } from "../../../parse/frontmatter";
 
 const SAMPLE_MARKDOWN = `---\ntitle: Post\ndescription: Desc\ndate: 2026-01-01\nauthor: Author\n---\n\n# Post`;
