@@ -1,4 +1,4 @@
-import { createContentRepository } from "../../document/adapters/repository/factory";
+import { contentRepository } from "../../document";
 import { computeContentHash } from "../../document/model/hash";
 import { parseDocument } from "../../document/parse/document";
 import type { Heading } from "../../document/parse/document";
@@ -12,26 +12,12 @@ export interface RenderDocumentPageResult {
   contentHash: string;
 }
 
-/**
- * Renderiza una página de contenido en runtime.
- *
- * - Crea el ContentRepository y el RenderedPageCache según configuración.
- * - Obtiene el documento por slug.
- * - Calcula el hash de contenido para la clave de cache.
- * - Usa PageRenderer para obtener cuerpo y navegación.
- * - Extrae los headings con parseDocument para el TOC.
- *
- * Nota: los headings se extraen del documento, no del HTML renderizado. Esto
- * mantiene la responsabilidad de análisis estructural en el dominio document
- * y permite que el renderizador se centre en generar HTML.
- */
 export async function renderDocumentPage(
   slug: string,
 ): Promise<RenderDocumentPageResult | null> {
   const documentId = slug || "index";
 
-  const repository = await createContentRepository();
-  const document = await repository.get(documentId);
+  const document = await contentRepository.get(documentId);
 
   if (!document) {
     return null;
@@ -39,7 +25,7 @@ export async function renderDocumentPage(
 
   const cache = createRenderedPageCache();
   const renderer = new PageRenderer(
-    repository,
+    contentRepository,
     new UnifiedMarkdownRenderer(),
     cache,
   );

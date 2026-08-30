@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import type { DocumentService } from "../service/document-service";
+import type { DocumentService, DocumentServiceError } from "../service/document-service";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,

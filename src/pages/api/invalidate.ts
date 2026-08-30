@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { createContentRepository } from "../../document/adapters/repository/factory";
+import { contentRepository } from "../../document";
 import {
   invalidateCache,
   type InvalidateRequest,
@@ -35,10 +35,9 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  const repository = await createContentRepository();
   const cache = createRenderedPageCache();
 
-  const result = await invalidateCache(repository, cache, {
+  const result = await invalidateCache(contentRepository, cache, {
     changes: body.changes,
   });
 

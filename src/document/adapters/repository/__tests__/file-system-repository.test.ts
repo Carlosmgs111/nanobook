@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FileSystemRepository } from "../file-system-repository";
-import { buildNewDocument } from "../../utils/document-builder";
+import { buildNewDocument } from "../../../shared/utils/document-builder";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,

@@ -1,4 +1,4 @@
-import type { GitHubLoaderOptions, GitHubTreeItem } from "./types";
+import type { GitHubLoaderOptions, GitHubTreeItem } from "../../shared/github/types";
 
 const GITHUB_API_BASE = "https://api.github.com";
 const API_VERSION = "2022-11-28";
@@ -30,6 +30,7 @@ export async function fetchGitHubTree(
   options: Required<Pick<GitHubLoaderOptions, "owner" | "repo" | "branch">> &
     Pick<GitHubLoaderOptions, "token">,
 ): Promise<GitHubTreeItem[]> {
+  console.log("fetchGitHubTree")
   const { owner, repo, branch, token } = options;
   const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
   const data = await fetchJson<{ tree: GitHubTreeItem[] }>(url, token);

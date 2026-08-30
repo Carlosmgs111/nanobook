@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { generateId } from "../adapters/github-loader/parser";
+import { generateId } from "../shared/github/parser";
 import type { ContentRepository } from "../model/types";
 import type { DocumentChange } from "../../navigation/model/types";
 import type { RenderedPageCache } from "../../rendering/model/types";

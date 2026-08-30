@@ -1,6 +1,6 @@
 import picomatch from "picomatch";
 import { parseFrontmatter } from "../../parse/frontmatter";
-import type { GitHubLoaderOptions, ParsedEntry } from "./types";
+import type { GitHubLoaderOptions, GitHubTreeItem, ParsedEntry } from "./types";
 
 export function generateId(
   filePath: string,
@@ -45,4 +45,20 @@ export function createParsedEntry(
   const { data, body } = parseFrontmatter(raw);
   const id = generateId(filePath, basePath);
   return { id, data, body, raw, path: filePath };
+}
+
+
+
+export function filterContentFiles(
+  tree: GitHubTreeItem[],
+  basePath: string,
+  pattern: GitHubLoaderOptions["pattern"]
+): GitHubTreeItem[] {
+  const prefix = basePath ? `${basePath}/` : "";
+
+  return tree.filter((item) => {
+    if (item.type !== "blob") return false;
+    if (!item.path.startsWith(prefix)) return false;
+    return matchesPattern(item.path, pattern);
+  });
 }

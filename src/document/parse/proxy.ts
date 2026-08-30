@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import type { Document, DocumentMetadata } from "./types";
+import type { Document, DocumentMetadata } from "../model/types";
 import type { ReferenceResolver } from "../reference/types";
 import { CompositeReferenceResolver } from "../reference/resolver";
 import { InternalReferenceResolver } from "../adapters/reference/internal-resolver";

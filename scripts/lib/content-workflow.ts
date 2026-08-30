@@ -1,4 +1,4 @@
-import { createContentRepository } from "../../src/document/adapters/repository/factory";
+import { contentRepository } from "../../src/document";
 import { ContentChangeService } from "../../src/document/change/change-service";
 import { hashDocument } from "../../src/document/change/snapshot";
 import {
@@ -19,7 +19,7 @@ export interface WorkflowContext {
 }
 
 export async function createWorkflowContext(): Promise<WorkflowContext> {
-  const repository = await createContentRepository("filesystem");
+  const repository = contentRepository;
   const changeService = new ContentChangeService(repository);
   const cache = createRenderedPageCache();
   const renderer = new PageRenderer(

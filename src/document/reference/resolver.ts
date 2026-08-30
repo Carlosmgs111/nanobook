@@ -28,7 +28,7 @@ export class CompositeReferenceResolver implements ReferenceResolver {
   async resolve(
     ref: RefValue,
     sourceDocument: Document,
-  ): Promise<import("../types").ContentEntry | null> {
+  ): Promise<import("../model/types").ContentEntry | null> {
     const context: ReferenceResolutionContext = {
       sourceId: sourceDocument.id,
       sourceData: sourceDocument.metadata,

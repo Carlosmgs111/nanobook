@@ -1,20 +1,13 @@
-import {
-  access,
-  mkdir,
-  readdir,
-  readFile,
-  writeFile,
-} from "node:fs/promises";
+import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 import { parseFrontmatter } from "../../parse/frontmatter";
 import { idToFilePath } from "../../parse/path";
-import { resolveProxies } from "../../parse/proxy";
 import type { ContentRepository, Document } from "../../model/types";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
 } from "../../model/errors";
-import { buildDocument } from "../utils/document-builder";
+import { buildDocument } from "../../shared/utils/document-builder";
 
 const CONTENT_DIR = "./src/content";
 
@@ -58,7 +51,11 @@ async function scanMarkdownFiles(dir: string): Promise<string[]> {
  * incremental.
  */
 export class FileSystemRepository implements ContentRepository {
-  constructor(private contentDir: string = CONTENT_DIR) {}
+  constructor(
+    private contentDir: string = CONTENT_DIR,
+    private resolveProxies: (documents: Document[]) => Promise<Document[]>
+      
+  ) {}
 
   async list(): Promise<Document[]> {
     const contentRoot = resolve(this.contentDir);
@@ -72,8 +69,8 @@ export class FileSystemRepository implements ContentRepository {
 
       documents.push(buildDocument(id, data, body, raw));
     }
-    
-    return resolveProxies(documents);
+
+    return this.resolveProxies(documents);
   }
 
   async get(id: string): Promise<Document | null> {
@@ -90,7 +87,7 @@ export class FileSystemRepository implements ContentRepository {
     const filePath = idToFilePath(
       document.id,
       document.metadata.index,
-      this.contentDir,
+      this.contentDir
     );
     if (await fileExists(filePath)) {
       throw new DocumentAlreadyExistsError(document.id);
@@ -99,7 +96,7 @@ export class FileSystemRepository implements ContentRepository {
     await writeFile(
       filePath,
       document.rawFrontmatter + document.content,
-      "utf-8",
+      "utf-8"
     );
   }
 
@@ -107,7 +104,7 @@ export class FileSystemRepository implements ContentRepository {
     const filePath = idToFilePath(
       document.id,
       document.metadata.index,
-      this.contentDir,
+      this.contentDir
     );
     if (!(await fileExists(filePath))) {
       throw new DocumentNotFoundError(document.id);
@@ -116,7 +113,7 @@ export class FileSystemRepository implements ContentRepository {
     await writeFile(
       filePath,
       document.rawFrontmatter + document.content,
-      "utf-8",
+      "utf-8"
     );
   }
 }

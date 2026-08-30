@@ -3,20 +3,21 @@ import {
   fetchFileSha,
   fetchGitHubTree,
   updateFileContent,
-} from "../github-loader/api";
-import { createParsedEntry } from "../github-loader/parser";
-import { filterContentFiles } from "../github-loader";
+} from "../../shared/github/api";
+import {
+  createParsedEntry,
+  filterContentFiles,
+} from "../../shared/github/parser";
 import type { ContentRepository, Document } from "../../model/types";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
 } from "../../model/errors";
-import { buildDocument } from "../utils/document-builder";
-import { resolveProxies } from "../../parse/proxy";
+import { buildDocument } from "../../shared/utils/document-builder";
 import { withRedisClient } from "../../../shared/utils/redis";
 
-import type { GitHubLoaderOptions } from "../github-loader/types";
-import type { GitHubTreeItem } from "../github-loader/types";
+import type { GitHubLoaderOptions } from "../../shared/github/types";
+import type { GitHubTreeItem } from "../../shared/github/types";
 
 export interface GitHubRepositoryOptions {
   owner: string;
@@ -78,7 +79,10 @@ export class GitHubRepository implements ContentRepository {
   private cacheKey: string;
   private treeCacheKey: string;
 
-  constructor(private options: GitHubRepositoryOptions) {
+  constructor(
+    private options: GitHubRepositoryOptions,
+    private resolveProxies: (documents: Document[]) => Promise<Document[]>
+  ) {
     this.branch = options.branch ?? "main";
     this.path = options.path ?? "";
     this.pattern = options.pattern ?? ["**/*.md", "!README.md"];
@@ -154,7 +158,7 @@ export class GitHubRepository implements ContentRepository {
       }
     }
 
-    return resolveProxies(documents);
+    return this.resolveProxies(documents);
   }
 
   async get(id: string): Promise<Document | null> {
@@ -172,9 +176,7 @@ export class GitHubRepository implements ContentRepository {
     if (id === "index") {
       return `${base}index.md`.replace(/^\/+/, "");
     }
-    const filePath = isIndex
-      ? `${base}${id}/index.md`
-      : `${base}${id}.md`;
+    const filePath = isIndex ? `${base}${id}/index.md` : `${base}${id}.md`;
     return filePath.replace(/^\/+/, "");
   }
 

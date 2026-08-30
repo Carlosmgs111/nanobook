@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createPatchHandler, createPostHandler } from "../document";
 import { MemoryRepository } from "../../adapters/repository/memory-repository";
-import { buildNewDocument } from "../../adapters/utils/document-builder";
+import { buildNewDocument } from "../../shared/utils/document-builder";
 import { DocumentService } from "../../service/document-service";
 
 function createService(initialDocuments: import("../../model/types").Document[] = []) {

@@ -1,21 +1,20 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import NewPage from "../../edition/ui/pages/NewPage.astro";
-import { createContentRepository } from "../../document/adapters/repository/factory";
+import { contentRepository } from "../../document";
 import { createNavigationService } from "../../navigation/service/service";
 
 export const prerender = false;
 
 const { slug } = Astro.params;
 const baseId = slug || "index";
-const repository = await createContentRepository();
-const baseEntry = await repository.get(baseId);
+const baseEntry = await contentRepository.get(baseId);
 
 if (!baseEntry) {
   return new Response("Document not found", { status: 404 });
-}
+ }
 
-const allDocuments = await repository.list();
+const allDocuments = await contentRepository.list();
 const navigation = createNavigationService(allDocuments);
 const breadcrumbs = navigation.getBreadcrumbs(baseEntry.id);
 const sidebarEntries = navigation.getSidebarEntries(baseEntry.id);

@@ -1,11 +1,12 @@
 import { createClient, type RedisClientType } from "redis";
+import { REDIS_URL } from "astro:env/server";
 
 let client: RedisClientType | null = null;
 
 export function getRedisClient(url?: string): RedisClientType {
   if (client) return client;
 
-  const redisUrl = url ?? process.env.REDIS_URL;
+  const redisUrl = url ?? REDIS_URL;
   if (!redisUrl) {
     throw new Error("REDIS_URL is not defined");
   }

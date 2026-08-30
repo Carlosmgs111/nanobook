@@ -1,6 +1,6 @@
 import type { Result } from "../../shared/utils/result";
 import { ok, err } from "../../shared/utils/result";
-import { buildNewDocument } from "../adapters/utils/document-builder";
+import { buildNewDocument } from "../shared/utils/document-builder";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,

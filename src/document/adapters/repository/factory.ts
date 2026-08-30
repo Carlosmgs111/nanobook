@@ -2,6 +2,15 @@ import { FileSystemRepository } from "./file-system-repository";
 import { GitHubRepository } from "./github-repository";
 import { MemoryRepository } from "./memory-repository";
 import type { ContentRepository } from "../../model/types";
+import type { Document } from "../../model/types";
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_BRANCH,
+  GITHUB_TOKEN,
+  GITHUB_PATH,
+  CONTENT_SOURCE,
+} from "astro:env/server";
 
 export type RepositorySource = "filesystem" | "github" | "memory";
 
@@ -25,16 +34,21 @@ export interface CreateContentRepositoryOptions {
  */
 
 export async function createContentRepository(
-  sourceOrOptions: RepositorySource | CreateContentRepositoryOptions = getConfiguredSource(),
+  sourceOrOptions:
+    | RepositorySource
+    | CreateContentRepositoryOptions = getConfiguredSource(),
+  resolveProxies: (documents: Document[]) => Promise<Document[]>
 ): Promise<ContentRepository> {
+  console.log({ resolveProxies });
   const options: CreateContentRepositoryOptions =
-    typeof sourceOrOptions === "string" ? { source: sourceOrOptions } : sourceOrOptions;
-
+    typeof sourceOrOptions === "string"
+      ? { source: sourceOrOptions }
+      : sourceOrOptions;
   switch (options.source ?? getConfiguredSource()) {
     case "filesystem":
-      return new FileSystemRepository();
+      return new FileSystemRepository(undefined, resolveProxies);
     case "github":
-      return createGitHubRepository();
+      return createGitHubRepository(resolveProxies);
     case "memory":
       return new MemoryRepository(options.initialDocuments);
     default:
@@ -44,7 +58,7 @@ export async function createContentRepository(
 
 function getConfiguredSource(): RepositorySource {
   const env =
-    typeof process !== "undefined" ? process.env.CONTENT_SOURCE : undefined;
+    typeof process !== "undefined" ? CONTENT_SOURCE : undefined;
 
   if (env === "filesystem" || env === "github") {
     return env;
@@ -53,21 +67,27 @@ function getConfiguredSource(): RepositorySource {
   return "filesystem";
 }
 
-function createGitHubRepository(): ContentRepository {
-  const owner = process.env.GITHUB_OWNER;
-  const repo = process.env.GITHUB_REPO;
+function createGitHubRepository(
+  resolveProxies: (documents: Document[]) => Promise<Document[]>
+): ContentRepository {
+  console.log(GITHUB_OWNER);
+  const owner = GITHUB_OWNER;
+  const repo = GITHUB_REPO;
 
   if (!owner || !repo) {
     throw new Error(
-      "GitHubRepository requires GITHUB_OWNER and GITHUB_REPO environment variables.",
+      "GitHubRepository requires GITHUB_OWNER and GITHUB_REPO environment variables."
     );
   }
 
-  return new GitHubRepository({
-    owner,
-    repo,
-    branch: process.env.GITHUB_BRANCH,
-    token: process.env.GITHUB_TOKEN,
-    path: process.env.GITHUB_PATH,
-  });
+  return new GitHubRepository(
+    {
+      owner,
+      repo,
+      branch: GITHUB_BRANCH,
+      token: GITHUB_TOKEN,
+      path: GITHUB_PATH,
+    },
+    resolveProxies
+  );
 }

@@ -8,7 +8,7 @@ import type {
   ReferenceResolutionContext,
   ReferenceResolverPlugin,
 } from "../../reference/types";
-import { fetchFileContent } from "../github-loader/api";
+import { fetchFileContent } from "../../shared/github/api";
 
 const DEFAULT_BRANCH = "main";
 
@@ -96,7 +96,7 @@ export class GitHubReferenceResolver implements ReferenceResolverPlugin {
 
       return {
         id: context.sourceId,
-        data: data as DocumentMetadata,
+        data: data as unknown as DocumentMetadata,
         body,
         rawFrontmatter: extractFrontmatter(raw),
       };

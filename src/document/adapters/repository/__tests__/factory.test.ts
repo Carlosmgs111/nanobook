@@ -3,17 +3,18 @@ import {
   createContentRepository,
   type RepositorySource,
 } from "../factory";
+import { resolveProxies } from "../../../../document/parse/proxy";
 import { FileSystemRepository } from "../file-system-repository";
 import { GitHubRepository } from "../github-repository";
 
 describe("createContentRepository", () => {
   it("devuelve FileSystemRepository cuando la fuente es filesystem", async () => {
-    const repository = await createContentRepository("filesystem");
+    const repository = await createContentRepository("filesystem", resolveProxies);
     expect(repository).toBeInstanceOf(FileSystemRepository);
   });
 
   it("devuelve FileSystemRepository por defecto", async () => {
-    const repository = await createContentRepository();
+    const repository = await createContentRepository(undefined, resolveProxies);
     expect(repository).toBeInstanceOf(FileSystemRepository);
   });
 
@@ -25,7 +26,7 @@ describe("createContentRepository", () => {
     process.env.GITHUB_REPO = "test-repo";
 
     try {
-      const repository = await createContentRepository("github");
+      const repository = await createContentRepository("github", resolveProxies);
       expect(repository).toBeInstanceOf(GitHubRepository);
     } finally {
       process.env.GITHUB_OWNER = originalOwner;
@@ -42,7 +43,7 @@ describe("createContentRepository", () => {
 
     try {
       await expect(
-        createContentRepository("github" as RepositorySource),
+        createContentRepository("github" as RepositorySource, resolveProxies),
       ).rejects.toThrow(
         "GitHubRepository requires GITHUB_OWNER and GITHUB_REPO",
       );
@@ -52,9 +53,9 @@ describe("createContentRepository", () => {
     }
   });
 
-  it("lanza error para fuentes desconocidas", async () => {
+  it("lanza error para fuentes desconocidos", async () => {
     await expect(
-      createContentRepository("unknown" as RepositorySource),
+      createContentRepository("unknown" as RepositorySource, resolveProxies),
     ).rejects.toThrow("Unsupported content source");
   });
 });
