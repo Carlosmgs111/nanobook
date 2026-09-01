@@ -1,40 +1,37 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import DocumentPage from "../../document/DocumentPage.astro";
-import { renderDocumentPage } from "../../rendering/page/render-document-page";
+import { getApp } from "../../Application";
+
+const app = await getApp();
 
 export const prerender = false;
 
-const { slug } = Astro.params;
-const result = await renderDocumentPage(slug ?? "");
+const slug = Astro.params.slug || "index";
+if (!slug) return new Response("Document not found", { status: 404 });
 
-if (!result) {
-  return new Response("Document not found", { status: 404 });
-}
-
-const { rendered, headings } = result;
 const {
-  document,
-  renderedBody,
+  rendered,
+  headings,
   breadcrumbs,
   sidebarEntries,
   parentEntry,
   childEntries,
-} = rendered;
+} = await app.renderPage(slug);
+const { document, renderedBody } = rendered;
 
-const editHref = document.slug
-  ? `/${document.slug}/edit`
-  : `${Astro.request.url}edit`;
+const editHref = slug ? `/${slug}/edit` : `${Astro.request.url}edit`;
 
-const newHref = document.metadata.index
-  ? document.id === "index"
+const newHref = document.getMetadata().index
+  ? document.getId().getValue() === "index"
     ? `${Astro.request.url}new`
-    : `/${document.id}/new`
+    : `/${document.getId().getValue()}/new`
   : "/new";
-const canonicalHref = document.proxyTargetId
-  ? document.proxyTargetId === "index"
+const proxyTargetId = document.getProxyTargetId();
+const canonicalHref = proxyTargetId
+  ? proxyTargetId.getValue() === "index"
     ? "/"
-    : `/${document.proxyTargetId}/`
+    : `/${proxyTargetId.getValue()}/`
   : undefined;
 
 Astro.response.headers.set(
@@ -44,8 +41,8 @@ Astro.response.headers.set(
 ---
 
 <Layout
-  title={document.title}
-  description={document.description}
+  title={document.getTitle()}
+  description={document.getDescription()}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentEntry}
@@ -55,11 +52,8 @@ Astro.response.headers.set(
   canonicalHref={canonicalHref}
 >
   <DocumentPage
-    entry={document}
+    entry={document.parse()}
     Content={renderedBody}
-    childEntries={childEntries.map((child) => ({
-      id: child.id,
-      data: child.metadata,
-    }))}
+    childEntries={childEntries.map((child) => child)}
   />
 </Layout>

@@ -1,0 +1,43 @@
+import type { ContentEntry } from "../../domain/types";
+import type { DocumentReference } from "../../domain/DocumentReference";
+import type {
+  ReferenceResolutionContext,
+  ReferenceResolverPlugin,
+} from "../../domain/reference/types";
+import type { Document } from "../../domain/Document";
+import type { ContentRepository } from "../../domain/types";
+import { DocumentId } from "../../domain/DocumentId";
+
+/**
+ * Resolutor para referencias internas a otros documentos de la colección.
+ *
+ * Acepta strings que parecen rutas relativas: `./doc.md`, `../doc.md`,
+ * `sibling.md`. No acepta rutas absolutas (`/README.md`) ni prefijos como
+ * `github:` o URLs.
+ */
+export class InternalReferenceResolver implements ReferenceResolverPlugin {
+  name = "internal";
+
+  constructor(private contentRepository: ContentRepository) {}
+
+  async resolve(
+    ref: DocumentReference,
+    context: ReferenceResolutionContext
+  ): Promise<ContentEntry | null> {
+    const refStr = ref.getValue() as string;
+    if (refStr.startsWith("/")) return null;
+    const targetId = context.sourceId.resolveDocumentReference(refStr);
+    const targetDocument = await this.contentRepository.get(new DocumentId(targetId));
+
+    // console.log({ targetDocument });
+
+    if (!targetDocument) return null;
+
+    return {
+      id: targetDocument.getId(),
+      data: targetDocument.getMetadata(),
+      body: targetDocument.getContent(),
+      rawFrontmatter: targetDocument.getRawFrontmatter(),
+    };
+  }
+}

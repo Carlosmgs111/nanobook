@@ -1,4 +1,4 @@
-import type { Document } from "../../document/model/types";
+import type { Document } from "../../document/domain/types";
 
 const STAGED_KEY = "stagedDocument";
 

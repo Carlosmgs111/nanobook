@@ -10,6 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "dev:preview": "astro build && astro preview",
     "start": "node ./dist/server/entry.mjs",
     "astro": "astro",
     "test": "vitest run",

@@ -32,6 +32,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Los handlers de `src/document/api/document.ts` ya no contienen lógica de negocio; ahora reciben `DocumentService` por inyección y solo adaptan el patrón `Result` a respuestas HTTP.
 - `src/pages/api/[...slug].ts` compone e inyecta `DocumentService` (con repositorio y cache) a nivel de módulo, eliminando el uso de factories dentro de los controladores.
 - `document-builder.ts` se movió de `src/document/adapters/repository/` a `src/document/adapters/utils/` para separar utilidades puras de construcción de documentos de las implementaciones de repositorio.
+- `PublishPage` recibe una `NavigationServiceFactoryPort` por inyección y crea el servicio de navegación bajo demanda con `.for(documents)`, eliminando el paso previo `.build()`. `BuildNavigation` y `getBuildNavigation` se reemplazan por `CreateNavigationService` y la interfaz `NavigationServiceFactory`.
 
 ## [0.4.2] - 2026-08-26
 

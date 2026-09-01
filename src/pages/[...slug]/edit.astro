@@ -1,32 +1,30 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import EditPage from "../../edition/ui/pages/EditPage.astro";
-import { contentRepository } from "../../document";
-import { createNavigationService } from "../../navigation/service/service";
+import { getApp } from "../../Application";
+
+const app = await getApp();
 
 export const prerender = false;
 
-const { slug } = Astro.params;
-const documentId = slug || "index";
-const entry = await contentRepository.get(documentId);
+const slug = Astro.params.slug || "index";
+if (!slug) return Astro.redirect("/404");
+const { breadcrumbs, sidebarEntries, parentEntry, rendered } = await app.renderPage(slug);
 
-if (!entry) {
+const { document } = rendered;
+if (!document) {
   return new Response("Document not found!", { status: 404 });
 }
-
-const allDocuments = await contentRepository.list();
-const navigation = createNavigationService(allDocuments);
-const breadcrumbs = navigation.getBreadcrumbs(entry.id);
-const sidebarEntries = navigation.getSidebarEntries(entry.id);
-const parentEntry = navigation.getParentEntry(entry.id);
-const viewHref = `/${entry.id}`;
-const previewHref = `/${entry.id}/preview`;
-const newHref = entry.metadata.index ? `/${entry.id}/new` : "/new";
+const viewHref = `/${document.getId().getValue()}`;
+const previewHref = `/${document.getId().getValue()}/preview`;
+const newHref = document.getMetadata().index
+  ? `/${document.getId().getValue()}/new`
+  : "/new";
 ---
 
 <Layout
-  title={`Editar: ${entry.title}`}
-  description={entry.description}
+  title={`Editar: ${document.getTitle()}`}
+  description={document.getDescription()}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentEntry}
@@ -34,5 +32,5 @@ const newHref = entry.metadata.index ? `/${entry.id}/new` : "/new";
   viewHref={viewHref}
   newHref={newHref}
 >
-  <EditPage entry={entry} previewHref={previewHref} />
+  <EditPage entry={document} previewHref={previewHref} />
 </Layout>

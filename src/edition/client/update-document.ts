@@ -1,8 +1,8 @@
-import type { Document } from "../../document/model/types";
+import type { Document } from "../../document/domain/Document";
 
 export async function updateDocument(
   documentId: string,
-  document: Document,
+  document: Document
 ): Promise<void> {
   const response = await fetch("/api/" + documentId, {
     method: "PATCH",

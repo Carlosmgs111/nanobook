@@ -3,32 +3,32 @@ import "../../../shared/styles/components/index-card.css";
 import FolderSvg from "../../../shared/icons/folder.svg";
 import FileSvg from "../../../shared/icons/file.svg";
 const { page, index } = Astro.props;
-const coverVar = page.data.cover ? `url('${page.data.cover}')` : undefined;
+const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefined;
 ---
 
-<div class="index-card-wrapper" data-folder={String(page.data.index)}>
+<div class="index-card-wrapper" data-folder={String(page.metadata.index)}>
   <a
     href={`/${page.id}`}
-    class={`index-card ${page.data.index ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
-    data-title={page.data.title}
-    data-description={page.data.description}
-    data-draft={String(page.data.draft)}
-    data-cover={page.data.cover ? "true" : undefined}
+    class={`index-card ${page.metadata.index ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
+    data-title={page.metadata.title}
+    data-description={page.metadata.description}
+    data-draft={String(page.metadata.draft)}
+    data-cover={page.metadata.cover ? "true" : undefined}
     style={coverVar ? `--card-cover: ${coverVar}` : undefined}
   >
     <div class="index-card-main">
       <span class="index-card-number">
         {String(index + 1).padStart(2, "0")}
       </span>
-      {page.data.index ? <FolderSvg /> : <FileSvg />}
+      {page.metadata.index ? <FolderSvg /> : <FileSvg />}
       <div class="index-card-body">
-        <span class="index-card-title" data-title={page.data.title}></span>
-        <span class="index-card-desc" data-description={page.data.description}></span>
+        <span class="index-card-title" data-title={page.metadata.title}></span>
+        <span class="index-card-desc" data-description={page.metadata.description}></span>
       </div>
     </div>
 
-    <span class="index-card-path" title={`/${page.id + (page.data.index ? "/" : ".md")}`}>
-      /{page.id + (page.data.index ? "/" : ".md")}
+    <span class="index-card-path" title={`/${page.id + (page.metadata.index ? "/" : ".md")}`}>
+      /{page.id + (page.metadata.index ? "/" : ".md")}
     </span>
   </a>
 </div>

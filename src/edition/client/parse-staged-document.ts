@@ -1,5 +1,5 @@
 import { parse } from "yaml";
-import type { Document } from "../../document/model/types";
+import type { Document } from "../../document/domain/Document";
 
 export function buildDocumentFromContent(
   base: Document,
@@ -7,6 +7,7 @@ export function buildDocumentFromContent(
 ): Document {
   const rawFrontmatter = fullContent.match(/^---[\s\S]*?---\n?/)?.[0]!;
   const data = parse(rawFrontmatter.replaceAll("---", ""))!;
+  console.log({ data });
   const content = fullContent.replace(/^---[\s\S]*?---\n?/g, "");
   return {
     ...base,

@@ -1,4 +1,4 @@
-import type { Document } from "../../document/model/types";
+import type { Entry } from "../../document/domain/types";
 
 export interface CreateDocumentPayload {
   id: string;
@@ -13,8 +13,8 @@ export interface CreateDocumentPayload {
 }
 
 export async function createDocument(
-  payload: CreateDocumentPayload,
-): Promise<Document> {
+  payload: CreateDocumentPayload
+): Promise<Entry> {
   const response = await fetch("/api/documents", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -26,5 +26,5 @@ export async function createDocument(
     throw new Error(payload.error || "Error al crear el documento");
   }
 
-  return response.json() as Promise<Document>;
+  return response.json();
 }

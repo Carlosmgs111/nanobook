@@ -1,5 +1,5 @@
 ---
-import type { Document } from "../../../../document/model/types";
+import type { Document } from "../../../../document/domain/Document";
 import EditorToolbar from "../EditorToolbar.astro";
 import EditorStatus from "../EditorStatus.astro";
 
@@ -9,13 +9,13 @@ interface Props {
 }
 
 const { document, previewHref } = Astro.props;
-const initialContent = document.rawFrontmatter + document.content;
+const initialContent = document.getRawFrontmatter() + document.getContent();
 ---
 
 <div
   class="editor-wrapper"
-  data-document={JSON.stringify(document)}
-  data-document-id={document.id}
+  data-document={JSON.stringify(document.parse())}
+  data-document-id={document.getId().getValue()}
   data-initial-content={initialContent}
 >
   <EditorToolbar previewHref={previewHref}>
@@ -25,13 +25,16 @@ const initialContent = document.rawFrontmatter + document.content;
 </div>
 
 <script>
-  import type { Document } from "../../../../document/model/types";
+  import type { Document } from "../../../../document/domain/Document";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
   } from "../../../client/code-mirror-editor";
   import { debounce } from "../../../../shared/utils/debounce";
-  import { renderStagedDocument, clearRenderedDocument } from "../../../client/render-service";
+  import {
+    renderStagedDocument,
+    clearRenderedDocument,
+  } from "../../../client/render-service";
   import {
     loadStagedDocument,
     saveStagedDocument,
@@ -84,7 +87,7 @@ const initialContent = document.rawFrontmatter + document.content;
 
     destroyEditor();
 
-    const baseDocument = JSON.parse(wrapper.dataset.document!) as Document;
+    const baseDocument = JSON.parse(wrapper.dataset.document!);
     const staged = loadStagedDocument();
     if (staged && staged.id !== baseDocument.id) {
       clearEditionStorage();
@@ -109,7 +112,8 @@ const initialContent = document.rawFrontmatter + document.content;
     const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
     saveButton.replaceWith(cleanButton);
 
-    cleanButton.addEventListener("click", async () => {
+    cleanButton.addEventListener("click", async (e) => {
+      e.preventDefault();
       try {
         const document = buildDocumentFromContent(
           JSON.parse(wrapper.dataset.document!) as Document,
@@ -170,7 +174,11 @@ const initialContent = document.rawFrontmatter + document.content;
       renderStagedDocument(stagedDocument).catch(console.error);
     }
 
-    if (documentId && destination && !isInsideEditionFlow(destination, documentId)) {
+    if (
+      documentId &&
+      destination &&
+      !isInsideEditionFlow(destination, documentId)
+    ) {
       clearEditionStorage();
     }
 

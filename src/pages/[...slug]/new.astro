@@ -1,28 +1,27 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import NewPage from "../../edition/ui/pages/NewPage.astro";
-import { contentRepository } from "../../document";
-import { createNavigationService } from "../../navigation/service/service";
+import { getApp } from "../../Application";
+
+const app = await getApp();
 
 export const prerender = false;
 
-const { slug } = Astro.params;
-const baseId = slug || "index";
-const baseEntry = await contentRepository.get(baseId);
+const slug = Astro.params.slug || "index";
 
-if (!baseEntry) {
+if (!slug) {
   return new Response("Document not found", { status: 404 });
- }
-
-const allDocuments = await contentRepository.list();
-const navigation = createNavigationService(allDocuments);
-const breadcrumbs = navigation.getBreadcrumbs(baseEntry.id);
-const sidebarEntries = navigation.getSidebarEntries(baseEntry.id);
-const parentEntry = navigation.getParentEntry(baseEntry.id);
+}
+const {
+  breadcrumbs,
+  sidebarEntries,
+  parentEntry,
+  rendered: { document },
+} = await app.renderPage(slug);
 ---
 
 <Layout
-  title={`Nuevo documento en ${baseEntry.title}`}
+  title={`Nuevo documento en ${document.getTitle()}`}
   description="Crear un nuevo documento"
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
@@ -38,5 +37,5 @@ const parentEntry = navigation.getParentEntry(baseEntry.id);
     </h1>
   </div>
 
-  <NewPage baseId={baseEntry.id} />
+  <NewPage baseId={document.getId().getValue()} />
 </Layout>

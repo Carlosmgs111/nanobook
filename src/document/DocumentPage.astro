@@ -1,11 +1,12 @@
 ---
 import IndexList from "./components/IndexList/index.astro";
-import type { Document } from "./model/types";
+import type { Entry } from "./domain/types";
+import type { NavigationNode } from "../navigation/domain/types";
 
 interface Props {
-  entry: Document;
+  entry: Entry;
   Content: any;
-  childEntries: { id: string; data: Document["metadata"] }[];
+  childEntries: NavigationNode[];
 }
 
 const { entry, Content, childEntries } = Astro.props;

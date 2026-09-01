@@ -1,9 +1,7 @@
-import {
-  createPatchHandler,
-  createPostHandler,
-} from "../../document/api/document";
-import { documentService } from "../../document/index";
+import { getApp } from "../../Application";
+const app = await getApp();
 
 export const prerender = false;
-export const PATCH = createPatchHandler(documentService);
-export const POST = createPostHandler(documentService);
+
+export const PATCH = app.documentModule.updateDocumentController.handle;
+export const POST = app.documentModule.createDocumentController.handle;
