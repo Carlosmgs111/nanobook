@@ -23,7 +23,11 @@ export default defineConfig({
   }),
   env: {
     schema: {
-      CONTENT_SOURCE: envField.string({ context: "server", access: "secret", default: "filesystem" }),
+      CONTENT_SOURCE: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
       GITHUB_BRANCH: envField.string({
         context: "server",
         access: "secret",
@@ -55,6 +59,11 @@ export default defineConfig({
         optional: true,
       }),
       REDIS_URL: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      CACHE_BACKEND: envField.string({
         context: "server",
         access: "secret",
         optional: true,

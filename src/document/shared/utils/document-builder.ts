@@ -1,5 +1,5 @@
-import { getParentId, normalizeDocumentId } from "../../parse/path";
-import type { Document, DocumentMetadata } from "../../model/types";
+import { DocumentId } from "../../_domain/DocumentId";
+import type { Document, DocumentMetadata } from "../../_domain/types";
 
 const NEW_DOCUMENT_TEMPLATE = `---
 title: "<%= title %>"
@@ -21,12 +21,12 @@ function interpolateTemplate(
 }
 
 export function buildNewDocument(
-  id: string,
+  id: DocumentId,
   overrides: Partial<DocumentMetadata> & { title: string; description: string }
 ): Document {
-  const normalizedId = normalizeDocumentId(id);
+  const normalizedId = DocumentId.normalizeDocumentId(id.getValue());
   const now = new Date();
-  const isIndex = id === "index" || id.endsWith("/index");
+  const isIndex = id.getValue() === "index" || id.getValue().endsWith("/index");
   const metadata = {
     title: overrides.title,
     description: overrides.description,
@@ -73,7 +73,7 @@ export function assertRequiredField<T>(
 }
 
 export function toDocumentMetadata(
-  data: Record<string, unknown>,
+  data: DocumentMetadata,
   documentId: string
 ): DocumentMetadata {
   return {
@@ -101,7 +101,7 @@ export function extractFrontmatter(raw: string): string {
 
 export function buildDocument(
   id: string,
-  data: Record<string, unknown>,
+  data: DocumentMetadata,
   body: string,
   raw: string
 ): Document {
@@ -110,7 +110,7 @@ export function buildDocument(
   return {
     id,
     slug: id === "index" ? "" : id,
-    parentId: getParentId(id),
+    parentId: DocumentId.getParentId(id),
     position: metadata.position,
     title: metadata.title,
     description: metadata.description,

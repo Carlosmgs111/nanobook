@@ -1,15 +1,15 @@
-import { contentRepository } from "../../src/document";
+import { contentRepository } from "../../src/document/_index";
 import { ContentChangeService } from "../../src/document/change/change-service";
 import { hashDocument } from "../../src/document/change/snapshot";
 import {
   loadSnapshot,
   saveSnapshot,
 } from "../../src/document/change/snapshot";
-import type { ContentRepository, DocumentHash } from "../../src/document/model/types";
-import { PageRenderer } from "../../src/rendering/page/page-renderer";
-import { UnifiedMarkdownRenderer } from "../../src/rendering/adapters/markdown/unified-markdown";
-import { createRenderedPageCache } from "../../src/rendering/adapters/cache/factory";
-import type { RenderedPageCache } from "../../src/rendering/model/types";
+import type { ContentRepository, DocumentHash } from "../../src/document/_domain/types";
+import { PageRenderer } from "../../src/publishing/page/page-renderer";
+import { UnifiedMarkdownRenderer } from "../../src/publishing/adapters/markdown/unified-markdown";
+import { createRenderedPageCache } from "../../src/publishing/adapters/cache/factory";
+import type { RenderedPageCache } from "../../src/publishing/model/types";
 
 export interface WorkflowContext {
   repository: ContentRepository;
@@ -32,7 +32,7 @@ export async function createWorkflowContext(): Promise<WorkflowContext> {
 }
 
 export interface WorkflowResult {
-  changes: import("../../src/navigation/model/types").DocumentChange[];
+  changes: import("../../src/navigation/domain/types").DocumentChange[];
   invalidatedIds: string[];
   addedIds: string[];
   removedIds: string[];
@@ -52,7 +52,7 @@ export async function detectWorkflowChanges(
 }
 
 export function printChanges(
-  changes: import("../../src/navigation/model/types").DocumentChange[],
+  changes: import("../../src/navigation/domain/types").DocumentChange[],
 ): void {
   if (changes.length === 0) {
     console.log("No content changes detected.");

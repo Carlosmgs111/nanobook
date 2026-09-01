@@ -1,8 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import EditPage from "../../edition/ui/pages/EditPage.astro";
-import { contentRepository } from "../../document";
-import { createNavigationService } from "../../navigation/service/service";
+import { contentRepository } from "../../document/_index";
+import { navigationService } from "../../navigation";
 
 export const prerender = false;
 
@@ -13,12 +13,9 @@ const entry = await contentRepository.get(documentId);
 if (!entry) {
   return new Response("Document not found!", { status: 404 });
 }
-
-const allDocuments = await contentRepository.list();
-const navigation = createNavigationService(allDocuments);
-const breadcrumbs = navigation.getBreadcrumbs(entry.id);
-const sidebarEntries = navigation.getSidebarEntries(entry.id);
-const parentEntry = navigation.getParentEntry(entry.id);
+const breadcrumbs = navigationService.getBreadcrumbs(entry.id);
+const sidebarEntries = navigationService.getSidebarEntries(entry.id);
+const parentEntry = navigationService.getParentEntry(entry.id);
 const viewHref = `/${entry.id}`;
 const previewHref = `/${entry.id}/preview`;
 const newHref = entry.metadata.index ? `/${entry.id}/new` : "/new";

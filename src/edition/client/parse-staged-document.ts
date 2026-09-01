@@ -1,5 +1,5 @@
 import { parse } from "yaml";
-import type { Document } from "../../document/model/types";
+import type { Document } from "../../document/_domain/types";
 
 export function buildDocumentFromContent(
   base: Document,

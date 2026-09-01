@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
-import { contentRepository } from "../../document";
+import { contentRepository } from "../../document/_index";
 import {
   invalidateCache,
   type InvalidateRequest,
 } from "../../document/change/invalidate-handler";
-import { createRenderedPageCache } from "../../rendering/adapters/cache/factory";
+import { createRenderedPageCache } from "../../publishing/infraestructure/cache";
 
 export const prerender = false;
 
@@ -31,11 +31,12 @@ export const POST: APIRoute = async ({ request }) => {
   if (!body.changes || !Array.isArray(body.changes)) {
     return new Response(
       JSON.stringify({ error: "Missing or invalid changes array" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  const cache = createRenderedPageCache();
+  const cache = await createRenderedPageCache();
+  console.log("cache:", cache);
 
   const result = await invalidateCache(contentRepository, cache, {
     changes: body.changes,

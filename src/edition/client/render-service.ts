@@ -1,6 +1,6 @@
-import { worker } from "../../rendering/client/workers";
-import type { Document } from "../../document/model/types";
-import type { RenderedDocument } from "../../rendering/model/types";
+import { worker } from "../../publishing/client/workers";
+import type { Document } from "../../document/_domain/types";
+import type { RenderedDocument } from "../../publishing/domain/render";
 
 const STAGED_KEY = "stagedDocument";
 const RENDERED_KEY = "renderedStagedDocument";

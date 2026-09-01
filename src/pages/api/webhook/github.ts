@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
-import { contentRepository } from "../../../document";
+import { contentRepository } from "../../../document/_index";
 import {
   handleGitHubPushWebhook,
   verifyGitHubWebhookSignature,
   type GitHubPushPayload,
 } from "../../../document/change/github-webhook-handler";
-import { createRenderedPageCache } from "../../../rendering/adapters/cache/factory";
+import { createRenderedPageCache } from "../../../publishing/infraestructure/cache";
 import {
   GITHUB_WEBHOOK_SECRET,
   GITHUB_BRANCH,
@@ -15,7 +15,6 @@ import {
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
-  console.log("WEBHOOK ");
   const secret = GITHUB_WEBHOOK_SECRET;
 
   if (!secret) {
@@ -44,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-  const cache = createRenderedPageCache();
+  const cache = await createRenderedPageCache();
 
   const result = await handleGitHubPushWebhook(
     contentRepository,

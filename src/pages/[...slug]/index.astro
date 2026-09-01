@@ -1,12 +1,13 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import DocumentPage from "../../document/DocumentPage.astro";
-import { renderDocumentPage } from "../../rendering/page/render-document-page";
+// import { renderDocumentPage } from "../../publishing/page/render-document-page";
+import { pagePublisher } from "../../publishing";
 
 export const prerender = false;
 
 const { slug } = Astro.params;
-const result = await renderDocumentPage(slug ?? "");
+const result = await pagePublisher.publish(slug ?? "");
 
 if (!result) {
   return new Response("Document not found", { status: 404 });

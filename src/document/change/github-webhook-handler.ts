@@ -1,8 +1,8 @@
 import { createHmac } from "node:crypto";
 import { generateId } from "../shared/github/parser";
-import type { ContentRepository } from "../model/types";
-import type { DocumentChange } from "../../navigation/model/types";
-import type { RenderedPageCache } from "../../rendering/model/types";
+import type { ContentRepository } from "../_domain/types";
+import type { DocumentChange } from "../../navigation/domain/types";
+import type { RenderedPageCache } from "../../publishing/domain/cache";
 import { invalidateCache } from "./invalidate-handler";
 
 export interface GitHubWebhookOptions {
@@ -31,7 +31,6 @@ export function verifyGitHubWebhookSignature(
   signature: string,
   body: string,
 ): boolean {
-  console.log({ signature, secret, body });
   const expected = `sha256=${createHmac("sha256", secret).update(body).digest("hex")}`;
   return signature === expected;
 }
@@ -66,7 +65,6 @@ export async function handleGitHubPushWebhook(
   removedIds: string[];
   message?: string;
 }> {
-  console.log(payload)
   const branchName = options.branch.replace(/^refs\/heads\//, "");
   const expectedRef = `refs/heads/${branchName}`;
 

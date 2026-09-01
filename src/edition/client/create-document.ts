@@ -1,4 +1,4 @@
-import type { Document } from "../../document/model/types";
+import type { Document } from "../../document/_domain/types";
 
 export interface CreateDocumentPayload {
   id: string;

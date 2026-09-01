@@ -1,11 +1,11 @@
-import { buildDocumentGraph } from "../../navigation/graph/graph";
-import { computeInvalidatedIds } from "../../navigation/graph/invalidation";
+import { graphService } from "../../navigation";
+import { computeInvalidatedIds } from "../../navigation/shared/invalidation";
 import type {
   DocumentChange,
-  DocumentGraph,
+  DocumentGraphService,
   InvalidationResult,
-} from "../../navigation/model/types";
-import type { ContentRepository, DocumentHash } from "../model/types";
+} from "../../navigation/domain/types";
+import type { ContentRepository, DocumentHash } from "../_domain/types";
 import { computeDocumentChanges, hashDocument } from "./snapshot";
 
 /**
@@ -19,13 +19,12 @@ export class ContentChangeService {
     return this.repository.list();
   }
 
-  async getGraph(): Promise<DocumentGraph> {
-    const documents = await this.repository.list();
-    return buildDocumentGraph(documents);
+  async getGraph(): Promise<DocumentGraphService> {
+    return graphService;
   }
 
   async detectChanges(
-    previousHashes: DocumentHash[],
+    previousHashes: DocumentHash[]
   ): Promise<DocumentChange[]> {
     const documents = await this.repository.list();
     const currentHashes = documents.map(hashDocument);
@@ -33,7 +32,7 @@ export class ContentChangeService {
   }
 
   async getInvalidatedIds(
-    changes: DocumentChange[],
+    changes: DocumentChange[]
   ): Promise<InvalidationResult> {
     const graph = await this.getGraph();
     return computeInvalidatedIds(graph, changes);

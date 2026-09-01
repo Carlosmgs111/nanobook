@@ -1,5 +1,5 @@
 import picomatch from "picomatch";
-import { parseFrontmatter } from "../../parse/frontmatter";
+import { parseFrontmatter } from "../../_index";
 import type { GitHubLoaderOptions, GitHubTreeItem, ParsedEntry } from "./types";
 
 export function generateId(

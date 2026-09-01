@@ -1,8 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import NewPage from "../../edition/ui/pages/NewPage.astro";
-import { contentRepository } from "../../document";
-import { createNavigationService } from "../../navigation/service/service";
+import { contentRepository } from "../../document/_index";
+import { navigationService } from "../../navigation";
 
 export const prerender = false;
 
@@ -14,11 +14,9 @@ if (!baseEntry) {
   return new Response("Document not found", { status: 404 });
  }
 
-const allDocuments = await contentRepository.list();
-const navigation = createNavigationService(allDocuments);
-const breadcrumbs = navigation.getBreadcrumbs(baseEntry.id);
-const sidebarEntries = navigation.getSidebarEntries(baseEntry.id);
-const parentEntry = navigation.getParentEntry(baseEntry.id);
+const breadcrumbs = navigationService.getBreadcrumbs(baseEntry.id);
+const sidebarEntries = navigationService.getSidebarEntries(baseEntry.id);
+const parentEntry = navigationService.getParentEntry(baseEntry.id);
 ---
 
 <Layout

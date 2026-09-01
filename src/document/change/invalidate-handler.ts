@@ -1,6 +1,6 @@
-import type { ContentRepository } from "../model/types";
-import type { DocumentChange, InvalidationResult } from "../../navigation/model/types";
-import type { RenderedPageCache } from "../../rendering/model/types";
+import type { ContentRepository } from "../_domain/types";
+import type { DocumentChange, InvalidationResult } from "../../navigation/domain/types";
+import type { RenderedPageCache } from "../../publishing/domain/cache";
 import { ContentChangeService } from "./change-service";
 
 export interface InvalidateRequest {
