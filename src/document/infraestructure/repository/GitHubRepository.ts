@@ -41,6 +41,8 @@ interface GitHubRepositoryCache {
 }
 
 const globalCache = new Map<string, GitHubRepositoryCache>();
+const globalListPromises = new Map<string, Promise<Document[]>>();
+const globalTreePromises = new Map<string, Promise<GitHubTreeItem[]>>();
 
 function buildCacheKey(options: GitHubRepositoryOptions): string {
   const pattern = Array.isArray(options.pattern)
@@ -80,8 +82,6 @@ export class GitHubRepository implements ContentRepository {
   private treeCacheTtl: number;
   private cacheKey: string;
   private treeCacheKey: string;
-  private listPromise: Promise<Document[]> | null = null;
-  private treePromise: Promise<GitHubTreeItem[]> | null = null;
 
   constructor(
     private options: GitHubRepositoryOptions,
@@ -103,8 +103,9 @@ export class GitHubRepository implements ContentRepository {
       return cached.documents;
     }
 
-    if (!this.listPromise) {
-      this.listPromise = this.fetchDocuments()
+    let listPromise = globalListPromises.get(this.cacheKey);
+    if (!listPromise) {
+      listPromise = this.fetchDocuments()
         .then((documents) => {
           globalCache.set(this.cacheKey, {
             documents,
@@ -113,23 +114,26 @@ export class GitHubRepository implements ContentRepository {
           return documents;
         })
         .finally(() => {
-          this.listPromise = null;
+          globalListPromises.delete(this.cacheKey);
         });
+      globalListPromises.set(this.cacheKey, listPromise);
     }
 
-    return this.listPromise;
+    return listPromise;
   }
 
   private async fetchTree(): Promise<GitHubTreeItem[]> {
-    if (this.treePromise) {
-      return this.treePromise;
+    let treePromise = globalTreePromises.get(this.treeCacheKey);
+    if (treePromise) {
+      return treePromise;
     }
 
-    this.treePromise = this.doFetchTree().finally(() => {
-      this.treePromise = null;
+    treePromise = this.doFetchTree().finally(() => {
+      globalTreePromises.delete(this.treeCacheKey);
     });
+    globalTreePromises.set(this.treeCacheKey, treePromise);
 
-    return this.treePromise;
+    return treePromise;
   }
 
   private async doFetchTree(): Promise<GitHubTreeItem[]> {
