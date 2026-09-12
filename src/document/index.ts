@@ -1,11 +1,14 @@
-import { eventBus } from "../shared/bus";
-import { createContentRepository } from "./infraestructure/repository";
+import type { EventBus } from "../shared/bus/EventBus";
+export type { Document, Heading, DocumentHash } from "./domain/Document";
+export { DocumentCreated } from "./domain/events/DocumentCreated";
+export { DocumentUpdated } from "./domain/events/DocumentUpdated";
+export { DocumentId } from "./domain/DocumentId";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
 import { UpdateDocument } from "./application/UpdateDocument";
 import { GetAllDocuments } from "./application/GetAllDocuments";
 import { GetDocument } from "./application/GetDocument";
-export { GetDocument };
+import { createContentRepository } from "./infraestructure/repository";
 import { CreateDocumentController } from "./infraestructure/api/CreateDocumentController";
 import { UpdateDocumentController } from "./infraestructure/api/UpdateDocumentController";
 import { CompositeReferenceResolver } from "./domain/reference/resolver";
@@ -13,19 +16,15 @@ import { InternalReferenceResolver } from "./infraestructure/reference/InternalR
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
 
-export type { Document, Heading, DocumentHash } from "./domain/Document";
-export { DocumentCreated } from "./domain/events/DocumentCreated";
-export { DocumentUpdated } from "./domain/events/DocumentUpdated";
-export { DocumentId } from "./domain/DocumentId";
-
 export class DocumentModule {
   constructor(
-    public createDocumentController: CreateDocumentController,
-    public updateDocumentController: UpdateDocumentController,
-    public getAllDocuments: GetAllDocuments,
-    public getDocument: GetDocument
+    public readonly createDocumentController: CreateDocumentController,
+    public readonly updateDocumentController: UpdateDocumentController,
+    public readonly getAllDocuments: GetAllDocuments,
+    public readonly getDocument: GetDocument,
+    public readonly eventBus: EventBus
   ) {}
-  static async create() {
+  static async create(eventBus: EventBus) {
     const contentRepository = await createContentRepository();
 
     const internalReferenceResolver = new InternalReferenceResolver(
@@ -34,7 +33,7 @@ export class DocumentModule {
     const localFileReferenceResolver = new LocalFileReferenceResolver();
     const githubReferenceResolver = new GitHubReferenceResolver();
 
-    const referenceResolver = new CompositeReferenceResolver([  
+    const referenceResolver = new CompositeReferenceResolver([
       internalReferenceResolver,
       localFileReferenceResolver,
       githubReferenceResolver,
@@ -54,7 +53,8 @@ export class DocumentModule {
       createDocumentController,
       updateDocumentController,
       getAllDocuments,
-      getDocument
+      getDocument,
+      eventBus
     );
   }
 }

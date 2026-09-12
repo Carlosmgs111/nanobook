@@ -1,3 +1,4 @@
+import { InMemoryEventBus } from "./shared/bus/InMemoryEventBus";
 import { DocumentModule, DocumentId } from "./document";
 import {
   GitHubWebhookHandler,
@@ -13,11 +14,12 @@ import {
 import type { RenderedDocumentPage } from "./publishing";
 
 export class Application {
-  public webhookController: WebhookController;
+  public readonly webhookController: WebhookController;
   private constructor(
-    public documentModule: DocumentModule,
-    public navigationModule: NavigationModule,
-    public publishingModule: PublishingModule
+    public readonly documentModule: DocumentModule,
+    public readonly navigationModule: NavigationModule,
+    public readonly publishingModule: PublishingModule,
+    public readonly eventBus: InMemoryEventBus
   ) {
     const githubWebhookHandler = new GitHubWebhookHandler(
       this.publishingModule.renderedPageCache,
@@ -27,11 +29,18 @@ export class Application {
   }
 
   static async create(): Promise<Application> {
-    const documentModule = await DocumentModule.create();
-    const publishingModule = await PublishingModule.create();
+    const eventBus = new InMemoryEventBus();
+    const documentModule = await DocumentModule.create(eventBus);
+    const publishingModule = await PublishingModule.create(eventBus);
+    publishingModule.registerEventHandlers();
     const documents = await documentModule.getAllDocuments.execute();
     const navigationModule = await NavigationModule.create(documents);
-    return new Application(documentModule, navigationModule, publishingModule);
+    return new Application(
+      documentModule,
+      navigationModule,
+      publishingModule,
+      eventBus
+    );
   }
 
   async renderPage(slug: string): Promise<
@@ -44,7 +53,6 @@ export class Application {
   > {
     const documentId = new DocumentId(slug);
     const document = await this.documentModule.getDocument.execute(documentId);
-    // console.log({ document });
     if (!document) throw new Error("Document not found");
     const breadcrumbs =
       this.navigationModule.navigationService.getBreadcrumbs(documentId);
@@ -57,7 +65,6 @@ export class Application {
     const renderedPage = await this.publishingModule.pagePublisher.publish(
       document
     );
-    // console.log({ renderedPage });
     if (!renderedPage) throw new Error("Page not found");
     return {
       ...renderedPage,

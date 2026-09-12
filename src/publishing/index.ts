@@ -1,56 +1,27 @@
-import { DocumentCreated, DocumentUpdated } from "../document";
-import type { EventHandler } from "../shared/bus/EventBus";
-
-export type { RenderedDocumentPage } from "./domain/render";
-
+import type { EventBus } from "../shared/bus/EventBus";
 import type { RenderedPageCache } from "./domain/cache";
-import { eventBus } from "../shared/bus";
+import { DocumentCreated, DocumentUpdated } from "../document";
 import { PagePublisher } from "./application/PagePublisher";
+import { OnDocumentCreatedHandler } from "./application/event-handlers/OnDocumentCreatedHandler";
+import { OnDocumentUpdatedHandler } from "./application/event-handlers/OnDocumentUpdatedHandler";
 import { createRenderedPageCache } from "./infraestructure/cache";
-export { createRenderedPageCache };
-import { type Result, ok, err } from "../shared/utils/result";
 import { UnifiedMarkdownRenderer } from "./infraestructure/markdown/UnifiedMarkdownRenderer";
 import { InvalidatePagesController } from "./infraestructure/api/InvalidatePagesController";
+
 export { GitHubWebhookHandler } from "./infraestructure/GithubWebhookHandler";
 export { WebhookController } from "./infraestructure/api/WebhookController";
-
-class OnDocumentCreatedHandler implements EventHandler<DocumentCreated> {
-  constructor(private pagePublisher: PagePublisher) {}
-  async handle(event: DocumentCreated): Promise<Result<Error, void>> {
-    if (!event.payload.id) return err(undefined);
-    this.pagePublisher.invalidate([event.payload.id as string]);
-    return ok();
-  }
-}
-
-class OnDocumentUpdatedHandler implements EventHandler<DocumentUpdated> {
-  constructor(private pagePublisher: PagePublisher) {}
-  async handle(event: DocumentUpdated): Promise<Result<Error, void>> {
-    if (!event.payload.id) return err(undefined);
-    this.pagePublisher.invalidate([event.payload.id as string]);
-    return ok();
-  }
-}
+export type { RenderedDocumentPage } from "./domain/render";
 
 export class PublishingModule {
   constructor(
-    public invalidatePagesController: InvalidatePagesController,
-    public pagePublisher: PagePublisher,
-    public pageRenderer: UnifiedMarkdownRenderer,
-    public renderedPageCache: RenderedPageCache
-  ) {
-    eventBus.subscribe(
-      DocumentCreated.name,
-      new OnDocumentCreatedHandler(this.pagePublisher)
-    );
+    public readonly invalidatePagesController: InvalidatePagesController,
+    public readonly pagePublisher: PagePublisher,
+    public readonly pageRenderer: UnifiedMarkdownRenderer,
+    public readonly renderedPageCache: RenderedPageCache,
+    public readonly eventBus: EventBus
+  ) {}
 
-    eventBus.subscribe(
-      DocumentUpdated.name,
-      new OnDocumentUpdatedHandler(this.pagePublisher)
-    );
-  }
-
-  static async create() {
+  static async create(eventBus: EventBus) {
     const pageRenderer = new UnifiedMarkdownRenderer();
     const renderedPageCache = await createRenderedPageCache();
 
@@ -63,7 +34,19 @@ export class PublishingModule {
       invalidatePagesController,
       pagePublisher,
       pageRenderer,
-      renderedPageCache
+      renderedPageCache,
+      eventBus
+    );
+  }
+
+  registerEventHandlers() {
+    this.eventBus.subscribe(
+      DocumentCreated.name,
+      new OnDocumentCreatedHandler(this.pagePublisher)
+    );
+    this.eventBus.subscribe(
+      DocumentUpdated.name,
+      new OnDocumentUpdatedHandler(this.pagePublisher)
     );
   }
 }
