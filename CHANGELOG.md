@@ -7,32 +7,46 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-11
+
 ### Added
 - `ContentRepository` ahora expone `create(document)` y `update(document)` en lugar del ambiguo `save(document)`.
-- Errores de dominio para operaciones de escritura: `DocumentAlreadyExistsError`, `DocumentNotFoundError`, `InvalidDocumentIdError` y `ParentNotFoundError` en `src/document/model/errors.ts`.
+- Errores de dominio para operaciones de escritura: `DocumentAlreadyExistsError`, `DocumentNotFoundError`, `InvalidDocumentIdError` y `ParentNotFoundError`.
 - `FileSystemRepository.create()` y `GitHubRepository.create()` para crear documentos nuevos con validación de duplicados.
 - `FileSystemRepository.update()` y `GitHubRepository.update()` para actualizar documentos existentes; devuelven error si el documento no existe.
 - `POST /api/documents` para crear documentos con validación de ids, padres y conflictos.
 - `PATCH /api/[...slug]` ahora actualiza documentos existentes y devuelve 404 cuando no existen.
-- `buildNewDocument()` en `src/document/adapters/utils/document-builder.ts` para construir documentos nuevos con frontmatter por defecto e inferencia de `index` desde el `id`.
 - `Result<T, E>` con helpers `ok()` y `err()` en `src/shared/utils/result.ts`.
-- `DocumentService` en `src/document/service/document-service.ts` para encapsular la lógica de negocio de creación y actualización de documentos.
-- `isIndexId()` y `validateDocumentId()` en `src/document/parse/path.ts`.
 - UI de creación de documentos: formulario `NewDocumentForm.astro` y página `/{slug}/new` con redirección al editor tras crear.
 - Botón "Nuevo" en el header para crear documentos desde cualquier página.
 - `MemoryRepository` como fuente `memory` en `createContentRepository()` para facilitar tests.
-
-### Fixed
-- `TocNav` ya no usa `define:vars` ni importa `/src/shared/utils/scroll-spy` con ruta absoluta en el cliente. En producción Astro no expone `src/` al navegador, lo que provocaba el error `GET https://nanobook-five.vercel.app/src/shared/utils/scroll-spy` 404. Ahora se leen los IDs desde atributos `data-*` y el helper se importa con ruta relativa dentro de un `<script type="module">` procesado por Vite.
-- Corregida la creación de directorios en `NewPage.astro`: al seleccionar "Directorio" se usaba siempre el id `index` en lugar de `{ruta}/index`, lo que sobreescribía el índice raíz. Ahora se construye el id `{base}/{nombre}/index` y se marca `index: true`.
-- Corregida la normalización de ids en `POST /api/documents`: la API normalizaba el id antes de `buildNewDocument`, lo que provocaba "Inconsistencia de índice" al crear directorios. Ahora se pasa el id original al builder y `getParentId()` normaliza antes de calcular el padre.
+- `src/Application.ts` como **composition root** modular que ensambla `DocumentModule`, `NavigationModule` y `PublishingModule`.
+- Casos de uso explícitos en `document/application/`: `CreateDocument`, `UpdateDocument`, `GetDocument`, `GetAllDocuments`.
+- `DocumentsGraph` en `src/navigation/infraestructure/DocumentsGraph.ts` con aristas de dependencia (`parent-child`, `sibling-order`, `proxy-target`, `internal-link`).
+- `NavigationService` en `src/navigation/application/navigationService.ts` para breadcrumbs, sidebar, padres, hijos e invalidación.
+- `PublishingModule` en `src/publishing/index.ts` con ciclo de vida explícito y acceso a `pagePublisher`, `renderedPageCache` e `invalidatePagesController`.
+- Webhook de GitHub (`/api/webhook/github`) compuesto desde `Application` e invalidando caché a través del grafo de dependencias.
+- Documentación de decisiones en `src/content/nanobook-project/arquitectura/`:
+  - `composicion-raiz-modular.md`
+  - `refactorizacion-grafo-dependencias.md`
+  - `webhook-github-arquitectura.md`
+  - `thundering-herd-github.md`
 
 ### Changed
-- `scripts/push-content-to-github.mjs` ahora migra **todos** los archivos dentro de `src/content/` (no solo `.md`) y crea el tree de GitHub sin `base_tree`, de modo que el repositorio remoto sea un reflejo exacto del contenido local: todo archivo local se sube y cualquier archivo remoto que no exista localmente se elimina.
-- Los handlers de `src/document/api/document.ts` ya no contienen lógica de negocio; ahora reciben `DocumentService` por inyección y solo adaptan el patrón `Result` a respuestas HTTP.
-- `src/pages/api/[...slug].ts` compone e inyecta `DocumentService` (con repositorio y cache) a nivel de módulo, eliminando el uso de factories dentro de los controladores.
-- `document-builder.ts` se movió de `src/document/adapters/repository/` a `src/document/adapters/utils/` para separar utilidades puras de construcción de documentos de las implementaciones de repositorio.
-- `PublishPage` recibe una `NavigationServiceFactoryPort` por inyección y crea el servicio de navegación bajo demanda con `.for(documents)`, eliminando el paso previo `.build()`. `BuildNavigation` y `getBuildNavigation` se reemplazan por `CreateNavigationService` y la interfaz `NavigationServiceFactory`.
+- **Refactorización a arquitectura modular con composition root**: las páginas Astro y los endpoints ya no instancian repositorios ni cachés directamente; consumen `getApp()`.
+- `src/document/index.ts` ahora exporta `DocumentModule` con `static async create()` en lugar de singletones de módulo.
+- `src/publishing/index.ts` ahora exporta `PublishingModule` con `static async create()` en lugar de constantes globales.
+- `src/navigation/index.ts` ahora exporta `NavigationModule` con `static async create(documents)`.
+- `scripts/push-content-to-github.mjs` ahora migra **todos** los archivos dentro de `src/content/` (no solo `.md`) y crea el tree de GitHub sin `base_tree`, de modo que el repositorio remoto sea un reflejo exacto del contenido local.
+- Los handlers de la API de documentos reciben casos de uso por inyección y solo adaptan el patrón `Result` a respuestas HTTP.
+- `src/pages/api/[...slug].ts` consume `app.documentModule` a través de `getApp()`.
+- `src/pages/api/invalidate.ts` consume `app.publishingModule` a través de `getApp()`.
+
+### Fixed
+- `TocNav` ya no usa `define:vars` ni importa `/src/shared/utils/scroll-spy` con ruta absoluta en el cliente.
+- Corregida la creación de directorios en `NewPage.astro`: al seleccionar "Directorio" se usaba siempre el id `index` en lugar de `{ruta}/index`, lo que sobreescribía el índice raíz.
+- Corregida la normalización de ids en `POST /api/documents`: la API normalizaba el id antes de construir el documento, provocando "Inconsistencia de índice" al crear directorios.
+- **`503 Backend.max_conn reached` contra la API de GitHub**: agregado in-flight promise deduplication en `GitHubRepository.list()` y `fetchTree()` para que llamadas concurrentes compartan la misma carga en lugar de disparar múltiples requests simultáneos.
 
 ## [0.4.2] - 2026-08-26
 
@@ -222,7 +236,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Comportamiento responsive del header, breadcrumb y TOC en mobile.
 - Sidebar en mobile: ahora muestra el texto completo en el drawer, independientemente del modo `collapsed` guardado.
 
-[Unreleased]: https://github.com/usuario/nanobook/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/usuario/nanobook/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/usuario/nanobook/compare/v0.4.4...v0.5.0
 [0.3.0]: https://github.com/usuario/nanobook/compare/v0.2.0-alpha.1...v0.3.0
 [0.2.0-alpha.1]: https://github.com/usuario/nanobook/compare/v0.1.0...v0.2.0-alpha.1
 [0.1.0]: https://github.com/usuario/nanobook/releases/tag/v0.1.0
