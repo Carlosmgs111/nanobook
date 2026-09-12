@@ -1,7 +1,9 @@
 import type { GitHubLoaderOptions, GitHubTreeItem } from "./types";
+import { getCached, setCached, buildCacheKey } from "./cache";
 
 const GITHUB_API_BASE = "https://api.github.com";
 const API_VERSION = "2022-11-28";
+const DEFAULT_CACHE_TTL = 5 * 60 * 1000;
 
 function getHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = {
@@ -30,10 +32,18 @@ export async function fetchGitHubTree(
   options: Required<Pick<GitHubLoaderOptions, "owner" | "repo" | "branch">> &
     Pick<GitHubLoaderOptions, "token">
 ): Promise<GitHubTreeItem[]> {
-  console.log("fetchGitHubTree");
   const { owner, repo, branch, token } = options;
+  const cacheKey = buildCacheKey("tree", owner, repo, branch);
+
+  const cached = await getCached<GitHubTreeItem[]>(cacheKey, DEFAULT_CACHE_TTL);
+  if (cached) {
+    return cached;
+  }
+
+  console.log("fetchGitHubTree");
   const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
   const data = await fetchJson<{ tree: GitHubTreeItem[] }>(url, token);
+  await setCached(cacheKey, data.tree, DEFAULT_CACHE_TTL);
   return data.tree;
 }
 
@@ -42,6 +52,13 @@ export async function fetchFileContent(
     Pick<GitHubLoaderOptions, "token"> & { path: string }
 ): Promise<string> {
   const { owner, repo, branch, path } = options;
+  const cacheKey = buildCacheKey("file", owner, repo, branch, path);
+
+  const cached = await getCached<string>(cacheKey, DEFAULT_CACHE_TTL);
+  if (cached !== null) {
+    return cached;
+  }
+
   const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeURIComponent(
     path
   )}`;
@@ -58,7 +75,9 @@ export async function fetchFileContent(
     );
   }
 
-  return response.text();
+  const content = await response.text();
+  await setCached(cacheKey, content, DEFAULT_CACHE_TTL);
+  return content;
 }
 
 interface GitHubContentResponse {

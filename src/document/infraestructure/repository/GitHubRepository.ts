@@ -15,6 +15,7 @@ import {
   DocumentNotFoundError,
 } from "../../domain/errors";
 import { withRedisClient } from "../../../shared/utils/redis";
+import { clearCached, buildCacheKey as buildGitHubCacheKey } from "../../../shared/github/cache";
 
 import type { GitHubLoaderOptions } from "../../../shared/github/types";
 import type { GitHubTreeItem } from "../../../shared/github/types";
@@ -221,6 +222,12 @@ export class GitHubRepository implements ContentRepository {
     return filePath.replace(/^\/+/, "");
   }
 
+  private invalidateFileCache(path: string): void {
+    const { owner, repo } = this.options;
+    const cacheKey = buildGitHubCacheKey("file", owner, repo, this.branch, path);
+    clearCached(cacheKey);
+  }
+
   async create(document: Document): Promise<void> {
     try {
       const path = this.idToGitHubPath(
@@ -251,6 +258,7 @@ export class GitHubRepository implements ContentRepository {
         message: `Create ${path}`,
       });
 
+      this.invalidateFileCache(path);
       this.clearCache();
     } catch (error) {
       console.error(error);
@@ -288,6 +296,7 @@ export class GitHubRepository implements ContentRepository {
       message: `Update ${path}`,
     });
 
+    this.invalidateFileCache(path);
     this.clearCache();
   }
 
