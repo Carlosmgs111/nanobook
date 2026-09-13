@@ -1,10 +1,14 @@
-import { Result } from "../../shared/utils/result";
+import { Result } from "../../shared/utils/Result";
 import { DocumentId } from "./DocumentId";
 import { DocumentReference } from "./DocumentReference";
 import type { DocumentMetadata, Entry } from "./types";
 import { hashString, serializeMetadata } from "./hash";
 import type { DocumentParser } from "./DocumentParser";
-import { InvalidDocumentError, InvalidDocumentIdError } from "./errors";
+import {
+  InvalidDocumentError,
+  InvalidDocumentIdError,
+  InvalidIndexDocumentError,
+} from "./errors";
 
 const NEW_DOCUMENT_TEMPLATE = `---
 title: "<%= title %>"
@@ -82,14 +86,6 @@ export class Document {
       },
       id.getValue()
     );
-    if (this.metadata.index !== isIndex) {
-      throw new Error(
-        `Inconsistencia de índice: el id "${id.getValue()}" ${
-          isIndex ? "es" : "no es"
-        } de índice pero metadata.index=${this.metadata.index}`
-      );
-    }
-
     this.rawFrontmatter = this.interpolateTemplate(NEW_DOCUMENT_TEMPLATE, {
       title: this.metadata.title,
       description: this.metadata.description,
@@ -98,6 +94,33 @@ export class Document {
       index: String(this.metadata.index),
     });
   }
+
+  static create(
+    id: string,
+    data: DocumentMetadata,
+    body: string = "",
+    parser: DocumentParser | null = null
+  ): Result<
+    InvalidDocumentError | InvalidDocumentIdError | InvalidIndexDocumentError,
+    Document
+  > {
+    const idResult = DocumentId.create(id);
+    if (!idResult.isSuccess) {
+      return Result.fail(idResult.getError());
+    }
+    const documentId = idResult.getValue();
+    if (Boolean(data.index) !== documentId.isIndexId()) {
+      return Result.fail(
+        new InvalidIndexDocumentError(
+          documentId.getValue(),
+          documentId.isIndexId(),
+          data
+        )
+      );
+    }
+    return Result.ok(new Document(idResult.getValue(), data, body, parser));
+  }
+
   async computeContentHash(): Promise<string> {
     return await hashString(this.content);
   }
@@ -155,27 +178,8 @@ export class Document {
       rawFrontmatter: this.rawFrontmatter,
       content: this.content,
       slug: this.slug,
-      headings: this.getHeadings()
+      headings: this.getHeadings(),
     };
-  }
-
-  static create(
-    id: string,
-    data: DocumentMetadata,
-    body: string = "",
-    parser: DocumentParser | null = null
-  ): Result<InvalidDocumentError | InvalidDocumentIdError, Document> {
-    const idResult = DocumentId.create(id);
-    if (!idResult.isSuccess) {
-      return Result.fail(idResult.getError());
-    }
-
-    try {
-      return Result.ok(new Document(idResult.getValue(), data, body, parser));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return Result.fail(new InvalidDocumentError(id, message));
-    }
   }
 
   private interpolateTemplate(

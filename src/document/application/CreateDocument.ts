@@ -1,5 +1,5 @@
 import type { EventBus } from "../../shared/bus/EventBus";
-import type { Result } from "../../shared/utils/result";
+import  { Result } from "../../shared/utils/Result";
 import type {
   ContentRepository,
   DocumentChangeNotifier,
@@ -7,9 +7,7 @@ import type {
 import type { DocumentServiceError } from "../domain/errors";
 import { DocumentCreated } from "../domain/events/DocumentCreated";
 import { Document } from "../domain/Document";
-import { Result as ResultUtils } from "../../shared/utils/result";
 import {
-  DocumentAlreadyExistsError,
   InvalidDocumentIdError,
   ParentNotFoundError,
 } from "../domain/errors";
@@ -41,36 +39,26 @@ export class CreateDocument {
   ): Promise<Result<CreateDocumentError, Document>> {
     const idResult = DocumentId.create(input.id);
     if (!idResult.isSuccess) {
-      return ResultUtils.fail(idResult.getError());
+      return Result.fail(idResult.getError());
     }
     const id = idResult.getValue();
 
-    const isIndex = id.isIndexId();
-
-    if (isIndex && input.index === false) {
-      return ResultUtils.fail(new InvalidDocumentIdError(id));
-    }
-
-    const existingResult = await this.repository.get(id);
-    if (!existingResult.isSuccess) {
-      return ResultUtils.fail(existingResult.getError());
-    }
-    if (existingResult.getValue()) {
-      return ResultUtils.fail(new DocumentAlreadyExistsError(id));
+    if (id.isIndexId() && input.index === false) {
+      return Result.fail(new InvalidDocumentIdError(id.getValue()));
     }
 
     const parentId = id.getParentId();
     if (parentId !== null) {
-      const parentResult = await this.repository.get(parentId);
+      const parentResult = await this.repository.getById(parentId.getValue());
       if (!parentResult.isSuccess) {
-        return ResultUtils.fail(parentResult.getError());
+        return Result.fail(parentResult.getError());
       }
       const parent = parentResult.getValue();
       if (!parent) {
-        return ResultUtils.fail(new ParentNotFoundError(parentId));
+        return Result.fail(new ParentNotFoundError(parentId.getValue()));
       }
       if (!parent.getMetadata().index) {
-        return ResultUtils.fail(new InvalidDocumentIdError(parentId));
+        return Result.fail(new InvalidDocumentIdError(parentId.getValue()));
       }
     }
 
@@ -89,20 +77,20 @@ export class CreateDocument {
       ""
     );
     if (!documentResult.isSuccess) {
-      return ResultUtils.fail(documentResult.getError());
+      return Result.fail(documentResult.getError());
     }
     const document = documentResult.getValue();
 
     const createResult = await this.repository.create(document);
     if (!createResult.isSuccess) {
-      return ResultUtils.fail(createResult.getError());
+      return Result.fail(createResult.getError());
     }
 
     const documentId = document.getId().getValue();
 
     const notifyDocResult = await this.notifier.onDocumentCreated(documentId);
     if (!notifyDocResult.isSuccess) {
-      return ResultUtils.fail(notifyDocResult.getError());
+      return Result.fail(notifyDocResult.getError());
     }
 
     if (parentId !== null) {
@@ -110,7 +98,7 @@ export class CreateDocument {
         parentId.getValue()
       );
       if (!notifyParentResult.isSuccess) {
-        return ResultUtils.fail(notifyParentResult.getError());
+        return Result.fail(notifyParentResult.getError());
       }
     }
 
@@ -118,7 +106,7 @@ export class CreateDocument {
       DocumentCreated.create({ id: documentId })
     );
     if (!publishDocResult.isSuccess) {
-      return ResultUtils.fail(publishDocResult.getError());
+      return Result.fail(publishDocResult.getError());
     }
 
     if (parentId !== null) {
@@ -126,10 +114,10 @@ export class CreateDocument {
         DocumentCreated.create({ id: parentId.getValue() })
       );
       if (!publishParentResult.isSuccess) {
-        return ResultUtils.fail(publishParentResult.getError());
+        return Result.fail(publishParentResult.getError());
       }
     }
 
-    return ResultUtils.ok(document);
+    return Result.ok(document);
   }
 }

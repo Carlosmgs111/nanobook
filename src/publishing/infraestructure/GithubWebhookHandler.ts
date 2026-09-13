@@ -4,7 +4,7 @@ import type {
   DocumentChange,
   InvalidationResult,
 } from "../../navigation/domain/types";
-import { generateId } from "../../shared/github/parser";
+import { toDocumentId } from "../../shared/utils/documentPath";
 import type { NavigationService } from "../../navigation";
 import {
   GITHUB_WEBHOOK_SECRET,
@@ -43,7 +43,7 @@ function mapGitHubPathsToChanges(
   return paths
     .filter((path) => path.endsWith(".md"))
     .map((path) => {
-      const id = generateId(path, basePath);
+      const id = toDocumentId(path, { basePath, lowercase: true });
       return kind === "modified"
         ? { id, kind: "modified", scope: "content" }
         : { id, kind };
@@ -109,7 +109,6 @@ export class GitHubWebhookHandler {
       };
     }
      const result = await this.navigationService.getInvalidatedIds(changes);
-     console.log(result);
      const invalidateResult = await this.renderedPageCache.invalidate(
        result.invalidatedIds
      );

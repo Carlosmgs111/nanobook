@@ -69,7 +69,7 @@ src/Application.ts
   ├── PublishingModule.renderedPageCache
   ├── NavigationModule.navigationService
   └── GitHubWebhookHandler(cache, navigationService)
-        └── WebhookController(handler)
+        └── GitHubWebhookController(handler)
 ```
 
 ## Justificación

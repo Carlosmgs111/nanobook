@@ -1,29 +1,9 @@
 import picomatch from "picomatch";
-import { FrontmatterParser } from "../../document/infraestructure/parse/FrontmatterParser";
-import type { GitHubLoaderOptions, GitHubTreeItem, ParsedEntry } from "./types";
-
-export function generateId(
-  filePath: string,
-  basePath: string | undefined,
-): string {
-  const prefix = basePath ? `${basePath}/` : "";
-  const relativePath = filePath.startsWith(prefix)
-    ? filePath.slice(prefix.length)
-    : filePath;
-  const withoutExt = relativePath.replace(/\.md$/, "");
-
-  // Align with Astro's glob loader convention:
-  // blog/index.md -> blog, index.md -> index
-  // if (withoutExt.endsWith("/index")) {
-  //   return (withoutExt.slice(0, -"/index".length) || "index").toLowerCase();
-  // }
-
-  return withoutExt.toLowerCase();
-}
+import type { GitHubRepositoryConfig, GitHubTreeItem } from "./types";
 
 export function matchesPattern(
   filePath: string,
-  pattern: GitHubLoaderOptions["pattern"],
+  pattern: GitHubRepositoryConfig["pattern"],
 ): boolean {
   if (!pattern) return filePath.endsWith(".md");
 
@@ -37,22 +17,10 @@ export function matchesPattern(
   return isMatch(filePath) && !isIgnored(filePath);
 }
 
-export function createParsedEntry(
-  filePath: string,
-  raw: string,
-  basePath: string | undefined,
-): ParsedEntry {
-  const { data, body } = FrontmatterParser.parseFrontmatter(raw);
-  const id = generateId(filePath, basePath);
-  return { id, data, body, raw, path: filePath };
-}
-
-
-
 export function filterContentFiles(
   tree: GitHubTreeItem[],
   basePath: string,
-  pattern: GitHubLoaderOptions["pattern"]
+  pattern: GitHubRepositoryConfig["pattern"]
 ): GitHubTreeItem[] {
   const prefix = basePath ? `${basePath}/` : "";
 

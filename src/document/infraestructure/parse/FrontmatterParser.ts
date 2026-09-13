@@ -52,4 +52,13 @@ export class FrontmatterParser {
       );
     }
   }
+
+  /**
+   * Extracts the raw frontmatter block (including delimiters) from a Markdown
+   * string. Returns `undefined` if no frontmatter is present.
+   */
+  static extractFrontmatter(raw: string): string | undefined {
+    const match = raw.match(FRONTMATTER_REGEX);
+    return match ? `---\n${match[1]}---\n\n` : undefined;
+  }
 }

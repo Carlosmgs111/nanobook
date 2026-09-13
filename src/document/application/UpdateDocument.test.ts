@@ -11,7 +11,7 @@ import {
   DocumentNotificationError,
   DocumentRepositoryError,
 } from "../infraestructure/errors";
-import { Result } from "../../shared/utils/result";
+import { Result } from "../../shared/utils/Result";
 import { EventBusError } from "../../shared/bus/errors";
 import type { EventBus } from "../../shared/bus/EventBus";
 import type { DocumentChangeNotifier } from "../domain/types";

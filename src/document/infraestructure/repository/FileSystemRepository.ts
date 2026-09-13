@@ -1,7 +1,6 @@
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { Result } from "../../../shared/utils/result";
-import { FrontmatterParser } from "../parse/FrontmatterParser";
+import { Result } from "../../../shared/utils/Result";
 import { idToFilePath, filePathToId } from "./fileSystemParsePath";
 import type {
   ContentRepository,
@@ -13,12 +12,11 @@ import {
 } from "../../domain/errors";
 
 import { Document } from "../../domain/Document";
-import type { DocumentId } from "../../domain/DocumentId";
 import type { DocumentParser } from "../../domain/DocumentParser";
 import {
-  DocumentParseError,
   DocumentRepositoryError,
 } from "../errors";
+import { createDocumentFromRaw } from "./createDocumentFromRaw";
 
 const CONTENT_DIR = "./src/content";
 
@@ -43,13 +41,6 @@ async function scanMarkdownFiles(dir: string): Promise<string[]> {
   return files;
 }
 
-/**
- * Repositorio de contenido que lee directamente desde `src/content/`
- * sin depender de Astro.
- *
- * Util para scripts standalone, tests sin build y futuro renderizador
- * incremental.
- */
 export class FileSystemRepository implements ContentRepository {
   constructor(
     private contentDir: string = CONTENT_DIR,
@@ -64,9 +55,8 @@ export class FileSystemRepository implements ContentRepository {
 
       for (const file of files) {
         const raw = await readFile(file, "utf-8");
-        const { data, body } = FrontmatterParser.parseFrontmatter(raw);
         const id = filePathToId(file, contentRoot);
-        const documentResult = Document.create(id, data, body, this.parser);
+        const documentResult = createDocumentFromRaw(id, raw, this.parser);
         if (!documentResult.isSuccess) {
           return Result.fail(documentResult.getError());
         }
@@ -81,8 +71,8 @@ export class FileSystemRepository implements ContentRepository {
     }
   }
 
-  async get(
-    id: DocumentId
+  async getById(
+    id: string
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
     const documentsResult = await this.list();
     if (!documentsResult.isSuccess) {
@@ -90,21 +80,7 @@ export class FileSystemRepository implements ContentRepository {
     }
     const documents = documentsResult.getValue();
     return Result.ok(
-      documents.find((document) => document.getId().getValue() === id.getValue()) ??
-        null
-    );
-  }
-
-  async getBySlug(
-    slug: string
-  ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) {
-      return Result.fail(documentsResult.getError());
-    }
-    const documents = documentsResult.getValue();
-    return Result.ok(
-      documents.find((document) => document.getId().getValue() === slug) ?? null
+      documents.find((document) => document.getId().getValue() === id) ?? null
     );
   }
 
@@ -131,7 +107,7 @@ export class FileSystemRepository implements ContentRepository {
         this.contentDir
       );
       if (await fileExists(filePath)) {
-        return Result.fail(new DocumentAlreadyExistsError(document.getId()));
+        return Result.fail(new DocumentAlreadyExistsError(document.getId().getValue()));
       }
       await mkdir(dirname(filePath), { recursive: true });
       await writeFile(
@@ -160,7 +136,7 @@ export class FileSystemRepository implements ContentRepository {
         this.contentDir
       );
       if (!(await fileExists(filePath))) {
-        return Result.fail(new DocumentNotFoundError(document.getId()));
+        return Result.fail(new DocumentNotFoundError(document.getId().getValue()));
       }
       await mkdir(dirname(filePath), { recursive: true });
       await writeFile(

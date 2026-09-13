@@ -1,6 +1,4 @@
-import type { DocumentMetadata } from "../../document/domain/types";
-
-export interface GitHubLoaderOptions {
+export interface GitHubRepositoryConfig {
   /** GitHub owner or organization name. */
   owner: string;
   /** Repository name. */
@@ -22,12 +20,4 @@ export interface GitHubTreeItem {
   sha: string;
   url: string;
   size?: number;
-}
-
-export interface ParsedEntry {
-  id: string;
-  data: DocumentMetadata;
-  body: string;
-  raw: string;
-  path: string;
 }

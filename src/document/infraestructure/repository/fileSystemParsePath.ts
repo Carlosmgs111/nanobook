@@ -1,4 +1,5 @@
 import { join, relative, resolve, sep } from "node:path";
+import { toDocumentId } from "../../../shared/utils/documentPath";
 import { InvalidDocumentIdError } from "../../domain/errors";
 
 const DEFAULT_CONTENT_DIR = "./src/content";
@@ -40,7 +41,5 @@ export function filePathToId(
 ): string {
   const contentRoot = resolveContentDir(contentDir);
   const relativePath = relative(contentRoot, filePath).replace(/\\/g, "/");
-  const withoutExt = relativePath.replace(/\.md$/, "");
-
-  return withoutExt;
+  return toDocumentId(relativePath, { lowercase: false });
 }

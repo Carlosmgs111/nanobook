@@ -5,11 +5,8 @@ import {
   updateFileContent,
 } from "../../../shared/github/api";
 import { DocumentId } from "../../domain/DocumentId";
-import {
-  createParsedEntry,
-  filterContentFiles,
-} from "../../../shared/github/parser";
-import { Result } from "../../../shared/utils/result";
+import { filterContentFiles } from "../../../shared/github/parser";
+import { Result } from "../../../shared/utils/Result";
 import type {
   ContentRepository,
   ContentRepositoryListError,
@@ -19,13 +16,14 @@ import {
   DocumentNotFoundError,
 } from "../../domain/errors";
 import { withRedisClient } from "../../../shared/utils/redis";
-import { clearCached, buildCacheKey as buildGitHubCacheKey } from "../../../shared/github/cache";
 
-import type { GitHubLoaderOptions } from "../../../shared/github/types";
+import type { GitHubRepositoryConfig } from "../../../shared/github/types";
 import type { GitHubTreeItem } from "../../../shared/github/types";
 import { Document } from "../../domain/Document";
 import type { DocumentParser } from "../../domain/DocumentParser";
 import { DocumentRepositoryError } from "../errors";
+import { toDocumentId } from "../../../shared/utils/documentPath";
+import { createDocumentFromRaw } from "./createDocumentFromRaw";
 
 export interface GitHubRepositoryOptions {
   owner: string;
@@ -34,7 +32,7 @@ export interface GitHubRepositoryOptions {
   token?: string;
   path?: string;
   /** Patrón de archivos a incluir/excluir. Por defecto excluye README.md. */
-  pattern?: GitHubLoaderOptions["pattern"];
+  pattern?: GitHubRepositoryConfig["pattern"];
   /** TTL del cache de lista de documentos en milisegundos. Por defecto 5 minutos. */
   cacheTtl?: number;
   /** TTL del cache del tree de GitHub en Redis en milisegundos. Por defecto 5 minutos. */
@@ -47,7 +45,10 @@ interface GitHubRepositoryCache {
 }
 
 const globalCache = new Map<string, GitHubRepositoryCache>();
-const globalListPromises = new Map<string, Promise<Result<ContentRepositoryListError, Document[]>>>();
+const globalListPromises = new Map<
+  string,
+  Promise<Result<ContentRepositoryListError, Document[]>>
+>();
 const globalTreePromises = new Map<string, Promise<GitHubTreeItem[]>>();
 
 function buildCacheKey(options: GitHubRepositoryOptions): string {
@@ -62,28 +63,10 @@ function buildCacheKey(options: GitHubRepositoryOptions): string {
 function buildTreeCacheKey(options: GitHubRepositoryOptions): string {
   return `nanobook:github:tree:${buildCacheKey(options)}`;
 }
-
-/**
- * Repositorio de contenido que lee y escribe Markdown desde un repositorio de
- * GitHub.
- *
- * Útil cuando el contenido vive en un repo separado y se actualiza sin
- * redeploy. Implementa save() a través de la GitHub Contents API, creando o
- * actualizando el archivo correspondiente y commiteando directamente en la
- * rama configurada.
- *
- * Cachea la lista de documentos en memoria compartida y el tree de GitHub en
- * Redis durante un TTL configurable para minimizar las llamadas a la API de
- * GitHub. El cache se invalida automáticamente al expirar el TTL y también se
- * invalida de forma proactiva después de guardar un documento.
- *
- * Por defecto excluye README.md para alinearse con el comportamiento del
- * github-loader de Astro, que también lo excluye del pattern por defecto.
- */
 export class GitHubRepository implements ContentRepository {
   private branch: string;
   private path: string;
-  private pattern: GitHubLoaderOptions["pattern"];
+  private pattern: GitHubRepositoryConfig["pattern"];
   private cacheTtl: number;
   private treeCacheTtl: number;
   private cacheKey: string;
@@ -100,6 +83,129 @@ export class GitHubRepository implements ContentRepository {
     this.treeCacheTtl = options.treeCacheTtl ?? 300_000;
     this.cacheKey = buildCacheKey(options);
     this.treeCacheKey = buildTreeCacheKey(options);
+  }
+
+  async getById(
+    id: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
+    }
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.find((document) => document.getId().getValue() === id) ?? null
+    );
+  }
+
+  async listChildren(
+    parentId: string | null
+  ): Promise<Result<ContentRepositoryListError, Document[]>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
+    }
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.filter(
+        (document) => document.getId().getParentId() === parentId
+      )
+    );
+  }
+
+  async create(
+    document: Document
+  ): Promise<
+    Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>
+  > {
+    try {
+      const path = this.idToGitHubPath(
+        document.getId().getValue(),
+        document.getMetadata().index
+      );
+      const { owner, repo, token } = this.options;
+
+      const sha = await fetchFileSha({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+      });
+
+      if (sha) {
+        return Result.fail(new DocumentAlreadyExistsError(document.getId().getValue()));
+      }
+
+      await updateFileContent({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+        content: document.getRawFrontmatter() + document.getContent(),
+        message: `Create ${path}`,
+      });
+
+      this.clearCache();
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to create document "${document
+            .getId()
+            .getValue()}" on GitHub`,
+          { cause: error }
+        )
+      );
+    }
+  }
+
+  async update(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
+    try {
+      const path = this.idToGitHubPath(
+        document.getId().getValue(),
+        document.getMetadata().index
+      );
+      const { owner, repo, token } = this.options;
+
+      const sha = await fetchFileSha({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+      });
+
+      if (!sha) {
+        return Result.fail(new DocumentNotFoundError(document.getId().getValue()));
+      }
+
+      await updateFileContent({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+        content: document.getRawFrontmatter() + document.getContent(),
+        sha,
+        message: `Update ${path}`,
+      });
+
+      this.clearCache();
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to update document "${document
+            .getId()
+            .getValue()}" on GitHub`,
+          { cause: error }
+        )
+      );
+    }
   }
 
   async list(): Promise<Result<ContentRepositoryListError, Document[]>> {
@@ -128,6 +234,15 @@ export class GitHubRepository implements ContentRepository {
     }
 
     return listPromise;
+  }
+
+  private idToGitHubPath(id: string, isIndex: boolean): string {
+    const base = this.path ? `${this.path}/` : "";
+    if (id === "index") {
+      return `${base}index.md`.replace(/^\/+/, "");
+    }
+    const filePath = isIndex ? `${base}${id}/index.md` : `${base}${id}.md`;
+    return filePath.replace(/^\/+/, "");
   }
 
   private async fetchTree(): Promise<GitHubTreeItem[]> {
@@ -179,7 +294,9 @@ export class GitHubRepository implements ContentRepository {
     return tree;
   }
 
-  private async fetchDocuments(): Promise<Result<ContentRepositoryListError, Document[]>> {
+  private async fetchDocuments(): Promise<
+    Result<ContentRepositoryListError, Document[]>
+  > {
     try {
       const tree = await this.fetchTree();
 
@@ -195,8 +312,11 @@ export class GitHubRepository implements ContentRepository {
           path: file.path,
         });
 
-        const { id, data, body } = createParsedEntry(file.path, raw, this.path);
-        const documentResult = Document.create(id, data, body);
+        const id = toDocumentId(file.path, {
+          basePath: this.path,
+          lowercase: true,
+        });
+        const documentResult = createDocumentFromRaw(id, raw, this.parser);
         if (!documentResult.isSuccess) {
           return Result.fail(documentResult.getError());
         }
@@ -213,162 +333,8 @@ export class GitHubRepository implements ContentRepository {
     }
   }
 
-  async get(
-    id: DocumentId
-  ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) {
-      return Result.fail(documentsResult.getError());
-    }
-    const documents = documentsResult.getValue();
-    return Result.ok(
-      documents.find(
-        (document) => document.getId().getValue() === id.getValue()
-      ) ?? null
-    );
-  }
-
-  async getBySlug(
-    slug: string
-  ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) {
-      return Result.fail(documentsResult.getError());
-    }
-    const documents = documentsResult.getValue();
-    return Result.ok(
-      documents.find((document) => document.getSlug() === slug) ?? null
-    );
-  }
-
-  async listChildren(
-    parentId: string | null
-  ): Promise<Result<ContentRepositoryListError, Document[]>> {
-    const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) {
-      return Result.fail(documentsResult.getError());
-    }
-    const documents = documentsResult.getValue();
-    return Result.ok(
-      documents.filter(
-        (document) => document.getId().getParentId() === parentId
-      )
-    );
-  }
-
-  private idToGitHubPath(id: string, isIndex: boolean): string {
-    const base = this.path ? `${this.path}/` : "";
-    if (id === "index") {
-      return `${base}index.md`.replace(/^\/+/, "");
-    }
-    const filePath = isIndex ? `${base}${id}/index.md` : `${base}${id}.md`;
-    return filePath.replace(/^\/+/, "");
-  }
-
-  private invalidateFileCache(path: string): void {
-    const { owner, repo } = this.options;
-    const cacheKey = buildGitHubCacheKey("file", owner, repo, this.branch, path);
-    clearCached(cacheKey);
-  }
-
-  async create(
-    document: Document
-  ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
-    try {
-      const path = this.idToGitHubPath(
-        document.getId().getValue(),
-        document.getMetadata().index
-      );
-      const { owner, repo, token } = this.options;
-
-      const sha = await fetchFileSha({
-        owner,
-        repo,
-        branch: this.branch,
-        token,
-        path,
-      });
-
-      if (sha) {
-        return Result.fail(new DocumentAlreadyExistsError(document.getId()));
-      }
-
-      await updateFileContent({
-        owner,
-        repo,
-        branch: this.branch,
-        token,
-        path,
-        content: document.getRawFrontmatter() + document.getContent(),
-        message: `Create ${path}`,
-      });
-
-      this.invalidateFileCache(path);
-      this.clearCache();
-      return Result.ok();
-    } catch (error) {
-      return Result.fail(
-        new DocumentRepositoryError(
-          `Failed to create document "${document.getId().getValue()}" on GitHub`,
-          { cause: error }
-        )
-      );
-    }
-  }
-
-  async update(
-    document: Document
-  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
-    try {
-      const path = this.idToGitHubPath(
-        document.getId().getValue(),
-        document.getMetadata().index
-      );
-      const { owner, repo, token } = this.options;
-
-      const sha = await fetchFileSha({
-        owner,
-        repo,
-        branch: this.branch,
-        token,
-        path,
-      });
-
-      if (!sha) {
-        return Result.fail(new DocumentNotFoundError(document.getId()));
-      }
-
-      await updateFileContent({
-        owner,
-        repo,
-        branch: this.branch,
-        token,
-        path,
-        content: document.getRawFrontmatter() + document.getContent(),
-        sha,
-        message: `Update ${path}`,
-      });
-
-      this.invalidateFileCache(path);
-      this.clearCache();
-      return Result.ok();
-    } catch (error) {
-      return Result.fail(
-        new DocumentRepositoryError(
-          `Failed to update document "${document.getId().getValue()}" on GitHub`,
-          { cause: error }
-        )
-      );
-    }
-  }
-
   /** Invalida el cache de documentos de esta instancia. */
   clearCache(): void {
     globalCache.delete(this.cacheKey);
-  }
-
-  /** Invalida todo el cache global de GitHubRepository. */
-  static clearAllCache(): void {
-    globalCache.clear();
   }
 }

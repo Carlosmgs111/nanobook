@@ -165,8 +165,8 @@ Usuario -> GET /markdown
 
 9. Para cada archivo:
    -> fetchFileContent() descarga desde raw.githubusercontent.com (sin rate limit de API).
-   -> createParsedEntry() parsea frontmatter.
-   -> buildDocument() construye Document.
+    -> createDocumentFromRaw() parsea frontmatter y construye Document.
+
 
 10. resolveProxies(documents) resuelve referencias ref si las hay.
 

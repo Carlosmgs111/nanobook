@@ -1,4 +1,4 @@
-import type { Result } from "../../shared/utils/result";
+import type { Result } from "../../shared/utils/Result";
 import type { DocumentId } from "./DocumentId";
 import type { Document, Heading } from "./Document";
 import type { Ref } from "./DocumentReference";
@@ -47,8 +47,7 @@ export type ContentRepositoryError =
 
 export interface ContentRepository {
   list(): Promise<Result<ContentRepositoryListError, Document[]>>;
-  get(id: DocumentId): Promise<Result<ContentRepositoryListError, Document | null>>;
-  getBySlug(slug: string): Promise<Result<ContentRepositoryListError, Document | null>>;
+  getById(id: string): Promise<Result<ContentRepositoryListError, Document | null>>;
   listChildren(parentId: string | null): Promise<Result<ContentRepositoryListError, Document[]>>;
   create(document: Document): Promise<Result<ContentRepositoryError, void>>;
   update(document: Document): Promise<Result<ContentRepositoryError, void>>;

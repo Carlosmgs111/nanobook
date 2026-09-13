@@ -36,7 +36,6 @@ export class LocalFileReferenceResolver implements ReferenceResolverPlugin {
   ): Promise<ContentEntry | null> {
     if (ref.getRef().source !== "local") return null;
     const relativePath = getPath(ref.getValue());
-    console.log({ relativePath });
     assertWithinProject(relativePath);
 
     const raw = await readFile(relativePath, "utf-8");
@@ -45,12 +44,7 @@ export class LocalFileReferenceResolver implements ReferenceResolverPlugin {
       id: context.sourceId,
       data,
       body,
-      rawFrontmatter: extractFrontmatter(raw),
+      rawFrontmatter: FrontmatterParser.extractFrontmatter(raw),
     };
   }
-}
-
-function extractFrontmatter(raw: string): string | undefined {
-  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  return match ? `---\n${match[1]}---\n\n` : undefined;
 }

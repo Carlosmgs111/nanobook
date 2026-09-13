@@ -9,7 +9,7 @@ import { UnifiedMarkdownRenderer } from "./infraestructure/markdown/UnifiedMarkd
 import { InvalidatePagesController } from "./infraestructure/api/InvalidatePagesController";
 
 export { GitHubWebhookHandler } from "./infraestructure/GithubWebhookHandler";
-export { WebhookController } from "./infraestructure/api/WebhookController";
+export { GitHubWebhookController } from "./infraestructure/api/GitHubWebhookController";
 export type { RenderedDocumentPage } from "./domain/render";
 
 export class PublishingModule {

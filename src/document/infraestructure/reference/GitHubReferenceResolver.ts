@@ -8,12 +8,6 @@ import { fetchFileContent } from "../../../shared/github/api";
 import { GITHUB_TOKEN } from "astro:env/server";
 import type { DocumentReference, GitHubRef } from "../../domain/DocumentReference";
 
-// function isGitHubRef(ref: DocumentReference): boolean {
-//   if (typeof ref === "string") return ref.startsWith("github:");
-//   return ref && typeof ref === "object" && ref.source === "github";
-// }
-
-
 export class GitHubReferenceResolver implements ReferenceResolverPlugin {
   name = "github";
 
@@ -21,8 +15,7 @@ export class GitHubReferenceResolver implements ReferenceResolverPlugin {
     ref: DocumentReference,
     context: ReferenceResolutionContext
   ): Promise<ContentEntry | null> {
-
-    const parsed = ref.getRef()as GitHubRef;
+    const parsed = ref.getRef() as GitHubRef;
     if (!parsed) {
       console.warn(`Invalid GitHub reference: ${JSON.stringify(ref)}`);
       return null;
@@ -33,7 +26,7 @@ export class GitHubReferenceResolver implements ReferenceResolverPlugin {
         owner: parsed.owner,
         repo: parsed.repo,
         path: parsed.path,
-        branch: parsed.branch as string,
+        branch: parsed.branch ?? "main",
         token: GITHUB_TOKEN,
       });
 
@@ -43,7 +36,7 @@ export class GitHubReferenceResolver implements ReferenceResolverPlugin {
         id: context.sourceId,
         data: data as unknown as DocumentMetadata,
         body,
-        rawFrontmatter: extractFrontmatter(raw),
+        rawFrontmatter: FrontmatterParser.extractFrontmatter(raw),
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -53,9 +46,4 @@ export class GitHubReferenceResolver implements ReferenceResolverPlugin {
       return null;
     }
   }
-}
-
-function extractFrontmatter(raw: string): string | undefined {
-  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  return match ? `---\n${match[1]}---\n\n` : undefined;
 }

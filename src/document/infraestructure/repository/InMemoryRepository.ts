@@ -1,4 +1,4 @@
-import { Result } from "../../../shared/utils/result";
+import { Result } from "../../../shared/utils/Result";
 import type {
   ContentRepository,
   ContentRepositoryListError,
@@ -28,16 +28,10 @@ export class InMemoryRepository implements ContentRepository {
     return Result.ok(Array.from(this.documents.values()));
   }
 
-  async get(
-    id: DocumentId
+  async getById(
+    id: string
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    return Result.ok(this.documents.get(id.getValue()) ?? null);
-  }
-
-  async getBySlug(
-    slug: string
-  ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    return Result.ok(this.documents.get(slug) ?? null);
+    return Result.ok(this.documents.get(id) ?? null);
   }
 
   async listChildren(
@@ -54,7 +48,7 @@ export class InMemoryRepository implements ContentRepository {
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
     if (this.documents.has(document.getId().getValue())) {
-      return Result.fail(new DocumentAlreadyExistsError(document.getId()));
+      return Result.fail(new DocumentAlreadyExistsError(document.getId().getValue()));
     }
     this.documents.set(document.getId().getValue(), document);
     return Result.ok();
@@ -64,7 +58,7 @@ export class InMemoryRepository implements ContentRepository {
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
     if (!this.documents.has(document.getId().getValue())) {
-      return Result.fail(new DocumentNotFoundError(document.getId()));
+      return Result.fail(new DocumentNotFoundError(document.getId().getValue()));
     }
     this.documents.set(document.getId().getValue(), document);
     return Result.ok();

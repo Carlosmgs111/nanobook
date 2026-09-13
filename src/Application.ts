@@ -1,10 +1,10 @@
-import { Result } from "./shared/utils/result";
+import { Result } from "./shared/utils/Result";
 import { InMemoryEventBus } from "./shared/bus/InMemoryEventBus";
-import { DocumentModule, DocumentId, type DocumentChangeNotifier } from "./document";
+import { DocumentModule, type DocumentChangeNotifier } from "./document";
 import { DocumentNotificationError } from "./document/infraestructure/errors";
 import {
   GitHubWebhookHandler,
-  WebhookController,
+  GitHubWebhookController,
   PublishingModule,
 } from "./publishing";
 import {
@@ -16,7 +16,7 @@ import {
 import type { RenderedDocumentPage } from "./publishing";
 
 export class Application {
-  public readonly webhookController: WebhookController;
+  public readonly githubWebhookController: GitHubWebhookController;
   private constructor(
     public readonly documentModule: DocumentModule,
     public readonly navigationModule: NavigationModule,
@@ -27,7 +27,7 @@ export class Application {
       this.publishingModule.renderedPageCache,
       this.navigationModule.navigationService
     );
-    this.webhookController = new WebhookController(githubWebhookHandler);
+    this.githubWebhookController = new GitHubWebhookController(githubWebhookHandler);
   }
 
   static async create(): Promise<Application> {

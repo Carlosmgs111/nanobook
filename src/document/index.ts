@@ -1,5 +1,6 @@
 import type { EventBus } from "../shared/bus/EventBus";
-import { Result } from "../shared/utils/result";
+import { Result } from "../shared/utils/Result";
+import { GITHUB_TOKEN } from "astro:env/server";
 export type { Document, Heading, DocumentHash } from "./domain/Document";
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
@@ -42,13 +43,17 @@ export class DocumentModule {
       contentRepository
     );
     const localFileReferenceResolver = new LocalFileReferenceResolver();
-    const githubReferenceResolver = new GitHubReferenceResolver();
 
-    const referenceResolver = new CompositeReferenceResolver([
+    const plugins = [
       internalReferenceResolver,
       localFileReferenceResolver,
-      githubReferenceResolver,
-    ]);
+    ];
+
+    if (GITHUB_TOKEN) {
+      plugins.push(new GitHubReferenceResolver());
+    }
+
+    const referenceResolver = new CompositeReferenceResolver(plugins);
     const proxyParser = new ProxyParser(referenceResolver);
     const createDocument = new CreateDocument(
       contentRepository,

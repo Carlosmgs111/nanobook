@@ -1,6 +1,5 @@
 import type { Document } from "../domain/Document";
 import type { ContentRepository } from "../domain/types";
-import type { DocumentId } from "../domain/DocumentId";
 import type { ProxyParser } from "./ProxyParser";
 
 export class GetDocument {
@@ -9,12 +8,8 @@ export class GetDocument {
     private parseProxy: ProxyParser
   ) {}
 
-  async execute(documentId: string | DocumentId): Promise<Document | null> {
-    const documentResult =
-      typeof documentId === "string"
-        ? await this.contentRepository.getBySlug(documentId)
-        : await this.contentRepository.get(documentId);
-
+  async execute(documentId: string): Promise<Document | null> {
+    const documentResult = await this.contentRepository.getById(documentId);
     if (!documentResult.isSuccess) {
       return null;
     }
