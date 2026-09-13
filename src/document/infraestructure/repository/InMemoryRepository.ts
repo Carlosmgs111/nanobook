@@ -1,10 +1,15 @@
-import type { ContentRepository } from "../../domain/types";
+import { Result } from "../../../shared/utils/result";
+import type {
+  ContentRepository,
+  ContentRepositoryListError,
+} from "../../domain/types";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
 } from "../../domain/errors";
 import { Document } from "../../domain/Document";
 import { DocumentId } from "../../domain/DocumentId";
+import { DocumentRepositoryError } from "../errors";
 
 /**
  * Implementación en memoria de ContentRepository.
@@ -19,35 +24,49 @@ export class InMemoryRepository implements ContentRepository {
     this.documents = new Map(documents.map((doc) => [doc.getId().getValue(), doc]));
   }
 
-  async list(): Promise<Document[]> {
-    return Array.from(this.documents.values());
+  async list(): Promise<Result<ContentRepositoryListError, Document[]>> {
+    return Result.ok(Array.from(this.documents.values()));
   }
 
-  async get(id: DocumentId): Promise<Document | null> {
-    return this.documents.get(id.getValue()) ?? null;
+  async get(
+    id: DocumentId
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    return Result.ok(this.documents.get(id.getValue()) ?? null);
   }
 
-  async getBySlug(slug: string): Promise<Document | null> {
-    return this.documents.get(slug) ?? null;
+  async getBySlug(
+    slug: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    return Result.ok(this.documents.get(slug) ?? null);
   }
 
-  async listChildren(parentId: string | null): Promise<Document[]> {
-    return Array.from(this.documents.values()).filter(
-      (doc) => doc.getParentId() === parentId,
+  async listChildren(
+    parentId: string | null
+  ): Promise<Result<ContentRepositoryListError, Document[]>> {
+    return Result.ok(
+      Array.from(this.documents.values()).filter(
+        (doc) => doc.getParentId() === parentId
+      )
     );
   }
 
-  async create(document: Document): Promise<void> {
+  async create(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
     if (this.documents.has(document.getId().getValue())) {
-      throw new DocumentAlreadyExistsError(document.getId());
+      return Result.fail(new DocumentAlreadyExistsError(document.getId()));
     }
     this.documents.set(document.getId().getValue(), document);
+    return Result.ok();
   }
 
-  async update(document: Document): Promise<void> {
+  async update(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
     if (!this.documents.has(document.getId().getValue())) {
-      throw new DocumentNotFoundError(document.getId());
+      return Result.fail(new DocumentNotFoundError(document.getId()));
     }
     this.documents.set(document.getId().getValue(), document);
+    return Result.ok();
   }
 }

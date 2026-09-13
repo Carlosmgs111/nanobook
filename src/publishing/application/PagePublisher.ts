@@ -1,6 +1,8 @@
+import type { Result } from "../../shared/utils/result";
 import type { RenderedPageCache } from "../domain/cache";
 import type { DocumentRenderer, RenderedDocumentPage } from "../domain/render";
 import type { Document } from "../../document";
+import type { PageCacheError } from "../infraestructure/errors";
 
 export class PagePublisher {
   constructor(
@@ -21,17 +23,16 @@ export class PagePublisher {
       document,
       renderedBody,
     };
-    if (!rendered) {
-      return null;
-    }
 
     const { headings } = document.parse();
 
     return { rendered, headings, contentHash };
   }
 
-  async invalidate(documentIds: string[]): Promise<void> {
-    await this.pageCache.invalidate(documentIds);
+  async invalidate(
+    documentIds: string[]
+  ): Promise<Result<PageCacheError, void>> {
+    return this.pageCache.invalidate(documentIds);
   }
 
   private async resolveRenderedBody(

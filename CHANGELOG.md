@@ -7,6 +7,29 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+- Errores de infraestructura tipados por módulo:
+  - `src/shared/errors.ts`: `InfrastructureError`.
+  - `src/shared/bus/errors.ts`: `EventBusError`.
+  - `src/document/infraestructure/errors.ts`: `DocumentRepositoryError`, `DocumentStorageError`, `DocumentParseError`, `DocumentNotificationError`.
+  - `src/publishing/infraestructure/errors.ts`: `PageCacheError`, `PageRenderError`.
+- `InvalidDocumentError` en `src/document/domain/errors.ts` para errores de construcción de `Document`.
+- Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
+
+### Changed
+- `Result` en `src/shared/utils/result.ts` ahora expone solo la API estática `Result.ok()` / `Result.fail()`; se eliminaron los helpers comentados `ok()` / `err()`.
+- `ContentRepository` devuelve `Result` en todos sus métodos (`list`, `get`, `getBySlug`, `listChildren`, `create`, `update`); las implementaciones `FileSystemRepository`, `GitHubRepository` e `InMemoryRepository` capturan excepciones de infraestructura y las traducen a errores tipados.
+- `DocumentChangeNotifier` devuelve `Result<DocumentNotificationError, void>`.
+- `EventBus.publish` y `EventHandler.handle` devuelven `Result<EventBusError, void>`; `InMemoryEventBus` combina los resultados de los handlers.
+- `RenderedPageCache.invalidate` y `PagePublisher.invalidate` devuelven `Result<PageCacheError, void>`.
+- `CreateDocument` y `UpdateDocument` ya no envuelven la lógica en `try/catch` defensivo; reciben `Result` de infraestructura, verifican `isSuccess` y propagan el error.
+- Controladores `CreateDocumentController` y `UpdateDocumentController` usan `result.isSuccess` y `result.getValue()`; `handleServiceError` mapea errores de dominio e infraestructura a códigos HTTP.
+- `Application.ts` adapta el `DocumentChangeNotifier` para capturar errores de `PagePublisher.invalidate` y devolver `Result`.
+
+### Fixed
+- `OnDocumentCreatedHandler` y `OnDocumentUpdatedHandler` importaban `err`/`ok` inexistentes; ahora usan `Result.ok()` / `Result.fail()`.
+- `GitHubRepository.create()` ya no oculta cualquier error bajo `DocumentAlreadyExistsError`; distingue errores de dominio de fallos de infraestructura.
+
 ## [0.5.0] - 2026-09-11
 
 ### Added

@@ -1,5 +1,7 @@
 import type { RedisClientType } from "redis";
+import { Result } from "../../../shared/utils/result";
 import type { CachedPage, RenderedPageCache } from "../../domain/cache";
+import { PageCacheError } from "../errors";
 
 function buildKey(pageId: string): string {
   return `nanobook:page:${pageId}`;
@@ -49,12 +51,22 @@ export class RedisRenderedPageCache implements RenderedPageCache {
     await this.client.set(buildKey(pageId), JSON.stringify(cached));
   }
 
-  async invalidate(pageIds: string[]): Promise<void> {
+  async invalidate(pageIds: string[]): Promise<Result<PageCacheError, void>> {
     console.log("invalidate", { pageIds });
 
-    await this.ensureConnected();
-    if (pageIds.length === 0) return;
-    const keys = pageIds.map(buildKey);
-    await this.client.del(keys);
+    try {
+      await this.ensureConnected();
+      if (pageIds.length === 0) return Result.ok();
+      const keys = pageIds.map(buildKey);
+      await this.client.del(keys);
+      return Result.ok();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(
+        new PageCacheError(`Failed to invalidate Redis cache: ${message}`, {
+          cause: error,
+        })
+      );
+    }
   }
 }

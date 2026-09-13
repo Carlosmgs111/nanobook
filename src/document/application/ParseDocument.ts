@@ -9,8 +9,13 @@ export class GetParsedDocument {
     private contentRepository: ContentRepository
   ) {}
   async execute(id: string): Promise<{ headings: Heading[] } | null> {
-    const documentId = new DocumentId(id);
-    const document = await this.contentRepository.get(documentId);
+    const documentIdResult = DocumentId.create(id);
+    if (!documentIdResult.isSuccess) return null;
+    const documentResult = await this.contentRepository.get(
+      documentIdResult.getValue()
+    );
+    if (!documentResult.isSuccess) return null;
+    const document = documentResult.getValue();
     if (!document) return null;
     return this.documentParser.parseDocument(document);
   }

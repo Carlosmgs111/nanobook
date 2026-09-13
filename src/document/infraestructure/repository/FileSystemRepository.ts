@@ -1,8 +1,12 @@
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { Result } from "../../../shared/utils/result";
 import { FrontmatterParser } from "../parse/FrontmatterParser";
 import { idToFilePath, filePathToId } from "./fileSystemParsePath";
-import type { ContentRepository } from "../../domain/types";
+import type {
+  ContentRepository,
+  ContentRepositoryListError,
+} from "../../domain/types";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
@@ -11,9 +15,12 @@ import {
 import { Document } from "../../domain/Document";
 import type { DocumentId } from "../../domain/DocumentId";
 import type { DocumentParser } from "../../domain/DocumentParser";
+import {
+  DocumentParseError,
+  DocumentRepositoryError,
+} from "../errors";
 
 const CONTENT_DIR = "./src/content";
-
 
 async function scanMarkdownFiles(dir: string): Promise<string[]> {
   const files: string[] = [];
@@ -49,76 +56,127 @@ export class FileSystemRepository implements ContentRepository {
     private parser: DocumentParser
   ) {}
 
-  async list(): Promise<Document[]> {
-    const contentRoot = resolve(this.contentDir);
-    const files = await scanMarkdownFiles(contentRoot);
-    const documents: Document[] = [];
+  async list(): Promise<Result<ContentRepositoryListError, Document[]>> {
+    try {
+      const contentRoot = resolve(this.contentDir);
+      const files = await scanMarkdownFiles(contentRoot);
+      const documents: Document[] = [];
 
-    for (const file of files) {
-      const raw = await readFile(file, "utf-8");
-      const { data, body } = FrontmatterParser.parseFrontmatter(raw);
-      const id = filePathToId(file, contentRoot);
-      documents.push(await Document.create(id, data, body, this.parser));
+      for (const file of files) {
+        const raw = await readFile(file, "utf-8");
+        const { data, body } = FrontmatterParser.parseFrontmatter(raw);
+        const id = filePathToId(file, contentRoot);
+        const documentResult = Document.create(id, data, body, this.parser);
+        if (!documentResult.isSuccess) {
+          return Result.fail(documentResult.getError());
+        }
+        documents.push(documentResult.getValue());
+      }
+
+      return Result.ok(documents);
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError("Failed to list documents", { cause: error })
+      );
     }
-
-    return documents;
   }
 
-  async get(id: DocumentId): Promise<Document | null> {
-    const documents = await this.list();
-    return (
-      documents.find(
-        (document) => document.getId().getValue() === id.getValue()
-      ) ?? null
-    );
-  }
-
-  async getBySlug(id: string): Promise<Document | null> {
-    const documents = await this.list();
-    return (
-      documents.find((document) => document.getId().getValue() === id) ?? null
-    );
-  }
-
-  async listChildren(parentId: string | null): Promise<Document[]> {
-    const documents = await this.list();
-    return documents.filter(
-      (document) => document.getId().getParentId() === parentId
-    );
-  }
-
-  async create(document: Document): Promise<void> {
-    const filePath = idToFilePath(
-      document.getId().getValue(),
-      document.getMetadata().index,
-      this.contentDir
-    );
-    if (await fileExists(filePath)) {
-      throw new DocumentAlreadyExistsError(document.getId());
+  async get(
+    id: DocumentId
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
     }
-    await mkdir(dirname(filePath), { recursive: true });
-    await writeFile(
-      filePath,
-      document.getRawFrontmatter() + document.getContent(),
-      "utf-8"
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.find((document) => document.getId().getValue() === id.getValue()) ??
+        null
     );
   }
 
-  async update(document: Document): Promise<void> {
-    const filePath = idToFilePath(
-      document.getId().getValue(),
-      document.getMetadata().index,
-      this.contentDir
-    );
-    if (!(await fileExists(filePath))) {
-      throw new DocumentNotFoundError(document.getId());
+  async getBySlug(
+    slug: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
     }
-    await mkdir(dirname(filePath), { recursive: true });
-    await writeFile(
-      filePath,
-      document.getRawFrontmatter() + document.getContent(),
-      "utf-8"
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.find((document) => document.getId().getValue() === slug) ?? null
     );
+  }
+
+  async listChildren(
+    parentId: string | null
+  ): Promise<Result<ContentRepositoryListError, Document[]>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
+    }
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.filter((document) => document.getId().getParentId() === parentId)
+    );
+  }
+
+  async create(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
+    try {
+      const filePath = idToFilePath(
+        document.getId().getValue(),
+        document.getMetadata().index,
+        this.contentDir
+      );
+      if (await fileExists(filePath)) {
+        return Result.fail(new DocumentAlreadyExistsError(document.getId()));
+      }
+      await mkdir(dirname(filePath), { recursive: true });
+      await writeFile(
+        filePath,
+        document.getRawFrontmatter() + document.getContent(),
+        "utf-8"
+      );
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to create document "${document.getId().getValue()}"`,
+          { cause: error }
+        )
+      );
+    }
+  }
+
+  async update(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
+    try {
+      const filePath = idToFilePath(
+        document.getId().getValue(),
+        document.getMetadata().index,
+        this.contentDir
+      );
+      if (!(await fileExists(filePath))) {
+        return Result.fail(new DocumentNotFoundError(document.getId()));
+      }
+      await mkdir(dirname(filePath), { recursive: true });
+      await writeFile(
+        filePath,
+        document.getRawFrontmatter() + document.getContent(),
+        "utf-8"
+      );
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to update document "${document.getId().getValue()}"`,
+          { cause: error }
+        )
+      );
+    }
   }
 }
 

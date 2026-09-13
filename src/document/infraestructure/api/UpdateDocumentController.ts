@@ -24,8 +24,8 @@ export class UpdateDocumentController {
       }
 
       const result = await this.updateDocument.execute(document);
-      if (!result.ok) {
-        return handleServiceError(result.error);
+      if (!result.isSuccess) {
+        return handleServiceError(result.getError());
       }
 
       return jsonResponse({ ok: true }, 200);

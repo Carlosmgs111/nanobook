@@ -9,7 +9,11 @@ export class GetAllDocuments {
   ) {}
 
   async execute(): Promise<Document[]> {
-    const documents = await this.repository.list();
+    const documentsResult = await this.repository.list();
+    if (!documentsResult.isSuccess) {
+      return [];
+    }
+    const documents = documentsResult.getValue();
     const allDocuments = await this.proxyResolver.parseProxies(documents);
     return allDocuments;
   }

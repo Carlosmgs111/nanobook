@@ -1,6 +1,18 @@
+import type { Result } from "../../shared/utils/result";
 import type { DocumentId } from "./DocumentId";
 import type { Document, Heading } from "./Document";
 import type { Ref } from "./DocumentReference";
+import type {
+  DocumentRepositoryError,
+  DocumentNotificationError,
+  DocumentParseError,
+} from "../infraestructure/errors";
+import type {
+  DocumentAlreadyExistsError,
+  DocumentNotFoundError,
+  InvalidDocumentError,
+  InvalidDocumentIdError,
+} from "./errors";
 
 export interface DocumentMetadata {
   title: string;
@@ -22,13 +34,40 @@ export interface ContentEntry {
   rawFrontmatter?: string;
 }
 
+export type ContentRepositoryListError =
+  | DocumentRepositoryError
+  | DocumentParseError
+  | InvalidDocumentError
+  | InvalidDocumentIdError;
+
+export type ContentRepositoryError =
+  | DocumentRepositoryError
+  | DocumentAlreadyExistsError
+  | DocumentNotFoundError;
+
 export interface ContentRepository {
-  list(): Promise<Document[]>;
-  get(id: DocumentId): Promise<Document | null>;
-  getBySlug(slug: string): Promise<Document | null>;
-  listChildren(parentId: string | null): Promise<Document[]>;
-  create(document: Document): Promise<void>;
-  update(document: Document): Promise<void>;
+  list(): Promise<Result<ContentRepositoryListError, Document[]>>;
+  get(id: DocumentId): Promise<Result<ContentRepositoryListError, Document | null>>;
+  getBySlug(slug: string): Promise<Result<ContentRepositoryListError, Document | null>>;
+  listChildren(parentId: string | null): Promise<Result<ContentRepositoryListError, Document[]>>;
+  create(document: Document): Promise<Result<ContentRepositoryError, void>>;
+  update(document: Document): Promise<Result<ContentRepositoryError, void>>;
+}
+
+/**
+ * Puerto de notificación para efectos secundarios que deben ocurrir de forma
+ * síncrona y confiable tras crear o actualizar un documento.
+ *
+ * El módulo `document` no conoce a los consumidores; `Application` cablea una
+ * implementación concreta (por ejemplo, invalidación de caché de páginas).
+ */
+export interface DocumentChangeNotifier {
+  onDocumentCreated(
+    documentId: string
+  ): Promise<Result<DocumentNotificationError, void>>;
+  onDocumentUpdated(
+    documentId: string
+  ): Promise<Result<DocumentNotificationError, void>>;
 }
 
 export interface DocumentInput {

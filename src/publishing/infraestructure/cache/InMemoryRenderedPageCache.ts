@@ -1,3 +1,4 @@
+import { Result } from "../../../shared/utils/result";
 import type { CachedPage, RenderedPageCache } from "../../domain/cache";
 
 /**
@@ -32,10 +33,11 @@ export class InMemoryRenderedPageCache implements RenderedPageCache {
     this.store.set(pageId, cached);
   }
 
-  async invalidate(pageIds: string[]): Promise<void> {
+  async invalidate(pageIds: string[]): Promise<Result<never, void>> {
     for (const pageId of pageIds) {
       this.store.delete(pageId);
     }
+    return Result.ok();
   }
 
   /** Expone el tamaño actual del cache; útil para tests y diagnóstico. */

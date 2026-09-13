@@ -110,7 +110,12 @@ export class GitHubWebhookHandler {
     }
      const result = await this.navigationService.getInvalidatedIds(changes);
      console.log(result);
-     await this.renderedPageCache.invalidate(result.invalidatedIds);
+     const invalidateResult = await this.renderedPageCache.invalidate(
+       result.invalidatedIds
+     );
+     if (!invalidateResult.isSuccess) {
+       throw invalidateResult.getError();
+     }
     return result;
   }
 }

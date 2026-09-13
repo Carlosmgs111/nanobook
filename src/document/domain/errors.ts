@@ -15,8 +15,9 @@ export class DocumentNotFoundError extends Error {
 }
 
 export class InvalidDocumentIdError extends Error {
-  constructor(public readonly documentId: DocumentId) {
-    super(`Id de documento inválido: ${documentId.getValue()}`);
+  constructor(public readonly documentId: DocumentId | string) {
+    const id = typeof documentId === "string" ? documentId : documentId.getValue();
+    super(`Id de documento inválido: ${id}`);
     this.name = "InvalidDocumentIdError";
   }
 }
@@ -28,9 +29,19 @@ export class ParentNotFoundError extends Error {
   }
 }
 
+export class InvalidDocumentError extends Error {
+  constructor(
+    public readonly documentId: string,
+    message: string
+  ) {
+    super(`Documento inválido "${documentId}": ${message}`);
+    this.name = "InvalidDocumentError";
+  }
+}
+
 export type DocumentServiceError =
   | DocumentAlreadyExistsError
   | DocumentNotFoundError
   | InvalidDocumentIdError
   | ParentNotFoundError
-  | Error;
+  | InvalidDocumentError;

@@ -27,10 +27,17 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
     const refStr = ref.getValue() as string;
     if (refStr.startsWith("/")) return null;
     const targetId = context.sourceId.resolveDocumentReference(refStr);
-    const targetDocument = await this.contentRepository.get(new DocumentId(targetId));
+    const targetDocumentIdResult = DocumentId.create(targetId);
+    if (!targetDocumentIdResult.isSuccess) return null;
 
-    // console.log({ targetDocument });
+    const targetDocumentResult = await this.contentRepository.get(
+      targetDocumentIdResult.getValue()
+    );
 
+    // console.log({ targetDocumentResult });
+
+    if (!targetDocumentResult.isSuccess) return null;
+    const targetDocument = targetDocumentResult.getValue();
     if (!targetDocument) return null;
 
     return {

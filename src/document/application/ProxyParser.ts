@@ -44,12 +44,20 @@ export class ProxyParser {
         index: data.index,
         ref: undefined,
       };
-      const proxyDocument = Document.create(
+      const proxyDocumentResult = Document.create(
         sourceDocument.getId().getValue(),
         mergedData,
         targetEntry.body
       );
-      return proxyDocument;
+      if (!proxyDocumentResult.isSuccess) {
+        console.warn(
+          `Failed to create proxy document ${sourceDocument
+            .getId()
+            .getValue()}: ${proxyDocumentResult.getError().message}`
+        );
+        return null;
+      }
+      return proxyDocumentResult.getValue();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(

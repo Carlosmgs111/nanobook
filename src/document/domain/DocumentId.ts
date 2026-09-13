@@ -1,15 +1,62 @@
+import { Result } from "../../shared/utils/result";
 import { InvalidDocumentIdError } from "./errors";
 
 const ALLOWED_ID_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
 export class DocumentId {
-  constructor(private readonly value: string) {
-    this.validate();
+  static validateNotEmpty(id: string): boolean {
+    return !!id;
   }
+
+  static validateNoLeadingOrTrailingSlash(id: string): boolean {
+    return !id.startsWith("/") && !id.endsWith("/");
+  }
+
+  static validateNoDotSegments(id: string): boolean {
+    const segments = id.split("/");
+    for (const segment of segments) {
+      if (segment === "." || segment === "..") {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static validateAllowedCharacters(id: string): boolean {
+    return ALLOWED_ID_PATTERN.test(id);
+  }
+
+  static validate(id: string): InvalidDocumentIdError | null {
+    if (!DocumentId.validateNotEmpty(id)) {
+      return new InvalidDocumentIdError(id);
+    }
+    if (!DocumentId.validateNoLeadingOrTrailingSlash(id)) {
+      return new InvalidDocumentIdError(id);
+    }
+    if (!DocumentId.validateNoDotSegments(id)) {
+      return new InvalidDocumentIdError(id);
+    }
+    if (!DocumentId.validateAllowedCharacters(id)) {
+      return new InvalidDocumentIdError(id);
+    }
+    return null;
+  }
+
+  static create(id: string): Result<InvalidDocumentIdError, DocumentId> {
+    const validationError = DocumentId.validate(id);
+    if (validationError) {
+      return Result.fail(validationError);
+    }
+    return Result.ok(new DocumentId(id));
+  }
+
+  private constructor(private readonly value: string) {}
+
   getValue(): string {
     return this.cleanId();
   }
+
   isIndexId(): boolean {
     return this.value === "index" || this.value.endsWith("/index");
   }
@@ -22,6 +69,7 @@ export class DocumentId {
       lastSlash === -1 ? "index" : normalizedId.slice(0, lastSlash);
     return new DocumentId(parentId);
   }
+
   normalize(): string {
     if (this.value === "index") return "index";
     if (this.value.endsWith("/index")) {
@@ -49,9 +97,7 @@ export class DocumentId {
     return ref.replace(/\.md$/, "").replace(/\/index$/, "");
   }
 
-   extractInternalLinkTargets(
-    content: string
-  ): string[] {
+  extractInternalLinkTargets(content: string): string[] {
     const targets = new Set<string>();
 
     for (const match of content.matchAll(MARKDOWN_LINK_REGEX)) {
@@ -75,9 +121,7 @@ export class DocumentId {
     return Array.from(targets);
   }
 
-  resolveDocumentReference(
-    ref: string,
-  ): string {
+  resolveDocumentReference(ref: string): string {
     const refPath = this.normalizeRef(ref);
     const refSegments = refPath.split("/").filter(Boolean);
 
@@ -107,26 +151,5 @@ export class DocumentId {
       return (withoutExt.slice(0, -"/index".length) || "index").toLowerCase();
     }
     return withoutExt.toLowerCase();
-  }
-
-  private validate(): void {
-    if (!this.value) {
-      throw new InvalidDocumentIdError(this);
-    }
-
-    if (this.value.startsWith("/") || this.value.endsWith("/")) {
-      throw new InvalidDocumentIdError(this);
-    }
-
-    const segments = this.value.split("/");
-    for (const segment of segments) {
-      if (segment === "." || segment === "..") {
-        throw new InvalidDocumentIdError(this);
-      }
-    }
-
-    if (!ALLOWED_ID_PATTERN.test(this.value)) {
-      throw new InvalidDocumentIdError(this);
-    }
   }
 }

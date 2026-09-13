@@ -9,7 +9,11 @@ import {
   createParsedEntry,
   filterContentFiles,
 } from "../../../shared/github/parser";
-import type { ContentRepository } from "../../domain/types";
+import { Result } from "../../../shared/utils/result";
+import type {
+  ContentRepository,
+  ContentRepositoryListError,
+} from "../../domain/types";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
@@ -21,6 +25,7 @@ import type { GitHubLoaderOptions } from "../../../shared/github/types";
 import type { GitHubTreeItem } from "../../../shared/github/types";
 import { Document } from "../../domain/Document";
 import type { DocumentParser } from "../../domain/DocumentParser";
+import { DocumentRepositoryError } from "../errors";
 
 export interface GitHubRepositoryOptions {
   owner: string;
@@ -42,7 +47,7 @@ interface GitHubRepositoryCache {
 }
 
 const globalCache = new Map<string, GitHubRepositoryCache>();
-const globalListPromises = new Map<string, Promise<Document[]>>();
+const globalListPromises = new Map<string, Promise<Result<ContentRepositoryListError, Document[]>>>();
 const globalTreePromises = new Map<string, Promise<GitHubTreeItem[]>>();
 
 function buildCacheKey(options: GitHubRepositoryOptions): string {
@@ -97,22 +102,24 @@ export class GitHubRepository implements ContentRepository {
     this.treeCacheKey = buildTreeCacheKey(options);
   }
 
-  async list(): Promise<Document[]> {
+  async list(): Promise<Result<ContentRepositoryListError, Document[]>> {
     const now = Date.now();
     const cached = globalCache.get(this.cacheKey);
     if (cached && cached.expiresAt > now) {
-      return cached.documents;
+      return Result.ok(cached.documents);
     }
 
     let listPromise = globalListPromises.get(this.cacheKey);
     if (!listPromise) {
       listPromise = this.fetchDocuments()
-        .then((documents) => {
-          globalCache.set(this.cacheKey, {
-            documents,
-            expiresAt: Date.now() + this.cacheTtl,
-          });
-          return documents;
+        .then((result) => {
+          if (result.isSuccess) {
+            globalCache.set(this.cacheKey, {
+              documents: result.getValue(),
+              expiresAt: Date.now() + this.cacheTtl,
+            });
+          }
+          return result;
         })
         .finally(() => {
           globalListPromises.delete(this.cacheKey);
@@ -138,13 +145,17 @@ export class GitHubRepository implements ContentRepository {
   }
 
   private async doFetchTree(): Promise<GitHubTreeItem[]> {
-    const cachedTree = await withRedisClient(async (client) => {
-      const raw = await client.get(this.treeCacheKey);
-      return raw ? (JSON.parse(raw) as GitHubTreeItem[]) : null;
-    });
+    try {
+      const cachedTree = await withRedisClient(async (client) => {
+        const raw = await client.get(this.treeCacheKey);
+        return raw ? (JSON.parse(raw) as GitHubTreeItem[]) : null;
+      });
 
-    if (cachedTree) {
-      return cachedTree;
+      if (cachedTree) {
+        return cachedTree;
+      }
+    } catch {
+      // Redis es opcional; si falla continuamos sin cache.
     }
 
     const { owner, repo, token } = this.options;
@@ -155,23 +166,27 @@ export class GitHubRepository implements ContentRepository {
       token,
     });
 
-    await withRedisClient(async (client) => {
-      await client.set(this.treeCacheKey, JSON.stringify(tree), {
-        PX: this.treeCacheTtl,
+    try {
+      await withRedisClient(async (client) => {
+        await client.set(this.treeCacheKey, JSON.stringify(tree), {
+          PX: this.treeCacheTtl,
+        });
       });
-    });
+    } catch {
+      // Redis es opcional; si falla continuamos sin cachear el tree.
+    }
 
     return tree;
   }
 
-  private async fetchDocuments(): Promise<Document[]> {
-    const tree = await this.fetchTree();
+  private async fetchDocuments(): Promise<Result<ContentRepositoryListError, Document[]>> {
+    try {
+      const tree = await this.fetchTree();
 
-    const contentFiles = filterContentFiles(tree, this.path, this.pattern);
-    const documents: Document[] = [];
+      const contentFiles = filterContentFiles(tree, this.path, this.pattern);
+      const documents: Document[] = [];
 
-    for (const file of contentFiles) {
-      try {
+      for (const file of contentFiles) {
         const raw = await fetchFileContent({
           owner: this.options.owner,
           repo: this.options.repo,
@@ -181,35 +196,63 @@ export class GitHubRepository implements ContentRepository {
         });
 
         const { id, data, body } = createParsedEntry(file.path, raw, this.path);
-        documents.push(Document.create(id, data, body));
-      } catch (error) {
-        // console.log(error);
-        const message = error instanceof Error ? error.message : String(error);
-        console.warn(`Failed to load GitHub file ${file.path}: ${message}`);
+        const documentResult = Document.create(id, data, body);
+        if (!documentResult.isSuccess) {
+          return Result.fail(documentResult.getError());
+        }
+        documents.push(documentResult.getValue());
       }
-    }
 
-    return documents;
+      return Result.ok(documents);
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError("Failed to fetch documents from GitHub", {
+          cause: error,
+        })
+      );
+    }
   }
 
-  async get(id: DocumentId): Promise<Document | null> {
-    const documents = await this.list();
-    return (
+  async get(
+    id: DocumentId
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
+    }
+    const documents = documentsResult.getValue();
+    return Result.ok(
       documents.find(
         (document) => document.getId().getValue() === id.getValue()
       ) ?? null
     );
   }
 
-  async getBySlug(slug: string): Promise<Document | null> {
-    const documents = await this.list();
-    return documents.find((document) => document.getSlug() === slug) ?? null;
+  async getBySlug(
+    slug: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
+    }
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.find((document) => document.getSlug() === slug) ?? null
+    );
   }
 
-  async listChildren(parentId: string | null): Promise<Document[]> {
-    const documents = await this.list();
-    return documents.filter(
-      (document) => document.getId().getParentId() === parentId
+  async listChildren(
+    parentId: string | null
+  ): Promise<Result<ContentRepositoryListError, Document[]>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) {
+      return Result.fail(documentsResult.getError());
+    }
+    const documents = documentsResult.getValue();
+    return Result.ok(
+      documents.filter(
+        (document) => document.getId().getParentId() === parentId
+      )
     );
   }
 
@@ -228,7 +271,9 @@ export class GitHubRepository implements ContentRepository {
     clearCached(cacheKey);
   }
 
-  async create(document: Document): Promise<void> {
+  async create(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
     try {
       const path = this.idToGitHubPath(
         document.getId().getValue(),
@@ -245,7 +290,7 @@ export class GitHubRepository implements ContentRepository {
       });
 
       if (sha) {
-        throw new DocumentAlreadyExistsError(document.getId());
+        return Result.fail(new DocumentAlreadyExistsError(document.getId()));
       }
 
       await updateFileContent({
@@ -260,44 +305,61 @@ export class GitHubRepository implements ContentRepository {
 
       this.invalidateFileCache(path);
       this.clearCache();
+      return Result.ok();
     } catch (error) {
-      console.error(error);
-      throw new DocumentAlreadyExistsError(document.getId());
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to create document "${document.getId().getValue()}" on GitHub`,
+          { cause: error }
+        )
+      );
     }
   }
 
-  async update(document: Document): Promise<void> {
-    const path = this.idToGitHubPath(
-      document.getId().getValue(),
-      document.getMetadata().index
-    );
-    const { owner, repo, token } = this.options;
+  async update(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
+    try {
+      const path = this.idToGitHubPath(
+        document.getId().getValue(),
+        document.getMetadata().index
+      );
+      const { owner, repo, token } = this.options;
 
-    const sha = await fetchFileSha({
-      owner,
-      repo,
-      branch: this.branch,
-      token,
-      path,
-    });
+      const sha = await fetchFileSha({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+      });
 
-    if (!sha) {
-      throw new DocumentNotFoundError(document.getId());
+      if (!sha) {
+        return Result.fail(new DocumentNotFoundError(document.getId()));
+      }
+
+      await updateFileContent({
+        owner,
+        repo,
+        branch: this.branch,
+        token,
+        path,
+        content: document.getRawFrontmatter() + document.getContent(),
+        sha,
+        message: `Update ${path}`,
+      });
+
+      this.invalidateFileCache(path);
+      this.clearCache();
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to update document "${document.getId().getValue()}" on GitHub`,
+          { cause: error }
+        )
+      );
     }
-
-    await updateFileContent({
-      owner,
-      repo,
-      branch: this.branch,
-      token,
-      path,
-      content: document.getRawFrontmatter() + document.getContent(),
-      sha,
-      message: `Update ${path}`,
-    });
-
-    this.invalidateFileCache(path);
-    this.clearCache();
   }
 
   /** Invalida el cache de documentos de esta instancia. */

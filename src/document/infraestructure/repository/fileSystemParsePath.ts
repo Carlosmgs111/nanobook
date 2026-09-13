@@ -1,6 +1,5 @@
 import { join, relative, resolve, sep } from "node:path";
 import { InvalidDocumentIdError } from "../../domain/errors";
-import { DocumentId } from "../../domain/DocumentId";
 
 const DEFAULT_CONTENT_DIR = "./src/content";
 
@@ -29,7 +28,7 @@ export function idToFilePath(
   const filePath = resolve(join(contentRoot, relativePath));
 
   if (!filePath.startsWith(contentRoot + sep) && filePath !== contentRoot) {
-    throw new InvalidDocumentIdError(new DocumentId(id));
+    throw new InvalidDocumentIdError(id);
   }
 
   return filePath;

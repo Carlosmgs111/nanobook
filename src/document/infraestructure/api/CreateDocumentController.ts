@@ -23,10 +23,10 @@ export class CreateDocumentController {
         content: payload.content,
       });
 
-      if (!result.ok) {
-        return handleServiceError(result.error);
+      if (!result.isSuccess) {
+        return handleServiceError(result.getError());
       }
-      return jsonResponse(result.value.parse(), 201);
+      return jsonResponse(result.getValue().parse(), 201);
     } catch (error) {
       console.error(error);
       return jsonResponse({ error: "Error interno del servidor" }, 500);

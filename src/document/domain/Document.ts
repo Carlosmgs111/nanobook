@@ -1,8 +1,10 @@
+import { Result } from "../../shared/utils/result";
 import { DocumentId } from "./DocumentId";
 import { DocumentReference } from "./DocumentReference";
 import type { DocumentMetadata, Entry } from "./types";
 import { hashString, serializeMetadata } from "./hash";
 import type { DocumentParser } from "./DocumentParser";
+import { InvalidDocumentError, InvalidDocumentIdError } from "./errors";
 
 const NEW_DOCUMENT_TEMPLATE = `---
 title: "<%= title %>"
@@ -162,10 +164,18 @@ export class Document {
     data: DocumentMetadata,
     body: string = "",
     parser: DocumentParser | null = null
-  ): Document {
-    const documentId = new DocumentId(id);
-    const newDocument = new Document(documentId, data, body, parser);
-    return newDocument;
+  ): Result<InvalidDocumentError | InvalidDocumentIdError, Document> {
+    const idResult = DocumentId.create(id);
+    if (!idResult.isSuccess) {
+      return Result.fail(idResult.getError());
+    }
+
+    try {
+      return Result.ok(new Document(idResult.getValue(), data, body, parser));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(new InvalidDocumentError(id, message));
+    }
   }
 
   private interpolateTemplate(

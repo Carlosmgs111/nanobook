@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { Result } from "../../../shared/utils/result";
 import type { CachedPage, RenderedPageCache } from "../../domain/cache";
+import { PageCacheError } from "../errors";
 
 function hashPageId(pageId: string): string {
   return createHash("sha256").update(pageId).digest("hex");
@@ -54,12 +56,22 @@ export class FileSystemRenderedPageCache implements RenderedPageCache {
     await writeFile(filePath, JSON.stringify(cached, null, 2), "utf-8");
   }
 
-  async invalidate(pageIds: string[]): Promise<void> {
-    for (const pageId of pageIds) {
-      const filePath = this.cacheFilePath(pageId);
-      if (existsSync(filePath)) {
-        await unlink(filePath);
+  async invalidate(pageIds: string[]): Promise<Result<PageCacheError, void>> {
+    try {
+      for (const pageId of pageIds) {
+        const filePath = this.cacheFilePath(pageId);
+        if (existsSync(filePath)) {
+          await unlink(filePath);
+        }
       }
+      return Result.ok();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(
+        new PageCacheError(`Failed to invalidate cache entries: ${message}`, {
+          cause: error,
+        })
+      );
     }
   }
 }

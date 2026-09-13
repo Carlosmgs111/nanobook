@@ -1,7 +1,8 @@
 import type { Result } from "../utils/result";
+import type { EventBusError } from "./errors";
 
 export interface EventHandler<DomainEvent> {
-  handle(event: DomainEvent): Promise<Result<Error, void>>;
+  handle(event: DomainEvent): Promise<Result<EventBusError, void>>;
 }
 
 export class DomainEvent<T> {
@@ -24,7 +25,7 @@ export class DomainEvent<T> {
 }
 
 export interface EventBus {
-  publish<T extends DomainEvent<unknown>>(event: T): Promise<void>;
+  publish<T extends DomainEvent<unknown>>(event: T): Promise<Result<EventBusError, void>>;
   subscribe<K extends DomainEvent<unknown>>(
     eventName: K["name"],
     handler: EventHandler<K>

@@ -10,12 +10,16 @@ export class GetDocument {
   ) {}
 
   async execute(documentId: string | DocumentId): Promise<Document | null> {
-    let document;
-    if (typeof documentId === "string") {
-      document = await this.contentRepository.getBySlug(documentId);
-    } else {
-      document = await this.contentRepository.get(documentId);
+    const documentResult =
+      typeof documentId === "string"
+        ? await this.contentRepository.getBySlug(documentId)
+        : await this.contentRepository.get(documentId);
+
+    if (!documentResult.isSuccess) {
+      return null;
     }
+
+    const document = documentResult.getValue();
     if (!document) return null;
     return (await this.parseProxy.parseProxies([document]))[0];
   }

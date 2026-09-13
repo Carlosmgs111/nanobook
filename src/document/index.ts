@@ -1,8 +1,10 @@
 import type { EventBus } from "../shared/bus/EventBus";
+import { Result } from "../shared/utils/result";
 export type { Document, Heading, DocumentHash } from "./domain/Document";
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentId } from "./domain/DocumentId";
+export type { DocumentChangeNotifier } from "./domain/types";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
 import { UpdateDocument } from "./application/UpdateDocument";
@@ -15,6 +17,12 @@ import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
+import type { DocumentChangeNotifier } from "./domain/types";
+
+const noOpNotifier: DocumentChangeNotifier = {
+  onDocumentCreated: async () => Result.ok(),
+  onDocumentUpdated: async () => Result.ok(),
+};
 
 export class DocumentModule {
   constructor(
@@ -24,7 +32,10 @@ export class DocumentModule {
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus
   ) {}
-  static async create(eventBus: EventBus) {
+  static async create(
+    eventBus: EventBus,
+    notifier: DocumentChangeNotifier = noOpNotifier
+  ) {
     const contentRepository = await createContentRepository();
 
     const internalReferenceResolver = new InternalReferenceResolver(
@@ -39,8 +50,16 @@ export class DocumentModule {
       githubReferenceResolver,
     ]);
     const proxyParser = new ProxyParser(referenceResolver);
-    const createDocument = new CreateDocument(contentRepository, eventBus);
-    const updateDocument = new UpdateDocument(contentRepository, eventBus);
+    const createDocument = new CreateDocument(
+      contentRepository,
+      eventBus,
+      notifier
+    );
+    const updateDocument = new UpdateDocument(
+      contentRepository,
+      eventBus,
+      notifier
+    );
     const getAllDocuments = new GetAllDocuments(contentRepository, proxyParser);
     const getDocument = new GetDocument(contentRepository, proxyParser);
     const updateDocumentController = new UpdateDocumentController(
