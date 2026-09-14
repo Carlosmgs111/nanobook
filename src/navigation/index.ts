@@ -1,4 +1,3 @@
-import type { Document } from "../document/domain/Document";
 export type { NavigationService };
 export type {
   Crumb,
@@ -6,15 +5,17 @@ export type {
   ParentEntry,
   InvalidationResult,
 } from "./domain/types";
+export type { DocumentProvider } from "./domain/ports/DocumentProvider";
 import { NavigationService } from "./application/NavigationService";
 import { DocumentsGraph } from "./infraestructure/DocumentsGraph";
+import type { DocumentProvider } from "./domain/ports/DocumentProvider";
 
 export class NavigationModule {
   constructor(public readonly navigationService: NavigationService) {}
 
-  static async create(documents: Document[]) {
+  static async create(documentProvider: DocumentProvider) {
+    const documents = await documentProvider.getAll();
     const documentGraph = new DocumentsGraph(documents);
-    // TODO Revisar mover esta composicion a un punto unico por encima
     const navigationService = new NavigationService(documentGraph);
     return new NavigationModule(navigationService);
   }

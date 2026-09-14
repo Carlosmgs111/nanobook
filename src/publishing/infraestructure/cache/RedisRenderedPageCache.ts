@@ -1,5 +1,5 @@
 import type { RedisClientType } from "redis";
-import { Result } from "../../../shared/utils/result";
+import { Result } from "../../../shared/domain/Result";
 import type { CachedPage, RenderedPageCache } from "../../domain/cache";
 import { PageCacheError } from "../errors";
 

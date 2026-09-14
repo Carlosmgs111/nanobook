@@ -1,4 +1,4 @@
-import type { EventBus } from "../shared/bus/EventBus";
+import type { EventBus } from "../shared/domain/bus/EventBus";
 import type { RenderedPageCache } from "./domain/cache";
 import { DocumentCreated, DocumentUpdated } from "../document";
 import { PagePublisher } from "./application/PagePublisher";

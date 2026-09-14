@@ -1,4 +1,4 @@
-import type { Result } from "../../shared/utils/result";
+import type { Result } from "../../shared/domain/Result";
 import type { PageCacheError } from "../infraestructure/errors";
 
 export interface CachedPage {

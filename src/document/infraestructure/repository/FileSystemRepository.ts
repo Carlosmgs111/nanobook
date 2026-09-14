@@ -1,6 +1,6 @@
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { Result } from "../../../shared/utils/Result";
+import { Result } from "../../../shared/domain/Result";
 import { idToFilePath, filePathToId } from "./fileSystemParsePath";
 import type {
   ContentRepository,

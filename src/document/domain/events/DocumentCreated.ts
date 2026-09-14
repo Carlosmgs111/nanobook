@@ -1,5 +1,5 @@
 import { DocumentEvent, type DocumentEventPayloadMap } from "./";
-import { DomainEvent } from "../../../shared/bus/EventBus";
+import { DomainEvent } from "../../../shared/domain/bus/EventBus";
 
 type eventPayload = DocumentEventPayloadMap[DocumentEvent.DOCUMENT_CREATED];
 type eventName = DocumentEvent.DOCUMENT_CREATED;

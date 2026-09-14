@@ -1,9 +1,7 @@
-import { Result } from "../../shared/utils/Result";
-import type { EventBus } from "../../shared/bus/EventBus";
-import type {
-  ContentRepository,
-  DocumentChangeNotifier,
-} from "../domain/types";
+import { Result } from "../../shared/domain/Result";
+import type { EventBus } from "../../shared/domain/bus/EventBus";
+import type { ContentRepository } from "../domain/types";
+import type { DocumentChangeNotifier } from "./ports/DocumentChangeNotifier";
 import type { DocumentInput } from "../domain/types";
 import { DocumentUpdated } from "../domain/events/DocumentUpdated";
 import { DocumentId } from "../domain/DocumentId";
@@ -17,7 +15,7 @@ import type {
   DocumentRepositoryError,
   DocumentParseError,
 } from "../infraestructure/errors";
-import type { EventBusError } from "../../shared/bus/errors";
+import type { EventBusError } from "../../shared/domain/bus/errors";
 
 export type UpdateDocumentError =
   | DocumentServiceError

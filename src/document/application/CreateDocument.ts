@@ -1,9 +1,7 @@
-import type { EventBus } from "../../shared/bus/EventBus";
-import  { Result } from "../../shared/utils/Result";
-import type {
-  ContentRepository,
-  DocumentChangeNotifier,
-} from "../domain/types";
+import type { EventBus } from "../../shared/domain/bus/EventBus";
+import  { Result } from "../../shared/domain/Result";
+import type { ContentRepository } from "../domain/types";
+import type { DocumentChangeNotifier } from "./ports/DocumentChangeNotifier";
 import type { DocumentServiceError } from "../domain/errors";
 import { DocumentCreated } from "../domain/events/DocumentCreated";
 import { Document } from "../domain/Document";
@@ -18,7 +16,7 @@ import type {
   DocumentRepositoryError,
   DocumentParseError,
 } from "../infraestructure/errors";
-import type { EventBusError } from "../../shared/bus/errors";
+import type { EventBusError } from "../../shared/domain/bus/errors";
 
 export type CreateDocumentError =
   | DocumentServiceError

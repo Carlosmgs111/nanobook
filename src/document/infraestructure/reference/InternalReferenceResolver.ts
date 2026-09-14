@@ -4,7 +4,6 @@ import type {
   ReferenceResolutionContext,
   ReferenceResolverPlugin,
 } from "../../domain/reference/types";
-import type { Document } from "../../domain/Document";
 import type { ContentRepository } from "../../domain/types";
 import { DocumentId } from "../../domain/DocumentId";
 
@@ -30,8 +29,8 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
     const targetDocumentIdResult = DocumentId.create(targetId);
     if (!targetDocumentIdResult.isSuccess) return null;
 
-    const targetDocumentResult = await this.contentRepository.get(
-      targetDocumentIdResult.getValue()
+    const targetDocumentResult = await this.contentRepository.getById(
+      targetDocumentIdResult.getValue().getValue()
     );
 
     // console.log({ targetDocumentResult });

@@ -1,4 +1,4 @@
-import { Result } from "../../shared/utils/Result";
+import { Result } from "../../shared/domain/Result";
 import { InvalidDocumentIdError } from "./errors";
 
 const ALLOWED_ID_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;

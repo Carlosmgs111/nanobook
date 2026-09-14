@@ -1,11 +1,5 @@
-import type { EventBus } from "../shared/bus/EventBus";
-import { Result } from "../shared/utils/Result";
+import { Result } from "../shared/domain/Result";
 import { GITHUB_TOKEN } from "astro:env/server";
-export type { Document, Heading, DocumentHash } from "./domain/Document";
-export { DocumentCreated } from "./domain/events/DocumentCreated";
-export { DocumentUpdated } from "./domain/events/DocumentUpdated";
-export { DocumentId } from "./domain/DocumentId";
-export type { DocumentChangeNotifier } from "./domain/types";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
 import { UpdateDocument } from "./application/UpdateDocument";
@@ -18,7 +12,14 @@ import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
-import type { DocumentChangeNotifier } from "./domain/types";
+import type { DocumentChangeNotifier } from "./application/ports/DocumentChangeNotifier";
+export type { Document, Heading, DocumentHash } from "./domain/Document";
+import type { EventBus } from "../shared/domain/bus/EventBus";
+
+export { DocumentCreated } from "./domain/events/DocumentCreated";
+export { DocumentUpdated } from "./domain/events/DocumentUpdated";
+export { DocumentId } from "./domain/DocumentId";
+export type { DocumentChangeNotifier } from "./application/ports/DocumentChangeNotifier";
 
 const noOpNotifier: DocumentChangeNotifier = {
   onDocumentCreated: async () => Result.ok(),
@@ -44,10 +45,7 @@ export class DocumentModule {
     );
     const localFileReferenceResolver = new LocalFileReferenceResolver();
 
-    const plugins = [
-      internalReferenceResolver,
-      localFileReferenceResolver,
-    ];
+    const plugins = [internalReferenceResolver, localFileReferenceResolver];
 
     if (GITHUB_TOKEN) {
       plugins.push(new GitHubReferenceResolver());

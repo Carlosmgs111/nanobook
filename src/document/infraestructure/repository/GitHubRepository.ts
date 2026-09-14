@@ -6,7 +6,7 @@ import {
 } from "../../../shared/github/api";
 import { DocumentId } from "../../domain/DocumentId";
 import { filterContentFiles } from "../../../shared/github/parser";
-import { Result } from "../../../shared/utils/Result";
+import { Result } from "../../../shared/domain/Result";
 import type {
   ContentRepository,
   ContentRepositoryListError,

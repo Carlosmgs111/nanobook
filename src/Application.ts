@@ -1,19 +1,15 @@
-import { Result } from "./shared/utils/Result";
-import { InMemoryEventBus } from "./shared/bus/InMemoryEventBus";
-import { DocumentModule, type DocumentChangeNotifier } from "./document";
-import { DocumentNotificationError } from "./document/infraestructure/errors";
+import { InMemoryEventBus } from "./shared/infraestructure/InMemoryEventBus";
+import { DocumentModule } from "./document";
 import {
   GitHubWebhookHandler,
   GitHubWebhookController,
   PublishingModule,
 } from "./publishing";
-import {
-  NavigationModule,
-  type Crumb,
-  type NavigationNode,
-  type ParentEntry,
-} from "./navigation";
+import { NavigationModule } from "./navigation";
+import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
 import type { RenderedDocumentPage } from "./publishing";
+import { PublishingDocumentChangeNotifier } from "./publishing/infraestructure/document/PublishingDocumentChangeNotifier";
+import { DocumentModuleDocumentProvider } from "./document/infraestructure/navigation/DocumentModuleDocumentProvider";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -37,68 +33,20 @@ export class Application {
     // crear un ciclo de inicialización.
     const publishingModule = await PublishingModule.create(eventBus);
 
-    const documentChangeNotifier: DocumentChangeNotifier = {
-      onDocumentCreated: async (documentId) => {
-        try {
-          const result = await publishingModule.pagePublisher.invalidate([
-            documentId,
-          ]);
-          if (!result.isSuccess) {
-            return Result.fail(
-              new DocumentNotificationError(
-                `Failed to notify document creation: ${result.getError().message}`,
-                { cause: result.getError() }
-              )
-            );
-          }
-          return Result.ok();
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          return Result.fail(
-            new DocumentNotificationError(
-              `Failed to notify document creation: ${message}`,
-              { cause: error }
-            )
-          );
-        }
-      },
-      onDocumentUpdated: async (documentId) => {
-        try {
-          const result = await publishingModule.pagePublisher.invalidate([
-            documentId,
-          ]);
-          if (!result.isSuccess) {
-            return Result.fail(
-              new DocumentNotificationError(
-                `Failed to notify document update: ${result.getError().message}`,
-                { cause: result.getError() }
-              )
-            );
-          }
-          return Result.ok();
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          return Result.fail(
-            new DocumentNotificationError(
-              `Failed to notify document update: ${message}`,
-              { cause: error }
-            )
-          );
-        }
-      },
-    };
+    // Adaptador: publishing satisface el puerto DocumentChangeNotifier de document.
+    const documentChangeNotifier = new PublishingDocumentChangeNotifier(
+      publishingModule.pagePublisher
+    );
 
     const documentModule = await DocumentModule.create(
       eventBus,
       documentChangeNotifier
     );
 
-    // La invalidación de caché ahora se hace de forma síncrona a través del
-    // notifier. El bus sigue disponible para efectos secundarios futuros.
-    // publishingModule.registerEventHandlers();
+    // Adaptador: document satisface el puerto DocumentProvider de navigation.
+    const documentProvider = new DocumentModuleDocumentProvider(documentModule);
+    const navigationModule = await NavigationModule.create(documentProvider);
 
-    const documents = await documentModule.getAllDocuments.execute();
-    const navigationModule = await NavigationModule.create(documents);
     return new Application(
       documentModule,
       navigationModule,

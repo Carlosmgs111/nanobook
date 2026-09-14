@@ -1,8 +1,8 @@
-import type { EventHandler } from "../../../shared/bus/EventBus";
+import type { EventHandler } from "../../../shared/domain/bus/EventBus";
 import { DocumentCreated } from "../../../document";
-import type { Result } from "../../../shared/utils/result";
-import { Result as ResultUtils } from "../../../shared/utils/result";
-import { EventBusError } from "../../../shared/bus/errors";
+import type { Result } from "../../../shared/domain/Result";
+import { Result as ResultUtils } from "../../../shared/domain/Result";
+import { EventBusError } from "../../../shared/domain/bus/errors";
 import { PagePublisher } from "../PagePublisher";
 
 export class OnDocumentCreatedHandler implements EventHandler<DocumentCreated> {

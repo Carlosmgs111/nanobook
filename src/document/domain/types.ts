@@ -1,4 +1,4 @@
-import type { Result } from "../../shared/utils/Result";
+import type { Result } from "../../shared/domain/Result";
 import type { DocumentId } from "./DocumentId";
 import type { Document, Heading } from "./Document";
 import type { Ref } from "./DocumentReference";
@@ -13,6 +13,8 @@ import type {
   InvalidDocumentError,
   InvalidDocumentIdError,
 } from "./errors";
+
+export type { DocumentChangeNotifier } from "../application/ports/DocumentChangeNotifier";
 
 export interface DocumentMetadata {
   title: string;
@@ -51,22 +53,6 @@ export interface ContentRepository {
   listChildren(parentId: string | null): Promise<Result<ContentRepositoryListError, Document[]>>;
   create(document: Document): Promise<Result<ContentRepositoryError, void>>;
   update(document: Document): Promise<Result<ContentRepositoryError, void>>;
-}
-
-/**
- * Puerto de notificación para efectos secundarios que deben ocurrir de forma
- * síncrona y confiable tras crear o actualizar un documento.
- *
- * El módulo `document` no conoce a los consumidores; `Application` cablea una
- * implementación concreta (por ejemplo, invalidación de caché de páginas).
- */
-export interface DocumentChangeNotifier {
-  onDocumentCreated(
-    documentId: string
-  ): Promise<Result<DocumentNotificationError, void>>;
-  onDocumentUpdated(
-    documentId: string
-  ): Promise<Result<DocumentNotificationError, void>>;
 }
 
 export interface DocumentInput {

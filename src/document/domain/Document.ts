@@ -1,4 +1,4 @@
-import { Result } from "../../shared/utils/Result";
+import { Result } from "../../shared/domain/Result";
 import { DocumentId } from "./DocumentId";
 import { DocumentReference } from "./DocumentReference";
 import type { DocumentMetadata, Entry } from "./types";

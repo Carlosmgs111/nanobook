@@ -1,6 +1,6 @@
-import { Result } from "../utils/result";
-import { EventBusError } from "./errors";
-import type { EventBus, DomainEvent, EventHandler } from "./EventBus";
+import { Result } from "../domain/Result";
+import { EventBusError } from "../domain/bus/errors";
+import type { EventBus, DomainEvent, EventHandler } from "../domain/bus/EventBus";
 
 export class InMemoryEventBus implements EventBus {
   subscribers: Map<string, EventHandler<DomainEvent<any>>[]> = new Map();

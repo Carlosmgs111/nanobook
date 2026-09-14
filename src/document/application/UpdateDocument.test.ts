@@ -11,10 +11,10 @@ import {
   DocumentNotificationError,
   DocumentRepositoryError,
 } from "../infraestructure/errors";
-import { Result } from "../../shared/utils/Result";
-import { EventBusError } from "../../shared/bus/errors";
-import type { EventBus } from "../../shared/bus/EventBus";
-import type { DocumentChangeNotifier } from "../domain/types";
+import { Result } from "../../shared/domain/Result";
+import { EventBusError } from "../../shared/domain/bus/errors";
+import type { EventBus } from "../../shared/domain/bus/EventBus";
+import type { DocumentChangeNotifier } from "./ports/DocumentChangeNotifier";
 
 const existingDocument = Document.create(
   "guide/intro",

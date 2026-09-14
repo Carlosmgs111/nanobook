@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { Result } from "../../../shared/utils/result";
+import { Result } from "../../../shared/domain/Result";
 import type { CachedPage, RenderedPageCache } from "../../domain/cache";
 import { PageCacheError } from "../errors";
 

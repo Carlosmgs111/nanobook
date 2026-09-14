@@ -1,4 +1,4 @@
-import type { Result } from "../utils/result";
+import type { Result } from "../Result";
 import type { EventBusError } from "./errors";
 
 export interface EventHandler<DomainEvent> {

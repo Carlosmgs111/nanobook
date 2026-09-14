@@ -1,4 +1,4 @@
-import { Result } from "../../../shared/utils/Result";
+import { Result } from "../../../shared/domain/Result";
 import type {
   ContentRepository,
   ContentRepositoryListError,
