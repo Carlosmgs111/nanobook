@@ -36,31 +36,62 @@ export async function fetchGitHubTree(
   return data.tree;
 }
 
+interface GitHubFileContentResponse {
+  content: string;
+  encoding: "base64";
+  sha: string;
+}
+
 export async function fetchFileContent(
   options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
     Pick<GitHubRepositoryConfig, "token"> & { path: string }
 ): Promise<string> {
-  const { owner, repo, branch, path } = options;
+  const { owner, repo, branch, path, token } = options;
+
+  if (token) {
+    return fetchFileContentFromApi({ owner, repo, branch, path, token });
+  }
+
   const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeURIComponent(
     path
   )}`;
   const response = await fetch(url, {
-    headers: {
-      "User-Agent": "nanobook",
-    },
+    headers: { "User-Agent": "nanobook" },
   });
 
   if (!response.ok) {
     const text = await response.text().catch(() => "Unknown error");
     throw new Error(
-      `GitHub raw error ${response.status} ${response.statusText}: ${text}`
+      `GitHub raw error ${response.status} ${response.statusText} fetching "${path}": ${text}`
     );
   }
 
   return response.text();
 }
 
-interface GitHubContentResponse {
+async function fetchFileContentFromApi(
+  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
+    Pick<GitHubRepositoryConfig, "token"> & { path: string }
+): Promise<string> {
+  const { owner, repo, branch, path, token } = options;
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(
+    path
+  )}?ref=${branch}`;
+
+  const response = await fetch(url, { headers: getHeaders(token) });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "Unknown error");
+    throw new Error(
+      `GitHub API error ${response.status} ${response.statusText} fetching "${path}": ${text}`
+    );
+  }
+
+  const data = (await response.json()) as GitHubFileContentResponse;
+  return Buffer.from(data.content, "base64").toString("utf-8");
+}
+
+interface GitHubFileShaResponse {
   sha: string;
 }
 
@@ -86,7 +117,7 @@ export async function fetchFileSha(
     );
   }
 
-  const data = (await response.json()) as GitHubContentResponse;
+  const data = (await response.json()) as GitHubFileShaResponse;
   return data.sha;
 }
 
