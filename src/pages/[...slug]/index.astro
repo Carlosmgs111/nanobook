@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import DocumentPage from "../../document/DocumentPage.astro";
+import DocumentPage from "../../document/ui/pages/DocumentPage.astro";
 import { getApp } from "../../Application";
 
 const app = await getApp();
@@ -18,20 +18,19 @@ const {
   parentEntry,
   childEntries,
 } = await app.renderPage(slug);
-const { document, renderedBody } = rendered;
+const { entry, renderedBody } = rendered;
 
 const editHref = slug ? `/${slug}/edit` : `${Astro.request.url}edit`;
 
-const newHref = document.getMetadata().index
-  ? document.getId().getValue() === "index"
+const newHref = entry.metadata.index
+  ? entry.id === "index"
     ? `${Astro.request.url}new`
-    : `/${document.getId().getValue()}/new`
+    : `/${entry.id}/new`
   : "/new";
-const proxyTargetId = document.getProxyTargetId();
-const canonicalHref = proxyTargetId
-  ? proxyTargetId.getValue() === "index"
+const canonicalHref = entry.proxyTargetId
+  ? entry.proxyTargetId === "index"
     ? "/"
-    : `/${proxyTargetId.getValue()}/`
+    : `/${entry.proxyTargetId}/`
   : undefined;
 
 Astro.response.headers.set(
@@ -41,8 +40,8 @@ Astro.response.headers.set(
 ---
 
 <Layout
-  title={document.getTitle()}
-  description={document.getDescription()}
+  title={entry.title}
+  description={entry.description}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentEntry}
@@ -52,8 +51,67 @@ Astro.response.headers.set(
   canonicalHref={canonicalHref}
 >
   <DocumentPage
-    entry={document.parse()}
+    entry={entry}
     Content={renderedBody}
     childEntries={childEntries.map((child) => child)}
   />
 </Layout>
+
+<script>
+  import {
+    loadStagedDocument,
+    getStagedDocumentSavedAt,
+    clearStagedDocument,
+  } from "../../edition/client/stage-document";
+  import { getRenderedDocument } from "../../edition/client/render-service";
+  import { isInsideDocumentFlow } from "../../edition/client/document-flow";
+
+  function getDocumentId(): string {
+    const body = document.getElementById("document-body");
+    return body?.dataset.documentId ?? "index";
+  }
+
+  function applyConfirmedStagedContent(): void {
+    const documentId = getDocumentId();
+    const body = document.getElementById("document-body");
+    if (!body) return;
+
+    const savedAt = getStagedDocumentSavedAt();
+    if (!savedAt) return;
+
+    const staged = loadStagedDocument();
+    if (!staged || staged.id !== documentId) return;
+
+    const rendered = getRenderedDocument();
+    if (!rendered) return;
+
+    body.innerHTML = rendered.Content;
+    body.classList.add("document-body--from-memory");
+  }
+
+  function handleBeforeSwap(event: Event): void {
+    const documentId = getDocumentId();
+    const destination = (event as unknown as { to?: URL }).to;
+    if (destination && !isInsideDocumentFlow(destination, documentId)) {
+      clearStagedDocument();
+    }
+  }
+
+  document.addEventListener("astro:page-load", applyConfirmedStagedContent);
+  document.addEventListener("astro:before-swap", handleBeforeSwap);
+</script>
+
+<style>
+  .document-body--from-memory {
+    position: relative;
+  }
+  .document-body--from-memory::before {
+    content: "Versión guardada en memoria";
+    position: absolute;
+    top: -1.75rem;
+    right: 0;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+</style>

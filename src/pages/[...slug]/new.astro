@@ -16,12 +16,12 @@ const {
   breadcrumbs,
   sidebarEntries,
   parentEntry,
-  rendered: { document },
+  rendered: { entry },
 } = await app.renderPage(slug);
 ---
 
 <Layout
-  title={`Nuevo documento en ${document.getTitle()}`}
+  title={`Nuevo documento en ${entry.title}`}
   description="Crear un nuevo documento"
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
@@ -37,5 +37,5 @@ const {
     </h1>
   </div>
 
-  <NewPage baseId={document.getId().getValue()} />
+  <NewPage baseId={entry.id} />
 </Layout>

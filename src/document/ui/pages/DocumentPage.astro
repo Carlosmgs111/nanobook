@@ -1,7 +1,7 @@
 ---
-import IndexList from "./components/IndexList/index.astro";
-import type { Entry } from "./domain/types";
-import type { NavigationNode } from "../navigation/domain/types";
+import IndexList from "../components/IndexList/index.astro";
+import type { Entry } from "../../../domain/types";
+import type { NavigationNode } from "../../../../navigation/domain/types";
 
 interface Props {
   entry: Entry;
@@ -38,7 +38,7 @@ const { entry, Content, childEntries } = Astro.props;
         <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
         <span>AUTHOR: {entry.metadata.author}</span>
       </div>
-      <Fragment set:html={Content} />
+      <div id="document-body" data-document-id={entry.id} set:html={Content} />
     </Fragment>
   )
 }

@@ -11,20 +11,20 @@ const slug = Astro.params.slug || "index";
 if (!slug) return Astro.redirect("/404");
 const { breadcrumbs, sidebarEntries, parentEntry, rendered } = await app.renderPage(slug);
 
-const { document } = rendered;
-if (!document) {
+const { entry } = rendered;
+if (!entry) {
   return new Response("Document not found!", { status: 404 });
 }
-const viewHref = `/${document.getId().getValue()}`;
-const previewHref = `/${document.getId().getValue()}/preview`;
-const newHref = document.getMetadata().index
-  ? `/${document.getId().getValue()}/new`
+const viewHref = `/${entry.id}`;
+const previewHref = `/${entry.id}/preview`;
+const newHref = entry.metadata.index
+  ? `/${entry.id}/new`
   : "/new";
 ---
 
 <Layout
-  title={`Editar: ${document.getTitle()}`}
-  description={document.getDescription()}
+  title={`Editar: ${entry.title}`}
+  description={entry.description}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentEntry}
@@ -32,5 +32,5 @@ const newHref = document.getMetadata().index
   viewHref={viewHref}
   newHref={newHref}
 >
-  <EditPage entry={document} previewHref={previewHref} />
+  <EditPage entry={entry} previewHref={previewHref} />
 </Layout>
