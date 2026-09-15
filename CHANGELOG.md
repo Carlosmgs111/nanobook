@@ -8,6 +8,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Estado de guardado confirmado en el flujo de edición:
+  - `src/edition/client/stage-document.ts` expone `markStagedDocumentAsSaved()`, `getStagedDocumentSavedAt()` e `isStagedDocumentSaved()`.
+  - `src/edition/client/document-flow.ts`: utilidad compartida `isInsideDocumentFlow()` que incluye la página pública del documento.
+  - `src/pages/[...slug]/index.astro` reemplaza el cuerpo renderizado por servidor con la versión guardada en memoria cuando existe un guardado confirmado para el mismo documento, evitando mostrar contenido cacheado antiguo tras editar en producción.
+- Indicador visual "Versión guardada en memoria" en el cuerpo del documento cuando se muestra la versión staged.
 - Errores de infraestructura tipados por módulo:
   - `src/shared/errors.ts`: `InfrastructureError`.
   - `src/shared/bus/errors.ts`: `EventBusError`.
@@ -17,6 +22,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- `DocumentEditor.astro` marca el borrador como guardado tras un `PATCH` exitoso, vuelve a renderizarlo y ya no borra `sessionStorage` al navegar a la página pública del mismo documento.
+- `DocumentEditor.astro` limpia el timestamp de guardado confirmado cuando el usuario escribe cambios no guardados, de modo que la página pública solo muestre la versión en memoria tras un guardado explícito.
+- `PreviewPage.astro` usa `isInsideDocumentFlow()` para mantener el borrador al navegar entre `/{id}`, `/{id}/edit` y `/{id}/preview`.
+- `src/shared/github/api.ts`: `fetchFileContent` ahora usa el endpoint autenticado de contenidos de la API de GitHub cuando se proporciona `GITHUB_TOKEN`, permitiendo leer repositorios privados; sin token sigue usando `raw.githubusercontent.com` para repositorios públicos.
 - `Result` en `src/shared/utils/result.ts` ahora expone solo la API estática `Result.ok()` / `Result.fail()`; se eliminaron los helpers comentados `ok()` / `err()`.
 - `ContentRepository` devuelve `Result` en todos sus métodos (`list`, `get`, `getBySlug`, `listChildren`, `create`, `update`); las implementaciones `FileSystemRepository`, `GitHubRepository` e `InMemoryRepository` capturan excepciones de infraestructura y las traducen a errores tipados.
 - `DocumentChangeNotifier` devuelve `Result<DocumentNotificationError, void>`.
