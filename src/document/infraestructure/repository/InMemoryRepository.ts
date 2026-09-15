@@ -2,14 +2,13 @@ import { Result } from "../../../shared/domain/Result";
 import type {
   ContentRepository,
   ContentRepositoryListError,
-} from "../../domain/types";
+} from "../../domain/ports/ContentRepository";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
+  DocumentRepositoryError,
 } from "../../domain/errors";
 import { Document } from "../../domain/Document";
-import { DocumentId } from "../../domain/DocumentId";
-import { DocumentRepositoryError } from "../errors";
 
 /**
  * Implementación en memoria de ContentRepository.
@@ -39,7 +38,7 @@ export class InMemoryRepository implements ContentRepository {
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     return Result.ok(
       Array.from(this.documents.values()).filter(
-        (doc) => doc.getParentId() === parentId
+        (doc) => doc.getParentId()?.getValue() === parentId
       )
     );
   }

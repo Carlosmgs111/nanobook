@@ -1,34 +1,28 @@
 import { Result } from "../../shared/domain/Result";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
-import type { ContentRepository } from "../domain/types";
-import type { DocumentChangeNotifier } from "./ports/DocumentChangeNotifier";
-import type { DocumentInput } from "../domain/types";
+import type { ContentRepository } from "../domain/ports/ContentRepository";
+import type { DocumentInput } from "./dto/DocumentInput";
 import { DocumentUpdated } from "../domain/events/DocumentUpdated";
 import { DocumentId } from "../domain/DocumentId";
 import {
   DocumentNotFoundError,
+  DocumentRepositoryError,
+  DocumentParseError,
   type DocumentServiceError,
 } from "../domain/errors";
 import { Document } from "../domain/Document";
-import type {
-  DocumentNotificationError,
-  DocumentRepositoryError,
-  DocumentParseError,
-} from "../infraestructure/errors";
 import type { EventBusError } from "../../shared/domain/bus/errors";
 
 export type UpdateDocumentError =
   | DocumentServiceError
   | DocumentRepositoryError
   | DocumentParseError
-  | DocumentNotificationError
   | EventBusError;
 
 export class UpdateDocument {
   constructor(
     private contentRepository: ContentRepository,
-    private eventBus: EventBus,
-    private notifier: DocumentChangeNotifier
+    private eventBus: EventBus
   ) {}
 
   async execute(
@@ -60,13 +54,6 @@ export class UpdateDocument {
     }
 
     const updatedDocumentId = updatedDocument.getId().getValue();
-
-    const notifyResult = await this.notifier.onDocumentUpdated(
-      updatedDocumentId
-    );
-    if (!notifyResult.isSuccess) {
-      return Result.fail(notifyResult.getError());
-    }
 
     const publishResult = await this.eventBus.publish(
       DocumentUpdated.create({ id: updatedDocumentId })

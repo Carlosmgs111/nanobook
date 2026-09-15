@@ -28,9 +28,9 @@ export class DocumentReference {
     this.ref = ref;
   }
   getValue(): string {
-    if (this.ref.source == "url") return this.ref.url;
-    if (this.ref.source == "local") return this.ref.path;
-    if (this.ref.source == "github") {
+    if (this.ref.source === "url") return this.ref.url;
+    if (this.ref.source === "local") return this.ref.path;
+    if (this.ref.source === "github") {
       return `https://github.com/${this.ref.owner}/${this.ref.repo}/blob/${
         this.ref.branch ?? "main"
       }/${this.ref.path}`;

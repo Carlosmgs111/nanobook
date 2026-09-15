@@ -4,7 +4,7 @@ import type {
   ReferenceResolutionContext,
   ReferenceResolverPlugin,
 } from "../../domain/reference/types";
-import type { ContentRepository } from "../../domain/types";
+import type { ContentRepository } from "../../domain/ports/ContentRepository";
 import { DocumentId } from "../../domain/DocumentId";
 
 /**

@@ -10,18 +10,18 @@ import { Result } from "../../../shared/domain/Result";
 import type {
   ContentRepository,
   ContentRepositoryListError,
-} from "../../domain/types";
+} from "../../domain/ports/ContentRepository";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
+  DocumentRepositoryError,
 } from "../../domain/errors";
 import { withRedisClient } from "../../../shared/utils/redis";
 
 import type { GitHubRepositoryConfig } from "../../../shared/github/types";
 import type { GitHubTreeItem } from "../../../shared/github/types";
 import { Document } from "../../domain/Document";
-import type { DocumentParser } from "../../domain/DocumentParser";
-import { DocumentRepositoryError } from "../errors";
+import type { DocumentParser } from "../../domain/ports/DocumentParser";
 import { toDocumentId } from "../../../shared/utils/documentPath";
 import { createDocumentFromRaw } from "./createDocumentFromRaw";
 
@@ -108,7 +108,7 @@ export class GitHubRepository implements ContentRepository {
     const documents = documentsResult.getValue();
     return Result.ok(
       documents.filter(
-        (document) => document.getId().getParentId() === parentId
+        (document) => document.getParentId()?.getValue() === parentId
       )
     );
   }

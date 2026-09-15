@@ -9,8 +9,7 @@ import type {
 } from "../../domain/reference/types";
 
 function getPath(ref: string): string {
-  if (typeof ref === "string") return ref.slice(1);
-  throw new Error("Invalid local reference");
+  return ref.replace(/^\//, "");
 }
 
 function assertWithinProject(filePath: string): void {

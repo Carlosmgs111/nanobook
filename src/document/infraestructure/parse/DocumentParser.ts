@@ -3,8 +3,9 @@ import { slug } from "github-slugger";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Node } from "unist";
-import type { DocumentParser as DocumentParserPort } from "../../domain/DocumentParser";
-import type { Document, Heading } from "../../domain/Document";
+import type { DocumentParser as DocumentParserPort } from "../../domain/ports/DocumentParser";
+import type { Document } from "../../domain/Document";
+import type { Heading } from "../../domain/Heading";
 import { FrontmatterParser } from "./FrontmatterParser";
 
 export class UnifiedDocumentParser implements DocumentParserPort {

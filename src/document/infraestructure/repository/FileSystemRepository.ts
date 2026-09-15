@@ -5,17 +5,14 @@ import { idToFilePath, filePathToId } from "./fileSystemParsePath";
 import type {
   ContentRepository,
   ContentRepositoryListError,
-} from "../../domain/types";
+} from "../../domain/ports/ContentRepository";
 import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
-} from "../../domain/errors";
-
-import { Document } from "../../domain/Document";
-import type { DocumentParser } from "../../domain/DocumentParser";
-import {
   DocumentRepositoryError,
-} from "../errors";
+} from "../../domain/errors";
+import { Document } from "../../domain/Document";
+import type { DocumentParser } from "../../domain/ports/DocumentParser";
 import { createDocumentFromRaw } from "./createDocumentFromRaw";
 
 const CONTENT_DIR = "./src/content";
@@ -93,7 +90,9 @@ export class FileSystemRepository implements ContentRepository {
     }
     const documents = documentsResult.getValue();
     return Result.ok(
-      documents.filter((document) => document.getId().getParentId() === parentId)
+      documents.filter(
+        (document) => document.getParentId()?.getValue() === parentId
+      )
     );
   }
 

@@ -1,5 +1,5 @@
 import type { Document } from "../domain/Document";
-import type { ContentRepository } from "../domain/types";
+import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { ProxyParser } from "./ProxyParser";
 
 export class GetDocument {

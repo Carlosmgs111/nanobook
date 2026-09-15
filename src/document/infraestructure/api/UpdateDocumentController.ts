@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
-import type {
-  UpdateDocument,
-} from "../../application/UpdateDocument";
+import type { UpdateDocument } from "../../application/UpdateDocument";
 import { jsonResponse, handleServiceError } from "./utils";
-import type { DocumentInput } from "../../domain/types";
+import type { UpdateDocumentRequest } from "./dto/UpdateDocumentRequest";
+import { toDocumentInput } from "./mappers/toDocumentInput";
 
 export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
@@ -14,16 +13,16 @@ export class UpdateDocumentController {
         return jsonResponse({ error: "Falta el parámetro slug" }, 400);
       }
 
-      const document: DocumentInput = JSON.parse(await request.text());
+      const payload: UpdateDocumentRequest = JSON.parse(await request.text());
 
-      if (document.id !== slug) {
+      if (payload.id !== slug) {
         return jsonResponse(
           { error: "El slug no coincide con el id del documento" },
           400
         );
       }
 
-      const result = await this.updateDocument.execute(document);
+      const result = await this.updateDocument.execute(toDocumentInput(payload));
       if (!result.isSuccess) {
         return handleServiceError(result.getError());
       }

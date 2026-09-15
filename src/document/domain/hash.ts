@@ -1,4 +1,4 @@
-import { Document } from "./Document";
+import type { DocumentMetadata } from "./types";
 
 export async function hashString(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
@@ -6,8 +6,7 @@ export async function hashString(input: string): Promise<string> {
   return Buffer.from(buffer).toString("hex");
 }
 
-export function serializeMetadata(document: Document): string {
-  const metadata = document.getMetadata();
+export function serializeMetadata(metadata: DocumentMetadata): string {
   return JSON.stringify({
     title: metadata.title,
     description: metadata.description,

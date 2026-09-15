@@ -31,18 +31,20 @@ export class FrontmatterParser {
   static parseFrontmatter(raw: string): {
     data: DocumentMetadata;
     body: string;
+    rawFrontmatter: string;
   } {
     const match = raw.match(FRONTMATTER_REGEX);
     if (!match) {
-      return { data: {} as DocumentMetadata, body: raw };
+      return { data: {} as DocumentMetadata, body: raw, rawFrontmatter: "" };
     }
 
     const frontmatter = match[1];
     const body = raw.slice(match[0].length);
+    const rawFrontmatter = match[0];
 
     try {
       const data = parseYaml(frontmatter) as Record<string, unknown>;
-      return { data: coerceDates(data) as DocumentMetadata, body };
+      return { data: coerceDates(data) as DocumentMetadata, body, rawFrontmatter };
     } catch (error) {
       console.error(error);
       throw new Error(

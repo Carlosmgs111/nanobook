@@ -1,7 +1,7 @@
 import { FileSystemRepository } from "./FileSystemRepository";
 import { GitHubRepository } from "./GitHubRepository";
 import { InMemoryRepository } from "./InMemoryRepository";
-import type { ContentRepository } from "../../domain/types";
+import type { ContentRepository } from "../../domain/ports/ContentRepository";
 import type { Document } from "../../domain/Document";
 import { UnifiedDocumentParser } from "../parse/DocumentParser";
 import {

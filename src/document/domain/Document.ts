@@ -3,12 +3,14 @@ import { DocumentId } from "./DocumentId";
 import { DocumentReference } from "./DocumentReference";
 import type { DocumentMetadata, Entry } from "./types";
 import { hashString, serializeMetadata } from "./hash";
-import type { DocumentParser } from "./DocumentParser";
+import type { DocumentParser } from "./ports/DocumentParser";
 import {
   InvalidDocumentError,
   InvalidDocumentIdError,
   InvalidIndexDocumentError,
 } from "./errors";
+import type { Heading } from "./Heading";
+import type { DocumentHash } from "./DocumentHash";
 
 const NEW_DOCUMENT_TEMPLATE = `---
 title: "<%= title %>"
@@ -22,18 +24,6 @@ position: 0
 proxyTargetId: null
 ---
 `;
-
-export interface Heading {
-  depth: number;
-  slug: string;
-  text: string;
-}
-
-export interface DocumentHash {
-  id: string;
-  contentHash: string;
-  metadataHash: string;
-}
 
 export class Document {
   private parser: DocumentParser | null;
@@ -56,7 +46,8 @@ export class Document {
       description: string;
     },
     body: string = "",
-    parser: DocumentParser | null = null
+    parser: DocumentParser | null = null,
+    rawFrontmatter?: string
   ) {
     const now = new Date();
     const isIndex = id.isIndexId();
@@ -86,20 +77,23 @@ export class Document {
       },
       id.getValue()
     );
-    this.rawFrontmatter = this.interpolateTemplate(NEW_DOCUMENT_TEMPLATE, {
-      title: this.metadata.title,
-      description: this.metadata.description,
-      date: this.metadata.date.toISOString(),
-      author: this.metadata.author || "",
-      index: String(this.metadata.index),
-    });
+    this.rawFrontmatter =
+      rawFrontmatter ??
+      this.interpolateTemplate(NEW_DOCUMENT_TEMPLATE, {
+        title: this.metadata.title,
+        description: this.metadata.description,
+        date: this.metadata.date.toISOString(),
+        author: this.metadata.author || "",
+        index: String(this.metadata.index),
+      });
   }
 
   static create(
     id: string,
     data: DocumentMetadata,
     body: string = "",
-    parser: DocumentParser | null = null
+    parser: DocumentParser | null = null,
+    rawFrontmatter?: string
   ): Result<
     InvalidDocumentError | InvalidDocumentIdError | InvalidIndexDocumentError,
     Document
@@ -118,7 +112,9 @@ export class Document {
         )
       );
     }
-    return Result.ok(new Document(idResult.getValue(), data, body, parser));
+    return Result.ok(
+      new Document(idResult.getValue(), data, body, parser, rawFrontmatter)
+    );
   }
 
   async computeContentHash(): Promise<string> {
@@ -129,7 +125,7 @@ export class Document {
     return {
       id: this.id.getValue(),
       contentHash: await this.computeContentHash(),
-      metadataHash: await hashString(serializeMetadata(this)),
+      metadataHash: await hashString(serializeMetadata(this.metadata)),
     };
   }
 
@@ -178,6 +174,7 @@ export class Document {
       rawFrontmatter: this.rawFrontmatter,
       content: this.content,
       slug: this.slug,
+      proxyTargetId: this.proxyTargetId?.getValue(),
       headings: this.getHeadings(),
     };
   }

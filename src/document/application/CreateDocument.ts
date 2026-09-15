@@ -1,35 +1,29 @@
 import type { EventBus } from "../../shared/domain/bus/EventBus";
-import  { Result } from "../../shared/domain/Result";
-import type { ContentRepository } from "../domain/types";
-import type { DocumentChangeNotifier } from "./ports/DocumentChangeNotifier";
-import type { DocumentServiceError } from "../domain/errors";
-import { DocumentCreated } from "../domain/events/DocumentCreated";
-import { Document } from "../domain/Document";
+import { Result } from "../../shared/domain/Result";
+import type { ContentRepository } from "../domain/ports/ContentRepository";
 import {
   InvalidDocumentIdError,
   ParentNotFoundError,
-} from "../domain/errors";
-import { DocumentId } from "../domain/DocumentId";
-import type { DocumentInput } from "../domain/types";
-import type {
-  DocumentNotificationError,
   DocumentRepositoryError,
   DocumentParseError,
-} from "../infraestructure/errors";
+  type DocumentServiceError,
+} from "../domain/errors";
+import { DocumentCreated } from "../domain/events/DocumentCreated";
+import { Document } from "../domain/Document";
+import { DocumentId } from "../domain/DocumentId";
+import type { DocumentInput } from "./dto/DocumentInput";
 import type { EventBusError } from "../../shared/domain/bus/errors";
 
 export type CreateDocumentError =
   | DocumentServiceError
   | DocumentRepositoryError
   | DocumentParseError
-  | DocumentNotificationError
   | EventBusError;
 
 export class CreateDocument {
   constructor(
     private repository: ContentRepository,
-    private eventBus: EventBus,
-    private notifier: DocumentChangeNotifier
+    private eventBus: EventBus
   ) {}
 
   async execute(
@@ -71,8 +65,10 @@ export class CreateDocument {
         position: input.position,
         draft: input.draft,
         tags: input.tags,
+        cover: input.cover,
+        ref: input.ref,
       },
-      ""
+      input.content
     );
     if (!documentResult.isSuccess) {
       return Result.fail(documentResult.getError());
@@ -85,20 +81,6 @@ export class CreateDocument {
     }
 
     const documentId = document.getId().getValue();
-
-    const notifyDocResult = await this.notifier.onDocumentCreated(documentId);
-    if (!notifyDocResult.isSuccess) {
-      return Result.fail(notifyDocResult.getError());
-    }
-
-    if (parentId !== null) {
-      const notifyParentResult = await this.notifier.onDocumentCreated(
-        parentId.getValue()
-      );
-      if (!notifyParentResult.isSuccess) {
-        return Result.fail(notifyParentResult.getError());
-      }
-    }
 
     const publishDocResult = await this.eventBus.publish(
       DocumentCreated.create({ id: documentId })
