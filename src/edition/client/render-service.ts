@@ -1,5 +1,5 @@
 import { worker } from "../../publishing/client/workers";
-import type { Document } from "../../document/domain/Document";
+import type { SerializedEntry } from "../../document/application/dto/SerializedEntry";
 import type { RenderedDocument } from "../../publishing/domain/render";
 
 const STAGED_KEY = "stagedDocument";
@@ -22,7 +22,7 @@ function remove(key: string): void {
   sessionStorage.removeItem(key);
 }
 
-function sameDocument(a: Document, b: Document): boolean {
+function sameDocument(a: SerializedEntry, b: SerializedEntry): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
@@ -51,16 +51,16 @@ function waitForRender(timeoutMs = 30000): Promise<RenderedDocument> {
   });
 }
 
-export function getStagedDocument(): Document | null {
-  return read<Document>(STAGED_KEY);
+export function getStagedDocument(): SerializedEntry | null {
+  return read<SerializedEntry>(STAGED_KEY);
 }
 
 export function getRenderedDocument(): RenderedDocument | null {
   return read<RenderedDocument>(RENDERED_KEY);
 }
 
-export function getRenderedDocumentSource(): Document | null {
-  return read<Document>(RENDERED_SOURCE_KEY);
+export function getRenderedDocumentSource(): SerializedEntry | null {
+  return read<SerializedEntry>(RENDERED_SOURCE_KEY);
 }
 
 export function clearRenderedDocument(): void {
@@ -69,14 +69,14 @@ export function clearRenderedDocument(): void {
 }
 
 export async function renderStagedDocument(
-  stagedDocument: Document
+  stagedDocument: SerializedEntry
 ): Promise<RenderedDocument | null> {
-  const pending = read<Document>(PENDING_KEY);
+  const pending = read<SerializedEntry>(PENDING_KEY);
   if (pending && sameDocument(pending, stagedDocument)) {
     return waitForRender();
   }
 
-  const existingSource = read<Document>(RENDERED_SOURCE_KEY);
+  const existingSource = read<SerializedEntry>(RENDERED_SOURCE_KEY);
   const existingRendered = read<RenderedDocument>(RENDERED_KEY);
   if (
     existingSource &&

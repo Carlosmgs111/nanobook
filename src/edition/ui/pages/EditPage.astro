@@ -1,9 +1,9 @@
 ---
 import DocumentEditor from "../components/DocumentEditor/DocumentEditor.astro";
-import type { Document } from "../../../document/domain/Document";
+import type { Entry } from "../../../document/domain/types";
 
 interface Props {
-  entry: Document;
+  entry: Entry;
   previewHref: string;
 }
 
@@ -15,8 +15,8 @@ const { entry, previewHref } = Astro.props;
   <h1
     class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
   >
-    {entry.getTitle()}
+    {entry.title}
   </h1>
 </div>
 
-<DocumentEditor document={entry} previewHref={previewHref} />
+<DocumentEditor entry={entry} previewHref={previewHref} />

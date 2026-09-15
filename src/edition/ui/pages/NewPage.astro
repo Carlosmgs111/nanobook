@@ -212,7 +212,13 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
       throw new Error("ID no válida");
     }
 
-    const document = await createDocument({ id, ...metadata, index });
+    const document = await createDocument({
+      id,
+      ...metadata,
+      index,
+      content: "",
+      date: new Date().toISOString(),
+    });
     return document.id;
   }
 

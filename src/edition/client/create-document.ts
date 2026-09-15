@@ -1,20 +1,11 @@
-import type { Entry } from "../../document/domain/types";
+import type { CreateDocumentRequest } from "../../document/application/dto/CreateDocumentRequest";
+import type { SerializedEntry } from "../../document/application/dto/SerializedEntry";
 
-export interface CreateDocumentPayload {
-  id: string;
-  title: string;
-  description: string;
-  author?: string;
-  date?: string;
-  index?: boolean;
-  position?: number;
-  draft?: boolean;
-  tags?: string[];
-}
+export type { CreateDocumentRequest };
 
 export async function createDocument(
-  payload: CreateDocumentPayload
-): Promise<Entry> {
+  payload: CreateDocumentRequest
+): Promise<SerializedEntry> {
   const response = await fetch("/api/documents", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

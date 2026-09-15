@@ -1,21 +1,26 @@
 ---
-import type { Document } from "../../../../document/domain/Document";
+import type { Entry } from "../../../../document/domain/types";
+import {
+  type SerializedEntry,
+  serializeEntry,
+} from "../../../../document/application/dto/SerializedEntry";
 import EditorToolbar from "../EditorToolbar.astro";
 import EditorStatus from "../EditorStatus.astro";
 
 interface Props {
-  document: Document;
+  entry: Entry;
   previewHref?: string;
 }
 
-const { document, previewHref } = Astro.props;
-const initialContent = document.getRawFrontmatter() + document.getContent();
+const { entry, previewHref } = Astro.props;
+const serializedEntry = serializeEntry(entry);
+const initialContent = entry.rawFrontmatter + entry.content;
 ---
 
 <div
   class="editor-wrapper"
-  data-document={JSON.stringify(document.parse())}
-  data-document-id={document.getId().getValue()}
+  data-document={JSON.stringify(serializedEntry)}
+  data-document-id={entry.id}
   data-initial-content={initialContent}
 >
   <EditorToolbar previewHref={previewHref}>
@@ -25,7 +30,7 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
 </div>
 
 <script>
-  import type { Document } from "../../../../document/domain/Document";
+  import type { SerializedEntry } from "../../../../document/application/dto/SerializedEntry";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
@@ -40,15 +45,22 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
     saveStagedDocument,
     ensureStagedDocument,
     clearStagedDocument,
+    markStagedDocumentAsSaved,
+    clearStagedDocumentSavedAt,
   } from "../../../client/stage-document";
   import { buildDocumentFromContent } from "../../../client/parse-staged-document";
   import { updateDocument } from "../../../client/update-document";
+  import { isInsideDocumentFlow } from "../../../client/document-flow";
 
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
 
   function getWrapper() {
     return document.querySelector<HTMLElement>(".editor-wrapper");
+  }
+
+  function getBaseDocument(wrapper: HTMLElement): SerializedEntry {
+    return JSON.parse(wrapper.dataset.document!) as SerializedEntry;
   }
 
   function getInitialContent(wrapper: HTMLElement) {
@@ -61,14 +73,6 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
   function clearEditionStorage(): void {
     clearStagedDocument();
     clearRenderedDocument();
-  }
-
-  function isInsideEditionFlow(url: URL, documentId: string): boolean {
-    const path = url.pathname.replace(/\/$/, "");
-    if (documentId === "index") {
-      return path === "/edit" || path === "/preview";
-    }
-    return path === `/${documentId}/edit` || path === `/${documentId}/preview`;
   }
 
   function initEditor() {
@@ -87,7 +91,7 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
 
     destroyEditor();
 
-    const baseDocument = JSON.parse(wrapper.dataset.document!);
+    const baseDocument = getBaseDocument(wrapper);
     const staged = loadStagedDocument();
     if (staged && staged.id !== baseDocument.id) {
       clearEditionStorage();
@@ -115,11 +119,14 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
     cleanButton.addEventListener("click", async (e) => {
       e.preventDefault();
       try {
-        const document = buildDocumentFromContent(
-          JSON.parse(wrapper.dataset.document!) as Document,
+        const stagedDocument = buildDocumentFromContent(
+          getBaseDocument(wrapper),
           editor!.getContent()
         );
-        await updateDocument(documentId, document);
+        await updateDocument(documentId, stagedDocument);
+        saveStagedDocument(stagedDocument);
+        markStagedDocumentAsSaved();
+        await renderStagedDocument(stagedDocument);
         showStatus("Guardado correctamente");
       } catch (error) {
         console.error(error);
@@ -142,10 +149,11 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
     const wrapper = getWrapper();
     if (!wrapper || !editor) return;
     const stagedDocument = buildDocumentFromContent(
-      JSON.parse(wrapper.dataset.document!) as Document,
+      getBaseDocument(wrapper),
       editor.getContent()
     );
     saveStagedDocument(stagedDocument);
+    clearStagedDocumentSavedAt();
     await renderStagedDocument(stagedDocument);
   }, 1000);
 
@@ -167,7 +175,7 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
 
     if (wrapper && editor) {
       const stagedDocument = buildDocumentFromContent(
-        JSON.parse(wrapper.dataset.document!) as Document,
+        getBaseDocument(wrapper),
         editor.getContent()
       );
       saveStagedDocument(stagedDocument);
@@ -177,7 +185,7 @@ const initialContent = document.getRawFrontmatter() + document.getContent();
     if (
       documentId &&
       destination &&
-      !isInsideEditionFlow(destination, documentId)
+      !isInsideDocumentFlow(destination, documentId)
     ) {
       clearEditionStorage();
     }

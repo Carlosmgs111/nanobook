@@ -18,6 +18,7 @@ const documentId = slug || "index";
     clearRenderedDocument,
   } from "../../client/render-service";
   import { clearStagedDocument } from "../../client/stage-document";
+  import { isInsideDocumentFlow } from "../../client/document-flow";
 
   const channel = new BroadcastChannel("rendered-document");
 
@@ -29,14 +30,6 @@ const documentId = slug || "index";
   function clearEditionStorage(): void {
     clearStagedDocument();
     clearRenderedDocument();
-  }
-
-  function isInsideEditionFlow(url: URL, documentId: string): boolean {
-    const path = url.pathname.replace(/\/$/, "");
-    if (documentId === "index") {
-      return path === "/edit" || path === "/preview";
-    }
-    return path === `/${documentId}/edit` || path === `/${documentId}/preview`;
   }
 
   async function renderPreview() {
@@ -71,7 +64,7 @@ const documentId = slug || "index";
   function handleBeforeSwap(event: Event) {
     const documentId = getDocumentId();
     const destination = (event as unknown as { to?: URL }).to;
-    if (destination && !isInsideEditionFlow(destination, documentId)) {
+    if (destination && !isInsideDocumentFlow(destination, documentId)) {
       clearEditionStorage();
     }
   }
