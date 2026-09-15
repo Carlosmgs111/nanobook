@@ -1,17 +1,17 @@
-import type { Heading } from "../../document/domain/Document";
-import type { Document } from "../../document/domain/Document";
+import type { Heading } from "../../document/domain/Heading";
+import type { Entry } from "../../document/domain/types";
 
 export interface RenderedDocument {
   Content: any;
 }
 
 export interface DocumentRenderer {
-  render(document: Document): Promise<RenderedDocument>;
+  render(document: { getContent(): string }): Promise<RenderedDocument>;
 }
 
 export interface RenderedPageData {
   pageId: string;
-  document: Document;
+  entry: Entry;
   renderedBody: string;
 }
 

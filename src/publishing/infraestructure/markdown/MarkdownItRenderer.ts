@@ -5,8 +5,8 @@ import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
 import { bundledLanguages } from "shiki/langs";
 import { bundledThemes } from "shiki/themes";
 import anchor from "markdown-it-anchor";
-import type { DocumentRenderer, RenderedDocument } from "../../domain/render";
-import type { Document } from "../../../document/domain/Document";
+import type { RenderedDocument } from "../../domain/render";
+import type { SerializedEntry } from "../../../document/application/dto/SerializedEntry";
 
 const createHighlighter = createBundledHighlighter({
   langs: bundledLanguages,
@@ -14,7 +14,7 @@ const createHighlighter = createBundledHighlighter({
   engine: () => createJavaScriptRegexEngine({ forgiving: true }),
 });
 
-export class MarkdownItRenderer implements DocumentRenderer {
+export class MarkdownItRenderer {
   private processor: MarkdownIt | null = null;
 
   private async getProcessor(): Promise<MarkdownIt> {
@@ -52,10 +52,10 @@ export class MarkdownItRenderer implements DocumentRenderer {
     return this.processor;
   }
 
-  async render(document: Document): Promise<RenderedDocument> {
+  async render(document: Pick<SerializedEntry, "content">): Promise<RenderedDocument> {
     const processor = await this.getProcessor();
 
-    const Content = processor.render(document.getContent());
+    const Content = processor.render(document.content);
 
     return {
       Content,

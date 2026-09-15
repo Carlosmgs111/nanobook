@@ -1,9 +1,9 @@
-import type { Document } from "../../../document/domain/types";
+import type { SerializedEntry } from "../../../document/application/dto/SerializedEntry";
 import type { RenderedDocument } from "../../domain/render";
 
 export type RenderRequest = {
   id: number;
-  document: Document;
+  document: SerializedEntry;
 };
 
 type RenderResponse = {
@@ -34,7 +34,7 @@ export class MarkdownRenderClient {
     };
   }
 
-  render(document: Document): Promise<RenderedDocument> {
+  render(document: SerializedEntry): Promise<RenderedDocument> {
     const id = ++this.nextId;
     return new Promise((resolve) => {
       this.pending.set(id, resolve);

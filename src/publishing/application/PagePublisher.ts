@@ -18,15 +18,14 @@ export class PagePublisher {
       contentHash
     );
 
+    const entry = document.parse();
     const rendered = {
       pageId: document.getId().getValue(),
-      document,
+      entry,
       renderedBody,
     };
 
-    const { headings } = document.parse();
-
-    return { rendered, headings, contentHash };
+    return { rendered, headings: entry.headings, contentHash };
   }
 
   async invalidate(

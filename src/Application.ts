@@ -8,7 +8,6 @@ import {
 import { NavigationModule } from "./navigation";
 import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
 import type { RenderedDocumentPage } from "./publishing";
-import { PublishingDocumentChangeNotifier } from "./publishing/infraestructure/document/PublishingDocumentChangeNotifier";
 import { DocumentModuleDocumentProvider } from "./document/infraestructure/navigation/DocumentModuleDocumentProvider";
 
 export class Application {
@@ -28,22 +27,9 @@ export class Application {
 
   static async create(): Promise<Application> {
     const eventBus = new InMemoryEventBus();
-
-    // Publicar primero para poder construir el notifier de documentos sin
-    // crear un ciclo de inicialización.
     const publishingModule = await PublishingModule.create(eventBus);
-
-    // Adaptador: publishing satisface el puerto DocumentChangeNotifier de document.
-    const documentChangeNotifier = new PublishingDocumentChangeNotifier(
-      publishingModule.pagePublisher
-    );
-
-    const documentModule = await DocumentModule.create(
-      eventBus,
-      documentChangeNotifier
-    );
-
-    // Adaptador: document satisface el puerto DocumentProvider de navigation.
+    publishingModule.registerEventHandlers()
+    const documentModule = await DocumentModule.create(eventBus);
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await NavigationModule.create(documentProvider);
 
