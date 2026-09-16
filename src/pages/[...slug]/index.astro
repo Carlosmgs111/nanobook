@@ -58,21 +58,31 @@ Astro.response.headers.set(
 </Layout>
 
 <script>
-  import {
-    loadStagedDocument,
-    getStagedDocumentSavedAt,
-    clearStagedDocument,
-  } from "../../edition/client/stage-document";
-  import {
-    getRenderedDocument,
-    getRenderedDocumentSource,
-  } from "../../edition/client/render-service";
-  import { selectConfirmedRenderedDocument } from "../../edition/client/confirmed-render";
-  import { isInsideDocumentFlow } from "../../edition/client/document-flow";
+  import { edition, type SerializedEntry, type RenderedPreview } from "../../edition/index";
 
   function getDocumentId(): string {
     const body = document.getElementById("document-body");
     return body?.dataset.documentId ?? "index";
+  }
+
+  function loadStagedDocument(): SerializedEntry | null {
+    const result = edition.storage.loadStagedDocument();
+    return result.isSuccess ? result.getValue() : null;
+  }
+
+  function getStagedDocumentSavedAt(): number | null {
+    const result = edition.storage.getSavedAt();
+    return result.isSuccess ? result.getValue() : null;
+  }
+
+  function loadRenderedDocument(): RenderedPreview | null {
+    const result = edition.storage.loadRenderedDocument();
+    return result.isSuccess ? result.getValue() : null;
+  }
+
+  function loadRenderedSource(): SerializedEntry | null {
+    const result = edition.storage.loadRenderedSource();
+    return result.isSuccess ? result.getValue() : null;
   }
 
   function applyConfirmedStagedContent(): void {
@@ -86,11 +96,14 @@ Astro.response.headers.set(
     const staged = loadStagedDocument();
     if (!staged || staged.id !== documentId) return;
 
-    const rendered = selectConfirmedRenderedDocument({
+    const renderedResult = edition.confirmRenderedPreview.execute({
       savedDocument: staged,
-      renderedSource: getRenderedDocumentSource(),
-      rendered: getRenderedDocument(),
+      renderedSource: loadRenderedSource(),
+      rendered: loadRenderedDocument(),
     });
+    if (!renderedResult.isSuccess) return;
+
+    const rendered = renderedResult.getValue();
     if (!rendered) return;
 
     body.innerHTML = rendered.Content;
@@ -100,8 +113,8 @@ Astro.response.headers.set(
   function handleBeforeSwap(event: Event): void {
     const documentId = getDocumentId();
     const destination = (event as unknown as { to?: URL }).to;
-    if (destination && !isInsideDocumentFlow(destination, documentId)) {
-      clearStagedDocument();
+    if (destination && !edition.isInsideDocumentFlow(destination, documentId)) {
+      edition.storage.clearStagedDocument();
     }
   }
 

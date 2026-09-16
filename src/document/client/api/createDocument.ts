@@ -1,5 +1,5 @@
-import type { CreateDocumentRequest } from "../../document/application/dto/CreateDocumentRequest";
-import type { SerializedEntry } from "../../document/application/dto/SerializedEntry";
+import type { CreateDocumentRequest } from "../../application/dto/CreateDocumentRequest";
+import type { SerializedEntry } from "../../application/dto/SerializedEntry";
 
 export type { CreateDocumentRequest };
 

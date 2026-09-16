@@ -8,6 +8,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Migración del módulo `edition` a arquitectura hexagonal con DDD, replicando el patrón de los demás módulos:
+  - `src/edition/domain/`: modelos (`StagedDocument`, `RenderedPreview`), puertos (`DocumentStorage`, `PreviewRenderer`, `PageWarmingService`), servicios de dominio puros (`DocumentFlow`, `RenderConfirmation`, `DocumentContentParser`) y errores tipados (`EditionStorageError`, `EditionRenderError`, `InvalidDocumentContentError`).
+  - `src/edition/application/`: casos de uso (`BuildStagedDocument`, `StageDocument`, `LoadStagedDocument`, `ClearEditionStorage`, `RenderPreview`, `ConfirmRenderedPreview`, `WarmDocumentPage`, `MarkDocumentSaved`) con tests unitarios en `src/edition/application/test/`.
+  - `src/edition/infraestructure/`: adaptadores concretos (`SessionStorageDocumentStorage`, `WorkerPreviewRenderer`, `FetchPageWarmingService`).
+  - `src/edition/index.ts`: `EditionModule` como composition root del módulo, exponiendo casos de uso, adaptadores, utilidades de dominio (`isInsideDocumentFlow`) y el singleton `edition`.
+
+### Added
 - Estado de guardado confirmado en el flujo de edición:
   - `src/edition/client/stage-document.ts` expone `markStagedDocumentAsSaved()`, `getStagedDocumentSavedAt()` e `isStagedDocumentSaved()`.
   - `src/edition/client/document-flow.ts`: utilidad compartida `isInsideDocumentFlow()` que incluye la página pública del documento.
@@ -22,6 +29,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- `DocumentEditor.astro`, `PreviewPage.astro` y `src/pages/[...slug]/index.astro` usan directamente `edition` desde `src/edition/index.ts`, eliminando la dependencia de la fachada `src/edition/client/`.
+- Helpers de API de documentos (`createDocument`, `updateDocument`) movidos desde `src/edition/client/` a `src/document/client/api/`.
+- `code-mirror-editor.ts` movido desde `src/edition/client/` a `src/edition/ui/components/DocumentEditor/code-mirror-editor.ts`.
 - `DocumentEditor.astro` marca el borrador como guardado tras un `PATCH` exitoso, vuelve a renderizarlo y ya no borra `sessionStorage` al navegar a la página pública del mismo documento.
 - `DocumentEditor.astro` limpia el timestamp de guardado confirmado cuando el usuario escribe cambios no guardados, de modo que la página pública solo muestre la versión en memoria tras un guardado explícito.
 - `PreviewPage.astro` usa `isInsideDocumentFlow()` para mantener el borrador al navegar entre `/{id}`, `/{id}/edit` y `/{id}/preview`.
@@ -34,6 +44,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `CreateDocument` y `UpdateDocument` ya no envuelven la lógica en `try/catch` defensivo; reciben `Result` de infraestructura, verifican `isSuccess` y propagan el error.
 - Controladores `CreateDocumentController` y `UpdateDocumentController` usan `result.isSuccess` y `result.getValue()`; `handleServiceError` mapea errores de dominio e infraestructura a códigos HTTP.
 - `Application.ts` adapta el `DocumentChangeNotifier` para capturar errores de `PagePublisher.invalidate` y devolver `Result`.
+
+### Removed
+- Eliminada la fachada `src/edition/client/` y sus tests asociados; la funcionalidad equivalente ahora reside en `src/edition/application/`, `src/edition/domain/` y en los propios componentes Astro.
 
 ### Fixed
 - `OnDocumentCreatedHandler` y `OnDocumentUpdatedHandler` importaban `err`/`ok` inexistentes; ahora usan `Result.ok()` / `Result.fail()`.

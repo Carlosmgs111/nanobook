@@ -1,5 +1,5 @@
-import type { SerializedEntry } from "../../document/application/dto/SerializedEntry";
-import type { UpdateDocumentRequest } from "../../document/application/dto/UpdateDocumentRequest";
+import type { SerializedEntry } from "../../application/dto/SerializedEntry";
+import type { UpdateDocumentRequest } from "../../application/dto/UpdateDocumentRequest";
 
 function toUpdateDocumentRequest(
   document: SerializedEntry

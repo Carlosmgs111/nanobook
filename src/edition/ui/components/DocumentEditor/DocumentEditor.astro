@@ -33,30 +33,70 @@ const initialContent = entry.rawFrontmatter + entry.content;
 
 <script>
   import type { SerializedEntry } from "../../../../document/application/dto/SerializedEntry";
-  import { warmDocumentPage } from "../../../client/warm-document-page";
+  import { edition, type RenderedPreview } from "../../../index";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
-  } from "../../../client/code-mirror-editor";
+  } from "./code-mirror-editor";
   import { debounce } from "../../../../shared/utils/debounce";
-  import {
-    renderStagedDocument,
-    clearRenderedDocument,
-  } from "../../../client/render-service";
-  import {
-    loadStagedDocument,
-    saveStagedDocument,
-    ensureStagedDocument,
-    clearStagedDocument,
-    markStagedDocumentAsSaved,
-    clearStagedDocumentSavedAt,
-  } from "../../../client/stage-document";
-  import { buildDocumentFromContent } from "../../../client/parse-staged-document";
-  import { updateDocument } from "../../../client/update-document";
-  import { isInsideDocumentFlow } from "../../../client/document-flow";
+  import { updateDocument } from "../../../../document/client/api/updateDocument";
 
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
+
+  function loadStagedDocument(): SerializedEntry | null {
+    const result = edition.storage.loadStagedDocument();
+    return result.isSuccess ? result.getValue() : null;
+  }
+
+  function saveStagedDocument(document: SerializedEntry): void {
+    edition.stageDocument.execute(document);
+  }
+
+  function ensureStagedDocument(base: SerializedEntry): SerializedEntry {
+    const existing = loadStagedDocument();
+    if (existing) return existing;
+    saveStagedDocument(base);
+    return base;
+  }
+
+  function clearStagedDocument(): void {
+    edition.storage.clearStagedDocument();
+    edition.storage.clearSavedAt();
+  }
+
+  function markStagedDocumentAsSaved(): void {
+    edition.markDocumentSaved.execute();
+  }
+
+  function clearStagedDocumentSavedAt(): void {
+    edition.storage.clearSavedAt();
+  }
+
+  function clearRenderedDocument(): void {
+    edition.storage.clearRenderedDocument();
+    edition.storage.clearRenderedSource();
+  }
+
+  function buildDocumentFromContent(
+    base: SerializedEntry,
+    fullContent: string
+  ): SerializedEntry {
+    const result = edition.buildStagedDocument.execute(base, fullContent);
+    return result.isSuccess ? result.getValue() : base;
+  }
+
+  async function warmDocumentPage(href: string): Promise<void> {
+    const result = await edition.warmDocumentPage.execute(href);
+    if (!result.isSuccess) console.error(result.getError());
+  }
+
+  async function renderStagedDocument(
+    stagedDocument: SerializedEntry
+  ): Promise<RenderedPreview | null> {
+    const result = await edition.renderPreview.execute(stagedDocument);
+    return result.isSuccess ? result.getValue() : null;
+  }
 
   function getWrapper() {
     return document.querySelector<HTMLElement>(".editor-wrapper");
@@ -192,7 +232,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
     if (
       documentId &&
       destination &&
-      !isInsideDocumentFlow(destination, documentId)
+      !edition.isInsideDocumentFlow(destination, documentId)
     ) {
       clearEditionStorage();
     }
