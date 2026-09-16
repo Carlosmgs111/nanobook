@@ -8,6 +8,7 @@ import {
   DocumentNotFoundError,
   DocumentRepositoryError,
   DocumentParseError,
+  InvalidDocumentIdError,
   type DocumentServiceError,
 } from "../domain/errors";
 import { Document } from "../domain/Document";
@@ -28,6 +29,13 @@ export class UpdateDocument {
   async execute(
     documentDelta: DocumentInput
   ): Promise<Result<UpdateDocumentError, void>> {
+    const idResult = DocumentId.create(documentDelta.id);
+    if (!idResult.isSuccess) {
+      return Result.fail(
+        new InvalidDocumentIdError(documentDelta.id)
+      );
+    }
+
     const documentResult = await this.contentRepository.getById(
       documentDelta.id
     );

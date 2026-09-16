@@ -2,6 +2,7 @@ import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { Result } from "../../shared/domain/Result";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import {
+  DocumentAlreadyExistsError,
   InvalidDocumentIdError,
   ParentNotFoundError,
   DocumentRepositoryError,
@@ -37,6 +38,14 @@ export class CreateDocument {
 
     if (id.isIndexId() && input.index === false) {
       return Result.fail(new InvalidDocumentIdError(id.getValue()));
+    }
+
+    const existingResult = await this.repository.getById(id.getValue());
+    if (!existingResult.isSuccess) {
+      return Result.fail(existingResult.getError());
+    }
+    if (existingResult.getValue()) {
+      return Result.fail(new DocumentAlreadyExistsError(id.getValue()));
     }
 
     const parentId = id.getParentId();

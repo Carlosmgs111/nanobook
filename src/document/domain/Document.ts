@@ -112,9 +112,14 @@ export class Document {
         )
       );
     }
-    return Result.ok(
-      new Document(idResult.getValue(), data, body, parser, rawFrontmatter)
-    );
+    try {
+      return Result.ok(
+        new Document(idResult.getValue(), data, body, parser, rawFrontmatter)
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(new InvalidDocumentError(id, message));
+    }
   }
 
   async computeContentHash(): Promise<string> {
