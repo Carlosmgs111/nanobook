@@ -5,9 +5,10 @@ import type { Entry } from "../../../document/domain/types";
 interface Props {
   entry: Entry;
   previewHref: string;
+  viewHref: string;
 }
 
-const { entry, previewHref } = Astro.props;
+const { entry, previewHref, viewHref } = Astro.props;
 ---
 
 <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
@@ -19,4 +20,4 @@ const { entry, previewHref } = Astro.props;
   </h1>
 </div>
 
-<DocumentEditor entry={entry} previewHref={previewHref} />
+<DocumentEditor entry={entry} previewHref={previewHref} viewHref={viewHref} />

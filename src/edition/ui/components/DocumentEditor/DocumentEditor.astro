@@ -10,15 +10,17 @@ import EditorStatus from "../EditorStatus.astro";
 interface Props {
   entry: Entry;
   previewHref?: string;
+  viewHref?: string;
 }
 
-const { entry, previewHref } = Astro.props;
+const { entry, previewHref, viewHref } = Astro.props;
 const serializedEntry = serializeEntry(entry);
 const initialContent = entry.rawFrontmatter + entry.content;
 ---
 
 <div
   class="editor-wrapper"
+  data-view-href={viewHref}
   data-document={JSON.stringify(serializedEntry)}
   data-document-id={entry.id}
   data-initial-content={initialContent}
@@ -31,6 +33,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
 
 <script>
   import type { SerializedEntry } from "../../../../document/application/dto/SerializedEntry";
+  import { warmDocumentPage } from "../../../client/warm-document-page";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
@@ -111,6 +114,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
     const saveButton = wrapper.querySelector<HTMLButtonElement>(
       "[data-action='save']"
     );
+    const viewHref = wrapper.dataset.viewHref;
     if (!saveButton) return;
 
     const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
@@ -126,6 +130,9 @@ const initialContent = entry.rawFrontmatter + entry.content;
         await updateDocument(documentId, stagedDocument);
         saveStagedDocument(stagedDocument);
         markStagedDocumentAsSaved();
+
+        if (viewHref) void warmDocumentPage(viewHref);
+
         await renderStagedDocument(stagedDocument);
         showStatus("Guardado correctamente");
       } catch (error) {

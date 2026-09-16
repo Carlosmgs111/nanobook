@@ -63,7 +63,11 @@ Astro.response.headers.set(
     getStagedDocumentSavedAt,
     clearStagedDocument,
   } from "../../edition/client/stage-document";
-  import { getRenderedDocument } from "../../edition/client/render-service";
+  import {
+    getRenderedDocument,
+    getRenderedDocumentSource,
+  } from "../../edition/client/render-service";
+  import { selectConfirmedRenderedDocument } from "../../edition/client/confirmed-render";
   import { isInsideDocumentFlow } from "../../edition/client/document-flow";
 
   function getDocumentId(): string {
@@ -82,7 +86,11 @@ Astro.response.headers.set(
     const staged = loadStagedDocument();
     if (!staged || staged.id !== documentId) return;
 
-    const rendered = getRenderedDocument();
+    const rendered = selectConfirmedRenderedDocument({
+      savedDocument: staged,
+      renderedSource: getRenderedDocumentSource(),
+      rendered: getRenderedDocument(),
+    });
     if (!rendered) return;
 
     body.innerHTML = rendered.Content;
