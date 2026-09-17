@@ -9,10 +9,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 - Migración del módulo `edition` a arquitectura hexagonal con DDD, replicando el patrón de los demás módulos:
-  - `src/edition/domain/`: modelos (`StagedDocument`, `RenderedPreview`), puertos (`DocumentStorage`, `PreviewRenderer`, `PageWarmingService`), servicios de dominio puros (`DocumentFlow`, `RenderConfirmation`, `DocumentContentParser`) y errores tipados (`EditionStorageError`, `EditionRenderError`, `InvalidDocumentContentError`).
-  - `src/edition/application/`: casos de uso (`BuildStagedDocument`, `StageDocument`, `LoadStagedDocument`, `ClearEditionStorage`, `RenderPreview`, `ConfirmRenderedPreview`, `WarmDocumentPage`, `MarkDocumentSaved`) con tests unitarios en `src/edition/application/test/`.
-  - `src/edition/infraestructure/`: adaptadores concretos (`SessionStorageDocumentStorage`, `WorkerPreviewRenderer`, `FetchPageWarmingService`).
-  - `src/edition/index.ts`: `EditionModule` como composition root del módulo, exponiendo casos de uso, adaptadores, utilidades de dominio (`isInsideDocumentFlow`) y el singleton `edition`.
+  - `src/edition/domain/`: modelos (`StagedDocument`, `RenderedPreview`), puertos (`DocumentStorage`, `PreviewRenderer`, `PageWarmingService`, `DocumentContentParser`), servicios de dominio puros (`DocumentFlow`, `RenderConfirmation`) y errores tipados (`EditionStorageError`, `EditionRenderError`, `InvalidDocumentContentError`).
+  - `src/edition/application/`: casos de uso primitivos (`BuildStagedDocument`, `StageDocument`, `LoadStagedDocument`, `ClearEditionStorage`, `RenderPreview`, `ConfirmRenderedPreview`, `WarmDocumentPage`, `MarkDocumentSaved`) y casos de uso de flujo (`InitializeEditor`, `GetEditorInitialContent`, `SaveDocument`, `HandleEditorChange`, `PrepareEditorNavigation`) con tests unitarios en `src/edition/application/test/`.
+  - `src/edition/infraestructure/`: adaptadores concretos (`SessionStorageDocumentStorage`, `WorkerPreviewRenderer`, `FetchPageWarmingService`, `YamlDocumentContentParser`).
+  - `src/edition/index.ts`: `EditionModule` como composition root del módulo, exponiendo casos de uso, adaptadores, utilidades de dominio (`isInsideDocumentFlow`), el servicio de flujo `EditorFlow` y el singleton `edition`.
 
 ### Added
 - Estado de guardado confirmado en el flujo de edición:
@@ -32,6 +32,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `DocumentEditor.astro`, `PreviewPage.astro` y `src/pages/[...slug]/index.astro` usan directamente `edition` desde `src/edition/index.ts`, eliminando la dependencia de la fachada `src/edition/client/`.
 - Helpers de API de documentos (`createDocument`, `updateDocument`) movidos desde `src/edition/client/` a `src/document/client/api/`.
 - `code-mirror-editor.ts` movido desde `src/edition/client/` a `src/edition/ui/components/DocumentEditor/code-mirror-editor.ts`.
+- `DocumentEditor.astro` delega la orquestación del flujo de edición en casos de uso de alto nivel (`InitializeEditor`, `GetEditorInitialContent`, `SaveDocument`, `HandleEditorChange`, `PrepareEditorNavigation`), eliminando wrappers locales y código redundante.
 - `DocumentEditor.astro` marca el borrador como guardado tras un `PATCH` exitoso, vuelve a renderizarlo y ya no borra `sessionStorage` al navegar a la página pública del mismo documento.
 - `DocumentEditor.astro` limpia el timestamp de guardado confirmado cuando el usuario escribe cambios no guardados, de modo que la página pública solo muestre la versión en memoria tras un guardado explícito.
 - `PreviewPage.astro` usa `isInsideDocumentFlow()` para mantener el borrador al navegar entre `/{id}`, `/{id}/edit` y `/{id}/preview`.

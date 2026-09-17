@@ -58,7 +58,12 @@ Astro.response.headers.set(
 </Layout>
 
 <script>
-  import { edition, type SerializedEntry, type RenderedPreview } from "../../edition/index";
+  import {
+    edition,
+    type SerializedEntry,
+    type RenderedPreview,
+    confirmRenderedPreview,
+  } from "../../edition/index";
 
   function getDocumentId(): string {
     const body = document.getElementById("document-body");
@@ -96,7 +101,7 @@ Astro.response.headers.set(
     const staged = loadStagedDocument();
     if (!staged || staged.id !== documentId) return;
 
-    const renderedResult = edition.confirmRenderedPreview.execute({
+    const renderedResult = confirmRenderedPreview({
       savedDocument: staged,
       renderedSource: loadRenderedSource(),
       rendered: loadRenderedDocument(),

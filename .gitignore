@@ -35,4 +35,6 @@ pnpm-debug.log*
 !.env.example
 
 .vercel
-.src/content
+/src/content
+.superpowers
+.opencode

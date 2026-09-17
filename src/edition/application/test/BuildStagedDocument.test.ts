@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { BuildStagedDocument } from "../BuildStagedDocument";
+import { YamlDocumentContentParser } from "../../infraestructure/parser/YamlDocumentContentParser";
 import { buildSerializedEntry } from "./factories";
 import { InvalidDocumentContentError } from "../../domain/errors";
 
-const useCase = new BuildStagedDocument();
+const useCase = new BuildStagedDocument(new YamlDocumentContentParser());
 
 const base = buildSerializedEntry();
 

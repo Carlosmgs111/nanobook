@@ -33,7 +33,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
 
 <script>
   import type { SerializedEntry } from "../../../../document/application/dto/SerializedEntry";
-  import { edition, type RenderedPreview } from "../../../index";
+  import { edition } from "../../../index";
   import {
     createCodeMirrorEditor,
     type CodeMirrorEditorInstance,
@@ -44,78 +44,12 @@ const initialContent = entry.rawFrontmatter + entry.content;
   let editor: CodeMirrorEditorInstance | null = null;
   let statusElement: HTMLElement | null = null;
 
-  function loadStagedDocument(): SerializedEntry | null {
-    const result = edition.storage.loadStagedDocument();
-    return result.isSuccess ? result.getValue() : null;
-  }
-
-  function saveStagedDocument(document: SerializedEntry): void {
-    edition.stageDocument.execute(document);
-  }
-
-  function ensureStagedDocument(base: SerializedEntry): SerializedEntry {
-    const existing = loadStagedDocument();
-    if (existing) return existing;
-    saveStagedDocument(base);
-    return base;
-  }
-
-  function clearStagedDocument(): void {
-    edition.storage.clearStagedDocument();
-    edition.storage.clearSavedAt();
-  }
-
-  function markStagedDocumentAsSaved(): void {
-    edition.markDocumentSaved.execute();
-  }
-
-  function clearStagedDocumentSavedAt(): void {
-    edition.storage.clearSavedAt();
-  }
-
-  function clearRenderedDocument(): void {
-    edition.storage.clearRenderedDocument();
-    edition.storage.clearRenderedSource();
-  }
-
-  function buildDocumentFromContent(
-    base: SerializedEntry,
-    fullContent: string
-  ): SerializedEntry {
-    const result = edition.buildStagedDocument.execute(base, fullContent);
-    return result.isSuccess ? result.getValue() : base;
-  }
-
-  async function warmDocumentPage(href: string): Promise<void> {
-    const result = await edition.warmDocumentPage.execute(href);
-    if (!result.isSuccess) console.error(result.getError());
-  }
-
-  async function renderStagedDocument(
-    stagedDocument: SerializedEntry
-  ): Promise<RenderedPreview | null> {
-    const result = await edition.renderPreview.execute(stagedDocument);
-    return result.isSuccess ? result.getValue() : null;
-  }
-
   function getWrapper() {
     return document.querySelector<HTMLElement>(".editor-wrapper");
   }
 
   function getBaseDocument(wrapper: HTMLElement): SerializedEntry {
     return JSON.parse(wrapper.dataset.document!) as SerializedEntry;
-  }
-
-  function getInitialContent(wrapper: HTMLElement) {
-    const staged = loadStagedDocument();
-    return staged
-      ? staged.rawFrontmatter + staged.content
-      : wrapper.dataset.initialContent || "";
-  }
-
-  function clearEditionStorage(): void {
-    clearStagedDocument();
-    clearRenderedDocument();
   }
 
   function initEditor() {
@@ -135,15 +69,14 @@ const initialContent = entry.rawFrontmatter + entry.content;
     destroyEditor();
 
     const baseDocument = getBaseDocument(wrapper);
-    const staged = loadStagedDocument();
-    if (staged && staged.id !== baseDocument.id) {
-      clearEditionStorage();
-    }
-    ensureStagedDocument(baseDocument);
+    edition.initializeEditor.execute(baseDocument);
 
     editor = createCodeMirrorEditor({
       container,
-      initialContent: getInitialContent(wrapper),
+      initialContent:
+        edition.storage.getRawDocumentContent(baseDocument).getValue() ||
+        wrapper.dataset.initialContent ||
+        "",
       onChange: debouncedOnChange,
     });
 
@@ -162,20 +95,17 @@ const initialContent = entry.rawFrontmatter + entry.content;
 
     cleanButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      try {
-        const stagedDocument = buildDocumentFromContent(
-          getBaseDocument(wrapper),
-          editor!.getContent()
-        );
-        await updateDocument(documentId, stagedDocument);
-        saveStagedDocument(stagedDocument);
-        markStagedDocumentAsSaved();
+      const result = await edition.saveDocument.execute(
+        getBaseDocument(wrapper),
+        editor!.getContent(),
+        updateDocument,
+        viewHref
+      );
 
-        if (viewHref) void warmDocumentPage(viewHref);
-
-        await renderStagedDocument(stagedDocument);
+      if (result.isSuccess) {
         showStatus("Guardado correctamente");
-      } catch (error) {
+      } else {
+        const error = result.getError();
         console.error(error);
         showStatus(
           error instanceof Error ? error.message : "Error al guardar",
@@ -195,13 +125,10 @@ const initialContent = entry.rawFrontmatter + entry.content;
   const debouncedOnChange = debounce(async () => {
     const wrapper = getWrapper();
     if (!wrapper || !editor) return;
-    const stagedDocument = buildDocumentFromContent(
+    await edition.handleEditorChange.execute(
       getBaseDocument(wrapper),
       editor.getContent()
     );
-    saveStagedDocument(stagedDocument);
-    clearStagedDocumentSavedAt();
-    await renderStagedDocument(stagedDocument);
   }, 1000);
 
   function showStatus(message: string, isError = false) {
@@ -220,21 +147,21 @@ const initialContent = entry.rawFrontmatter + entry.content;
     const documentId = wrapper?.dataset.documentId;
     const destination = (event as unknown as { to?: URL }).to;
 
-    if (wrapper && editor) {
-      const stagedDocument = buildDocumentFromContent(
-        getBaseDocument(wrapper),
-        editor.getContent()
-      );
-      saveStagedDocument(stagedDocument);
-      renderStagedDocument(stagedDocument).catch(console.error);
-    }
-
-    if (
+    if (wrapper && editor && documentId) {
+      edition.prepareEditorNavigation
+        .execute(
+          getBaseDocument(wrapper),
+          editor.getContent(),
+          documentId,
+          destination
+        )
+        .catch(console.error);
+    } else if (
       documentId &&
       destination &&
       !edition.isInsideDocumentFlow(destination, documentId)
     ) {
-      clearEditionStorage();
+      edition.storage.clearAll();
     }
 
     destroyEditor();

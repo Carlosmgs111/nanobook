@@ -92,11 +92,24 @@ export class SessionStorageDocumentStorage implements DocumentStorage {
 
   loadSavedAt(): Result<EditionStorageError, number | null> {
     const result = read<string>(this.storage, SAVED_AT_KEY);
-    if (!result.isSuccess) return result;
+    if (!result.isSuccess) return Result.fail(result.getError());
     const raw = result.getValue();
     if (!raw) return Result.ok(null);
     const value = Number(raw);
     return Result.ok(Number.isNaN(value) ? null : value);
+  }
+
+  getRawDocumentContent(base: SerializedEntry): Result<EditionStorageError, string | null> {
+    const stagedResult = this.storage.loadStagedDocument();
+    if (!stagedResult.isSuccess) {
+      return Result.fail(stagedResult.getError());
+    }
+
+    const staged = stagedResult.getValue();
+    if (staged && staged.id === base.id) {
+      return Result.ok(staged.rawFrontmatter + staged.content);
+    }
+    return Result.ok(null);
   }
 
   markSavedAt(): Result<EditionStorageError, void> {

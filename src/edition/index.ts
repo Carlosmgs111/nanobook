@@ -1,19 +1,18 @@
-import { BuildStagedDocument } from "./application/BuildStagedDocument";
-import { StageDocument } from "./application/StageDocument";
-import { LoadStagedDocument } from "./application/LoadStagedDocument";
-import { ClearEditionStorage } from "./application/ClearEditionStorage";
 import { RenderPreview } from "./application/RenderPreview";
-import { ConfirmRenderedPreview } from "./application/ConfirmRenderedPreview";
-import { WarmDocumentPage } from "./application/WarmDocumentPage";
-import { MarkDocumentSaved } from "./application/MarkDocumentSaved";
+import { InitializeEditor } from "./application/InitializeEditor";
+import { SaveDocument } from "./application/SaveDocument";
+import { HandleEditorChange } from "./application/HandleEditorChange";
+import { PrepareEditorNavigation } from "./application/PrepareEditorNavigation";
 import { SessionStorageDocumentStorage } from "./infraestructure/storage/SessionStorageDocumentStorage";
 import { WorkerPreviewRenderer } from "./infraestructure/renderer/WorkerPreviewRenderer";
 import { FetchPageWarmingService } from "./infraestructure/warming/FetchPageWarmingService";
+import { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
 import { isInsideDocumentFlow as isInsideDocumentFlowService } from "./domain/services/DocumentFlow";
 
 export { isInsideDocumentFlow } from "./domain/services/DocumentFlow";
-export { confirmRenderedPreview } from "./domain/services/RenderConfirmation";
-export { buildDocumentFromContent } from "./domain/services/DocumentContentParser";
+export { confirmRenderedPreview } from "./domain/model/StagedDocument";
+export { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
+export type { DocumentContentParser } from "./domain/ports/DocumentContentParser";
 export type {
   SerializedEntry,
   RenderedPreview,
@@ -29,35 +28,59 @@ export {
 } from "./domain/errors";
 
 export class EditionModule {
-  public readonly storage: SessionStorageDocumentStorage;
-  public readonly renderer: WorkerPreviewRenderer;
-  public readonly warmingService: FetchPageWarmingService;
+  private constructor(
+    public readonly storage: SessionStorageDocumentStorage,
+    public readonly renderer: WorkerPreviewRenderer,
+    public readonly warmingService: FetchPageWarmingService,
+    public readonly contentParser: YamlDocumentContentParser,
+    public readonly renderPreview: RenderPreview,
+    public readonly initializeEditor: InitializeEditor,
+    public readonly saveDocument: SaveDocument,
+    public readonly handleEditorChange: HandleEditorChange,
+    public readonly prepareEditorNavigation: PrepareEditorNavigation,
+    public readonly isInsideDocumentFlow: typeof isInsideDocumentFlowService
+  ) {}
 
-  public readonly buildStagedDocument: BuildStagedDocument;
-  public readonly stageDocument: StageDocument;
-  public readonly loadStagedDocument: LoadStagedDocument;
-  public readonly clearEditionStorage: ClearEditionStorage;
-  public readonly renderPreview: RenderPreview;
-  public readonly confirmRenderedPreview: ConfirmRenderedPreview;
-  public readonly warmDocumentPage: WarmDocumentPage;
-  public readonly markDocumentSaved: MarkDocumentSaved;
-  public readonly isInsideDocumentFlow: typeof isInsideDocumentFlowService;
+  static create() {
+    const storage = new SessionStorageDocumentStorage();
+    const renderer = new WorkerPreviewRenderer();
+    const warmingService = new FetchPageWarmingService();
+    const contentParser = new YamlDocumentContentParser();
+    const renderPreview = new RenderPreview(storage, renderer);
+    const initializeEditor = new InitializeEditor(
+      storage
+    );
+    const saveDocument = new SaveDocument(
+      contentParser,
+      storage,
+      warmingService,
+      renderPreview
+    );
+    const handleEditorChange = new HandleEditorChange(
+      contentParser,
+      storage,
+      renderPreview
+    );
+    const prepareEditorNavigation = new PrepareEditorNavigation(
+      contentParser,
+      renderPreview,
+      storage
+    );
+    const isInsideDocumentFlow = isInsideDocumentFlowService;
 
-  constructor() {
-    this.storage = new SessionStorageDocumentStorage();
-    this.renderer = new WorkerPreviewRenderer();
-    this.warmingService = new FetchPageWarmingService();
-
-    this.buildStagedDocument = new BuildStagedDocument();
-    this.stageDocument = new StageDocument(this.storage);
-    this.loadStagedDocument = new LoadStagedDocument(this.storage);
-    this.clearEditionStorage = new ClearEditionStorage(this.storage);
-    this.renderPreview = new RenderPreview(this.storage, this.renderer);
-    this.confirmRenderedPreview = new ConfirmRenderedPreview();
-    this.warmDocumentPage = new WarmDocumentPage(this.warmingService);
-    this.markDocumentSaved = new MarkDocumentSaved(this.storage);
-    this.isInsideDocumentFlow = isInsideDocumentFlowService;
+    return new EditionModule(
+      storage,
+      renderer,
+      warmingService,
+      contentParser,
+      renderPreview,
+      initializeEditor,
+      saveDocument,
+      handleEditorChange,
+      prepareEditorNavigation,
+      isInsideDocumentFlow
+    );
   }
 }
 
-export const edition = new EditionModule();
+export const edition = EditionModule.create();

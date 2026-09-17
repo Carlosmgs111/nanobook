@@ -72,10 +72,10 @@ export class RenderPreview {
     document: SerializedEntry
   ): Result<EditionStorageError, RenderedPreview | null> {
     const sourceResult = this.storage.loadRenderedSource();
-    if (!sourceResult.isSuccess) return sourceResult;
+    if (!sourceResult.isSuccess) return Result.fail(sourceResult.getError());
 
     const renderedResult = this.storage.loadRenderedDocument();
-    if (!renderedResult.isSuccess) return renderedResult;
+    if (!renderedResult.isSuccess) return Result.fail(renderedResult.getError());
 
     const source = sourceResult.getValue();
     const rendered = renderedResult.getValue();
