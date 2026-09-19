@@ -8,80 +8,83 @@ import type { EditionStorageError, EditionRenderError } from "../domain/errors";
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
 
 export class RenderPreview {
+  private isRendering = false;
+
   constructor(
     private storage: DocumentStorage,
     private renderer: PreviewRenderer
   ) {}
 
   async execute(
-    document: SerializedEntry
+    documentId: string
   ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
-    const pendingResult = this.storage.loadPendingDocument();
-    if (!pendingResult.isSuccess) return Result.fail(pendingResult.getError());
-
-    const pending = pendingResult.getValue();
-    if (pending && sameDocument(pending, document)) {
+    if (this.isRendering) {
       return Result.ok(null);
     }
 
-    const cachedResult = this.loadCachedPreview(document);
-    if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
+    this.isRendering = true;
+    const result = await this.renderPipeline(documentId);
+    this.isRendering = false;
+
+    return result;
+  }
+
+  private async renderPipeline(
+    documentId: string
+  ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
+    const stagedResult = this.storage.loadStagedDocument();
+    if (!stagedResult.isSuccess) {
+      return Result.fail(stagedResult.getError());
+    }
+
+    const staged = stagedResult.getValue();
+    if (!staged || staged.id !== documentId) {
+      return Result.ok(null);
+    }
+
+    const cachedResult = this.loadCachedPreview(staged);
+    if (!cachedResult.isSuccess) {
+      return Result.fail(cachedResult.getError());
+    }
     if (cachedResult.getValue()) {
       return Result.ok(cachedResult.getValue());
     }
 
-    const savePendingResult = this.storage.savePendingDocument(document);
-    if (!savePendingResult.isSuccess) {
-      this.storage.clearPendingDocument();
-      return Result.fail(savePendingResult.getError());
+    const renderResult = await this.renderer.render(staged);
+    if (!renderResult.isSuccess) {
+      return Result.fail(renderResult.getError());
+    }
+    const rendered = renderResult.getValue();
+
+    const currentStagedResult = this.storage.loadStagedDocument();
+    if (!currentStagedResult.isSuccess) {
+      return Result.fail(currentStagedResult.getError());
+    }
+    const currentStaged = currentStagedResult.getValue();
+    if (currentStaged && !sameDocument(currentStaged, staged)) {
+      return Result.ok(null);
     }
 
-    try {
-      const renderResult = await this.renderer.render(document);
-      if (!renderResult.isSuccess) {
-        return Result.fail(renderResult.getError());
-      }
-      const rendered = renderResult.getValue();
-
-      const currentStagedResult = this.storage.loadStagedDocument();
-      if (!currentStagedResult.isSuccess) {
-        return Result.fail(currentStagedResult.getError());
-      }
-      const currentStaged = currentStagedResult.getValue();
-      if (currentStaged && !sameDocument(currentStaged, document)) {
-        return Result.ok(null);
-      }
-
-      const saveRenderedResult = this.storage.saveRenderedDocument(rendered);
-      if (!saveRenderedResult.isSuccess) {
-        return Result.fail(saveRenderedResult.getError());
-      }
-
-      const saveSourceResult = this.storage.saveRenderedSource(document);
-      if (!saveSourceResult.isSuccess) {
-        return Result.fail(saveSourceResult.getError());
-      }
-
-      return Result.ok(rendered);
-    } finally {
-      this.storage.clearPendingDocument();
+    const saveCachedResult = this.storage.saveCachedPreview({
+      rendered,
+      source: staged,
+    });
+    if (!saveCachedResult.isSuccess) {
+      return Result.fail(saveCachedResult.getError());
     }
+
+    return Result.ok(rendered);
   }
 
   private loadCachedPreview(
     document: SerializedEntry
   ): Result<EditionStorageError, RenderedPreview | null> {
-    const sourceResult = this.storage.loadRenderedSource();
-    if (!sourceResult.isSuccess) return Result.fail(sourceResult.getError());
+    const cachedResult = this.storage.loadCachedPreview();
+    if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
 
-    const renderedResult = this.storage.loadRenderedDocument();
-    if (!renderedResult.isSuccess) return Result.fail(renderedResult.getError());
-
-    const source = sourceResult.getValue();
-    const rendered = renderedResult.getValue();
-
-    if (source && rendered && sameDocument(source, document)) {
-      return Result.ok(rendered);
+    const cached = cachedResult.getValue();
+    if (cached && sameDocument(cached.source, document)) {
+      return Result.ok(cached.rendered);
     }
 
     return Result.ok(null);

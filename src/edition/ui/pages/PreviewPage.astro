@@ -11,40 +11,21 @@ const documentId = slug || "index";
 <div id="preview-container" data-document-id={documentId}></div>
 
 <script>
-  import { edition, type RenderedPreview, type SerializedEntry } from "../../index";
+  import { edition } from "../../index";
 
   const channel = new BroadcastChannel("rendered-document");
 
-  function getDocumentId(): string {
-    const container = document.getElementById("preview-container");
-    return container?.dataset.documentId ?? "index";
-  }
-
-  function loadRenderedDocument(): RenderedPreview | null {
-    const result = edition.storage.loadRenderedDocument();
-    return result.isSuccess ? result.getValue() : null;
-  }
-
-  function loadRenderedSource(): SerializedEntry | null {
-    const result = edition.storage.loadRenderedSource();
-    return result.isSuccess ? result.getValue() : null;
-  }
-
-  function clearEditionStorage(): void {
-    edition.storage.clearStagedDocument();
-    edition.storage.clearRenderedDocument();
-    edition.storage.clearRenderedSource();
-  }
-
-  function renderPreview() {
+  async function renderPreview() {
     const container = document.getElementById("preview-container");
     if (!container) return;
 
-    const documentId = getDocumentId();
-    const rendered = loadRenderedDocument();
-    const source = loadRenderedSource();
+    const rendered = (
+      await edition.renderPreview.execute(
+        container.dataset.documentId as string
+      )
+    ).getValue();
 
-    if (!rendered || !source || source.id !== documentId) {
+    if (!rendered) {
       container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
       return;
     }
@@ -52,16 +33,7 @@ const documentId = slug || "index";
     container.innerHTML = rendered.Content;
   }
 
-  function handleBeforeSwap(event: Event) {
-    const documentId = getDocumentId();
-    const destination = (event as unknown as { to?: URL }).to;
-    if (destination && !edition.isInsideDocumentFlow(destination, documentId)) {
-      clearEditionStorage();
-    }
-  }
-
   document.addEventListener("astro:page-load", renderPreview);
-  document.addEventListener("astro:before-swap", handleBeforeSwap);
 
   channel.addEventListener("message", () => {
     renderPreview();

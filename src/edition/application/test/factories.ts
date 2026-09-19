@@ -3,7 +3,7 @@ import { Result } from "../../../shared/domain/Result";
 import type { DocumentStorage } from "../../domain/ports/DocumentStorage";
 import type { PreviewRenderer } from "../../domain/ports/PreviewRenderer";
 import type { PageWarmingService } from "../../domain/ports/PageWarmingService";
-import type { SerializedEntry, RenderedPreview } from "../../domain/model/StagedDocument";
+import type { SerializedEntry, RenderedPreview, CachedPreview } from "../../domain/model/StagedDocument";
 
 export function createDocumentStorage(
   overrides: Partial<DocumentStorage> = {}
@@ -12,17 +12,9 @@ export function createDocumentStorage(
     loadStagedDocument: vi.fn().mockReturnValue(Result.ok(null)),
     saveStagedDocument: vi.fn().mockReturnValue(Result.ok()),
     clearStagedDocument: vi.fn().mockReturnValue(Result.ok()),
-    loadRenderedDocument: vi.fn().mockReturnValue(Result.ok(null)),
-    saveRenderedDocument: vi.fn().mockReturnValue(Result.ok()),
-    clearRenderedDocument: vi.fn().mockReturnValue(Result.ok()),
-    loadRenderedSource: vi.fn().mockReturnValue(Result.ok(null)),
-    saveRenderedSource: vi.fn().mockReturnValue(Result.ok()),
-    loadPendingDocument: vi.fn().mockReturnValue(Result.ok(null)),
-    savePendingDocument: vi.fn().mockReturnValue(Result.ok()),
-    clearPendingDocument: vi.fn().mockReturnValue(Result.ok()),
-    loadSavedAt: vi.fn().mockReturnValue(Result.ok(null)),
-    markSavedAt: vi.fn().mockReturnValue(Result.ok()),
-    clearSavedAt: vi.fn().mockReturnValue(Result.ok()),
+    loadCachedPreview: vi.fn().mockReturnValue(Result.ok(null)),
+    saveCachedPreview: vi.fn().mockReturnValue(Result.ok()),
+    clearCachedPreview: vi.fn().mockReturnValue(Result.ok()),
     clearAll: vi.fn().mockReturnValue(Result.ok()),
     ...overrides,
   };
@@ -75,6 +67,16 @@ export function buildRenderedPreview(
 ): RenderedPreview {
   return {
     Content: "<h1>Preview</h1>",
+    ...overrides,
+  };
+}
+
+export function buildCachedPreview(
+  overrides: Partial<CachedPreview> = {}
+): CachedPreview {
+  return {
+    rendered: buildRenderedPreview(),
+    source: buildSerializedEntry(),
     ...overrides,
   };
 }

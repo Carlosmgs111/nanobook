@@ -37,7 +37,7 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
           type="text"
           required
           placeholder="nuevo-elemento"
-          pattern="[\p{L}\p{N}_-]+"
+          pattern="[\p{L}\p{N}\-_]+"
           class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
           data-name-input
         />
@@ -110,14 +110,13 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
 </div>
 
 <script>
-  import { createDocument } from "../../../document/client/api/createDocument";
+  import { edition } from "../../index";
 
   const TYPE_HELP: Record<string, string> = {
     document: "Crea un archivo Markdown directamente bajo la ruta actual.",
     directory:
       "Crea un directorio con un archivo index.md que actúa como índice.",
   };
-
   function initForm() {
     const form = document.querySelector<HTMLFormElement>(
       "[data-new-document-form]"
@@ -149,6 +148,10 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
       const description = String(formData.get("description") ?? "").trim();
       const position = Number(formData.get("position") ?? 0);
       const draft = formData.get("draft") === "on";
+
+      function isValidName(name: string): boolean {
+        return /^[\p{L}\p{N}\-_]+$/u.test(name.normalize("NFC"));
+      }
 
       if (!isValidName(name)) {
         errorContainer.textContent =
@@ -182,10 +185,6 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     });
   }
 
-  function isValidName(name: string): boolean {
-    return /^[\p{L}\p{N}_-]+$/u.test(name);
-  }
-
   async function createFromType(
     type: string,
     name: string,
@@ -211,15 +210,14 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     if (!id) {
       throw new Error("ID no válida");
     }
-
-    const document = await createDocument({
+    await edition.createDocument.execute({
       id,
       ...metadata,
       index,
       content: "",
       date: new Date().toISOString(),
     });
-    return document.id;
+    return id;
   }
 
   document.addEventListener("astro:page-load", initForm);

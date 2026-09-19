@@ -1,13 +1,10 @@
 import { Result } from "../../../shared/domain/Result";
 import type { DocumentStorage } from "../../domain/ports/DocumentStorage";
-import type { SerializedEntry, RenderedPreview } from "../../domain/model/StagedDocument";
+import type { SerializedEntry, CachedPreview } from "../../domain/model/StagedDocument";
 import { EditionStorageError } from "../../domain/errors";
 
 const STAGED_KEY = "stagedDocument";
-const RENDERED_KEY = "renderedStagedDocument";
-const RENDERED_SOURCE_KEY = "renderedStagedDocumentSource";
-const PENDING_KEY = "renderPendingDocument";
-const SAVED_AT_KEY = "stagedDocumentSavedAt";
+const CACHED_PREVIEW_KEY = "cachedPreview";
 
 function read<T>(storage: Storage, key: string): Result<EditionStorageError, T | null> {
   try {
@@ -58,74 +55,22 @@ export class SessionStorageDocumentStorage implements DocumentStorage {
     return remove(this.storage, STAGED_KEY);
   }
 
-  loadRenderedDocument(): Result<EditionStorageError, RenderedPreview | null> {
-    return read<RenderedPreview>(this.storage, RENDERED_KEY);
+  loadCachedPreview(): Result<EditionStorageError, CachedPreview | null> {
+    return read<CachedPreview>(this.storage, CACHED_PREVIEW_KEY);
   }
 
-  saveRenderedDocument(rendered: RenderedPreview): Result<EditionStorageError, void> {
-    return write(this.storage, RENDERED_KEY, rendered);
+  saveCachedPreview(cached: CachedPreview): Result<EditionStorageError, void> {
+    return write(this.storage, CACHED_PREVIEW_KEY, cached);
   }
 
-  clearRenderedDocument(): Result<EditionStorageError, void> {
-    return remove(this.storage, RENDERED_KEY);
-  }
-
-  loadRenderedSource(): Result<EditionStorageError, SerializedEntry | null> {
-    return read<SerializedEntry>(this.storage, RENDERED_SOURCE_KEY);
-  }
-
-  saveRenderedSource(source: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, RENDERED_SOURCE_KEY, source);
-  }
-
-  loadPendingDocument(): Result<EditionStorageError, SerializedEntry | null> {
-    return read<SerializedEntry>(this.storage, PENDING_KEY);
-  }
-
-  savePendingDocument(document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, PENDING_KEY, document);
-  }
-
-  clearPendingDocument(): Result<EditionStorageError, void> {
-    return remove(this.storage, PENDING_KEY);
-  }
-
-  loadSavedAt(): Result<EditionStorageError, number | null> {
-    const result = read<string>(this.storage, SAVED_AT_KEY);
-    if (!result.isSuccess) return Result.fail(result.getError());
-    const raw = result.getValue();
-    if (!raw) return Result.ok(null);
-    const value = Number(raw);
-    return Result.ok(Number.isNaN(value) ? null : value);
-  }
-
-  getRawDocumentContent(base: SerializedEntry): Result<EditionStorageError, string | null> {
-    const stagedResult = this.storage.loadStagedDocument();
-    if (!stagedResult.isSuccess) {
-      return Result.fail(stagedResult.getError());
-    }
-
-    const staged = stagedResult.getValue();
-    if (staged && staged.id === base.id) {
-      return Result.ok(staged.rawFrontmatter + staged.content);
-    }
-    return Result.ok(null);
-  }
-
-  markSavedAt(): Result<EditionStorageError, void> {
-    return write(this.storage, SAVED_AT_KEY, String(Date.now()));
-  }
-
-  clearSavedAt(): Result<EditionStorageError, void> {
-    return remove(this.storage, SAVED_AT_KEY);
+  clearCachedPreview(): Result<EditionStorageError, void> {
+    return remove(this.storage, CACHED_PREVIEW_KEY);
   }
 
   clearAll(): Result<EditionStorageError, void> {
     const results: Result<EditionStorageError, void>[] = [
       this.clearStagedDocument(),
-      this.clearRenderedDocument(),
-      this.clearPendingDocument(),
-      this.clearSavedAt(),
+      this.clearCachedPreview(),
     ];
     for (const result of results) {
       if (!result.isSuccess) return result;

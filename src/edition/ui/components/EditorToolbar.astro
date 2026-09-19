@@ -1,13 +1,21 @@
 ---
 interface Props {
   previewHref?: string;
+  viewHref?: string;
+  documentId?: string;
 }
 
-const { previewHref } = Astro.props;
+const { previewHref, viewHref, documentId } = Astro.props;
 ---
 
 <div class="editor-toolbar">
-  <button type="button" class="save-button" data-action="save">Guardar</button>
+  <button
+    type="button"
+    class="save-button"
+    data-action="save"
+    data-view-href={viewHref}
+    data-document-id={documentId}>Guardar</button
+  >
   {
     previewHref && (
       <a class="preview-link" href={previewHref}>
@@ -58,3 +66,46 @@ const { previewHref } = Astro.props;
     opacity: 0.9;
   }
 </style>
+
+<script>
+  import { edition } from "../../index";
+  let statusElement: HTMLElement;
+  function showStatus(message: string, isError = false) {
+    if (!statusElement) return;
+    statusElement.textContent = message;
+    statusElement.className = `status ${isError ? "status-error" : "status-success"}`;
+    window.setTimeout(() => {
+      if (!statusElement) return;
+      statusElement.textContent = "";
+      statusElement.className = "status";
+    }, 4000);
+  }
+  document.addEventListener("astro:page-load", () => {
+    const saveButton = document.querySelector<HTMLButtonElement>(
+      "[data-action='save']"
+    );
+    if (!saveButton) return;
+    statusElement = document.getElementsByName("status")[0] as HTMLElement;
+
+    const viewHref = saveButton.dataset.viewHref;
+    const documentId = saveButton.dataset.documentId;
+    const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
+    saveButton.replaceWith(cleanButton);
+    cleanButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      fetch(viewHref as string, { credentials: "same-origin" });
+      const result = await edition.saveDocument.execute();
+      if (result.isSuccess) {
+        await edition.renderPreview.execute(documentId as string);
+        showStatus("Guardado correctamente");
+      } else {
+        const error = result.getError();
+        console.error(error);
+        showStatus(
+          error instanceof Error ? error.message : "Error al guardar",
+          true
+        );
+      }
+    });
+  });
+</script>

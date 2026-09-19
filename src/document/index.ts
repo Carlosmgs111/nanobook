@@ -1,4 +1,4 @@
-import { Result } from "../shared/domain/Result";
+
 import { GITHUB_TOKEN } from "astro:env/server";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
@@ -18,6 +18,9 @@ import type { EventBus } from "../shared/domain/bus/EventBus";
 export type { Document } from "./domain/Document";
 export type { Heading } from "./domain/Heading";
 export type { DocumentHash } from "./domain/DocumentHash";
+export type { CreateDocumentRequest } from "./application/dto/CreateDocumentRequest";
+export type { UpdateDocumentRequest } from "./application/dto/UpdateDocumentRequest";
+export type { SerializedEntry } from "./application/dto/SerializedEntry";
 
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
