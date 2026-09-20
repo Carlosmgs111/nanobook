@@ -3,10 +3,11 @@ import { InitializeEditor } from "./application/InitializeEditor";
 import { SaveDocument } from "./application/SaveDocument";
 import { HandleEditorChange } from "./application/HandleEditorChange";
 import { SessionStorageDocumentStorage } from "./infraestructure/storage/SessionStorageDocumentStorage";
-import { WorkerPreviewRenderer } from "./infraestructure/renderer/WorkerPreviewRenderer";
 import { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
 import { HttpDocumentWriter } from "./infraestructure/documentWriter/HttpDocumentWriter";
 import { CreateDocument } from "./application/CreateDocument";
+import { MarkdownItRenderer } from "./infraestructure/renderer/MarkdownItRenderer";
+
 
 export { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
 export type { DocumentContentParser } from "./domain/ports/DocumentContentParser";
@@ -34,9 +35,9 @@ export class EditionModule {
 
   static create() {
     const storage = new SessionStorageDocumentStorage();
-    const renderer = new WorkerPreviewRenderer();
     const contentParser = new YamlDocumentContentParser();
     const documentWriter = new HttpDocumentWriter();
+    const renderer = new MarkdownItRenderer();
 
     const renderPreview = new RenderPreview(storage, renderer);
     const saveDocument = new SaveDocument(
@@ -46,6 +47,7 @@ export class EditionModule {
     const createDocument = new CreateDocument(documentWriter);
     const handleEditorChange = new HandleEditorChange(contentParser, storage);
     const initializeEditor = new InitializeEditor(storage);
+
 
     return new EditionModule(
       renderPreview,

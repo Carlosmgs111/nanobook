@@ -1,9 +1,6 @@
-import type {
-  SerializedEntry,
-  SerializedDocumentMetadata,
-} from "../../../document/application/dto/SerializedEntry";
+import type { SerializedEntry } from "../../../document";
 
-export type { SerializedEntry, SerializedDocumentMetadata };
+export type { SerializedEntry };
 
 export interface RenderedPreview {
   Content: string;

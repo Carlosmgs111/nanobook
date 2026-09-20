@@ -34,12 +34,21 @@ const initialContent = entry.rawFrontmatter + entry.content;
 
 <script>
   import { edition } from "../../index";
+  import handler from "../../infraestructure/WorkerHandler";
   import { basicSetup } from "codemirror";
   import { EditorView, keymap } from "@codemirror/view";
   import { EditorState } from "@codemirror/state";
   import { markdown } from "@codemirror/lang-markdown";
   import { indentWithTab } from "@codemirror/commands";
   import { debounce } from "../../../shared/utils/debounce";
+
+  const workerHandler = "self.onmessage = " + handler.toString()
+  console.log(workerHandler);
+
+  const blob = new Blob([workerHandler], { type: "application/javascript" });
+  const workerUrl = URL.createObjectURL(blob);
+
+  const worker = new Worker(workerUrl);
 
   const container = document.querySelector<HTMLElement>(
     "[data-editor-container]"
@@ -53,14 +62,17 @@ const initialContent = entry.rawFrontmatter + entry.content;
     throw new Error("Missing base document");
   }
   let view: EditorView | undefined;
-  const debouncedHandleEditorChange = debounce(async (document, content) => { 
+  const debouncedHandleEditorChange = debounce(async (document, content) => {
     if (edition.handleEditorChange) {
-      const result = await edition.handleEditorChange.execute(document, content);
+      const result = await edition.handleEditorChange.execute(
+        document,
+        content
+      );
       if (!result.isSuccess) {
         console.error(result.getError());
-        return
+        return;
       }
-      edition.renderPreview.execute(container.dataset.documentId as string)
+      worker.postMessage({ id: result.getValue().id });
     }
   }, 1000);
   document.addEventListener("astro:page-load", () => {

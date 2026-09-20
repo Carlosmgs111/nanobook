@@ -50,7 +50,7 @@ export class RenderPreview {
       return Result.ok(cachedResult.getValue());
     }
 
-    const renderResult = await this.renderer.render(staged);
+    const renderResult = await this.renderer.render(staged.content);
     if (!renderResult.isSuccess) {
       return Result.fail(renderResult.getError());
     }
