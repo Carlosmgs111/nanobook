@@ -34,7 +34,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
 
 <script>
   import { edition } from "../../index";
-  import handler from "../../infraestructure/WorkerHandler";
+  // import handler from "../../infraestructure/WorkerHandler";
   import { basicSetup } from "codemirror";
   import { EditorView, keymap } from "@codemirror/view";
   import { EditorState } from "@codemirror/state";
@@ -42,13 +42,13 @@ const initialContent = entry.rawFrontmatter + entry.content;
   import { indentWithTab } from "@codemirror/commands";
   import { debounce } from "../../../shared/utils/debounce";
 
-  const workerHandler = "self.onmessage = " + handler.toString()
-  console.log(workerHandler);
+  // const workerHandler = "self.onmessage = " + handler.toString()
+  // console.log(workerHandler);
 
-  const blob = new Blob([workerHandler], { type: "application/javascript" });
-  const workerUrl = URL.createObjectURL(blob);
+  // const blob = new Blob([workerHandler], { type: "application/javascript" });
+  // const workerUrl = URL.createObjectURL(blob);
 
-  const worker = new Worker(workerUrl);
+  // const worker = new Worker(workerUrl);
 
   const container = document.querySelector<HTMLElement>(
     "[data-editor-container]"
@@ -72,7 +72,8 @@ const initialContent = entry.rawFrontmatter + entry.content;
         console.error(result.getError());
         return;
       }
-      worker.postMessage({ id: result.getValue().id });
+      // worker.postMessage({ id: result.getValue().id });
+      edition.renderPreview.execute(result.getValue().id);
     }
   }, 1000);
   document.addEventListener("astro:page-load", () => {

@@ -19,23 +19,26 @@ const documentId = slug || "index";
     const container = document.getElementById("preview-container");
     if (!container) return;
 
-    const rendered = (
-      await edition.renderPreview.execute(
-        container.dataset.documentId as string
-      )
-    ).getValue();
+    // const rendered = (
+    //   await edition.renderPreview.execute(
+    //     container.dataset.documentId as string
+    //   )
+    // ).getValue();
 
-    if (!rendered) {
-      container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
-      return;
-    }
+    // console.log({rendered});
 
-    container.innerHTML = rendered.Content;
+    // if (!rendered) {
+    //   container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
+    //   return;
+    // }
+
+    // container.innerHTML = rendered.Content;
   }
 
   document.addEventListener("astro:page-load", renderPreview);
 
   channel.addEventListener("message", () => {
+    console.log("Received message from rendered-document channel");
     renderPreview();
   });
 </script>

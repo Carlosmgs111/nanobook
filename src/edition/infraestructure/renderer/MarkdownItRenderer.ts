@@ -1,5 +1,5 @@
 import { Result } from "../../../shared/domain/Result";
-import MarkdownIt from "markdown-it";
+import MarkdownIt, { type Renderer } from "markdown-it";
 import { fromHighlighter } from "@shikijs/markdown-it";
 import { createBundledHighlighter } from "@shikijs/core";
 import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
@@ -16,9 +16,9 @@ const createHighlighter = createBundledHighlighter({
 });
 
 export class MarkdownItRenderer implements PreviewRenderer {
-  private processor: MarkdownIt | null = null;
+  private processor: Renderer | null = null;
 
-  private async getProcessor(): Promise<MarkdownIt> {
+  private async getProcessor(): Promise<Renderer> {
     if (this.processor) {
       return this.processor;
     }

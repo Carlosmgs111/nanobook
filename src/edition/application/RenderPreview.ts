@@ -36,7 +36,6 @@ export class RenderPreview {
     if (!stagedResult.isSuccess) {
       return Result.fail(stagedResult.getError());
     }
-
     const staged = stagedResult.getValue();
     if (!staged || staged.id !== documentId) {
       return Result.ok(null);
@@ -49,13 +48,12 @@ export class RenderPreview {
     if (cachedResult.getValue()) {
       return Result.ok(cachedResult.getValue());
     }
-
     const renderResult = await this.renderer.render(staged.content);
     if (!renderResult.isSuccess) {
       return Result.fail(renderResult.getError());
     }
     const rendered = renderResult.getValue();
-
+    console.log({ rendered });
     const currentStagedResult = this.storage.loadStagedDocument();
     if (!currentStagedResult.isSuccess) {
       return Result.fail(currentStagedResult.getError());
