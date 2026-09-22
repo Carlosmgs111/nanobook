@@ -1,5 +1,5 @@
 import { Result } from "../../../shared/domain/Result";
-import MarkdownIt, { type Renderer } from "markdown-it";
+import MarkdownIt from "markdown-it";
 import { fromHighlighter } from "@shikijs/markdown-it";
 import { createBundledHighlighter } from "@shikijs/core";
 import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
@@ -16,9 +16,9 @@ const createHighlighter = createBundledHighlighter({
 });
 
 export class MarkdownItRenderer implements PreviewRenderer {
-  private processor: Renderer | null = null;
+  private processor: typeof MarkdownIt | null = null;
 
-  private async getProcessor(): Promise<Renderer> {
+  private async getProcessor(): Promise<typeof MarkdownIt> {
     if (this.processor) {
       return this.processor;
     }
@@ -48,7 +48,7 @@ export class MarkdownItRenderer implements PreviewRenderer {
             .replace(/[^\p{L}\p{N}\s-]/gu, "")
             .replace(/\s+/g, "-"),
       })
-      .use(shiki);
+      .use(shiki) as unknown as typeof MarkdownIt;
 
     return this.processor;
   }

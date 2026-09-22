@@ -11,34 +11,31 @@ const documentId = slug || "index";
 <div id="preview-container" data-document-id={documentId}></div>
 
 <script>
-  import { edition } from "../../index";
-
-  const channel = new BroadcastChannel("rendered-document");
+  import { Result } from "../../../shared/domain/Result";
+  import { edition, DocumentChanged } from "../../index";
 
   async function renderPreview() {
     const container = document.getElementById("preview-container");
-    if (!container) return;
+    if (!container) throw new Error("Missing preview container");
 
-    // const rendered = (
-    //   await edition.renderPreview.execute(
-    //     container.dataset.documentId as string
-    //   )
-    // ).getValue();
-
-    // console.log({rendered});
-
-    // if (!rendered) {
-    //   container.innerHTML = "<p>No hay contenido para previsualizar.</p>";
-    //   return;
-    // }
-
-    // container.innerHTML = rendered.Content;
+    function setRenderedPage(pageId: string, container: HTMLElement) {
+      const renderedResult = edition.getRenderedDocument.execute(pageId);
+      if (!renderedResult.isSuccess) {
+        console.error(renderedResult.getError());
+        return;
+      }
+      const renderedContent = renderedResult.getValue();
+      const { rendered } = renderedContent;
+      container.innerHTML = rendered.Content;
+    }
+    setRenderedPage(container.dataset.documentId as string, container);
+    edition.eventBus.subscribe<DocumentChanged>("document.changed", {
+      async handle(event) {
+        setRenderedPage(event.payload.id as string, container);
+        return Result.ok();
+      },
+    });
   }
 
   document.addEventListener("astro:page-load", renderPreview);
-
-  channel.addEventListener("message", () => {
-    console.log("Received message from rendered-document channel");
-    renderPreview();
-  });
 </script>

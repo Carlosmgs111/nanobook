@@ -4,15 +4,27 @@ import type { RenderedPreview } from "../domain/model/StagedDocument";
 import type { DocumentStorage } from "../domain/ports/DocumentStorage";
 import type { PreviewRenderer } from "../domain/ports/PreviewRenderer";
 import type { EditionStorageError, EditionRenderError } from "../domain/errors";
+import { type EventBus, DomainEvent } from "../../shared/domain/bus/EventBus";
 
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
 
+export class DocumentChanged extends DomainEvent<"document.changed"> {
+  constructor(documentId: string) {
+    super(
+      "document.changed",
+      crypto.randomUUID(),
+      new Date(),
+      { documentId }
+    );
+  }
+}
 export class RenderPreview {
   private isRendering = false;
 
   constructor(
     private storage: DocumentStorage,
-    private renderer: PreviewRenderer
+    private renderer: PreviewRenderer,
+    private eventBus: EventBus
   ) {}
 
   async execute(
@@ -70,6 +82,7 @@ export class RenderPreview {
     if (!saveCachedResult.isSuccess) {
       return Result.fail(saveCachedResult.getError());
     }
+    this.eventBus.publish(new DocumentChanged(documentId));
 
     return Result.ok(rendered);
   }
