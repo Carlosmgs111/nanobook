@@ -26,7 +26,7 @@ export {
   EditionRenderError,
   InvalidDocumentContentError,
 } from "./domain/errors";
-export  { DocumentChanged} from "./application/RenderPreview"
+export { DocumentChanged } from "./domain/events/DocumentChanged";
 
 export class EditionModule {
   private constructor(
@@ -43,7 +43,6 @@ export class EditionModule {
     const storage = new SessionStorageDocumentStorage();
     const contentParser = new YamlDocumentContentParser();
     const documentWriter = new HttpDocumentWriter();
-    // const renderer = new MarkdownItRenderer();
     const delegatedRenderer = new DelegatedMarkdownItRenderer();
     const eventBus = new EventTargetEventBus();
 

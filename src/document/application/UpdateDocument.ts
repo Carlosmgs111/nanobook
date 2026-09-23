@@ -31,9 +31,7 @@ export class UpdateDocument {
   ): Promise<Result<UpdateDocumentError, void>> {
     const idResult = DocumentId.create(documentDelta.id);
     if (!idResult.isSuccess) {
-      return Result.fail(
-        new InvalidDocumentIdError(documentDelta.id)
-      );
+      return Result.fail(new InvalidDocumentIdError(documentDelta.id));
     }
 
     const documentResult = await this.contentRepository.getById(
@@ -63,12 +61,7 @@ export class UpdateDocument {
 
     const updatedDocumentId = updatedDocument.getId().getValue();
 
-    const publishResult = await this.eventBus.publish(
-      DocumentUpdated.create({ id: updatedDocumentId })
-    );
-    if (!publishResult.isSuccess) {
-      return Result.fail(publishResult.getError());
-    }
+    this.eventBus.publish(new DocumentUpdated(updatedDocumentId));
 
     return Result.ok();
   }

@@ -9,10 +9,8 @@ export class OnDocumentCreatedHandler implements EventHandler<DocumentCreated> {
   constructor(private pagePublisher: PagePublisher) {}
 
   async handle(event: DocumentCreated): Promise<Result<EventBusError, void>> {
-    if (!event.payload.id) return ResultUtils.ok();
-    const result = await this.pagePublisher.invalidate([
-      event.payload.id as string,
-    ]);
+    if (!event.id) return ResultUtils.ok();
+    const result = await this.pagePublisher.invalidate([event.id]);
     if (!result.isSuccess) {
       return ResultUtils.fail(
         new EventBusError(`Failed to handle DocumentCreated event`, {

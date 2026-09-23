@@ -19,7 +19,9 @@ export class SaveDocument {
     }
     const staged = stageResult.getValue() as SerializedEntry;
     try {
-      await this.writer.updateDocument(staged.id, staged);
+      const result = await this.writer.updateDocument(staged.id, staged);
+      // console.log({ result });
+      // return Result.ok(result);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return Result.fail(new Error(message));
@@ -27,7 +29,7 @@ export class SaveDocument {
 
     const saveResult = this.storage.saveStagedDocument(staged);
     if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
-
+    console.log({ saveResult });
     return Result.ok(staged);
   }
 }

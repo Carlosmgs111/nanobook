@@ -12,7 +12,6 @@ import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
-import type { Document } from "./domain/Document";
 import type { EventBus } from "../shared/domain/bus/EventBus";
 
 export type { Document } from "./domain/Document";

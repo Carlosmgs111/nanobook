@@ -52,6 +52,8 @@ export class HttpDocumentWriter implements DocumentWriter {
       body: JSON.stringify(toUpdateDocumentRequest(document)),
     });
 
+    console.log({ response });
+
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       throw new Error(payload.error || "Error al actualizar");

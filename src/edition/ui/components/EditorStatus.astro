@@ -11,6 +11,7 @@ const { message, variant } = Astro.props;
   class:list={["status", variant && `status-${variant}`]}
   role="status"
   aria-live="polite"
+  data-edition-result
 >
   {message}
 </span>

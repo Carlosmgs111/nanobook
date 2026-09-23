@@ -41,11 +41,11 @@ export class PublishingModule {
 
   registerEventHandlers() {
     this.eventBus.subscribe(
-      DocumentCreated.name,
+      "document.created",
       new OnDocumentCreatedHandler(this.pagePublisher)
     );
     this.eventBus.subscribe(
-      DocumentUpdated.name,
+      "document.updated",
       new OnDocumentUpdatedHandler(this.pagePublisher)
     );
   }

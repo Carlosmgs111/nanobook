@@ -1,22 +1,13 @@
 import { Result } from "../../shared/domain/Result";
+import { DocumentChanged } from "../domain/events/DocumentChanged";
 import type { SerializedEntry } from "../domain/model/StagedDocument";
 import type { RenderedPreview } from "../domain/model/StagedDocument";
 import type { DocumentStorage } from "../domain/ports/DocumentStorage";
 import type { PreviewRenderer } from "../domain/ports/PreviewRenderer";
 import type { EditionStorageError, EditionRenderError } from "../domain/errors";
-import { type EventBus, DomainEvent } from "../../shared/domain/bus/EventBus";
+import type { EventBus } from "../../shared/domain/bus/EventBus";
 
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
-
-export class DocumentChanged extends DomainEvent {
-  readonly name = "document.changed";
-
-  constructor(
-    readonly documentId: string,
-  ) {
-    super(crypto.randomUUID(), new Date());
-  }
-}
 
 export class RenderPreview {
   private isRendering = false;

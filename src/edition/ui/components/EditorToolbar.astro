@@ -26,6 +26,51 @@ const { previewHref, viewHref, documentId } = Astro.props;
   <slot name="status" />
 </div>
 
+<script>
+  import { edition } from "../../index";
+  let statusElement: HTMLElement;
+  function showStatus(message: string, isError = false) {
+    if (!statusElement) return;
+    statusElement.textContent = message;
+    statusElement.className = `status ${isError ? "status-error" : "status-success"}`;
+    window.setTimeout(() => {
+      if (!statusElement) return;
+      statusElement.textContent = "";
+      statusElement.className = "status";
+    }, 4000);
+  }
+  document.addEventListener("astro:page-load", () => {
+    statusElement = document.querySelector<HTMLElement>(
+      "[data-edition-result]"
+    ) as HTMLElement;
+    const saveButton = document.querySelector<HTMLButtonElement>(
+      "[data-action='save']"
+    );
+    if (!saveButton) return;
+
+    const viewHref = saveButton.dataset.viewHref;
+    const documentId = saveButton.dataset.documentId;
+    const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
+    saveButton.replaceWith(cleanButton);
+    cleanButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      fetch(viewHref as string, { credentials: "same-origin" });
+      const result = await edition.saveDocument.execute();
+      if (result.isSuccess) {
+        await edition.renderPreview.execute(documentId as string);
+        showStatus("Guardado correctamente");
+      } else {
+        const error = result.getError();
+        console.error(error);
+        showStatus(
+          error instanceof Error ? error.message : "Error al guardar",
+          true
+        );
+      }
+    });
+  });
+</script>
+
 <style>
   .editor-toolbar {
     display: flex;
@@ -66,46 +111,3 @@ const { previewHref, viewHref, documentId } = Astro.props;
     opacity: 0.9;
   }
 </style>
-
-<script>
-  import { edition } from "../../index";
-  let statusElement: HTMLElement;
-  function showStatus(message: string, isError = false) {
-    if (!statusElement) return;
-    statusElement.textContent = message;
-    statusElement.className = `status ${isError ? "status-error" : "status-success"}`;
-    window.setTimeout(() => {
-      if (!statusElement) return;
-      statusElement.textContent = "";
-      statusElement.className = "status";
-    }, 4000);
-  }
-  document.addEventListener("astro:page-load", () => {
-    const saveButton = document.querySelector<HTMLButtonElement>(
-      "[data-action='save']"
-    );
-    if (!saveButton) return;
-    statusElement = document.getElementsByName("status")[0] as HTMLElement;
-
-    const viewHref = saveButton.dataset.viewHref;
-    const documentId = saveButton.dataset.documentId;
-    const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
-    saveButton.replaceWith(cleanButton);
-    cleanButton.addEventListener("click", async (e) => {
-      e.preventDefault();
-      fetch(viewHref as string, { credentials: "same-origin" });
-      const result = await edition.saveDocument.execute();
-      if (result.isSuccess) {
-        await edition.renderPreview.execute(documentId as string);
-        showStatus("Guardado correctamente");
-      } else {
-        const error = result.getError();
-        console.error(error);
-        showStatus(
-          error instanceof Error ? error.message : "Error al guardar",
-          true
-        );
-      }
-    });
-  });
-</script>

@@ -91,20 +91,10 @@ export class CreateDocument {
 
     const documentId = document.getId().getValue();
 
-    const publishDocResult = await this.eventBus.publish(
-      DocumentCreated.create({ id: documentId })
-    );
-    if (!publishDocResult.isSuccess) {
-      return Result.fail(publishDocResult.getError());
-    }
+    this.eventBus.publish(new DocumentCreated(documentId));
 
     if (parentId !== null) {
-      const publishParentResult = await this.eventBus.publish(
-        DocumentCreated.create({ id: parentId.getValue() })
-      );
-      if (!publishParentResult.isSuccess) {
-        return Result.fail(publishParentResult.getError());
-      }
+      await this.eventBus.publish(new DocumentCreated(parentId.getValue()));
     }
 
     return Result.ok(document);
