@@ -20,13 +20,11 @@ export class DelegatedMarkdownItRenderer implements PreviewRenderer {
       type: "module",
     });
     this.worker.addEventListener("message", this.handleMessage);
-    console.log(this.worker);
   }
 
   render(
     content: string
   ): Promise<Result<EditionRenderError, RenderedPreview>> {
-    console.log("worker", this.worker);
     const id = ++this.sequence;
 
     return new Promise((resolve) => {

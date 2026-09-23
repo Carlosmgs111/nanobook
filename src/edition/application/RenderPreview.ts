@@ -8,16 +8,16 @@ import { type EventBus, DomainEvent } from "../../shared/domain/bus/EventBus";
 
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
 
-export class DocumentChanged extends DomainEvent<"document.changed"> {
-  constructor(documentId: string) {
-    super(
-      "document.changed",
-      crypto.randomUUID(),
-      new Date(),
-      { documentId }
-    );
+export class DocumentChanged extends DomainEvent {
+  readonly name = "document.changed";
+
+  constructor(
+    readonly documentId: string,
+  ) {
+    super(crypto.randomUUID(), new Date());
   }
 }
+
 export class RenderPreview {
   private isRendering = false;
 
@@ -65,7 +65,7 @@ export class RenderPreview {
       return Result.fail(renderResult.getError());
     }
     const rendered = renderResult.getValue();
-    console.log({ rendered });
+
     const currentStagedResult = this.storage.loadStagedDocument();
     if (!currentStagedResult.isSuccess) {
       return Result.fail(currentStagedResult.getError());

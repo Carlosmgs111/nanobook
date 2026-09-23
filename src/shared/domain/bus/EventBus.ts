@@ -1,33 +1,41 @@
 import type { Result } from "../Result";
 import type { EventBusError } from "./errors";
 
-export interface EventHandler<DomainEvent> {
-  handle(event: DomainEvent): Promise<Result<EventBusError, void>>;
+export interface EventHandler<E extends DomainEvent> {
+  handle(event: E): Promise<Result<EventBusError, void>>;
 }
 
-export class DomainEvent<T> {
-  readonly name: T;
+export abstract class DomainEvent {
+  abstract readonly name: string;
   readonly id: string;
   readonly timestamp: Date;
-  readonly payload: Record<string, unknown>;
-  constructor(
-    name: T,
-    id: string,
-    timestamp: Date,
-    payload: Record<string, unknown>
-  ) {
-    console.log({name})
-    this.name = name;
+
+  protected constructor(id: string, timestamp = new Date()) {
     this.id = id;
     this.timestamp = timestamp;
-    this.payload = payload;
   }
 }
 
+// export class DocumentPublished extends DomainEvent {
+//   readonly name = "document.published";
+
+//   constructor(
+//     id: string,
+//     readonly documentId: string,
+//     readonly version: number,
+//     timestamp = new Date(),
+//   ) {
+//     super(id, timestamp);
+//   }
+// }
+
 export interface EventBus {
-  publish<T extends DomainEvent<unknown>>(event: T): Promise<Result<EventBusError, void>>;
-  subscribe<K extends DomainEvent<unknown>>(
-    eventName: K["name"],
-    handler: EventHandler<K>
+  publish<E extends DomainEvent>(
+    event: E
+  ): Promise<Result<EventBusError, void>>;
+
+  subscribe<E extends DomainEvent>(
+    eventName: E["name"],
+    handler: EventHandler<E>
   ): void;
 }

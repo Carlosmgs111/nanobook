@@ -53,6 +53,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Eliminada la fachada `src/edition/client/` y sus tests asociados; la funcionalidad equivalente ahora reside en `src/edition/application/`, `src/edition/domain/` y en los propios componentes Astro.
 
 ### Fixed
+- `DocumentEditor.astro` vuelve a inicializar el editor al navegar desde la vista preview con `ClientRouter`: destruye la instancia de CodeMirror en `astro:before-swap`, busca el contenedor actual en `astro:page-load` y elimina el guarda `if (view) return` que impedía recrear el editor en el nuevo DOM.
 - `OnDocumentCreatedHandler` y `OnDocumentUpdatedHandler` importaban `err`/`ok` inexistentes; ahora usan `Result.ok()` / `Result.fail()`.
 - `GitHubRepository.create()` ya no oculta cualquier error bajo `DocumentAlreadyExistsError`; distingue errores de dominio de fallos de infraestructura.
 

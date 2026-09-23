@@ -9,7 +9,6 @@ self.addEventListener(
     const { id, content } = event.data;
 
     const result = await renderer.render(content);
-    console.log({result});
 
     const response: RenderResponse = result.isSuccess
       ? {

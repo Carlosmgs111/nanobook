@@ -6,7 +6,7 @@ import type { EditionStorageError } from "../domain/errors";
 export class InitializeEditor {
   constructor(private storage: DocumentStorage) {}
 
-  execute(base: SerializedEntry): Result<EditionStorageError, void> {
+  execute(base: SerializedEntry): Result<EditionStorageError, SerializedEntry | null> {
     const stagedResult = this.storage.loadStagedDocument();
     if (!stagedResult.isSuccess) {
       return Result.fail(stagedResult.getError());
@@ -22,6 +22,6 @@ export class InitializeEditor {
       if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
     }
 
-    return Result.ok();
+    return Result.ok(staged);
   }
 }
