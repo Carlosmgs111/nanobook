@@ -1,16 +1,17 @@
 import { Result } from "../domain/Result";
 import { EventBusError } from "../domain/bus/errors";
 import type {
+  DomainEventType,
   EventBus,
-  DomainEvent,
   EventHandler,
 } from "../domain/bus/EventBus";
+import type { DomainEvent } from "../domain/DomainEvent";
 
 export class EventTargetEventBus implements EventBus {
   private readonly target = new EventTarget();
 
-  async publish<T extends DomainEvent<unknown>>(
-    event: T
+  async publish<E extends DomainEvent>(
+    event: E
   ): Promise<Result<EventBusError, void>> {
     const executions: Promise<Result<EventBusError, void>>[] = [];
 
@@ -32,22 +33,26 @@ export class EventTargetEventBus implements EventBus {
     return failure ?? Result.ok();
   }
 
-  subscribe<K extends DomainEvent<unknown>>(
-    eventName: K["name"],
-    handler: EventHandler<K>
-  ): void {
-    this.target.addEventListener(String(eventName), ((
-      rawEvent: CustomEvent
-    ) => {
+  subscribe<E extends DomainEvent>(
+    eventType: DomainEventType<E>,
+    handler: EventHandler<E>
+  ): () => void {
+    const listener = ((rawEvent: CustomEvent) => {
       const {
         event,
         executions,
       }: {
-        event: K;
+        event: E;
         executions: Promise<Result<EventBusError, void>>[];
       } = rawEvent.detail;
 
       executions.push(handler.handle(event));
-    }) as EventListener);
+    }) as EventListener;
+
+    this.target.addEventListener(eventType.eventName, listener);
+
+    return () => {
+      this.target.removeEventListener(eventType.eventName, listener);
+    };
   }
 }

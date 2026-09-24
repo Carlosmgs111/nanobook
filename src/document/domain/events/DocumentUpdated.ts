@@ -1,8 +1,10 @@
 import { DomainEvent } from "../../../shared/domain/DomainEvent";
 
 export class DocumentUpdated extends DomainEvent {
-  readonly name = "document.updated";
-  constructor(readonly id: string) {
+  static readonly eventName = "document.updated";
+  readonly name = DocumentUpdated.eventName;
+
+  constructor(readonly documentId: string) {
     super(crypto.randomUUID(), new Date());
   }
 }

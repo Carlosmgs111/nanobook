@@ -29,6 +29,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- Los eventos de dominio ahora exponen una clave estática tipada y usan
+  `documentId`; los buses aceptan la clase del evento al suscribirse y devuelven
+  una función de cancelación. `PublishingModule` conserva dichas cancelaciones
+  para liberar sus handlers.
 - `DocumentEditor.astro`, `PreviewPage.astro` y `src/pages/[...slug]/index.astro` usan directamente `edition` desde `src/edition/index.ts`, eliminando la dependencia de la fachada `src/edition/client/`.
 - Helpers de API de documentos (`createDocument`, `updateDocument`) movidos desde `src/edition/client/` a `src/document/client/api/`.
 - `code-mirror-editor.ts` movido desde `src/edition/client/` a `src/edition/ui/components/DocumentEditor/code-mirror-editor.ts`.

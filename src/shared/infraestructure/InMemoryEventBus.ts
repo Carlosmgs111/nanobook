@@ -1,27 +1,40 @@
 import { Result } from "../domain/Result";
 import { EventBusError } from "../domain/bus/errors";
-import type { EventBus, DomainEvent, EventHandler } from "../domain/bus/EventBus";
+import type {
+  DomainEventType,
+  EventBus,
+  EventHandler,
+} from "../domain/bus/EventBus";
+import type { DomainEvent } from "../domain/DomainEvent";
 
 export class InMemoryEventBus implements EventBus {
-  subscribers: Map<string, EventHandler<DomainEvent<any>>[]> = new Map();
+  private readonly subscribers = new Map<
+    string,
+    Set<(event: DomainEvent) => Promise<Result<EventBusError, void>>>
+  >();
 
-  subscribe<K extends DomainEvent<any>>(
-    eventName: K["name"],
-    handler: EventHandler<K>
-  ): void {
-    if (!this.subscribers.get(eventName as string)) {
-      this.subscribers.set(eventName as string, [handler]);
-      return;
-    }
-    this.subscribers.get(eventName as string)?.push(handler);
+  subscribe<E extends DomainEvent>(
+    eventType: DomainEventType<E>,
+    handler: EventHandler<E>
+  ): () => void {
+    const key = eventType.eventName;
+    const handlers = this.subscribers.get(key) ?? new Set();
+    const invoke = (event: DomainEvent) => handler.handle(event as E);
+    handlers.add(invoke);
+    this.subscribers.set(key, handlers);
+
+    return () => {
+      handlers.delete(invoke);
+      if (handlers.size === 0) this.subscribers.delete(key);
+    };
   }
 
-  async publish<T extends DomainEvent<any>>(
-    event: T
+  async publish<E extends DomainEvent>(
+    event: E
   ): Promise<Result<EventBusError, void>> {
-    const handlers = this.subscribers.get(event.name) ?? [];
+    const handlers = this.subscribers.get(event.name) ?? new Set();
     const results = await Promise.all(
-      handlers.map((handler) => handler.handle(event))
+      [...handlers].map((handler) => handler(event))
     );
 
     const failures = results.filter((result) => !result.isSuccess);

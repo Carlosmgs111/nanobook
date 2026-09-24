@@ -13,6 +13,8 @@ export { GitHubWebhookController } from "./infraestructure/api/GitHubWebhookCont
 export type { RenderedDocumentPage } from "./domain/render";
 
 export class PublishingModule {
+  private unsubscribes: (() => void)[] = [];
+
   constructor(
     public readonly invalidatePagesController: InvalidatePagesController,
     public readonly pagePublisher: PagePublisher,
@@ -40,13 +42,22 @@ export class PublishingModule {
   }
 
   registerEventHandlers() {
-    this.eventBus.subscribe(
-      "document.created",
-      new OnDocumentCreatedHandler(this.pagePublisher)
+    this.unsubscribes.push(
+      this.eventBus.subscribe(
+        DocumentCreated,
+        new OnDocumentCreatedHandler(this.pagePublisher)
+      )
     );
-    this.eventBus.subscribe(
-      "document.updated",
-      new OnDocumentUpdatedHandler(this.pagePublisher)
+    this.unsubscribes.push(
+      this.eventBus.subscribe(
+        DocumentUpdated,
+        new OnDocumentUpdatedHandler(this.pagePublisher)
+      )
     );
+  }
+
+  unregisterEventHandlers() {
+    this.unsubscribes.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribes = [];
   }
 }

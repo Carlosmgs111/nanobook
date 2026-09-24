@@ -32,7 +32,7 @@ const documentId = slug || "index";
       container.innerHTML = rendered.Content;
     }
     setRenderedPage(container.dataset.documentId as string, container);
-    edition.eventBus.subscribe<DocumentChanged>("document.changed", {
+    edition.eventBus.subscribe(DocumentChanged, {
       async handle(event) {
         setRenderedPage(event.documentId as string, container);
         return Result.ok();
