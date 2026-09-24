@@ -8,6 +8,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- `worker-entry2.ts` renderiza las vistas previas de edición con
+  `UnifiedMarkdownRenderer` dentro de un Web Worker, preservando el contrato
+  `PreviewRenderer` y evitando bloquear el hilo principal.
 - Migración del módulo `edition` a arquitectura hexagonal con DDD, replicando el patrón de los demás módulos:
   - `src/edition/domain/`: modelos (`StagedDocument`, `RenderedPreview`), puertos (`DocumentStorage`, `PreviewRenderer`, `PageWarmingService`, `DocumentContentParser`), servicios de dominio puros (`DocumentFlow`, `RenderConfirmation`) y errores tipados (`EditionStorageError`, `EditionRenderError`, `InvalidDocumentContentError`).
   - `src/edition/application/`: casos de uso primitivos (`BuildStagedDocument`, `StageDocument`, `LoadStagedDocument`, `ClearEditionStorage`, `RenderPreview`, `ConfirmRenderedPreview`, `WarmDocumentPage`, `MarkDocumentSaved`) y casos de uso de flujo (`InitializeEditor`, `GetEditorInitialContent`, `SaveDocument`, `HandleEditorChange`, `PrepareEditorNavigation`) con tests unitarios en `src/edition/application/test/`.

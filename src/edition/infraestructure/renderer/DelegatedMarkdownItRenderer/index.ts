@@ -16,7 +16,7 @@ export class DelegatedMarkdownItRenderer implements PreviewRenderer {
   >();
 
   constructor() {
-    this.worker = new Worker(new URL("./worker-entry.ts", import.meta.url), {
+    this.worker = new Worker(new URL("./worker-entry2.ts", import.meta.url), {
       type: "module",
     });
     this.worker.addEventListener("message", this.handleMessage);
