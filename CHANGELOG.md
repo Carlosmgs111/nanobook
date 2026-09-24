@@ -29,6 +29,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- `GitHubRepository.update()` actualiza la entrada afectada de la caché de
+  documentos después de que GitHub confirma el `PUT`, conservando el parser y
+  el TTL existente en vez de invalidar todo el catálogo.
 - Los eventos de dominio ahora exponen una clave estática tipada y usan
   `documentId`; los buses aceptan la clase del evento al suscribirse y devuelven
   una función de cancelación. `PublishingModule` conserva dichas cancelaciones

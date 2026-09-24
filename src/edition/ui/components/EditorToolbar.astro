@@ -28,6 +28,7 @@ const { previewHref, viewHref, documentId } = Astro.props;
 
 <script>
   import { edition } from "../../index";
+  import { prefetch } from "astro:prefetch";
   let statusElement: HTMLElement;
   function showStatus(message: string, isError = false) {
     if (!statusElement) return;
@@ -54,10 +55,9 @@ const { previewHref, viewHref, documentId } = Astro.props;
     saveButton.replaceWith(cleanButton);
     cleanButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      fetch(viewHref as string, { credentials: "same-origin" });
       const result = await edition.saveDocument.execute();
       if (result.isSuccess) {
-        await edition.renderPreview.execute(documentId as string);
+        prefetch(viewHref as string);
         showStatus("Guardado correctamente");
       } else {
         const error = result.getError();

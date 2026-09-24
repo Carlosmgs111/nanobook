@@ -194,7 +194,7 @@ export class GitHubRepository implements ContentRepository {
         message: `Update ${path}`,
       });
 
-      this.clearCache();
+      this.updateCachedDocument(document);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -243,6 +243,38 @@ export class GitHubRepository implements ContentRepository {
     }
     const filePath = isIndex ? `${base}${id}/index.md` : `${base}${id}.md`;
     return filePath.replace(/^\/+/, "");
+  }
+
+  private updateCachedDocument(document: Document): void {
+    const cached = globalCache.get(this.cacheKey);
+    if (!cached || cached.expiresAt <= Date.now()) {
+      return;
+    }
+
+    const id = document.getId().getValue();
+    const cachedIndex = cached.documents.findIndex(
+      (cachedDocument) => cachedDocument.getId().getValue() === id
+    );
+    if (cachedIndex === -1) {
+      return;
+    }
+
+    const sourceId = document.getMetadata().index && id !== "index"
+      ? `${id}/index`
+      : id;
+    const documentResult = createDocumentFromRaw(
+      sourceId,
+      document.getRawFrontmatter() + document.getContent(),
+      this.parser
+    );
+    if (!documentResult.isSuccess) {
+      this.clearCache();
+      return;
+    }
+
+    const documents = [...cached.documents];
+    documents[cachedIndex] = documentResult.getValue();
+    globalCache.set(this.cacheKey, { ...cached, documents });
   }
 
   private async fetchTree(): Promise<GitHubTreeItem[]> {

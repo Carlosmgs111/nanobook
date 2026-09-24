@@ -10,6 +10,7 @@ const isVercelDeploy = Boolean(process.env.VERCEL_DEPLOY);
 const adapter = isVercelDeploy ? vercel({}) : node({ mode: "standalone" });
 
 export default defineConfig({
+  prefetch: true,
   output: "server",
   adapter: adapter,
   vite: {
