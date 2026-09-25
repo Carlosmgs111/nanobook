@@ -42,6 +42,21 @@ interface GitHubFileContentResponse {
   sha: string;
 }
 
+interface GitHubBlobResponse {
+  content: string;
+  encoding: "base64";
+}
+
+export async function fetchGitHubBlob(
+  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo">> &
+    Pick<GitHubRepositoryConfig, "token"> & { sha: string }
+): Promise<string> {
+  const { owner, repo, sha, token } = options;
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/blobs/${sha}`;
+  const data = await fetchJson<GitHubBlobResponse>(url, token);
+  return Buffer.from(data.content, "base64").toString("utf-8");
+}
+
 export async function fetchFileContent(
   options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
     Pick<GitHubRepositoryConfig, "token"> & { path: string }

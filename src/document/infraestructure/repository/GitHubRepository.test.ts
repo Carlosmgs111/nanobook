@@ -52,6 +52,13 @@ index: false
         });
       }
 
+      if (url.includes("/git/blobs/")) {
+        return Response.json({
+          encoding: "base64",
+          content: Buffer.from(remoteDocument, "utf8").toString("base64"),
+        });
+      }
+
       if (url.includes("/contents/") && init?.method === "PUT") {
         return new Response(null, { status: 200 });
       }

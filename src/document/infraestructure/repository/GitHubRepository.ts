@@ -1,7 +1,7 @@
 import {
-  fetchFileContent,
   fetchFileSha,
   fetchGitHubTree,
+  fetchGitHubBlob,
   updateFileContent,
 } from "../../../shared/github/api";
 import { DocumentId } from "../../domain/DocumentId";
@@ -340,12 +340,12 @@ export class GitHubRepository implements ContentRepository {
       const documents: Document[] = [];
 
       for (const file of contentFiles) {
-        const raw = await fetchFileContent({
+        const raw = await fetchGitHubBlob({
           owner: this.options.owner,
           repo: this.options.repo,
           branch: this.branch,
           token: this.options.token,
-          path: file.path,
+          sha: file.sha,
         });
 
         const id = toDocumentId(file.path, {
