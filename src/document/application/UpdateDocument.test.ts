@@ -43,7 +43,7 @@ function buildUpdateInput(
 describe("UpdateDocument", () => {
   it("updates an existing document and publishes DocumentUpdated", async () => {
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
     });
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
@@ -62,7 +62,7 @@ describe("UpdateDocument", () => {
 
   it("returns DocumentNotFoundError when the document does not exist", async () => {
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(null)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(null)),
     });
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
@@ -89,7 +89,7 @@ describe("UpdateDocument", () => {
 
   it("propagates repository.getById errors as Result failures", async () => {
     const repository = createRepository({
-      getById: vi
+      getByPath: vi
         .fn()
         .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
     });
@@ -105,7 +105,7 @@ describe("UpdateDocument", () => {
 
   it("propagates repository.update errors and does not publish events", async () => {
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
       update: vi
         .fn()
         .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
@@ -122,7 +122,7 @@ describe("UpdateDocument", () => {
 
   it("propagates eventBus.publish errors", async () => {
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
     });
     const eventBus = createEventBus();
     eventBus.publish = vi
@@ -138,7 +138,7 @@ describe("UpdateDocument", () => {
 
   it("returns InvalidDocumentError when Document construction fails", async () => {
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
     });
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);

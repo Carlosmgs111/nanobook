@@ -41,9 +41,7 @@ export class CreateDocument {
       return Result.fail(new InvalidDocumentIdError(path.getValue()));
     }
 
-    const existingResult = this.repository.getByPath
-      ? await this.repository.getByPath(path.getValue())
-      : await this.repository.getById(path.getValue());
+    const existingResult = await this.repository.getByPath(path.getValue());
     if (!existingResult.isSuccess) {
       return Result.fail(existingResult.getError());
     }
@@ -54,9 +52,7 @@ export class CreateDocument {
     const parentPath = path.getParentPath();
     let parentDocument: Document | null = null;
     if (parentPath !== null) {
-      const parentResult = this.repository.getByPath
-        ? await this.repository.getByPath(parentPath.getValue())
-        : await this.repository.getById(parentPath.getValue());
+      const parentResult = await this.repository.getByPath(parentPath.getValue());
       if (!parentResult.isSuccess) {
         return Result.fail(parentResult.getError());
       }

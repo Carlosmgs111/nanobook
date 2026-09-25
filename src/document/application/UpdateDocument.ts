@@ -34,9 +34,7 @@ export class UpdateDocument {
       return Result.fail(new InvalidDocumentIdError(documentDelta.id));
     }
 
-    const documentResult = this.contentRepository.getByPath
-      ? await this.contentRepository.getByPath(documentDelta.id)
-      : await this.contentRepository.getById(documentDelta.id);
+    const documentResult = await this.contentRepository.getByPath(documentDelta.id);
     if (!documentResult.isSuccess) {
       return Result.fail(documentResult.getError());
     }

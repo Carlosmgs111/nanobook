@@ -11,6 +11,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `DocumentId` queda reservado para identidades estables y opacas; la lógica de rutas, índices y referencias relativas se concentra en `DocumentPath`.
 - Navegación, repositorios y resolutores usan explícitamente `path` para localizar documentos y `documentId` para identidad, eventos y dependencias.
 - La creación de documentos propaga eventos con la identidad estable del documento creado y de su padre.
+- `getByPath()` pasa a ser una operación obligatoria del repositorio; creación, actualización y referencias ya no usan `getById()` como fallback para localizar rutas.
 - Separación inicial en el dominio de documentos entre identidad estable (`documentId`), ubicación mutable (`path`) y versión del estado (`version`), documentada en `src/content/nanobook-project/arquitectura/identidad-ruta-version-documento.md`.
 - Nuevo value object `DocumentPath` para normalizar rutas, detectar índices y resolver referencias sin usar la identidad de la entidad.
 - El storage de edición ahora usa claves por `documentId` para staged, preview y confirmed; los renders concurrentes se coordinan por `documentId` y `version`.

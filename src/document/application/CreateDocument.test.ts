@@ -52,7 +52,7 @@ describe("CreateDocument", () => {
       index: false,
     });
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(existing)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(existing)),
     });
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
@@ -93,7 +93,7 @@ describe("CreateDocument", () => {
 
   it("returns ParentNotFoundError when the parent does not exist", async () => {
     const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(null)),
+      getByPath: vi.fn().mockResolvedValue(Result.ok(null)),
     });
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
@@ -113,7 +113,7 @@ describe("CreateDocument", () => {
       index: false,
     });
     const repository = createRepository({
-      getById: vi.fn(async (id: string) => {
+      getByPath: vi.fn(async (id: string) => {
         if (id === "intro") return Result.ok(nonIndexParent);
         return Result.ok(null);
       }),
@@ -132,7 +132,7 @@ describe("CreateDocument", () => {
 
   it("propagates repository.getById errors as Result failures", async () => {
     const repository = createRepository({
-      getById: vi
+      getByPath: vi
         .fn()
         .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
     });
@@ -194,7 +194,7 @@ describe("CreateDocument", () => {
 
   it("publishes DocumentCreated for document and parent when creating a child", async () => {
     const repository = createRepository({
-      getById: vi.fn(async (id: string) => {
+      getByPath: vi.fn(async (id: string) => {
         if (id === "index") return Result.ok(rootIndex);
         return Result.ok(null);
       }),
@@ -222,7 +222,7 @@ describe("CreateDocument", () => {
 
   it("stops and propagates when parent event publication fails", async () => {
     const repository = createRepository({
-      getById: vi.fn(async (id: string) => {
+      getByPath: vi.fn(async (id: string) => {
         if (id === "index") return Result.ok(rootIndex);
         return Result.ok(null);
       }),

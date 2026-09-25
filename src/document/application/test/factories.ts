@@ -12,6 +12,7 @@ export function createRepository(
   return {
     list: vi.fn().mockResolvedValue(Result.ok([])),
     getById: vi.fn().mockResolvedValue(Result.ok(null)),
+    getByPath: vi.fn().mockResolvedValue(Result.ok(null)),
     listChildren: vi.fn().mockResolvedValue(Result.ok([])),
     create: vi.fn().mockResolvedValue(Result.ok()),
     update: vi.fn().mockResolvedValue(Result.ok()),
