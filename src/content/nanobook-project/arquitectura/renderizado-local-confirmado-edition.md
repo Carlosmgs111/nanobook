@@ -1,4 +1,5 @@
 ---
+id: "3d6ae747-fb1e-410b-8bdb-db8f91e04339"
 title: "Renderizado local confirmado en edition"
 description: "Cómo la página pública muestra el HTML que edition confirmó tras guardar."
 date: 2026-09-24
