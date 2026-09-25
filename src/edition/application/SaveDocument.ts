@@ -3,13 +3,15 @@ import type { SerializedEntry } from "../domain/model/StagedDocument";
 import type { EditionStorageError } from "../domain/errors";
 import type { DocumentStorage } from "../domain/ports/DocumentStorage";
 import type { DocumentWriter } from "../application/ports/DocumentWriter";
+import type { RenderPreview } from "./RenderPreview";
 
 export type SaveDocumentError = EditionStorageError | Error;
 
 export class SaveDocument {
   constructor(
     private storage: DocumentStorage,
-    private writer: DocumentWriter
+    private writer: DocumentWriter,
+    private renderPreview: RenderPreview
   ) {}
 
   async execute(): Promise<Result<SaveDocumentError, SerializedEntry>> {
@@ -17,19 +19,38 @@ export class SaveDocument {
     if (!stageResult.isSuccess) {
       return Result.fail(stageResult.getError());
     }
-    const staged = stageResult.getValue() as SerializedEntry;
+    const staged = stageResult.getValue();
+    if (!staged) return Result.fail(new Error("Staged document not found"));
+
+    let renderResult = await this.renderPreview.execute(staged.id);
+    if (renderResult.isSuccess && !renderResult.getValue()) {
+      renderResult = await this.renderPreview.execute(staged.id);
+    }
+    if (!renderResult.isSuccess) return Result.fail(renderResult.getError());
+    if (!renderResult.getValue()) {
+      return Result.fail(new Error("Rendered preview not available"));
+    }
+
     try {
-      const result = await this.writer.updateDocument(staged.id, staged);
-      // console.log({ result });
-      // return Result.ok(result);
+      await this.writer.updateDocument(staged.id, staged);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return Result.fail(new Error(message));
     }
 
-    const saveResult = this.storage.saveStagedDocument(staged);
-    if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
-    console.log({ saveResult });
+    const currentStageResult = this.storage.loadStagedDocument();
+    if (!currentStageResult.isSuccess) return Result.fail(currentStageResult.getError());
+    if (!sameDocument(currentStageResult.getValue(), staged)) return Result.ok(staged);
+
+    const confirmationResult = this.storage.saveConfirmedDocument(staged);
+    if (!confirmationResult.isSuccess) return Result.fail(confirmationResult.getError());
     return Result.ok(staged);
   }
+}
+
+function sameDocument(
+  current: SerializedEntry | null,
+  saved: SerializedEntry
+): boolean {
+  return JSON.stringify(current) === JSON.stringify(saved);
 }

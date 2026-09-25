@@ -51,7 +51,7 @@ export class EditionModule {
       delegatedRenderer,
       eventBus
     );
-    const saveDocument = new SaveDocument(storage, documentWriter);
+    const saveDocument = new SaveDocument(storage, documentWriter, renderPreview);
     const createDocument = new CreateDocument(documentWriter);
     const handleEditorChange = new HandleEditorChange(contentParser, storage);
     const initializeEditor = new InitializeEditor(storage);

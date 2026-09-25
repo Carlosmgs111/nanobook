@@ -8,6 +8,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- La página pública reemplaza su cuerpo por el HTML renderizado por `edition`
+  cuando este coincide con la versión confirmada tras guardar, sin consultar el
+  backend.
+- Documentada la decisión en
+  `src/content/nanobook-project/arquitectura/renderizado-local-confirmado-edition.md`.
 - `worker-entry2.ts` renderiza las vistas previas de edición con
   `UnifiedMarkdownRenderer` dentro de un Web Worker, preservando el contrato
   `PreviewRenderer` y evitando bloquear el hilo principal.
@@ -63,6 +68,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Eliminada la fachada `src/edition/client/` y sus tests asociados; la funcionalidad equivalente ahora reside en `src/edition/application/`, `src/edition/domain/` y en los propios componentes Astro.
 
 ### Fixed
+- El worker de `edition` resuelve las dependencias de Markdown con la condición
+  `worker`, evitando que `remark-parse` cargue un decodificador que requiere
+  `document` y bloqueaba el renderizado y guardado en el navegador.
 - `DocumentEditor.astro` vuelve a inicializar el editor al navegar desde la vista preview con `ClientRouter`: destruye la instancia de CodeMirror en `astro:before-swap`, busca el contenedor actual en `astro:page-load` y elimina el guarda `if (view) return` que impedía recrear el editor en el nuevo DOM.
 - `OnDocumentCreatedHandler` y `OnDocumentUpdatedHandler` importaban `err`/`ok` inexistentes; ahora usan `Result.ok()` / `Result.fail()`.
 - `GitHubRepository.create()` ya no oculta cualquier error bajo `DocumentAlreadyExistsError`; distingue errores de dominio de fallos de infraestructura.

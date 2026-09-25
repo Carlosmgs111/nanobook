@@ -15,6 +15,9 @@ export function createDocumentStorage(
     loadCachedPreview: vi.fn().mockReturnValue(Result.ok(null)),
     saveCachedPreview: vi.fn().mockReturnValue(Result.ok()),
     clearCachedPreview: vi.fn().mockReturnValue(Result.ok()),
+    loadConfirmedDocument: vi.fn().mockReturnValue(Result.ok(null)),
+    saveConfirmedDocument: vi.fn().mockReturnValue(Result.ok()),
+    clearConfirmedDocument: vi.fn().mockReturnValue(Result.ok()),
     clearAll: vi.fn().mockReturnValue(Result.ok()),
     ...overrides,
   };

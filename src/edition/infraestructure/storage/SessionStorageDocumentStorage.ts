@@ -5,6 +5,7 @@ import { EditionStorageError } from "../../domain/errors";
 
 const STAGED_KEY = "stagedDocument";
 const CACHED_PREVIEW_KEY = "cachedPreview";
+const CONFIRMED_DOCUMENT_KEY = "confirmedDocument";
 
 function read<T>(storage: Storage, key: string): Result<EditionStorageError, T | null> {
   try {
@@ -67,10 +68,23 @@ export class SessionStorageDocumentStorage implements DocumentStorage {
     return remove(this.storage, CACHED_PREVIEW_KEY);
   }
 
+  loadConfirmedDocument(): Result<EditionStorageError, SerializedEntry | null> {
+    return read<SerializedEntry>(this.storage, CONFIRMED_DOCUMENT_KEY);
+  }
+
+  saveConfirmedDocument(document: SerializedEntry): Result<EditionStorageError, void> {
+    return write(this.storage, CONFIRMED_DOCUMENT_KEY, document);
+  }
+
+  clearConfirmedDocument(): Result<EditionStorageError, void> {
+    return remove(this.storage, CONFIRMED_DOCUMENT_KEY);
+  }
+
   clearAll(): Result<EditionStorageError, void> {
     const results: Result<EditionStorageError, void>[] = [
       this.clearStagedDocument(),
       this.clearCachedPreview(),
+      this.clearConfirmedDocument(),
     ];
     for (const result of results) {
       if (!result.isSuccess) return result;

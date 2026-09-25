@@ -14,6 +14,9 @@ export default defineConfig({
   output: "server",
   adapter: adapter,
   vite: {
+    resolve: {
+      conditions: ["worker"],
+    },
     plugins: [tailwindcss()],
     server: {
       watch: {

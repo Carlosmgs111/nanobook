@@ -12,5 +12,9 @@ export interface DocumentStorage {
   saveCachedPreview(cached: CachedPreview): Result<EditionStorageError, void>;
   clearCachedPreview(): Result<EditionStorageError, void>;
 
+  loadConfirmedDocument(): Result<EditionStorageError, SerializedEntry | null>;
+  saveConfirmedDocument(document: SerializedEntry): Result<EditionStorageError, void>;
+  clearConfirmedDocument(): Result<EditionStorageError, void>;
+
   clearAll(): Result<EditionStorageError, void>;
 }

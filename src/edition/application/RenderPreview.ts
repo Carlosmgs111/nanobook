@@ -10,7 +10,9 @@ import type { EventBus } from "../../shared/domain/bus/EventBus";
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
 
 export class RenderPreview {
-  private isRendering = false;
+  private activeRender: Promise<
+    Result<RenderPreviewError, RenderedPreview | null>
+  > | null = null;
 
   constructor(
     private storage: DocumentStorage,
@@ -21,15 +23,16 @@ export class RenderPreview {
   async execute(
     documentId: string
   ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
-    if (this.isRendering) {
-      return Result.ok(null);
+    if (this.activeRender) return this.activeRender;
+
+    const render = this.renderPipeline(documentId);
+    this.activeRender = render;
+
+    try {
+      return await render;
+    } finally {
+      if (this.activeRender === render) this.activeRender = null;
     }
-
-    this.isRendering = true;
-    const result = await this.renderPipeline(documentId);
-    this.isRendering = false;
-
-    return result;
   }
 
   private async renderPipeline(

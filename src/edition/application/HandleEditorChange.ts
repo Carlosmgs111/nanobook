@@ -19,6 +19,11 @@ export class HandleEditorChange {
     const saveResult = this.storage.saveStagedDocument(staged);
     if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
 
+    const clearConfirmationResult = this.storage.clearConfirmedDocument();
+    if (!clearConfirmationResult.isSuccess) {
+      return Result.fail(clearConfirmationResult.getError());
+    }
+
     return Result.ok(staged);
   }
 }

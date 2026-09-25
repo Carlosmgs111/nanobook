@@ -56,3 +56,19 @@ Astro.response.headers.set(
     childEntries={childEntries.map((child) => child)}
   />
 </Layout>
+
+<script>
+  import { edition } from "../../edition";
+
+  document.addEventListener("astro:page-load", () => {
+    const body = document.querySelector<HTMLElement>("#document-body");
+    const documentId = body?.dataset.documentId;
+    if (!body || !documentId) return;
+
+    const renderedResult = edition.getRenderedDocument.execute(documentId, true);
+    if (!renderedResult.isSuccess) return;
+
+    body.innerHTML = renderedResult.getValue().rendered.Content;
+    body.dataset.renderedFromEdition = "true";
+  });
+</script>
