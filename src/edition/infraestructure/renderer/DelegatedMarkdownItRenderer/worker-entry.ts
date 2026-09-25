@@ -1,13 +1,12 @@
-import { MarkdownItRenderer } from "../MarkdownItRenderer";
+import { UnifiedMarkdownRenderer } from "../UnifiedMarkdownRenderer";
 import type { RenderRequest, RenderResponse } from "./protocol";
 
-const renderer = new MarkdownItRenderer();
+const renderer = new UnifiedMarkdownRenderer();
 
 self.addEventListener(
   "message",
   async (event: MessageEvent<RenderRequest>) => {
     const { id, content } = event.data;
-
     const result = await renderer.render(content);
 
     const response: RenderResponse = result.isSuccess

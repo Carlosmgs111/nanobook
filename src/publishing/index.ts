@@ -5,7 +5,7 @@ import { PagePublisher } from "./application/PagePublisher";
 import { OnDocumentCreatedHandler } from "./application/event-handlers/OnDocumentCreatedHandler";
 import { OnDocumentUpdatedHandler } from "./application/event-handlers/OnDocumentUpdatedHandler";
 import { createRenderedPageCache } from "./infraestructure/cache";
-import { UnifiedMarkdownRenderer } from "./infraestructure/markdown/UnifiedMarkdownRenderer";
+import { UnifiedMarkdownRenderer } from "./infraestructure/renderer/UnifiedMarkdownRenderer";
 import { InvalidatePagesController } from "./infraestructure/api/InvalidatePagesController";
 
 export { GitHubWebhookHandler } from "./infraestructure/GithubWebhookHandler";

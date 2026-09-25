@@ -7,7 +7,6 @@ import { SessionStorageDocumentStorage } from "./infraestructure/storage/Session
 import { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
 import { HttpDocumentWriter } from "./infraestructure/documentWriter/HttpDocumentWriter";
 import { CreateDocument } from "./application/CreateDocument";
-import { MarkdownItRenderer } from "./infraestructure/renderer/MarkdownItRenderer";
 import { DelegatedMarkdownItRenderer } from "./infraestructure/renderer/DelegatedMarkdownItRenderer";
 import { EventTargetEventBus } from "../shared/infraestructure/EventTargetEventBus";
 import type { EventBus } from "../shared/domain/bus/EventBus";
