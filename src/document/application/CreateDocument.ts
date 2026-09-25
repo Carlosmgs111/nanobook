@@ -12,6 +12,7 @@ import {
 import { DocumentCreated } from "../domain/events/DocumentCreated";
 import { Document } from "../domain/Document";
 import { DocumentId } from "../domain/DocumentId";
+import { DocumentPath } from "../domain/DocumentPath";
 import type { DocumentInput } from "./dto/DocumentInput";
 import type { EventBusError } from "../../shared/domain/bus/errors";
 
@@ -30,40 +31,41 @@ export class CreateDocument {
   async execute(
     input: DocumentInput
   ): Promise<Result<CreateDocumentError, Document>> {
-    const idResult = DocumentId.create(input.id);
-    if (!idResult.isSuccess) {
-      return Result.fail(idResult.getError());
+    const pathResult = DocumentPath.create(input.id);
+    if (!pathResult.isSuccess) {
+      return Result.fail(pathResult.getError());
     }
-    const id = idResult.getValue();
+    const path = pathResult.getValue();
 
-    if (id.isIndexId() && input.index === false) {
-      return Result.fail(new InvalidDocumentIdError(id.getValue()));
+    if (path.isIndex() && input.index === false) {
+      return Result.fail(new InvalidDocumentIdError(path.getValue()));
     }
 
     const existingResult = this.repository.getByPath
-      ? await this.repository.getByPath(id.getValue())
-      : await this.repository.getById(id.getValue());
+      ? await this.repository.getByPath(path.getValue())
+      : await this.repository.getById(path.getValue());
     if (!existingResult.isSuccess) {
       return Result.fail(existingResult.getError());
     }
     if (existingResult.getValue()) {
-      return Result.fail(new DocumentAlreadyExistsError(id.getValue()));
+      return Result.fail(new DocumentAlreadyExistsError(path.getValue()));
     }
 
-    const parentId = id.getParentId();
-    if (parentId !== null) {
+    const parentPath = path.getParentPath();
+    let parentDocument: Document | null = null;
+    if (parentPath !== null) {
       const parentResult = this.repository.getByPath
-        ? await this.repository.getByPath(parentId.getValue())
-        : await this.repository.getById(parentId.getValue());
+        ? await this.repository.getByPath(parentPath.getValue())
+        : await this.repository.getById(parentPath.getValue());
       if (!parentResult.isSuccess) {
         return Result.fail(parentResult.getError());
       }
-      const parent = parentResult.getValue();
-      if (!parent) {
-        return Result.fail(new ParentNotFoundError(parentId.getValue()));
+      parentDocument = parentResult.getValue();
+      if (!parentDocument) {
+        return Result.fail(new ParentNotFoundError(parentPath.getValue()));
       }
-      if (!parent.getMetadata().index) {
-        return Result.fail(new InvalidDocumentIdError(parentId.getValue()));
+      if (!parentDocument.getMetadata().index) {
+        return Result.fail(new InvalidDocumentIdError(parentPath.getValue()));
       }
     }
 
@@ -98,10 +100,20 @@ export class CreateDocument {
 
     const documentId = document.getDocumentId().getValue();
 
-    this.eventBus.publish(new DocumentCreated(documentId));
+    const documentEventResult = await this.eventBus.publish(
+      new DocumentCreated(documentId)
+    );
+    if (!documentEventResult.isSuccess) {
+      return Result.fail(documentEventResult.getError());
+    }
 
-    if (parentId !== null) {
-      await this.eventBus.publish(new DocumentCreated(parentId.getValue()));
+    if (parentDocument !== null) {
+      const parentEventResult = await this.eventBus.publish(
+        new DocumentCreated(parentDocument.getDocumentId().getValue())
+      );
+      if (!parentEventResult.isSuccess) {
+        return Result.fail(parentEventResult.getError());
+      }
     }
 
     return Result.ok(document);

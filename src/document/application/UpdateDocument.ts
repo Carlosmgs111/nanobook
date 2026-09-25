@@ -3,7 +3,7 @@ import type { EventBus } from "../../shared/domain/bus/EventBus";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { DocumentInput } from "./dto/DocumentInput";
 import { DocumentUpdated } from "../domain/events/DocumentUpdated";
-import { DocumentId } from "../domain/DocumentId";
+import { DocumentPath } from "../domain/DocumentPath";
 import {
   DocumentNotFoundError,
   DocumentRepositoryError,
@@ -29,8 +29,8 @@ export class UpdateDocument {
   async execute(
     documentDelta: DocumentInput
   ): Promise<Result<UpdateDocumentError, void>> {
-    const idResult = DocumentId.create(documentDelta.id);
-    if (!idResult.isSuccess) {
+    const pathResult = DocumentPath.create(documentDelta.id);
+    if (!pathResult.isSuccess) {
       return Result.fail(new InvalidDocumentIdError(documentDelta.id));
     }
 
@@ -68,7 +68,12 @@ export class UpdateDocument {
 
     const updatedDocumentId = updatedDocument.getDocumentId().getValue();
 
-    this.eventBus.publish(new DocumentUpdated(updatedDocumentId));
+    const eventResult = await this.eventBus.publish(
+      new DocumentUpdated(updatedDocumentId)
+    );
+    if (!eventResult.isSuccess) {
+      return Result.fail(eventResult.getError());
+    }
 
     return Result.ok();
   }

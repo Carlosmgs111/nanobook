@@ -32,12 +32,14 @@ describe("CreateDocument", () => {
     const result = await useCase.execute(buildDocumentInput({ id: "index" }));
 
     expect(result.isSuccess).toBe(true);
-    expect(result.getValue().getId().getValue()).toBe("index");
+    expect(result.getValue().getDocumentId().getValue()).toMatch(
+      /^[0-9a-f-]{36}$/
+    );
     expect(repository.create).toHaveBeenCalledTimes(1);
     expect(eventBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "Document:Created",
-        payload: { id: "index" },
+        name: "document.created",
+        documentId: result.getValue().getDocumentId().getValue(),
       })
     );
   });
@@ -206,14 +208,14 @@ describe("CreateDocument", () => {
     expect(eventBus.publish).toHaveBeenCalledTimes(2);
     expect(eventBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "Document:Created",
-        payload: { id: "intro" },
+        name: "document.created",
+        documentId: result.getValue().getDocumentId().getValue(),
       })
     );
     expect(eventBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "Document:Created",
-        payload: { id: "index" },
+        name: "document.created",
+        documentId: rootIndex.getDocumentId().getValue(),
       })
     );
   });

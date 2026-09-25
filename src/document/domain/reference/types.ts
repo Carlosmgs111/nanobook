@@ -4,6 +4,7 @@ import type {
 } from "../types";
 
 import type { DocumentId } from "../DocumentId";
+import type { DocumentPath } from "../DocumentPath";
 import type { Document } from "../Document";
 import type { DocumentReference } from "../DocumentReference";
 
@@ -13,6 +14,7 @@ import type { DocumentReference } from "../DocumentReference";
 export interface ReferenceResolutionContext {
   /** ID del documento origen que contiene el `ref`. */
   sourceId: DocumentId;
+  sourcePath: DocumentPath;
   /** Metadatos del documento origen. */
   sourceData: DocumentMetadata;
 }

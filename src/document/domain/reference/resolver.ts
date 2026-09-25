@@ -23,7 +23,8 @@ export class CompositeReferenceResolver implements ReferenceResolver {
     sourceDocument: Document
   ): Promise<ContentEntry | null> {
     const context: ReferenceResolutionContext = {
-      sourceId: sourceDocument.getId(),
+      sourceId: sourceDocument.getDocumentId(),
+      sourcePath: sourceDocument.getDocumentPath(),
       sourceData: sourceDocument.getMetadata(),
     };
 
@@ -37,7 +38,7 @@ export class CompositeReferenceResolver implements ReferenceResolver {
     console.warn(
       `No resolver found for reference ${JSON.stringify(
         ref
-      )} in ${sourceDocument.getId().getValue()}`
+      )} in ${sourceDocument.getPath()}`
     );
     return null;
   }

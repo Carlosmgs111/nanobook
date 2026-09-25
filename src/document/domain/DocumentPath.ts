@@ -2,6 +2,7 @@ import { Result } from "../../shared/domain/Result";
 import { InvalidDocumentIdError } from "./errors";
 
 const ALLOWED_PATH_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
+const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
 /**
  * Ubicación mutable de un documento dentro del árbol de contenido.
@@ -48,10 +49,11 @@ export class DocumentPath {
     if (normalized === "index") return null;
     const lastSlash = normalized.lastIndexOf("/");
     const parent = lastSlash === -1 ? "index" : normalized.slice(0, lastSlash);
-    return DocumentPath.create(parent).getValue();
+    const result = DocumentPath.create(parent);
+    return result.isSuccess ? result.getValue() : null;
   }
 
-  resolveReference(reference: string): string {
+  resolveReference(reference: string): DocumentPath {
     const ref = reference.replace(/\.md$/, "").replace(/\/index$/, "");
     const sourceSegments =
       this.getValue() === "index"
@@ -67,7 +69,23 @@ export class DocumentPath {
       else targetSegments.push(segment);
     }
 
-    return targetSegments.join("/") || "index";
+    return DocumentPath.create(targetSegments.join("/") || "index").getValue();
+  }
+
+  extractInternalLinkTargets(content: string): string[] {
+    const targets = new Set<string>();
+    for (const match of content.matchAll(MARKDOWN_LINK_REGEX)) {
+      const href = match[2];
+      if (!href || href.startsWith("http://") || href.startsWith("https://") ||
+        href.startsWith("//") || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+        continue;
+      }
+      const target = href.startsWith("/")
+        ? href.replace(/^\//, "").replace(/\.md$/, "")
+        : this.resolveReference(href).getValue();
+      if (target && target !== this.getValue()) targets.add(target);
+    }
+    return Array.from(targets);
   }
 
   private static normalizeValue(path: string): string {

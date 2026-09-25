@@ -50,7 +50,7 @@ export class InMemoryRepository implements ContentRepository {
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     return Result.ok(
       Array.from(this.documents.values()).filter(
-        (doc) => doc.getParentId()?.getValue() === parentId
+        (doc) => doc.getParentPath()?.getValue() === parentId
       )
     );
   }

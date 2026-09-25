@@ -1,5 +1,6 @@
 import { InMemoryEventBus } from "./shared/infraestructure/InMemoryEventBus";
 import { DocumentModule } from "./document";
+import { DocumentPath } from "./document/domain/DocumentPath";
 import {
   GitHubWebhookHandler,
   GitHubWebhookController,
@@ -51,15 +52,15 @@ export class Application {
   > {
     const document = await this.documentModule.getDocument.execute(slug);
     if (!document) throw new Error("Document not found");
-    const documentId = document.getId();
+    const documentPath = DocumentPath.create(document.getPath()).getValue();
     const breadcrumbs =
-      this.navigationModule.navigationService.getBreadcrumbs(documentId);
+      this.navigationModule.navigationService.getBreadcrumbs(documentPath);
     const sidebarEntries =
-      this.navigationModule.navigationService.getSidebarEntries(documentId);
+      this.navigationModule.navigationService.getSidebarEntries(documentPath);
     const parentEntry =
-      this.navigationModule.navigationService.getParentEntry(documentId);
+      this.navigationModule.navigationService.getParentEntry(documentPath);
     const childEntries =
-      this.navigationModule.navigationService.getImmediateChildren(documentId);
+      this.navigationModule.navigationService.getImmediateChildren(documentPath);
     const renderedPage = await this.publishingModule.pagePublisher.publish(
       document
     );

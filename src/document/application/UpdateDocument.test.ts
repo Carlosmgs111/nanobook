@@ -54,8 +54,8 @@ describe("UpdateDocument", () => {
     expect(repository.update).toHaveBeenCalledTimes(1);
     expect(eventBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "Document:Updated",
-        payload: { id: "guide/intro" },
+        name: "document.updated",
+        documentId: existingDocument.getDocumentId().getValue(),
       })
     );
   });

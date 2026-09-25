@@ -24,10 +24,10 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
   ): Promise<ContentEntry | null> {
     const refStr = ref.getValue() as string;
     if (refStr.startsWith("/")) return null;
-    const targetId = context.sourceId.resolveDocumentReference(refStr);
+    const targetPath = context.sourcePath.resolveReference(refStr);
     const targetDocumentResult = this.contentRepository.getByPath
-      ? await this.contentRepository.getByPath(targetId)
-      : await this.contentRepository.getById(targetId);
+      ? await this.contentRepository.getByPath(targetPath.getValue())
+      : await this.contentRepository.getById(targetPath.getValue());
 
     // console.log({ targetDocumentResult });
 

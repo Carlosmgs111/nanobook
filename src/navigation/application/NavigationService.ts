@@ -9,7 +9,7 @@ import type {
   DependencyKind,
 } from "../domain/types";
 
-import { DocumentId } from "../../document/domain/DocumentId";
+import { DocumentPath } from "../../document/domain/DocumentPath";
 
 function getFolderPath(entryId: string): string {
   return entryId === "index" ? "" : entryId;
@@ -110,17 +110,17 @@ export class NavigationService implements NavigationServicePort {
     };
   }
 
-  getBreadcrumbs(documentId: DocumentId, homeTitle: string = "Inicio"): Crumb[] {
+  getBreadcrumbs(documentPath: DocumentPath, homeTitle: string = "Inicio"): Crumb[] {
     const crumbs: Crumb[] = [
       { id: "index", title: homeTitle, href: "/", current: false },
     ];
 
-    if (documentId.getValue() === "index") {
+    if (documentPath.getValue() === "index") {
       crumbs[0].current = true;
       return crumbs;
     }
 
-    const segments = documentId.getValue().split("/");
+    const segments = documentPath.getValue().split("/");
     let path = "";
 
     for (let i = 0; i < segments.length; i++) {
@@ -142,8 +142,8 @@ export class NavigationService implements NavigationServicePort {
     return crumbs;
   }
 
-  getSidebarEntries(documentId: DocumentId): NavigationNode[] {
-    const node = this.documentsGraph.getNodeByPath(documentId.getValue());
+  getSidebarEntries(documentPath: DocumentPath): NavigationNode[] {
+    const node = this.documentsGraph.getNodeByPath(documentPath.getValue());
     if (!node || node.parentId === null) return [];
 
     const parent = this.documentsGraph.getNode(node.parentId as string);
@@ -151,12 +151,12 @@ export class NavigationService implements NavigationServicePort {
 
     return parent.children.map((child) => ({
       ...child,
-      current: child.path === documentId.getValue(),
+      current: child.path === documentPath.getValue(),
     }));
   }
 
-  getParentEntry(documentId: DocumentId): ParentEntry | null {
-    const node = this.documentsGraph.getNodeByPath(documentId.getValue());
+  getParentEntry(documentPath: DocumentPath): ParentEntry | null {
+    const node = this.documentsGraph.getNodeByPath(documentPath.getValue());
     const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
     if (!parent) return null;
 
@@ -167,10 +167,10 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getImmediateChildren(
-    documentId: DocumentId,
-    excludeId?: DocumentId  
+    documentPath: DocumentPath,
+    excludePath?: DocumentPath
   ): NavigationNode[] {
-    const folderPath = getFolderPath(documentId.getValue());
+    const folderPath = getFolderPath(documentPath.getValue());
     const folder =
       folderPath === ""
         ? this.documentsGraph.getNodeByPath("index")
@@ -178,6 +178,6 @@ export class NavigationService implements NavigationServicePort {
 
     if (!folder) return [];
 
-    return folder.children.filter((child) => child.path !== excludeId?.getValue());
+    return folder.children.filter((child) => child.path !== excludePath?.getValue());
   }
 }

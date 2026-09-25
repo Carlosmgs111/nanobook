@@ -101,7 +101,7 @@ export class FileSystemRepository implements ContentRepository {
     const documents = documentsResult.getValue();
     return Result.ok(
       documents.filter(
-        (document) => document.getParentId()?.getValue() === parentId
+        (document) => document.getParentPath()?.getValue() === parentId
       )
     );
   }
@@ -111,12 +111,12 @@ export class FileSystemRepository implements ContentRepository {
   ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
     try {
       const filePath = idToFilePath(
-        document.getId().getValue(),
+        document.getPath(),
         document.getMetadata().index,
         this.contentDir
       );
       if (await fileExists(filePath)) {
-        return Result.fail(new DocumentAlreadyExistsError(document.getId().getValue()));
+        return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
       }
       await mkdir(dirname(filePath), { recursive: true });
       await writeFile(
@@ -128,7 +128,7 @@ export class FileSystemRepository implements ContentRepository {
     } catch (error) {
       return Result.fail(
         new DocumentRepositoryError(
-          `Failed to create document "${document.getId().getValue()}"`,
+          `Failed to create document "${document.getPath()}"`,
           { cause: error }
         )
       );
@@ -140,12 +140,12 @@ export class FileSystemRepository implements ContentRepository {
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
     try {
       const filePath = idToFilePath(
-        document.getId().getValue(),
+        document.getPath(),
         document.getMetadata().index,
         this.contentDir
       );
       if (!(await fileExists(filePath))) {
-        return Result.fail(new DocumentNotFoundError(document.getId().getValue()));
+        return Result.fail(new DocumentNotFoundError(document.getPath()));
       }
       await mkdir(dirname(filePath), { recursive: true });
       await writeFile(
@@ -157,7 +157,7 @@ export class FileSystemRepository implements ContentRepository {
     } catch (error) {
       return Result.fail(
         new DocumentRepositoryError(
-          `Failed to update document "${document.getId().getValue()}"`,
+          `Failed to update document "${document.getPath()}"`,
           { cause: error }
         )
       );

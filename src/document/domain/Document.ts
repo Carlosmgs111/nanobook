@@ -29,11 +29,11 @@ proxyTargetId: null
 
 export class Document {
   private parser: DocumentParser | null;
-  /** Stable identity. The legacy path remains available through getId(). */
+  /** Stable identity. */
   private documentId: DocumentId;
   private path: DocumentPath;
   private slug: string;
-  private parentId: DocumentId | null;
+  private parentPath: DocumentPath | null;
   private position: number;
   private title: string;
   private description: string;
@@ -61,10 +61,7 @@ export class Document {
     // is completed. New documents and migrated documents pass documentId.
     this.documentId = documentId ?? DocumentId.fromLegacyPath(path.getValue());
     this.slug = path.getValue();
-    const parentPath = path.getParentPath();
-    this.parentId = parentPath
-      ? DocumentId.create(parentPath.getValue()).getValue()
-      : null;
+    this.parentPath = path.getParentPath();
     this.position = overrides.position ?? 0;
     this.title = overrides.title;
     this.description = overrides.description;
@@ -167,15 +164,16 @@ export class Document {
   }
 
   getId(): DocumentId {
-    // Compatibility accessor: id currently means public path in the
-    // navigation and repository layers. New code should use getDocumentId().
-    return DocumentId.create(this.getPath()).getValue();
+    return this.documentId;
   }
   getDocumentId(): DocumentId {
     return this.documentId;
   }
   getPath(): string {
     return this.path.getValue();
+  }
+  getDocumentPath(): DocumentPath {
+    return this.path;
   }
   getDocumentVersion(): Promise<string> {
     return this.hashDocument().then((hash) => hash.version);
@@ -199,8 +197,8 @@ export class Document {
   getPosition(): number {
     return this.position;
   }
-  getParentId(): DocumentId | null {
-    return this.parentId;
+  getParentPath(): DocumentPath | null {
+    return this.parentPath;
   }
   getMetadata(): DocumentMetadata {
     return this.metadata;
@@ -230,7 +228,7 @@ export class Document {
       title: this.title,
       description: this.description,
       position: this.position,
-      parentId: this.parentId?.getValue(),
+      parentId: this.parentPath?.getValue(),
       metadata: this.metadata,
       rawFrontmatter: this.rawFrontmatter,
       content: this.content,

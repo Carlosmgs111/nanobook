@@ -20,8 +20,7 @@ export class ProxyParser {
       if (!targetEntry) {
         console.warn(
           `Proxy reference not found: ${sourceDocument
-            .getId()
-            .getValue()} -> ${JSON.stringify(data.ref)}`
+            .getPath()} -> ${JSON.stringify(data.ref)}`
         );
         return null;
       }
@@ -31,8 +30,7 @@ export class ProxyParser {
       if (targetData.ref) {
         console.warn(
           `Chained proxy references are not supported: ${sourceDocument
-            .getId()
-            .getValue()} -> ${JSON.stringify(data.ref)}`
+            .getPath()} -> ${JSON.stringify(data.ref)}`
         );
         return null;
       }
@@ -55,8 +53,7 @@ export class ProxyParser {
       if (!proxyDocumentResult.isSuccess) {
         console.warn(
           `Failed to create proxy document ${sourceDocument
-            .getId()
-            .getValue()}: ${proxyDocumentResult.getError().message}`
+            .getPath()}: ${proxyDocumentResult.getError().message}`
         );
         return null;
       }
@@ -65,8 +62,7 @@ export class ProxyParser {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(
         `Failed to resolve proxy ${sourceDocument
-          .getId()
-          .getValue()}: ${message}`
+          .getPath()}: ${message}`
       );
       return null;
     }

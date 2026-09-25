@@ -118,7 +118,7 @@ export class GitHubRepository implements ContentRepository {
     const documents = documentsResult.getValue();
     return Result.ok(
       documents.filter(
-        (document) => document.getParentId()?.getValue() === parentId
+        (document) => document.getParentPath()?.getValue() === parentId
       )
     );
   }
@@ -130,7 +130,7 @@ export class GitHubRepository implements ContentRepository {
   > {
     try {
       const path = this.idToGitHubPath(
-        document.getId().getValue(),
+        document.getPath(),
         document.getMetadata().index
       );
       const { owner, repo, token } = this.options;
@@ -144,7 +144,7 @@ export class GitHubRepository implements ContentRepository {
       });
 
       if (sha) {
-        return Result.fail(new DocumentAlreadyExistsError(document.getId().getValue()));
+        return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
       }
 
       await updateFileContent({
@@ -162,9 +162,7 @@ export class GitHubRepository implements ContentRepository {
     } catch (error) {
       return Result.fail(
         new DocumentRepositoryError(
-          `Failed to create document "${document
-            .getId()
-            .getValue()}" on GitHub`,
+          `Failed to create document "${document.getPath()}" on GitHub`,
           { cause: error }
         )
       );
@@ -176,7 +174,7 @@ export class GitHubRepository implements ContentRepository {
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
     try {
       const path = this.idToGitHubPath(
-        document.getId().getValue(),
+        document.getPath(),
         document.getMetadata().index
       );
       const { owner, repo, token } = this.options;
@@ -190,7 +188,7 @@ export class GitHubRepository implements ContentRepository {
       });
 
       if (!sha) {
-        return Result.fail(new DocumentNotFoundError(document.getId().getValue()));
+        return Result.fail(new DocumentNotFoundError(document.getPath()));
       }
 
       await updateFileContent({
@@ -209,9 +207,7 @@ export class GitHubRepository implements ContentRepository {
     } catch (error) {
       return Result.fail(
         new DocumentRepositoryError(
-          `Failed to update document "${document
-            .getId()
-            .getValue()}" on GitHub`,
+          `Failed to update document "${document.getPath()}" on GitHub`,
           { cause: error }
         )
       );
@@ -261,17 +257,15 @@ export class GitHubRepository implements ContentRepository {
       return;
     }
 
-    const id = document.getId().getValue();
+    const id = document.getPath();
     const cachedIndex = cached.documents.findIndex(
-      (cachedDocument) => cachedDocument.getId().getValue() === id
+      (cachedDocument) => cachedDocument.getPath() === id
     );
     if (cachedIndex === -1) {
       return;
     }
 
-    const sourceId = document.getMetadata().index && id !== "index"
-      ? `${id}/index`
-      : id;
+    const sourceId = id;
     const documentResult = createDocumentFromRaw(
       sourceId,
       document.getRawFrontmatter() + document.getContent(),
