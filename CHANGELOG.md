@@ -53,6 +53,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- `GitHubRepository` normaliza su configuración en un único objeto, comparte la
+  lógica de búsqueda y escritura entre operaciones CRUD y elimina duplicación
+  en el acceso a GitHub sin alterar el contrato de `ContentRepository`.
 - `GitHubRepository.update()` actualiza la entrada afectada de la caché de
   documentos después de que GitHub confirma el `PUT`, conservando el parser y
   el TTL existente en vez de invalidar todo el catálogo.
