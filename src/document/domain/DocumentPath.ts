@@ -53,7 +53,7 @@ export class DocumentPath {
     return result.isSuccess ? result.getValue() : null;
   }
 
-  resolveReference(reference: string): DocumentPath {
+  resolveReference(reference: string): DocumentPath | null {
     const ref = reference.replace(/\.md$/, "").replace(/\/index$/, "");
     const sourceSegments =
       this.getValue() === "index"
@@ -69,7 +69,8 @@ export class DocumentPath {
       else targetSegments.push(segment);
     }
 
-    return DocumentPath.create(targetSegments.join("/") || "index").getValue();
+    const result = DocumentPath.create(targetSegments.join("/") || "index");
+    return result.isSuccess ? result.getValue() : null;
   }
 
   extractInternalLinkTargets(content: string): string[] {
@@ -82,7 +83,7 @@ export class DocumentPath {
       }
       const target = href.startsWith("/")
         ? href.replace(/^\//, "").replace(/\.md$/, "")
-        : this.resolveReference(href).getValue();
+        : this.resolveReference(href)?.getValue();
       if (target && target !== this.getValue()) targets.add(target);
     }
     return Array.from(targets);

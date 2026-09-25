@@ -18,4 +18,11 @@ describe("DocumentPath", () => {
     expect(result.getValue().normalized()).toBe("guides");
     expect(result.getValue().getParentPath()?.getValue()).toBe("index");
   });
+
+  it("ignores references that cannot be represented as document paths", () => {
+    const source = DocumentPath.create("guides/cache").getValue();
+
+    expect(source.resolveReference("./invalid path")).toBeNull();
+    expect(source.extractInternalLinkTargets("[bad](./invalid%20path)")).toEqual([]);
+  });
 });
