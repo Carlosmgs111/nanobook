@@ -1,66 +1,30 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { InitializeEditor } from "../InitializeEditor";
-import { StageDocument } from "../StageDocument";
-import { ClearEditionStorage } from "../ClearEditionStorage";
 import { createDocumentStorage, buildSerializedEntry } from "./factories";
 import { Result } from "../../../shared/domain/Result";
 
 describe("InitializeEditor", () => {
-  it("stages the base document when no staged document exists", () => {
+  it("stages the base document when no staged version exists", () => {
     const storage = createDocumentStorage();
-    const stageDocument = new StageDocument(storage);
-    const clearEditionStorage = new ClearEditionStorage(storage);
-    const useCase = new InitializeEditor(
-      storage,
-      stageDocument,
-      clearEditionStorage
-    );
-
     const base = buildSerializedEntry();
-    const result = useCase.execute(base);
+
+    const result = new InitializeEditor(storage).execute(base);
 
     expect(result.isSuccess).toBe(true);
+    expect(result.getValue()).toEqual(base);
     expect(storage.saveStagedDocument).toHaveBeenCalledWith(base);
   });
 
-  it("clears storage when staged document belongs to another document", () => {
-    const other = buildSerializedEntry({ id: "other" });
+  it("returns the existing staged version", () => {
+    const staged = buildSerializedEntry({ content: "# Draft" });
     const storage = createDocumentStorage({
-      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(other)),
+      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(staged)),
     });
-    const stageDocument = new StageDocument(storage);
-    const clearEditionStorage = new ClearEditionStorage(storage);
-    const useCase = new InitializeEditor(
-      storage,
-      stageDocument,
-      clearEditionStorage
-    );
 
-    const base = buildSerializedEntry();
-    const result = useCase.execute(base);
+    const result = new InitializeEditor(storage).execute(buildSerializedEntry());
 
     expect(result.isSuccess).toBe(true);
-    expect(storage.clearAll).toHaveBeenCalled();
-    expect(storage.saveStagedDocument).not.toHaveBeenCalled();
-  });
-
-  it("does nothing when staged document matches the base document", () => {
-    const base = buildSerializedEntry();
-    const storage = createDocumentStorage({
-      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(base)),
-    });
-    const stageDocument = new StageDocument(storage);
-    const clearEditionStorage = new ClearEditionStorage(storage);
-    const useCase = new InitializeEditor(
-      storage,
-      stageDocument,
-      clearEditionStorage
-    );
-
-    const result = useCase.execute(base);
-
-    expect(result.isSuccess).toBe(true);
-    expect(storage.clearAll).not.toHaveBeenCalled();
+    expect(result.getValue()).toEqual(staged);
     expect(storage.saveStagedDocument).not.toHaveBeenCalled();
   });
 });

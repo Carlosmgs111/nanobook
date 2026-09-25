@@ -13,11 +13,18 @@ import { EditionStorageError, EditionRenderError } from "../../domain/errors";
 const document = buildSerializedEntry();
 const rendered = buildRenderedPreview();
 
+function createEventBus() {
+  return {
+    publish: vi.fn().mockResolvedValue(Result.ok()),
+    subscribe: vi.fn(),
+  };
+}
+
 describe("RenderPreview", () => {
   it("returns null when there is no staged document", async () => {
     const storage = createDocumentStorage();
     const renderer = createPreviewRenderer();
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute(document.id);
 
@@ -28,10 +35,10 @@ describe("RenderPreview", () => {
 
   it("returns null when the staged document belongs to another id", async () => {
     const storage = createDocumentStorage({
-      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(document)),
+      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(null)),
     });
     const renderer = createPreviewRenderer();
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute("other");
 
@@ -45,13 +52,13 @@ describe("RenderPreview", () => {
       loadStagedDocument: vi.fn().mockReturnValue(Result.ok(document)),
     });
     const renderer = createPreviewRenderer();
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute(document.id);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual(rendered);
-    expect(renderer.render).toHaveBeenCalledWith(document);
+    expect(renderer.render).toHaveBeenCalledWith(document.content);
     expect(storage.saveCachedPreview).toHaveBeenCalledWith({
       rendered,
       source: document,
@@ -65,7 +72,7 @@ describe("RenderPreview", () => {
       loadCachedPreview: vi.fn().mockReturnValue(Result.ok(cached)),
     });
     const renderer = createPreviewRenderer();
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute(document.id);
 
@@ -85,7 +92,7 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer({
       render: vi.fn().mockReturnValue(renderPromise),
     });
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const firstCall = useCase.execute(document.id);
     const secondCall = useCase.execute(document.id);
@@ -97,7 +104,7 @@ describe("RenderPreview", () => {
     expect(firstResult.isSuccess).toBe(true);
     expect(firstResult.getValue()).toEqual(rendered);
     expect(secondResult.isSuccess).toBe(true);
-    expect(secondResult.getValue()).toBeNull();
+    expect(secondResult.getValue()).toEqual(rendered);
     expect(renderer.render).toHaveBeenCalledTimes(1);
   });
 
@@ -113,13 +120,13 @@ describe("RenderPreview", () => {
         .mockReturnValueOnce(Result.ok(otherDocument)),
     });
     const renderer = createPreviewRenderer();
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute(document.id);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toBeNull();
-    expect(renderer.render).toHaveBeenCalledWith(document);
+    expect(renderer.render).toHaveBeenCalledWith(document.content);
     expect(storage.saveCachedPreview).not.toHaveBeenCalled();
   });
 
@@ -130,7 +137,7 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer({
       render: vi.fn().mockResolvedValue(Result.fail(new EditionRenderError("boom"))),
     });
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute(document.id);
 
@@ -144,7 +151,7 @@ describe("RenderPreview", () => {
       saveCachedPreview: vi.fn().mockReturnValue(Result.fail(new EditionStorageError("boom"))),
     });
     const renderer = createPreviewRenderer();
-    const useCase = new RenderPreview(storage, renderer);
+    const useCase = new RenderPreview(storage, renderer, createEventBus());
 
     const result = await useCase.execute(document.id);
 

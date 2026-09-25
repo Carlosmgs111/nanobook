@@ -16,7 +16,10 @@ describe("RenderPreview", () => {
       saveCachedPreview: vi.fn().mockReturnValue(Result.ok()),
     };
     const renderer = { render: vi.fn().mockReturnValue(renderPromise) };
-    const eventBus = { publish: vi.fn().mockReturnValue(Result.ok()) };
+    const eventBus = {
+      publish: vi.fn().mockResolvedValue(Result.ok()),
+      subscribe: vi.fn(),
+    };
     const useCase = new RenderPreview(storage as never, renderer as never, eventBus as never);
 
     const first = useCase.execute(document.id);

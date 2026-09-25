@@ -2,7 +2,6 @@ import { vi } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import type { DocumentStorage } from "../../domain/ports/DocumentStorage";
 import type { PreviewRenderer } from "../../domain/ports/PreviewRenderer";
-import type { PageWarmingService } from "../../domain/ports/PageWarmingService";
 import type { SerializedEntry, RenderedPreview, CachedPreview } from "../../domain/model/StagedDocument";
 
 export function createDocumentStorage(
@@ -28,15 +27,6 @@ export function createPreviewRenderer(
 ): PreviewRenderer {
   return {
     render: vi.fn().mockResolvedValue(Result.ok({ Content: "<h1>Preview</h1>" })),
-    ...overrides,
-  };
-}
-
-export function createPageWarmingService(
-  overrides: Partial<PageWarmingService> = {}
-): PageWarmingService {
-  return {
-    warm: vi.fn().mockResolvedValue(Result.ok()),
     ...overrides,
   };
 }
