@@ -54,7 +54,10 @@ export class DocumentPath {
   }
 
   resolveReference(reference: string): DocumentPath | null {
-    const ref = reference.replace(/\.md$/, "").replace(/\/index$/, "");
+    const ref = reference.split(/[?#]/, 1)[0]
+      .replace(/\.md$/, "")
+      .replace(/\/index$/, "");
+    if (!ref) return null;
     const sourceSegments =
       this.getValue() === "index"
         ? []
@@ -82,9 +85,15 @@ export class DocumentPath {
         continue;
       }
       const target = href.startsWith("/")
-        ? href.replace(/^\//, "").replace(/\.md$/, "")
+        ? href.split(/[?#]/, 1)[0].replace(/^\//, "").replace(/\.md$/, "")
         : this.resolveReference(href)?.getValue();
-      if (target && target !== this.getValue()) targets.add(target);
+      const targetResult = target ? DocumentPath.create(target) : null;
+      const normalizedTarget = targetResult?.isSuccess
+        ? targetResult.getValue().getValue()
+        : null;
+      if (normalizedTarget && normalizedTarget !== this.getValue()) {
+        targets.add(normalizedTarget);
+      }
     }
     return Array.from(targets);
   }

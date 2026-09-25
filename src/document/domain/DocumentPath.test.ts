@@ -25,4 +25,21 @@ describe("DocumentPath", () => {
     expect(source.resolveReference("./invalid path")).toBeNull();
     expect(source.extractInternalLinkTargets("[bad](./invalid%20path)")).toEqual([]);
   });
+
+  it("resolves the document path while ignoring anchors and query strings", () => {
+    const source = DocumentPath.create("guides/cache").getValue();
+
+    expect(source.resolveReference("../architecture#overview")?.getValue()).toBe(
+      "architecture"
+    );
+    expect(source.resolveReference("../architecture?preview=true")?.getValue()).toBe(
+      "architecture"
+    );
+    expect(source.resolveReference("#local-section")).toBeNull();
+    expect(
+      source.extractInternalLinkTargets(
+        "[doc](../architecture#overview) [same](#local-section)"
+      )
+    ).toEqual(["architecture"]);
+  });
 });
