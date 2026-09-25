@@ -4,17 +4,17 @@ import type { CachedPreview } from "../model/StagedDocument";
 import type { EditionStorageError } from "../errors";
 
 export interface DocumentStorage {
-  loadStagedDocument(): Result<EditionStorageError, SerializedEntry | null>;
+  loadStagedDocument(documentId: string): Result<EditionStorageError, SerializedEntry | null>;
   saveStagedDocument(document: SerializedEntry): Result<EditionStorageError, void>;
-  clearStagedDocument(): Result<EditionStorageError, void>;
+  clearStagedDocument(documentId: string): Result<EditionStorageError, void>;
 
-  loadCachedPreview(): Result<EditionStorageError, CachedPreview | null>;
+  loadCachedPreview(documentId: string): Result<EditionStorageError, CachedPreview | null>;
   saveCachedPreview(cached: CachedPreview): Result<EditionStorageError, void>;
-  clearCachedPreview(): Result<EditionStorageError, void>;
+  clearCachedPreview(documentId: string): Result<EditionStorageError, void>;
 
-  loadConfirmedDocument(): Result<EditionStorageError, SerializedEntry | null>;
+  loadConfirmedDocument(documentId: string): Result<EditionStorageError, SerializedEntry | null>;
   saveConfirmedDocument(document: SerializedEntry): Result<EditionStorageError, void>;
-  clearConfirmedDocument(): Result<EditionStorageError, void>;
+  clearConfirmedDocument(documentId: string): Result<EditionStorageError, void>;
 
-  clearAll(): Result<EditionStorageError, void>;
+  clearAll(documentId?: string): Result<EditionStorageError, void>;
 }

@@ -8,6 +8,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Separación inicial en el dominio de documentos entre identidad estable (`documentId`), ubicación mutable (`path`) y versión del estado (`version`), documentada en `src/content/nanobook-project/arquitectura/identidad-ruta-version-documento.md`.
+- Nuevo value object `DocumentPath` para normalizar rutas, detectar índices y resolver referencias sin usar la identidad de la entidad.
+- El storage de edición ahora usa claves por `documentId` para staged, preview y confirmed; los renders concurrentes se coordinan por `documentId` y `version`.
+- Los repositorios de contenido distinguen `getById()` (identidad estable) de `getByPath()` (ubicación pública), manteniendo compatibilidad temporal para documentos legacy.
 - La página pública reemplaza su cuerpo por el HTML renderizado por `edition`
   cuando este coincide con la versión confirmada tras guardar, sin consultar el
   backend.

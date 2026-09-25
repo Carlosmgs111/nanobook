@@ -25,6 +25,9 @@ export interface ContentRepository {
   getById(
     id: string
   ): Promise<Result<ContentRepositoryListError, Document | null>>;
+  getByPath?(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>>;
   listChildren(
     parentId: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>>;

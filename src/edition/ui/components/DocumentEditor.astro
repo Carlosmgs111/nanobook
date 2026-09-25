@@ -19,12 +19,12 @@ const initialContent = entry.rawFrontmatter + entry.content;
   <EditorToolbar
     previewHref={previewHref}
     viewHref={viewHref}
-    documentId={entry.id}
+    documentId={entry.documentId}
   >
     <EditorStatus slot="status" />
   </EditorToolbar>
   <div
-    data-document-id={entry.id}
+    data-document-id={entry.documentId}
     data-document={JSON.stringify(serializedEntry)}
     data-initial-content={initialContent}
     class="editor-container"
@@ -53,7 +53,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
         console.error(result.getError());
         return;
       }
-      edition.renderPreview.execute(result.getValue().id);
+      edition.renderPreview.execute(result.getValue().documentId);
     }
   }, 1000);
 

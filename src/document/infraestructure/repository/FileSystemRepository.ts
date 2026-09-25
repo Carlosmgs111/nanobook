@@ -77,7 +77,17 @@ export class FileSystemRepository implements ContentRepository {
     }
     const documents = documentsResult.getValue();
     return Result.ok(
-      documents.find((document) => document.getId().getValue() === id) ?? null
+      documents.find((document) => document.getDocumentId().getValue() === id) ?? null
+    );
+  }
+
+  async getByPath(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    return Result.ok(
+      documentsResult.getValue().find((document) => document.getPath() === path) ?? null
     );
   }
 

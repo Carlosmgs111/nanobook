@@ -10,9 +10,10 @@ import type { EventBus } from "../../shared/domain/bus/EventBus";
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
 
 export class RenderPreview {
-  private activeRender: Promise<
-    Result<RenderPreviewError, RenderedPreview | null>
-  > | null = null;
+  private activeRenders = new Map<
+    string,
+    Promise<Result<RenderPreviewError, RenderedPreview | null>>
+  >();
 
   constructor(
     private storage: DocumentStorage,
@@ -23,30 +24,31 @@ export class RenderPreview {
   async execute(
     documentId: string
   ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
-    if (this.activeRender) return this.activeRender;
+    const stagedResult = this.storage.loadStagedDocument(documentId);
+    if (!stagedResult.isSuccess) return Result.fail(stagedResult.getError());
+    const staged = stagedResult.getValue();
+    if (!staged) return Result.ok(null);
 
-    const render = this.renderPipeline(documentId);
-    this.activeRender = render;
+    const renderKey = `${documentId}:${staged.version ?? "legacy"}`;
+    const activeRender = this.activeRenders.get(renderKey);
+    if (activeRender) return activeRender;
+
+    const render = this.renderPipeline(documentId, staged);
+    this.activeRenders.set(renderKey, render);
 
     try {
       return await render;
     } finally {
-      if (this.activeRender === render) this.activeRender = null;
+      if (this.activeRenders.get(renderKey) === render) {
+        this.activeRenders.delete(renderKey);
+      }
     }
   }
 
   private async renderPipeline(
-    documentId: string
+    documentId: string,
+    staged: SerializedEntry
   ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
-    const stagedResult = this.storage.loadStagedDocument();
-    if (!stagedResult.isSuccess) {
-      return Result.fail(stagedResult.getError());
-    }
-    const staged = stagedResult.getValue();
-    if (!staged || staged.id !== documentId) {
-      return Result.ok(null);
-    }
-
     const cachedResult = this.loadCachedPreview(staged);
     if (!cachedResult.isSuccess) {
       return Result.fail(cachedResult.getError());
@@ -60,7 +62,7 @@ export class RenderPreview {
     }
     const rendered = renderResult.getValue();
 
-    const currentStagedResult = this.storage.loadStagedDocument();
+    const currentStagedResult = this.storage.loadStagedDocument(documentId);
     if (!currentStagedResult.isSuccess) {
       return Result.fail(currentStagedResult.getError());
     }
@@ -84,7 +86,7 @@ export class RenderPreview {
   private loadCachedPreview(
     document: SerializedEntry
   ): Result<EditionStorageError, RenderedPreview | null> {
-    const cachedResult = this.storage.loadCachedPreview();
+    const cachedResult = this.storage.loadCachedPreview(document.documentId ?? document.id);
     if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
 
     const cached = cachedResult.getValue();

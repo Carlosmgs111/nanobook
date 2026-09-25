@@ -1,0 +1,73 @@
+import { Result } from "../../shared/domain/Result";
+import { InvalidDocumentIdError } from "./errors";
+
+const ALLOWED_PATH_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
+
+/**
+ * Ubicación mutable de un documento dentro del árbol de contenido.
+ *
+ * No representa la identidad del documento. Puede cambiar cuando el
+ * documento se mueve o se renombra.
+ */
+export class DocumentPath {
+  private constructor(private readonly value: string) {}
+
+  static create(path: string): Result<InvalidDocumentIdError, DocumentPath> {
+    const normalized = DocumentPath.normalizeValue(path);
+    if (!normalized || !ALLOWED_PATH_PATTERN.test(normalized)) {
+      return Result.fail(new InvalidDocumentIdError(path));
+    }
+    return Result.ok(new DocumentPath(normalized));
+  }
+
+  static fromLegacyId(id: string): Result<InvalidDocumentIdError, DocumentPath> {
+    return DocumentPath.create(id);
+  }
+
+  getValue(): string {
+    return this.value;
+  }
+
+  isIndex(): boolean {
+    return this.value === "index" || this.value.endsWith("/index");
+  }
+
+  normalized(): string {
+    if (this.value === "index") return "index";
+    if (this.value.endsWith("/index")) {
+      return this.value.slice(0, -"/index".length) || "index";
+    }
+    return this.value;
+  }
+
+  getParentPath(): DocumentPath | null {
+    const normalized = this.normalized();
+    if (normalized === "index") return null;
+    const lastSlash = normalized.lastIndexOf("/");
+    const parent = lastSlash === -1 ? "index" : normalized.slice(0, lastSlash);
+    return DocumentPath.create(parent).getValue();
+  }
+
+  resolveReference(reference: string): string {
+    const ref = reference.replace(/\.md$/, "").replace(/\/index$/, "");
+    const sourceSegments =
+      this.getValue() === "index"
+        ? []
+        : this.isIndex()
+          ? this.getValue().split("/")
+          : this.getValue().split("/").slice(0, -1);
+
+    const targetSegments = [...sourceSegments];
+    for (const segment of ref.split("/").filter(Boolean)) {
+      if (segment === ".") continue;
+      if (segment === "..") targetSegments.pop();
+      else targetSegments.push(segment);
+    }
+
+    return targetSegments.join("/") || "index";
+  }
+
+  private static normalizeValue(path: string): string {
+    return path.replace(/^\/+|\/+$/g, "").replace(/\.md$/, "").toLowerCase();
+  }
+}

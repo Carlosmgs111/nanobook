@@ -34,21 +34,28 @@ export class UpdateDocument {
       return Result.fail(new InvalidDocumentIdError(documentDelta.id));
     }
 
-    const documentResult = await this.contentRepository.getById(
-      documentDelta.id
-    );
+    const documentResult = this.contentRepository.getByPath
+      ? await this.contentRepository.getByPath(documentDelta.id)
+      : await this.contentRepository.getById(documentDelta.id);
     if (!documentResult.isSuccess) {
       return Result.fail(documentResult.getError());
     }
 
-    const documentId = documentResult.getValue();
-    if (!documentId) {
+    const existingDocument = documentResult.getValue();
+    if (!existingDocument) {
       return Result.fail(new DocumentNotFoundError(documentDelta.id));
     }
 
     const { id, content, ...rest } = documentDelta;
 
-    const updatedDocumentResult = Document.create(id, rest, content);
+    const updatedDocumentResult = Document.create(
+      id,
+      rest,
+      content,
+      undefined,
+      undefined,
+      existingDocument.getDocumentId().getValue()
+    );
     if (!updatedDocumentResult.isSuccess) {
       return Result.fail(updatedDocumentResult.getError());
     }

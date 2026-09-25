@@ -7,19 +7,17 @@ export class InitializeEditor {
   constructor(private storage: DocumentStorage) {}
 
   execute(base: SerializedEntry): Result<EditionStorageError, SerializedEntry | null> {
-    const stagedResult = this.storage.loadStagedDocument();
+    const documentId = base.documentId ?? base.id;
+    const stagedResult = this.storage.loadStagedDocument(documentId);
     if (!stagedResult.isSuccess) {
       return Result.fail(stagedResult.getError());
     }
 
     const staged = stagedResult.getValue();
-    if (staged && staged.id !== base.id) {
-      this.storage.clearAll();
-    }
-
     if (!staged) {
       const saveResult = this.storage.saveStagedDocument(base);
       if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
+      return Result.ok(base);
     }
 
     return Result.ok(staged);

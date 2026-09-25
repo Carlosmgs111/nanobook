@@ -30,7 +30,9 @@ const { entry, Content, childEntries } = Astro.props;
       </div>
 
       <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
-        <span>ID: {entry.id}</span>
+        <span>ID: {entry.documentId}</span>
+        <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+        <span>PATH: {entry.path}</span>
         <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
         <span class="text-sm">
           DATE: {entry.metadata.date.toISOString().slice(0, 10)}
@@ -38,7 +40,7 @@ const { entry, Content, childEntries } = Astro.props;
         <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
         <span>AUTHOR: {entry.metadata.author}</span>
       </div>
-      <div id="document-body" data-document-id={entry.id} set:html={Content} />
+      <div id="document-body" data-document-id={entry.documentId} set:html={Content} />
     </Fragment>
   )
 }

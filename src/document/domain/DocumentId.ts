@@ -5,6 +5,13 @@ const ALLOWED_ID_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
 export class DocumentId {
+  static generate(): DocumentId {
+    return new DocumentId(crypto.randomUUID());
+  }
+  /** Creates a legacy identity from a path during the migration period. */
+  static fromLegacyPath(path: string): DocumentId {
+    return new DocumentId(`legacy:${path.toLowerCase()}`);
+  }
   static validateNotEmpty(id: string): boolean {
     return !!id;
   }
@@ -24,7 +31,7 @@ export class DocumentId {
   }
 
   static validateAllowedCharacters(id: string): boolean {
-    return ALLOWED_ID_PATTERN.test(id);
+    return id.startsWith("legacy:") || ALLOWED_ID_PATTERN.test(id);
   }
 
   static validate(id: string): InvalidDocumentIdError | null {

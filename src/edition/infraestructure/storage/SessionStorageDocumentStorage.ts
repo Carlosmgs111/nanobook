@@ -3,9 +3,15 @@ import type { DocumentStorage } from "../../domain/ports/DocumentStorage";
 import type { SerializedEntry, CachedPreview } from "../../domain/model/StagedDocument";
 import { EditionStorageError } from "../../domain/errors";
 
-const STAGED_KEY = "stagedDocument";
-const CACHED_PREVIEW_KEY = "cachedPreview";
-const CONFIRMED_DOCUMENT_KEY = "confirmedDocument";
+const KEY_PREFIX = "nanobook:edition";
+
+function key(kind: "staged" | "preview" | "confirmed", documentId: string): string {
+  return `${KEY_PREFIX}:${encodeURIComponent(documentId)}:${kind}`;
+}
+
+function documentIdOf(value: { documentId?: string; id: string }): string {
+  return value.documentId ?? value.id;
+}
 
 function read<T>(storage: Storage, key: string): Result<EditionStorageError, T | null> {
   try {
@@ -44,47 +50,48 @@ function remove(storage: Storage, key: string): Result<EditionStorageError, void
 export class SessionStorageDocumentStorage implements DocumentStorage {
   constructor(private storage: Storage = globalThis.sessionStorage) {}
 
-  loadStagedDocument(): Result<EditionStorageError, SerializedEntry | null> {
-    return read<SerializedEntry>(this.storage, STAGED_KEY);
+  loadStagedDocument(documentId: string): Result<EditionStorageError, SerializedEntry | null> {
+    return read<SerializedEntry>(this.storage, key("staged", documentId));
   }
 
   saveStagedDocument(document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, STAGED_KEY, document);
+    return write(this.storage, key("staged", documentIdOf(document)), document);
   }
 
-  clearStagedDocument(): Result<EditionStorageError, void> {
-    return remove(this.storage, STAGED_KEY);
+  clearStagedDocument(documentId: string): Result<EditionStorageError, void> {
+    return remove(this.storage, key("staged", documentId));
   }
 
-  loadCachedPreview(): Result<EditionStorageError, CachedPreview | null> {
-    return read<CachedPreview>(this.storage, CACHED_PREVIEW_KEY);
+  loadCachedPreview(documentId: string): Result<EditionStorageError, CachedPreview | null> {
+    return read<CachedPreview>(this.storage, key("preview", documentId));
   }
 
   saveCachedPreview(cached: CachedPreview): Result<EditionStorageError, void> {
-    return write(this.storage, CACHED_PREVIEW_KEY, cached);
+    return write(this.storage, key("preview", documentIdOf(cached.source)), cached);
   }
 
-  clearCachedPreview(): Result<EditionStorageError, void> {
-    return remove(this.storage, CACHED_PREVIEW_KEY);
+  clearCachedPreview(documentId: string): Result<EditionStorageError, void> {
+    return remove(this.storage, key("preview", documentId));
   }
 
-  loadConfirmedDocument(): Result<EditionStorageError, SerializedEntry | null> {
-    return read<SerializedEntry>(this.storage, CONFIRMED_DOCUMENT_KEY);
+  loadConfirmedDocument(documentId: string): Result<EditionStorageError, SerializedEntry | null> {
+    return read<SerializedEntry>(this.storage, key("confirmed", documentId));
   }
 
   saveConfirmedDocument(document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, CONFIRMED_DOCUMENT_KEY, document);
+    return write(this.storage, key("confirmed", documentIdOf(document)), document);
   }
 
-  clearConfirmedDocument(): Result<EditionStorageError, void> {
-    return remove(this.storage, CONFIRMED_DOCUMENT_KEY);
+  clearConfirmedDocument(documentId: string): Result<EditionStorageError, void> {
+    return remove(this.storage, key("confirmed", documentId));
   }
 
-  clearAll(): Result<EditionStorageError, void> {
+  clearAll(documentId?: string): Result<EditionStorageError, void> {
+    if (!documentId) return Result.ok();
     const results: Result<EditionStorageError, void>[] = [
-      this.clearStagedDocument(),
-      this.clearCachedPreview(),
-      this.clearConfirmedDocument(),
+      this.clearStagedDocument(documentId),
+      this.clearCachedPreview(documentId),
+      this.clearConfirmedDocument(documentId),
     ];
     for (const result of results) {
       if (!result.isSuccess) return result;

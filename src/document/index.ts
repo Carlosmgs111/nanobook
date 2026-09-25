@@ -24,6 +24,7 @@ export type { SerializedEntry } from "./application/dto/SerializedEntry";
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentId } from "./domain/DocumentId";
+export { DocumentPath } from "./domain/DocumentPath";
 
 export class DocumentModule {
   constructor(

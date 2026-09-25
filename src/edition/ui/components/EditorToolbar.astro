@@ -55,7 +55,9 @@ const { previewHref, viewHref, documentId } = Astro.props;
     saveButton.replaceWith(cleanButton);
     cleanButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      const result = await edition.saveDocument.execute();
+      const result = await edition.saveDocument.execute(
+        saveButton.dataset.documentId as string
+      );
       if (result.isSuccess) {
         prefetch(viewHref as string);
         showStatus("Guardado correctamente");

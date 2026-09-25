@@ -20,7 +20,7 @@ export class InMemoryRepository implements ContentRepository {
   private documents: Map<string, Document>;
 
   constructor(documents: Document[] = []) {
-    this.documents = new Map(documents.map((doc) => [doc.getId().getValue(), doc]));
+    this.documents = new Map(documents.map((doc) => [doc.getDocumentId().getValue(), doc]));
   }
 
   async list(): Promise<Result<ContentRepositoryListError, Document[]>> {
@@ -30,7 +30,19 @@ export class InMemoryRepository implements ContentRepository {
   async getById(
     id: string
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    return Result.ok(this.documents.get(id) ?? null);
+    return Result.ok(
+      Array.from(this.documents.values()).find(
+        (document) => document.getDocumentId().getValue() === id
+      ) ?? null
+    );
+  }
+
+  async getByPath(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    return Result.ok(
+      Array.from(this.documents.values()).find((document) => document.getPath() === path) ?? null
+    );
   }
 
   async listChildren(
@@ -46,20 +58,20 @@ export class InMemoryRepository implements ContentRepository {
   async create(
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
-    if (this.documents.has(document.getId().getValue())) {
-      return Result.fail(new DocumentAlreadyExistsError(document.getId().getValue()));
+    if (this.documents.has(document.getDocumentId().getValue())) {
+      return Result.fail(new DocumentAlreadyExistsError(document.getDocumentId().getValue()));
     }
-    this.documents.set(document.getId().getValue(), document);
+    this.documents.set(document.getDocumentId().getValue(), document);
     return Result.ok();
   }
 
   async update(
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
-    if (!this.documents.has(document.getId().getValue())) {
-      return Result.fail(new DocumentNotFoundError(document.getId().getValue()));
+    if (!this.documents.has(document.getDocumentId().getValue())) {
+      return Result.fail(new DocumentNotFoundError(document.getDocumentId().getValue()));
     }
-    this.documents.set(document.getId().getValue(), document);
+    this.documents.set(document.getDocumentId().getValue(), document);
     return Result.ok();
   }
 }

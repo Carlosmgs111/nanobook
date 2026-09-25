@@ -9,7 +9,9 @@ export class GetDocument {
   ) {}
 
   async execute(documentId: string): Promise<Document | null> {
-    const documentResult = await this.contentRepository.getById(documentId);
+    const documentResult = this.contentRepository.getByPath
+      ? await this.contentRepository.getByPath(documentId)
+      : await this.contentRepository.getById(documentId);
     if (!documentResult.isSuccess) {
       return null;
     }

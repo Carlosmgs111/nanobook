@@ -11,8 +11,10 @@ import {
 } from "./errors";
 import type { Heading } from "./Heading";
 import type { DocumentHash } from "./DocumentHash";
+import { DocumentPath } from "./DocumentPath";
 
 const NEW_DOCUMENT_TEMPLATE = `---
+id: "<%= id %>"
 title: "<%= title %>"
 description: "<%= description %>"
 date: <%= date %>
@@ -27,8 +29,9 @@ proxyTargetId: null
 
 export class Document {
   private parser: DocumentParser | null;
-
-  private id: DocumentId;
+  /** Stable identity. The legacy path remains available through getId(). */
+  private documentId: DocumentId;
+  private path: DocumentPath;
   private slug: string;
   private parentId: DocumentId | null;
   private position: number;
@@ -40,21 +43,28 @@ export class Document {
   private proxyTargetId: DocumentReference | null;
 
   private constructor(
-    id: DocumentId,
+    path: DocumentPath,
     overrides: Partial<DocumentMetadata> & {
       title: string;
       description: string;
     },
     body: string = "",
     parser: DocumentParser | null = null,
-    rawFrontmatter?: string
+    rawFrontmatter?: string,
+    documentId?: DocumentId
   ) {
     const now = new Date();
-    const isIndex = id.isIndexId();
+    const isIndex = path.isIndex();
     this.parser = parser;
-    this.id = id;
-    this.slug = id.getValue();
-    this.parentId = id.getParentId();
+    this.path = path;
+    // Legacy documents use their path until the persisted identity migration
+    // is completed. New documents and migrated documents pass documentId.
+    this.documentId = documentId ?? DocumentId.fromLegacyPath(path.getValue());
+    this.slug = path.getValue();
+    const parentPath = path.getParentPath();
+    this.parentId = parentPath
+      ? DocumentId.create(parentPath.getValue()).getValue()
+      : null;
     this.position = overrides.position ?? 0;
     this.title = overrides.title;
     this.description = overrides.description;
@@ -65,6 +75,7 @@ export class Document {
     this.metadata = Document.toDocumentMetadata(
       {
         title: overrides.title,
+        id: this.documentId.getValue(),
         description: overrides.description,
         date: overrides.date ?? now,
         author: overrides.author ?? "Nanobook",
@@ -75,11 +86,12 @@ export class Document {
         position: overrides.position ?? 0,
         ref: overrides.ref,
       },
-      id.getValue()
+      path.getValue()
     );
     this.rawFrontmatter =
       rawFrontmatter ??
       this.interpolateTemplate(NEW_DOCUMENT_TEMPLATE, {
+        id: this.documentId.getValue(),
         title: this.metadata.title,
         description: this.metadata.description,
         date: this.metadata.date.toISOString(),
@@ -89,36 +101,48 @@ export class Document {
   }
 
   static create(
-    id: string,
+    pathValue: string,
     data: DocumentMetadata,
     body: string = "",
     parser: DocumentParser | null = null,
-    rawFrontmatter?: string
+    rawFrontmatter?: string,
+    documentIdValue?: string
   ): Result<
     InvalidDocumentError | InvalidDocumentIdError | InvalidIndexDocumentError,
     Document
   > {
-    const idResult = DocumentId.create(id);
-    if (!idResult.isSuccess) {
-      return Result.fail(idResult.getError());
+    const pathResult = DocumentPath.create(pathValue);
+    if (!pathResult.isSuccess) {
+      return Result.fail(pathResult.getError());
     }
-    const documentId = idResult.getValue();
-    if (Boolean(data.index) !== documentId.isIndexId()) {
+    const path = pathResult.getValue();
+    if (Boolean(data.index) !== path.isIndex()) {
       return Result.fail(
         new InvalidIndexDocumentError(
-          documentId.getValue(),
-          documentId.isIndexId(),
+          path.getValue(),
+          path.isIndex(),
           data
         )
       );
     }
+    const documentIdResult = data.id || documentIdValue
+      ? DocumentId.create(data.id ?? documentIdValue ?? "")
+      : Result.ok(DocumentId.fromLegacyPath(path.getValue()));
+    if (!documentIdResult.isSuccess) return Result.fail(documentIdResult.getError());
     try {
       return Result.ok(
-        new Document(idResult.getValue(), data, body, parser, rawFrontmatter)
+        new Document(
+          path,
+          data,
+          body,
+          parser,
+          rawFrontmatter,
+          documentIdResult.getValue()
+        )
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return Result.fail(new InvalidDocumentError(id, message));
+      return Result.fail(new InvalidDocumentError(pathValue, message));
     }
   }
 
@@ -127,15 +151,44 @@ export class Document {
   }
 
   async hashDocument(): Promise<DocumentHash> {
+    const contentHash = await this.computeContentHash();
+    const metadataHash = await hashString(serializeMetadata(this.metadata));
+    // A path move must not create a new document version. Version identifies
+    // the document state, while path identifies its current location.
+    const version = await hashString(`${contentHash}\n${metadataHash}`);
     return {
-      id: this.id.getValue(),
-      contentHash: await this.computeContentHash(),
-      metadataHash: await hashString(serializeMetadata(this.metadata)),
+      documentId: this.getDocumentId().getValue(),
+      path: this.getPath(),
+      id: this.getPath(),
+      version,
+      contentHash,
+      metadataHash,
     };
   }
 
   getId(): DocumentId {
-    return this.id;
+    // Compatibility accessor: id currently means public path in the
+    // navigation and repository layers. New code should use getDocumentId().
+    return DocumentId.create(this.getPath()).getValue();
+  }
+  getDocumentId(): DocumentId {
+    return this.documentId;
+  }
+  getPath(): string {
+    return this.path.getValue();
+  }
+  getDocumentVersion(): Promise<string> {
+    return this.hashDocument().then((hash) => hash.version);
+  }
+  moveTo(pathValue: string): Result<InvalidDocumentError | InvalidDocumentIdError | InvalidIndexDocumentError, Document> {
+    return Document.create(
+      pathValue,
+      this.metadata,
+      this.content,
+      this.parser,
+      undefined,
+      this.getDocumentId().getValue()
+    );
   }
   getTitle(): string {
     return this.title;
@@ -170,7 +223,10 @@ export class Document {
   }
   parse(): Entry {
     return {
-      id: this.id.getValue(),
+      documentId: this.getDocumentId().getValue(),
+      path: this.getPath(),
+      version: "",
+      id: this.getPath(),
       title: this.title,
       description: this.description,
       position: this.position,
@@ -209,6 +265,7 @@ export class Document {
     documentId: string
   ): DocumentMetadata {
     return {
+      id: data.id,
       title: this.assertRequiredField(
         data.title as string,
         "title",

@@ -14,8 +14,8 @@ export class SaveDocument {
     private renderPreview: RenderPreview
   ) {}
 
-  async execute(): Promise<Result<SaveDocumentError, SerializedEntry>> {
-    const stageResult = this.storage.loadStagedDocument();
+  async execute(documentId: string): Promise<Result<SaveDocumentError, SerializedEntry>> {
+    const stageResult = this.storage.loadStagedDocument(documentId);
     if (!stageResult.isSuccess) {
       return Result.fail(stageResult.getError());
     }
@@ -32,13 +32,13 @@ export class SaveDocument {
     }
 
     try {
-      await this.writer.updateDocument(staged.id, staged);
+      await this.writer.updateDocument(staged.path ?? staged.id, staged);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return Result.fail(new Error(message));
     }
 
-    const currentStageResult = this.storage.loadStagedDocument();
+    const currentStageResult = this.storage.loadStagedDocument(documentId);
     if (!currentStageResult.isSuccess) return Result.fail(currentStageResult.getError());
     if (!sameDocument(currentStageResult.getValue(), staged)) return Result.ok(staged);
 
