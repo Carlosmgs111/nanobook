@@ -13,6 +13,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - La creación de documentos propaga eventos con la identidad estable del documento creado y de su padre.
 - `getByPath()` pasa a ser una operación obligatoria del repositorio; creación, actualización y referencias ya no usan `getById()` como fallback para localizar rutas.
 - Las referencias internas separan la ruta de los fragmentos (`#ancla`) y consultas antes de construir dependencias, conservando la navegación con anclas.
+- La migración de identidades también reemplaza automáticamente IDs persistidos con prefijo `legacy:` y mantiene los UUID ya existentes.
 - Separación inicial en el dominio de documentos entre identidad estable (`documentId`), ubicación mutable (`path`) y versión del estado (`version`), documentada en `src/content/nanobook-project/arquitectura/identidad-ruta-version-documento.md`.
 - Nuevo value object `DocumentPath` para normalizar rutas, detectar índices y resolver referencias sin usar la identidad de la entidad.
 - El storage de edición ahora usa claves por `documentId` para staged, preview y confirmed; los renders concurrentes se coordinan por `documentId` y `version`.

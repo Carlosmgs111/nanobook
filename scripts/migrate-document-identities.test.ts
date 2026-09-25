@@ -23,4 +23,15 @@ describe("ensureDocumentIdentity", () => {
       changed: false,
     });
   });
+
+  it("replaces a legacy path identity with a generated stable identity", () => {
+    const source = '---\nid: "legacy:guides/cache"\ntitle: Test\n---\nBody';
+    const result = ensureDocumentIdentity(source, () => "doc-migrated");
+
+    expect(result).toEqual({
+      content: '---\nid: "doc-migrated"\ntitle: Test\n---\nBody',
+      id: "doc-migrated",
+      changed: true,
+    });
+  });
 });

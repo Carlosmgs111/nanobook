@@ -4,6 +4,7 @@ import { join, relative, resolve } from "node:path";
 
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const ID_PATTERN = /^id:\s*(?:"([^"]+)"|'([^']+)'|([^\s#]+))\s*$/m;
+const LEGACY_ID_PREFIX = "legacy:";
 
 export interface IdentityMigrationResult {
   content: string;
@@ -24,6 +25,20 @@ export function ensureDocumentIdentity(
   if (existing) {
     const id = existing[1] ?? existing[2] ?? existing[3];
     if (!id) throw new Error("Document contains an empty id");
+    if (id.startsWith(LEGACY_ID_PREFIX)) {
+      const migratedId = idFactory();
+      const idLine = match[0].match(/^id:.*$/m)?.[0];
+      if (!idLine) throw new Error("Document contains an invalid id field");
+      const updatedFrontmatter = match[0].replace(
+        idLine,
+        `id: "${migratedId}"`
+      );
+      return {
+        content: `${updatedFrontmatter}${content.slice(match[0].length)}`,
+        id: migratedId,
+        changed: true,
+      };
+    }
     return { content, id, changed: false };
   }
 
