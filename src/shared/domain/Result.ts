@@ -1,41 +1,45 @@
+type ResultState<E, T> =
+  | { readonly isSuccess: true; readonly value: T }
+  | { readonly isSuccess: false; readonly error: E };
+
 export class Result<E, T> {
-  public isSuccess: boolean;
-  private error: E;
-  private value: T;
+  private constructor(private readonly state: ResultState<E, T>) {}
 
-  private constructor(
-    isSuccess: boolean,
-    error: E = undefined as E,
-    value: T = undefined as T
-  ) {
-    this.value = value;
-    this.error = error;
-    this.isSuccess = isSuccess;
+  public get isSuccess(): boolean {
+    return this.state.isSuccess;
   }
 
-  public static ok<F>(value: F = undefined as F): Result<never, F> {
-    return new Result<never, F>(true, undefined, value);
+  public static ok<T>(value: T): Result<never, T>;
+  public static ok(): Result<never, void>;
+  public static ok<T>(value?: T): Result<never, T | void> {
+    return new Result<never, T | void>({
+      isSuccess: true,
+      value,
+    });
   }
 
-  public static fail<F>(error: F): Result<F, never> {
-    return new Result<F, never>(false, error);
+  public static fail<E>(error: E): Result<E, never> {
+    return new Result<E, never>({
+      isSuccess: false,
+      error,
+    });
   }
 
   public getValue(): T {
-    if (!this.isSuccess) {
+    if (!this.state.isSuccess) {
       throw new Error(
         "Invalid Operation: Can't get value from a failed result"
       );
     }
-    return this.value;
+    return this.state.value;
   }
 
   public getError(): E {
-    if (this.isSuccess) {
+    if (this.state.isSuccess) {
       throw new Error(
         "Invalid Operation: Can't get error from a success result"
       );
     }
-    return this.error;
+    return this.state.error;
   }
 }
