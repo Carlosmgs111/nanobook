@@ -8,7 +8,7 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
 
 <div class="index-card-wrapper" data-folder={String(page.metadata.index)}>
   <a
-    href={`/${page.id}`}
+    href={`/${page.path}`}
     class={`index-card ${page.metadata.index ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
     data-title={page.metadata.title}
     data-description={page.metadata.description}
@@ -27,8 +27,8 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
       </div>
     </div>
 
-    <span class="index-card-path" title={`/${page.id + (page.metadata.index ? "/" : ".md")}`}>
-      /{page.id + (page.metadata.index ? "/" : ".md")}
+    <span class="index-card-path" title={`/${page.path + (page.metadata.index ? "/" : ".md")}`}>
+      /{page.path + (page.metadata.index ? "/" : ".md")}
     </span>
   </a>
 </div>

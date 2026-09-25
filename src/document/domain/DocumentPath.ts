@@ -10,14 +10,21 @@ const ALLOWED_PATH_PATTERN = /^(?:[\p{L}\p{N}_-]+\/)*[\p{L}\p{N}_-]+$/u;
  * documento se mueve o se renombra.
  */
 export class DocumentPath {
-  private constructor(private readonly value: string) {}
+  private constructor(
+    private readonly value: string,
+    private readonly indexPath: boolean
+  ) {}
 
   static create(path: string): Result<InvalidDocumentIdError, DocumentPath> {
     const normalized = DocumentPath.normalizeValue(path);
     if (!normalized || !ALLOWED_PATH_PATTERN.test(normalized)) {
       return Result.fail(new InvalidDocumentIdError(path));
     }
-    return Result.ok(new DocumentPath(normalized));
+    const indexPath = normalized === "index" || normalized.endsWith("/index");
+    const canonical = indexPath && normalized !== "index"
+      ? normalized.slice(0, -"/index".length)
+      : normalized;
+    return Result.ok(new DocumentPath(canonical || "index", indexPath));
   }
 
   static fromLegacyId(id: string): Result<InvalidDocumentIdError, DocumentPath> {
@@ -29,14 +36,10 @@ export class DocumentPath {
   }
 
   isIndex(): boolean {
-    return this.value === "index" || this.value.endsWith("/index");
+    return this.indexPath;
   }
 
   normalized(): string {
-    if (this.value === "index") return "index";
-    if (this.value.endsWith("/index")) {
-      return this.value.slice(0, -"/index".length) || "index";
-    }
     return this.value;
   }
 

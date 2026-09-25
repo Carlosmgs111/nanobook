@@ -12,6 +12,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Nuevo value object `DocumentPath` para normalizar rutas, detectar índices y resolver referencias sin usar la identidad de la entidad.
 - El storage de edición ahora usa claves por `documentId` para staged, preview y confirmed; los renders concurrentes se coordinan por `documentId` y `version`.
 - Los repositorios de contenido distinguen `getById()` (identidad estable) de `getByPath()` (ubicación pública), manteniendo compatibilidad temporal para documentos legacy.
+- El grafo de navegación y sus aristas (`parent-child`, `sibling-order`, `proxy-target`, `internal-link`) ahora se indexan por `documentId`; los enlaces y breadcrumbs continúan usando `path` para las URLs.
+- La caché de páginas publicadas y los eventos de creación/actualización usan la identidad estable del documento.
 - La página pública reemplaza su cuerpo por el HTML renderizado por `edition`
   cuando este coincide con la versión confirmada tras guardar, sin consultar el
   backend.

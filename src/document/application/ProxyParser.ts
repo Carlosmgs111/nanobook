@@ -45,9 +45,12 @@ export class ProxyParser {
         ref: undefined,
       };
       const proxyDocumentResult = Document.create(
-        sourceDocument.getId().getValue(),
+        sourceDocument.getPath(),
         mergedData,
-        targetEntry.body
+        targetEntry.body,
+        undefined,
+        undefined,
+        sourceDocument.getDocumentId().getValue()
       );
       if (!proxyDocumentResult.isSuccess) {
         console.warn(

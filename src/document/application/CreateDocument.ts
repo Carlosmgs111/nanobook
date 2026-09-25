@@ -96,7 +96,7 @@ export class CreateDocument {
       return Result.fail(createResult.getError());
     }
 
-    const documentId = document.getId().getValue();
+    const documentId = document.getDocumentId().getValue();
 
     this.eventBus.publish(new DocumentCreated(documentId));
 

@@ -9,12 +9,13 @@ import type {
 
 function toNavigationNode(document: Document): NavigationNode {
   return {
-    id: document.getId().getValue(),
+    id: document.getDocumentId().getValue(),
+    path: document.getPath(),
     slug: document.getSlug(),
     title: document.getTitle(),
     description: document.getDescription(),
     isIndex: document.getMetadata().index,
-    parentId: document.getParentId()?.getValue(),
+    parentId: undefined,
     position: document.getPosition(),
     metadata: document.getMetadata(),
     children: [],
@@ -31,6 +32,7 @@ function sortNodes(nodes: NavigationNode[]): NavigationNode[] {
 
 export class DocumentsGraph {
   private nodeMap: Map<string, NavigationNode>;
+  private pathMap: Map<string, NavigationNode>;
   private rootNodes: NavigationNode[];
   private dependencies: Map<string, DependencyEdge[]>;
   private dependents: Map<string, Set<string>>;
@@ -38,9 +40,18 @@ export class DocumentsGraph {
 
   constructor(documents: Document[]) {
     const map = new Map<string, NavigationNode>();
+    const pathMap = new Map<string, NavigationNode>();
 
     for (const document of documents) {
-      map.set(document.getId().getValue(), toNavigationNode(document));
+      const node = toNavigationNode(document);
+      map.set(node.id, node);
+      pathMap.set(node.path, node);
+    }
+
+    for (const document of documents) {
+      const node = map.get(document.getDocumentId().getValue())!;
+      const parentPath = document.getParentId()?.getValue();
+      node.parentId = parentPath ? pathMap.get(parentPath)?.id : undefined;
     }
 
     const roots: NavigationNode[] = [];
@@ -64,6 +75,7 @@ export class DocumentsGraph {
     }
 
     this.nodeMap = map;
+    this.pathMap = pathMap;
     this.rootNodes = sortNodes(roots);
     this.dependencies = new Map();
     this.dependents = new Map();
@@ -71,9 +83,10 @@ export class DocumentsGraph {
 
 
     for (const document of documents) {
-      this.dependencies.set(document.getId().getValue(), []);
-      this.dependents.set(document.getId().getValue(), new Set());
-      this.incoming.set(document.getId().getValue(), []);
+      const id = document.getDocumentId().getValue();
+      this.dependencies.set(id, []);
+      this.dependents.set(id, new Set());
+      this.incoming.set(id, []);
     }
 
     this.buildEdges(documents);
@@ -95,7 +108,8 @@ export class DocumentsGraph {
     const documentsByParent = new Map<string | undefined, Document[]>();
 
     for (const document of documents) {
-      const key = document.getParentId()?.getValue();
+      const parentPath = document.getParentId()?.getValue();
+      const key = parentPath ? this.pathMap.get(parentPath)?.id : undefined;
       const siblings = documentsByParent.get(key) ?? [];
       siblings.push(document);
       documentsByParent.set(key, siblings);
@@ -103,29 +117,30 @@ export class DocumentsGraph {
 
     for (const document of documents) {
       // parent-child: child -> parent
-      const parentId = document.getParentId()?.getValue();
+      const parentPath = document.getParentId()?.getValue();
+      const parentId = parentPath ? this.pathMap.get(parentPath)?.id : undefined;
       if (parentId && this.nodeMap.has(parentId)) {
-        this.addEdge(document.getId().getValue(), parentId, "parent-child");
+        this.addEdge(document.getDocumentId().getValue(), parentId, "parent-child");
       }
 
       // parent-child: parent -> child
-      const children = documentsByParent.get(document.getId().getValue()) ?? [];
+      const children = documentsByParent.get(document.getDocumentId().getValue()) ?? [];
       for (const child of children) {
         this.addEdge(
-          document.getId().getValue(),
-          child.getId().getValue(),
+          document.getDocumentId().getValue(),
+          child.getDocumentId().getValue(),
           "parent-child"
         );
       }
 
       // sibling-order: cada hermano depende de los demas
       const siblings =
-        documentsByParent.get(document.getParentId()?.getValue()) ?? [];
+        documentsByParent.get(document.getDocumentId().getValue()) ?? [];
       for (const sibling of siblings) {
-        if (sibling.getId().getValue() !== document.getId().getValue()) {
+        if (sibling.getDocumentId().getValue() !== document.getDocumentId().getValue()) {
           this.addEdge(
-            document.getId().getValue(),
-            sibling.getId().getValue(),
+            document.getDocumentId().getValue(),
+            sibling.getDocumentId().getValue(),
             "sibling-order"
           );
         }
@@ -133,13 +148,13 @@ export class DocumentsGraph {
 
       // proxy-target
       const proxyTargetId = document.getProxyTargetId();
-      if (
-        proxyTargetId &&
-        this.nodeMap.has(proxyTargetId.getValue() as string)
-      ) {
+      const proxyTarget = proxyTargetId
+        ? this.pathMap.get(proxyTargetId.getValue())
+        : undefined;
+      if (proxyTarget) {
         this.addEdge(
-          document.getId().getValue(),
-          proxyTargetId.getValue() as string,
+          document.getDocumentId().getValue(),
+          proxyTarget.id,
           "proxy-target"
         );
       }
@@ -149,8 +164,9 @@ export class DocumentsGraph {
         .getId()
         .extractInternalLinkTargets(document.getContent());
       for (const targetId of linkTargets) {
-        if (this.nodeMap.has(targetId)) {
-          this.addEdge(document.getId().getValue(), targetId, "internal-link");
+        const target = this.pathMap.get(targetId);
+        if (target) {
+          this.addEdge(document.getDocumentId().getValue(), target.id, "internal-link");
         }
       }
     }
@@ -163,6 +179,10 @@ export class DocumentsGraph {
 
   getNode(id: string): NavigationNode | undefined {
     return this.nodeMap.get(id);
+  }
+
+  getNodeByPath(path: string): NavigationNode | undefined {
+    return this.pathMap.get(path);
   }
 
   getParent(id: string): NavigationNode | undefined {

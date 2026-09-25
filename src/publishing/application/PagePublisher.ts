@@ -12,15 +12,16 @@ export class PagePublisher {
 
   async publish(document: Document): Promise<RenderedDocumentPage | null> {
     const contentHash = await document.computeContentHash();
+    const documentId = document.getDocumentId().getValue();
     const renderedBody = await this.resolveRenderedBody(
       document,
-      document.getId().getValue(),
+      documentId,
       contentHash
     );
 
     const entry = document.parse();
     const rendered = {
-      pageId: document.getId().getValue(),
+      pageId: documentId,
       entry,
       renderedBody,
     };

@@ -66,7 +66,7 @@ export class UpdateDocument {
       return Result.fail(updateResult.getError());
     }
 
-    const updatedDocumentId = updatedDocument.getId().getValue();
+    const updatedDocumentId = updatedDocument.getDocumentId().getValue();
 
     this.eventBus.publish(new DocumentUpdated(updatedDocumentId));
 

@@ -20,7 +20,7 @@ interface Props {
 const { parentEntry, toggleId } = Astro.props;
 
 function parentHref(parent: ParentEntry): string {
-  return parent.id === "index" ? "/" : `/${parent.id}/`;
+  return parent.path === "index" ? "/" : `/${parent.path}/`;
 }
 ---
 

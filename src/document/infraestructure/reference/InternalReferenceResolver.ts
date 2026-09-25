@@ -5,7 +5,6 @@ import type {
   ReferenceResolverPlugin,
 } from "../../domain/reference/types";
 import type { ContentRepository } from "../../domain/ports/ContentRepository";
-import { DocumentId } from "../../domain/DocumentId";
 
 /**
  * Resolutor para referencias internas a otros documentos de la colección.
@@ -26,12 +25,9 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
     const refStr = ref.getValue() as string;
     if (refStr.startsWith("/")) return null;
     const targetId = context.sourceId.resolveDocumentReference(refStr);
-    const targetDocumentIdResult = DocumentId.create(targetId);
-    if (!targetDocumentIdResult.isSuccess) return null;
-
-    const targetDocumentResult = await this.contentRepository.getById(
-      targetDocumentIdResult.getValue().getValue()
-    );
+    const targetDocumentResult = this.contentRepository.getByPath
+      ? await this.contentRepository.getByPath(targetId)
+      : await this.contentRepository.getById(targetId);
 
     // console.log({ targetDocumentResult });
 

@@ -16,7 +16,7 @@ const { entries } = Astro.props;
     entries.map((page) => (
       <li>
         <a
-          href={`/${page.id}/`}
+          href={`/${page.path}/`}
           class="sidebar-link"
           aria-current={page.current ? "page" : undefined}
           data-tooltip={page.title}

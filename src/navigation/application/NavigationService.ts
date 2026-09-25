@@ -39,6 +39,12 @@ function matchesKind(
 export class NavigationService implements NavigationServicePort {
   constructor(private documentsGraph: DocumentsGraph) {}
 
+  private resolveGraphId(value: string): string {
+    return this.documentsGraph.getNode(value)?.id
+      ?? this.documentsGraph.getNodeByPath(value)?.id
+      ?? value;
+  }
+
   getInvalidatedIds(changes: DocumentChange[]): InvalidationResult {
     const addedIds = new Set<string>();
     const removedIds = new Set<string>();
@@ -49,33 +55,35 @@ export class NavigationService implements NavigationServicePort {
     const queue: { id: string; allowed: DependencyKind[] | "all" }[] = [];
 
     for (const change of changes) {
+      const graphId = this.resolveGraphId(change.id);
       const allowed = getAllowedKinds(change);
 
       switch (change.kind) {
         case "added":
-          addedIds.add(change.id);
-          invalidatedIds.add(change.id);
-          queue.push({ id: change.id, allowed });
+          addedIds.add(graphId);
+          invalidatedIds.add(graphId);
+          queue.push({ id: graphId, allowed });
           break;
 
         case "removed":
-          removedIds.add(change.id);
-          invalidatedIds.add(change.id);
-          queue.push({ id: change.id, allowed });
+          removedIds.add(graphId);
+          invalidatedIds.add(graphId);
+          queue.push({ id: graphId, allowed });
           break;
 
         case "modified":
-          invalidatedIds.add(change.id);
-          queue.push({ id: change.id, allowed });
+          invalidatedIds.add(graphId);
+          queue.push({ id: graphId, allowed });
           break;
 
         case "renamed":
-          invalidatedIds.add(change.id);
-          queue.push({ id: change.id, allowed });
+          invalidatedIds.add(graphId);
+          queue.push({ id: graphId, allowed });
           if (change.previousId) {
-            removedIds.add(change.previousId);
-            invalidatedIds.add(change.previousId);
-            queue.push({ id: change.previousId, allowed });
+            const previousGraphId = this.resolveGraphId(change.previousId);
+            removedIds.add(previousGraphId);
+            invalidatedIds.add(previousGraphId);
+            queue.push({ id: previousGraphId, allowed });
           }
           break;
       }
@@ -119,7 +127,7 @@ export class NavigationService implements NavigationServicePort {
       const segment = segments[i];
       path = path ? `${path}/${segment}` : segment;
 
-      const node = this.documentsGraph.getNode(path);
+      const node = this.documentsGraph.getNodeByPath(path);
       const title = node?.title ?? segment;
       const isCurrent = i === segments.length - 1;
 
@@ -135,7 +143,7 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getSidebarEntries(documentId: DocumentId): NavigationNode[] {
-    const node = this.documentsGraph.getNode(documentId.getValue());
+    const node = this.documentsGraph.getNodeByPath(documentId.getValue());
     if (!node || node.parentId === null) return [];
 
     const parent = this.documentsGraph.getNode(node.parentId as string);
@@ -143,16 +151,17 @@ export class NavigationService implements NavigationServicePort {
 
     return parent.children.map((child) => ({
       ...child,
-      current: child.id === documentId.getValue(),
+      current: child.path === documentId.getValue(),
     }));
   }
 
   getParentEntry(documentId: DocumentId): ParentEntry | null {
-    const parent = this.documentsGraph.getParent(documentId.getValue());
+    const node = this.documentsGraph.getNodeByPath(documentId.getValue());
+    const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
     if (!parent) return null;
 
     return {
-      id: parent.id,
+      id: parent.path,
       data: { title: parent.title },
     };
   }
@@ -164,11 +173,11 @@ export class NavigationService implements NavigationServicePort {
     const folderPath = getFolderPath(documentId.getValue());
     const folder =
       folderPath === ""
-        ? this.documentsGraph.getNode("index")
-        : this.documentsGraph.getNode(folderPath);
+        ? this.documentsGraph.getNodeByPath("index")
+        : this.documentsGraph.getNodeByPath(folderPath);
 
     if (!folder) return [];
 
-    return folder.children.filter((child) => child.id !== excludeId?.getValue());
+    return folder.children.filter((child) => child.path !== excludeId?.getValue());
   }
 }

@@ -2,7 +2,10 @@ import type { DocumentId } from "../../document/domain/DocumentId";
 import type { DocumentMetadata } from "../../document/domain/types";
 
 export interface NavigationNode {
+  /** Stable document identity used by graph edges and invalidation. */
   id: string;
+  /** Mutable public path used to build links. */
+  path: string;
   slug: string;
   title: string;
   description: string;
@@ -31,6 +34,8 @@ export interface DocumentsGraph {
   getRoots(): NavigationNode[];
   /** Nodo por ID, si existe. */
   getNode(id: string): NavigationNode | undefined;
+  /** Nodo por ruta pública. */
+  getNodeByPath(path: string): NavigationNode | undefined;
   /** Padre inmediato de un nodo. */
   getParent(id: string): NavigationNode | undefined;
   /** Hijos directos de un nodo. */
