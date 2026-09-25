@@ -50,16 +50,14 @@ export class Document {
     },
     body: string = "",
     parser: DocumentParser | null = null,
-    rawFrontmatter?: string,
-    documentId?: DocumentId
+    documentId: DocumentId,
+    rawFrontmatter?: string
   ) {
     const now = new Date();
     const isIndex = path.isIndex();
     this.parser = parser;
     this.path = path;
-    // Legacy documents use their path until the persisted identity migration
-    // is completed. New documents and migrated documents pass documentId.
-    this.documentId = documentId ?? DocumentId.fromLegacyPath(path.getValue());
+    this.documentId = documentId;
     this.slug = path.getValue();
     this.parentPath = path.getParentPath();
     this.position = overrides.position ?? 0;
@@ -122,9 +120,11 @@ export class Document {
         )
       );
     }
-    const documentIdResult = data.id || documentIdValue
-      ? DocumentId.create(data.id ?? documentIdValue ?? "")
-      : Result.ok(DocumentId.fromLegacyPath(path.getValue()));
+    const identityValue = data.id ?? documentIdValue;
+    if (!identityValue) {
+      return Result.fail(new InvalidDocumentIdError(path.getValue()));
+    }
+    const documentIdResult = DocumentId.create(identityValue);
     if (!documentIdResult.isSuccess) return Result.fail(documentIdResult.getError());
     try {
       return Result.ok(
@@ -133,8 +133,8 @@ export class Document {
           data,
           body,
           parser,
-          rawFrontmatter,
-          documentIdResult.getValue()
+          documentIdResult.getValue(),
+          rawFrontmatter
         )
       );
     } catch (error) {

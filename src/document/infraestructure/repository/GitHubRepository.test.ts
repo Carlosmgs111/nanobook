@@ -25,6 +25,7 @@ describe("GitHubRepository", () => {
 
   it("keeps a cached document current and parsed after GitHub confirms its update", async () => {
     const remoteDocument = `---
+id: "doc-guides-cache"
 title: "Original cache"
 description: "Initial document"
 date: 2026-09-24
@@ -75,6 +76,7 @@ index: false
     const updated = Document.create(
       "guides/cache",
       {
+        id: "doc-guides-cache",
         title: "Updated cache",
         description: "Updated document",
         date: new Date("2026-09-24T00:00:00.000Z"),
@@ -88,7 +90,7 @@ index: false
     await repository.list();
 
     const updateResult = await repository.update(updated.getValue());
-    const documentResult = await repository.getById("guides/cache");
+    const documentResult = await repository.getByPath("guides/cache");
 
     expect(updateResult.isSuccess).toBe(true);
     expect(documentResult.isSuccess).toBe(true);

@@ -53,6 +53,7 @@ export function createDocument(
   return Document.create(
     id,
     {
+      id: metadata.id ?? crypto.randomUUID(),
       title: metadata.title,
       description: metadata.description,
       date: metadata.date ?? new Date(),
