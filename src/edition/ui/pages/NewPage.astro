@@ -210,13 +210,16 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     if (!id) {
       throw new Error("ID no válida");
     }
-    await edition.createDocument.execute({
+    const result = await edition.createDocument.execute({
       id,
       ...metadata,
       index,
       content: "",
       date: new Date().toISOString(),
     });
+    if (!result.isSuccess) {
+      throw result.getError();
+    }
     return id;
   }
 

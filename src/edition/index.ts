@@ -44,13 +44,12 @@ export class EditionModule {
     const documentWriter = new HttpDocumentWriter();
     const delegatedRenderer = new DelegatedMarkdownItRenderer();
     const eventBus = new EventTargetEventBus();
-
     const renderPreview = new RenderPreview(
       storage,
       delegatedRenderer,
       eventBus
     );
-    const saveDocument = new SaveDocument(storage, documentWriter, renderPreview);
+    const saveDocument = new SaveDocument(storage, documentWriter);
     const createDocument = new CreateDocument(documentWriter);
     const handleEditorChange = new HandleEditorChange(contentParser, storage);
     const initializeEditor = new InitializeEditor(storage);

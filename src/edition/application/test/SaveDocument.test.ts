@@ -1,12 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { SaveDocument } from "../SaveDocument";
-import { RenderPreview } from "../RenderPreview";
-import { createDocumentStorage, createPreviewRenderer, buildSerializedEntry } from "./factories";
+import { createDocumentStorage, buildSerializedEntry } from "./factories";
 import { Result } from "../../../shared/domain/Result";
-
-function createEventBus() {
-  return { publish: vi.fn().mockResolvedValue(Result.ok()), subscribe: vi.fn() };
-}
+import { EditionWriterError } from "../../domain/errors";
 
 describe("SaveDocument", () => {
   it("renders, writes and confirms the staged document", async () => {
@@ -14,32 +10,38 @@ describe("SaveDocument", () => {
     const storage = createDocumentStorage({
       loadStagedDocument: vi.fn().mockReturnValue(Result.ok(staged)),
     });
-    const writer = { updateDocument: vi.fn().mockResolvedValue(undefined) };
-    const renderPreview = new RenderPreview(
-      storage,
-      createPreviewRenderer(),
-      createEventBus()
-    );
+    const writer = { updateDocument: vi.fn().mockResolvedValue(Result.ok(staged)) };
 
-    const result = await new SaveDocument(storage, writer, renderPreview).execute(
-      staged.documentId
-    );
+    const result = await new SaveDocument(storage, writer).execute(staged.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(writer.updateDocument).toHaveBeenCalledWith(staged.path ?? staged.id, staged);
     expect(storage.saveConfirmedDocument).toHaveBeenCalledWith(staged.documentId, staged);
   });
 
+  it("returns an error when the writer fails", async () => {
+    const staged = buildSerializedEntry();
+    const storage = createDocumentStorage({
+      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(staged)),
+    });
+    const writer = {
+      updateDocument: vi.fn().mockResolvedValue(
+        Result.fail(new EditionWriterError("network error"))
+      ),
+    };
+
+    const result = await new SaveDocument(storage, writer).execute(staged.documentId);
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(EditionWriterError);
+    expect(storage.saveConfirmedDocument).not.toHaveBeenCalled();
+  });
+
   it("returns an error when the staged document does not exist", async () => {
     const storage = createDocumentStorage();
     const writer = { updateDocument: vi.fn() };
-    const renderPreview = new RenderPreview(
-      storage,
-      createPreviewRenderer(),
-      createEventBus()
-    );
 
-    const result = await new SaveDocument(storage, writer, renderPreview).execute("missing");
+    const result = await new SaveDocument(storage, writer).execute("missing");
 
     expect(result.isSuccess).toBe(false);
     expect(writer.updateDocument).not.toHaveBeenCalled();

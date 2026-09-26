@@ -1,9 +1,11 @@
+import { Result } from "../../../shared/domain/Result";
 import type { DocumentWriter } from "../../application/ports/DocumentWriter";
 import type {
   SerializedEntry,
   CreateDocumentRequest,
   UpdateDocumentRequest,
 } from "../../../document";
+import { EditionWriterError } from "../../domain/errors";
 
 function toUpdateDocumentRequest(
   document: SerializedEntry
@@ -27,38 +29,50 @@ function toUpdateDocumentRequest(
 export class HttpDocumentWriter implements DocumentWriter {
   async createDocument(
     document: CreateDocumentRequest
-  ): Promise<SerializedEntry> {
-    const response = await fetch("/api/documents", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(document),
-    });
+  ): Promise<Result<EditionWriterError, SerializedEntry>> {
+    try {
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(document),
+      });
 
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}));
-      throw new Error(payload.error || "Error al crear el documento");
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        return Result.fail(
+          new EditionWriterError(payload.error || "Error al crear el documento")
+        );
+      }
+
+      return Result.ok(await response.json());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(new EditionWriterError(message, { cause: error }));
     }
-
-    return response.json();
   }
 
   async updateDocument(
     documentId: string,
     document: SerializedEntry
-  ): Promise<SerializedEntry> {
-    const response = await fetch("/api/" + documentId, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toUpdateDocumentRequest(document)),
-    });
+  ): Promise<Result<EditionWriterError, SerializedEntry>> {
+    try {
+      const response = await fetch("/api/" + documentId, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toUpdateDocumentRequest(document)),
+      });
 
-    console.log({ response });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        return Result.fail(
+          new EditionWriterError(payload.error || "Error al actualizar")
+        );
+      }
 
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}));
-      throw new Error(payload.error || "Error al actualizar");
+      return Result.ok(await response.json());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(new EditionWriterError(message, { cause: error }));
     }
-
-    return response.json();
   }
 }

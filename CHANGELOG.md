@@ -98,6 +98,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
   del `id` del documento. `SaveDocument` y `RenderPreview` usan consistentemente
   `documentId`, evitando que la preview quede almacenada bajo una clave
   diferente a la que usa `GetRenderedDocument`.
+- `DocumentWriter` ahora devuelve `Result<EditionWriterError, SerializedEntry>`
+  en `createDocument` y `updateDocument`; `HttpDocumentWriter` captura errores de
+  red y respuestas HTTP fallidas. `SaveDocument` dejó de envolver la llamada en
+  `try/catch` y maneja el `Result` devuelto por el writer.
 
 ## [0.5.0] - 2026-09-11
 

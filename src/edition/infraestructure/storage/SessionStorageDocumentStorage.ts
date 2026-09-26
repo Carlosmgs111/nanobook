@@ -7,7 +7,6 @@ const KEY_PREFIX = "nanobook:edition";
 
 function key(kind: "staged" | "preview" | "confirmed", documentId: string): string {
   const key = `${KEY_PREFIX}:${encodeURIComponent(documentId)}:${kind}`;
-  console.log({ key })
   return key;
 }
 

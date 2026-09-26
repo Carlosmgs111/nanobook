@@ -14,6 +14,13 @@ export class EditionRenderError extends InfrastructureError {
   }
 }
 
+export class EditionWriterError extends InfrastructureError {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "EditionWriterError";
+  }
+}
+
 export class InvalidDocumentContentError extends Error {
   constructor(public readonly reason: string) {
     super(`Contenido de documento inválido: ${reason}`);
@@ -24,4 +31,5 @@ export class InvalidDocumentContentError extends Error {
 export type EditionServiceError =
   | EditionStorageError
   | EditionRenderError
+  | EditionWriterError
   | InvalidDocumentContentError;
