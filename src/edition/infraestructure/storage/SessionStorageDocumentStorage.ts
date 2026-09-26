@@ -6,11 +6,9 @@ import { EditionStorageError } from "../../domain/errors";
 const KEY_PREFIX = "nanobook:edition";
 
 function key(kind: "staged" | "preview" | "confirmed", documentId: string): string {
-  return `${KEY_PREFIX}:${encodeURIComponent(documentId)}:${kind}`;
-}
-
-function documentIdOf(value: { documentId?: string; id: string }): string {
-  return value.documentId ?? value.id;
+  const key = `${KEY_PREFIX}:${encodeURIComponent(documentId)}:${kind}`;
+  console.log({ key })
+  return key;
 }
 
 function read<T>(storage: Storage, key: string): Result<EditionStorageError, T | null> {
@@ -54,8 +52,8 @@ export class SessionStorageDocumentStorage implements DocumentStorage {
     return read<SerializedEntry>(this.storage, key("staged", documentId));
   }
 
-  saveStagedDocument(document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, key("staged", documentIdOf(document)), document);
+  saveStagedDocument(documentId: string, document: SerializedEntry): Result<EditionStorageError, void> {
+    return write(this.storage, key("staged", documentId), document);
   }
 
   clearStagedDocument(documentId: string): Result<EditionStorageError, void> {
@@ -66,8 +64,8 @@ export class SessionStorageDocumentStorage implements DocumentStorage {
     return read<CachedPreview>(this.storage, key("preview", documentId));
   }
 
-  saveCachedPreview(cached: CachedPreview): Result<EditionStorageError, void> {
-    return write(this.storage, key("preview", documentIdOf(cached.source)), cached);
+  saveCachedPreview(documentId: string, cached: CachedPreview): Result<EditionStorageError, void> {
+    return write(this.storage, key("preview", documentId), cached);
   }
 
   clearCachedPreview(documentId: string): Result<EditionStorageError, void> {
@@ -78,8 +76,8 @@ export class SessionStorageDocumentStorage implements DocumentStorage {
     return read<SerializedEntry>(this.storage, key("confirmed", documentId));
   }
 
-  saveConfirmedDocument(document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, key("confirmed", documentIdOf(document)), document);
+  saveConfirmedDocument(documentId: string, document: SerializedEntry): Result<EditionStorageError, void> {
+    return write(this.storage, key("confirmed", documentId), document);
   }
 
   clearConfirmedDocument(documentId: string): Result<EditionStorageError, void> {

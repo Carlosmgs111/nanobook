@@ -12,7 +12,7 @@ describe("InitializeEditor", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual(base);
-    expect(storage.saveStagedDocument).toHaveBeenCalledWith(base);
+    expect(storage.saveStagedDocument).toHaveBeenCalledWith(base.documentId, base);
   });
 
   it("returns the existing staged version", () => {

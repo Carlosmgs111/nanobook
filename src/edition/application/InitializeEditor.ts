@@ -15,7 +15,7 @@ export class InitializeEditor {
 
     const staged = stagedResult.getValue();
     if (!staged) {
-      const saveResult = this.storage.saveStagedDocument(base);
+      const saveResult = this.storage.saveStagedDocument(documentId, base);
       if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
       return Result.ok(base);
     }

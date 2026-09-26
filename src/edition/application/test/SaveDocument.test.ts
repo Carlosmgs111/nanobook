@@ -22,12 +22,12 @@ describe("SaveDocument", () => {
     );
 
     const result = await new SaveDocument(storage, writer, renderPreview).execute(
-      staged.id
+      staged.documentId
     );
 
     expect(result.isSuccess).toBe(true);
     expect(writer.updateDocument).toHaveBeenCalledWith(staged.path ?? staged.id, staged);
-    expect(storage.saveConfirmedDocument).toHaveBeenCalledWith(staged);
+    expect(storage.saveConfirmedDocument).toHaveBeenCalledWith(staged.documentId, staged);
   });
 
   it("returns an error when the staged document does not exist", async () => {

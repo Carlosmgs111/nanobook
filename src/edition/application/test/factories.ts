@@ -19,7 +19,7 @@ export function createDocumentStorage(
     clearConfirmedDocument: vi.fn().mockReturnValue(Result.ok()),
     clearAll: vi.fn().mockReturnValue(Result.ok()),
     ...overrides,
-  };
+  } as DocumentStorage;
 }
 
 export function createPreviewRenderer(
@@ -35,7 +35,9 @@ export function buildSerializedEntry(
   overrides: Partial<SerializedEntry> & { id?: string } = {}
 ): SerializedEntry {
   const id = overrides.id ?? "intro";
+  const documentId = overrides.documentId ?? `doc-${id}`;
   return {
+    documentId,
     id,
     title: "Introduction",
     description: "Getting started",

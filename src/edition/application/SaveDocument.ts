@@ -22,9 +22,9 @@ export class SaveDocument {
     const staged = stageResult.getValue();
     if (!staged) return Result.fail(new Error("Staged document not found"));
 
-    let renderResult = await this.renderPreview.execute(staged.id);
+    let renderResult = await this.renderPreview.execute(documentId);
     if (renderResult.isSuccess && !renderResult.getValue()) {
-      renderResult = await this.renderPreview.execute(staged.id);
+      renderResult = await this.renderPreview.execute(documentId);
     }
     if (!renderResult.isSuccess) return Result.fail(renderResult.getError());
     if (!renderResult.getValue()) {
@@ -42,7 +42,7 @@ export class SaveDocument {
     if (!currentStageResult.isSuccess) return Result.fail(currentStageResult.getError());
     if (!sameDocument(currentStageResult.getValue(), staged)) return Result.ok(staged);
 
-    const confirmationResult = this.storage.saveConfirmedDocument(staged);
+    const confirmationResult = this.storage.saveConfirmedDocument(documentId, staged);
     if (!confirmationResult.isSuccess) return Result.fail(confirmationResult.getError());
     return Result.ok(staged);
   }

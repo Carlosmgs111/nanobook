@@ -49,7 +49,7 @@ export class RenderPreview {
     documentId: string,
     staged: SerializedEntry
   ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
-    const cachedResult = this.loadCachedPreview(staged);
+    const cachedResult = this.loadCachedPreview(documentId, staged);
     if (!cachedResult.isSuccess) {
       return Result.fail(cachedResult.getError());
     }
@@ -71,7 +71,7 @@ export class RenderPreview {
       return Result.ok(null);
     }
 
-    const saveCachedResult = this.storage.saveCachedPreview({
+    const saveCachedResult = this.storage.saveCachedPreview(documentId, {
       rendered,
       source: staged,
     });
@@ -84,9 +84,10 @@ export class RenderPreview {
   }
 
   private loadCachedPreview(
+    documentId: string,
     document: SerializedEntry
   ): Result<EditionStorageError, RenderedPreview | null> {
-    const cachedResult = this.storage.loadCachedPreview(document.documentId ?? document.id);
+    const cachedResult = this.storage.loadCachedPreview(documentId);
     if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
 
     const cached = cachedResult.getValue();

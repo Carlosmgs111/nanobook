@@ -22,8 +22,8 @@ describe("RenderPreview", () => {
     };
     const useCase = new RenderPreview(storage as never, renderer as never, eventBus as never);
 
-    const first = useCase.execute(document.id);
-    const second = useCase.execute(document.id);
+    const first = useCase.execute(document.documentId);
+    const second = useCase.execute(document.documentId);
     const rendered = buildRenderedPreview();
     completeRender(Result.ok(rendered));
 

@@ -41,10 +41,37 @@ describe("SessionStorageDocumentStorage", () => {
     const first = entry("doc-1", "guides/one");
     const second = entry("doc-2", "guides/two");
 
-    expect(storage.saveStagedDocument(first)).toEqual(Result.ok());
-    expect(storage.saveStagedDocument(second)).toEqual(Result.ok());
+    expect(storage.saveStagedDocument("doc-1", first)).toEqual(Result.ok());
+    expect(storage.saveStagedDocument("doc-2", second)).toEqual(Result.ok());
 
     expect(storage.loadStagedDocument("doc-1").getValue()).toEqual(first);
     expect(storage.loadStagedDocument("doc-2").getValue()).toEqual(second);
+  });
+
+  it("uses the provided documentId as the storage key, not the document id", () => {
+    const fake = new FakeStorage();
+    const storage = new SessionStorageDocumentStorage(fake);
+    const documentId = "stable-doc-id";
+    const document = entry(documentId, "mutable/path");
+
+    storage.saveCachedPreview(documentId, {
+      rendered: { Content: "<h1>Preview</h1>" },
+      source: document,
+    });
+
+    const cached = storage.loadCachedPreview(documentId).getValue();
+    expect(cached?.rendered.Content).toBe("<h1>Preview</h1>");
+    expect(storage.loadCachedPreview("mutable/path").getValue()).toBeNull();
+  });
+
+  it("stores confirmed documents under the provided documentId", () => {
+    const storage = new SessionStorageDocumentStorage(new FakeStorage());
+    const documentId = "stable-doc-id";
+    const document = entry(documentId, "mutable/path");
+
+    storage.saveConfirmedDocument(documentId, document);
+
+    expect(storage.loadConfirmedDocument(documentId).getValue()).toEqual(document);
+    expect(storage.loadConfirmedDocument("mutable/path").getValue()).toBeNull();
   });
 });

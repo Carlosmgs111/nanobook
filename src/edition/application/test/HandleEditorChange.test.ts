@@ -15,8 +15,8 @@ describe("HandleEditorChange", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().content).toBe("\n# Body");
-    expect(storage.saveStagedDocument).toHaveBeenCalled();
-    expect(storage.clearConfirmedDocument).toHaveBeenCalledWith("intro");
+    expect(storage.saveStagedDocument).toHaveBeenCalledWith("doc-intro", expect.any(Object));
+    expect(storage.clearConfirmedDocument).toHaveBeenCalledWith("doc-intro");
   });
 
   it("returns an error for invalid frontmatter", async () => {

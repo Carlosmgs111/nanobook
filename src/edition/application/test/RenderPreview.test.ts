@@ -26,7 +26,7 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer();
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const result = await useCase.execute(document.id);
+    const result = await useCase.execute(document.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toBeNull();
@@ -54,12 +54,12 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer();
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const result = await useCase.execute(document.id);
+    const result = await useCase.execute(document.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual(rendered);
     expect(renderer.render).toHaveBeenCalledWith(document.content);
-    expect(storage.saveCachedPreview).toHaveBeenCalledWith({
+    expect(storage.saveCachedPreview).toHaveBeenCalledWith(document.documentId, {
       rendered,
       source: document,
     });
@@ -74,7 +74,7 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer();
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const result = await useCase.execute(document.id);
+    const result = await useCase.execute(document.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual(cached.rendered);
@@ -94,8 +94,8 @@ describe("RenderPreview", () => {
     });
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const firstCall = useCase.execute(document.id);
-    const secondCall = useCase.execute(document.id);
+    const firstCall = useCase.execute(document.documentId);
+    const secondCall = useCase.execute(document.documentId);
 
     finishRender!(Result.ok(rendered));
 
@@ -110,6 +110,7 @@ describe("RenderPreview", () => {
 
   it("does not cache the rendered preview when the staged document changed", async () => {
     const otherDocument = buildSerializedEntry({
+      documentId: document.documentId,
       id: document.id,
       content: "# Changed",
     });
@@ -122,7 +123,7 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer();
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const result = await useCase.execute(document.id);
+    const result = await useCase.execute(document.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toBeNull();
@@ -139,7 +140,7 @@ describe("RenderPreview", () => {
     });
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const result = await useCase.execute(document.id);
+    const result = await useCase.execute(document.documentId);
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EditionRenderError);
@@ -153,7 +154,7 @@ describe("RenderPreview", () => {
     const renderer = createPreviewRenderer();
     const useCase = new RenderPreview(storage, renderer, createEventBus());
 
-    const result = await useCase.execute(document.id);
+    const result = await useCase.execute(document.documentId);
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EditionStorageError);

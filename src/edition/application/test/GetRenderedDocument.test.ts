@@ -12,7 +12,7 @@ describe("GetRenderedDocument", () => {
     };
     const useCase = new GetRenderedDocument(storage as never);
 
-    const result = useCase.execute(source.id, true);
+    const result = useCase.execute(source.documentId, true);
 
     expect(result.isSuccess).toBe(false);
   });
@@ -26,7 +26,7 @@ describe("GetRenderedDocument", () => {
     };
     const useCase = new GetRenderedDocument(storage as never);
 
-    const result = useCase.execute(source.id);
+    const result = useCase.execute(source.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual(cached);
@@ -41,7 +41,7 @@ describe("GetRenderedDocument", () => {
     };
     const useCase = new GetRenderedDocument(storage as never);
 
-    const result = useCase.execute(source.id);
+    const result = useCase.execute(source.documentId);
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual(cached);

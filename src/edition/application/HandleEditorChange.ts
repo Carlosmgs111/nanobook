@@ -16,12 +16,11 @@ export class HandleEditorChange {
       return Result.fail(buildResult.getError());
     }
     const staged = buildResult.getValue();
-    const saveResult = this.storage.saveStagedDocument(staged);
+    const documentId = staged.documentId ?? staged.id;
+    const saveResult = this.storage.saveStagedDocument(documentId, staged);
     if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
 
-    const clearConfirmationResult = this.storage.clearConfirmedDocument(
-      staged.documentId ?? staged.id
-    );
+    const clearConfirmationResult = this.storage.clearConfirmedDocument(documentId);
     if (!clearConfirmationResult.isSuccess) {
       return Result.fail(clearConfirmationResult.getError());
     }

@@ -93,6 +93,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `DocumentEditor.astro` vuelve a inicializar el editor al navegar desde la vista preview con `ClientRouter`: destruye la instancia de CodeMirror en `astro:before-swap`, busca el contenedor actual en `astro:page-load` y elimina el guarda `if (view) return` que impedía recrear el editor en el nuevo DOM.
 - `OnDocumentCreatedHandler` y `OnDocumentUpdatedHandler` importaban `err`/`ok` inexistentes; ahora usan `Result.ok()` / `Result.fail()`.
 - `GitHubRepository.create()` ya no oculta cualquier error bajo `DocumentAlreadyExistsError`; distingue errores de dominio de fallos de infraestructura.
+- `DocumentStorage` recibe el `documentId` explícito en los métodos `save*`; el
+  adaptador `SessionStorageDocumentStorage` ya no reconstruye la clave a partir
+  del `id` del documento. `SaveDocument` y `RenderPreview` usan consistentemente
+  `documentId`, evitando que la preview quede almacenada bajo una clave
+  diferente a la que usa `GetRenderedDocument`.
 
 ## [0.5.0] - 2026-09-11
 
