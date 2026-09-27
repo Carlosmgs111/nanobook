@@ -7,13 +7,24 @@ import { toDocumentResponse } from "./mappers/toDocumentResponse";
 
 export class CreateDocumentController {
   constructor(private createDocument: CreateDocument) {}
-  handle: APIRoute = async ({ request }) => {
+  handle: APIRoute = async ({ params, request }) => {
     try {
-      const payload: CreateDocumentRequest = await request.json();
-      if (!payload.path) {
-        return jsonResponse({ error: "El path es obligatorio" }, 400);
+      const { slug: id } = params;
+      if (!id) {
+        return jsonResponse({ error: "Falta el parámetro id" }, 400);
       }
-      console.log({ payload });
+
+      const payload: CreateDocumentRequest = await request.json();
+      if (!payload.id || !payload.path) {
+        return jsonResponse({ error: "El id y el path son obligatorios" }, 400);
+      }
+
+      if (payload.id !== id) {
+        return jsonResponse(
+          { error: "El parámetro id no coincide con el id del documento" },
+          400
+        );
+      }
 
       const result = await this.createDocument.execute(toDocumentInput(payload));
 

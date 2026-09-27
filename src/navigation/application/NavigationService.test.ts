@@ -19,6 +19,14 @@ function document(path: string, id: string, title: string, index = false) {
 }
 
 describe("NavigationService", () => {
+  it("resolves a public path to the stable document id", () => {
+    const folder = document("new-dir/index", "stable-folder", "New directory", true);
+    const service = new NavigationService(new DocumentsGraph([folder]));
+
+    expect(service.getDocumentIdByPath("new-dir")).toBe("stable-folder");
+    expect(service.getDocumentIdByPath("missing")).toBeUndefined();
+  });
+
   it("returns the stable parent id and its public path", () => {
     const root = document("index", "stable-root", "Home", true);
     const folder = document(

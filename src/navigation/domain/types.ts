@@ -77,6 +77,8 @@ export interface ParentEntry {
 }
 
 export interface NavigationService {
+  /** Resuelve una ruta pública a la identidad estable del documento. */
+  getDocumentIdByPath(path: string): string | undefined;
   /** Breadcrumbs desde la raíz hasta el documento indicado. */
   getBreadcrumbs(documentPath: DocumentPath, homeTitle?: string): Crumb[];
   /** Entradas del sidebar contextual (hermanos del documento). */

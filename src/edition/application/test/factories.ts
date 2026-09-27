@@ -45,7 +45,7 @@ export function buildSerializedEntry(
     content: "# Intro\n\nHello.",
     rawFrontmatter: '---\ntitle: "Introduction"\ndescription: "Getting started"\n---\n',
     slug: id,
-    parentId: id === "index" ? undefined : "index",
+    parentPath: id === "index" ? undefined : "index",
     position: 0,
     headings: [],
     metadata: {

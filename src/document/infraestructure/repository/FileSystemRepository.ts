@@ -92,7 +92,7 @@ export class FileSystemRepository implements ContentRepository {
   }
 
   async listChildren(
-    parentId: string | null
+    parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     const documentsResult = await this.list();
     if (!documentsResult.isSuccess) {
@@ -101,7 +101,7 @@ export class FileSystemRepository implements ContentRepository {
     const documents = documentsResult.getValue();
     return Result.ok(
       documents.filter(
-        (document) => document.getParentPath()?.getValue() === parentId
+        (document) => document.getParentPath()?.getValue() === parentPath
       )
     );
   }

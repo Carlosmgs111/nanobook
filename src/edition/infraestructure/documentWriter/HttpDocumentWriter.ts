@@ -7,6 +7,16 @@ import type {
 } from "../../../document";
 import { EditionWriterError } from "../../domain/errors";
 
+function documentApiUrl(identifier: string): string {
+  const path = identifier
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+
+  return `/api/${path}`;
+}
+
 function toUpdateDocumentRequest(
   document: SerializedEntry
 ): UpdateDocumentRequest {
@@ -32,7 +42,7 @@ export class HttpDocumentWriter implements DocumentWriter {
     document: CreateDocumentRequest
   ): Promise<Result<EditionWriterError, SerializedEntry>> {
     try {
-      const response = await fetch("/api/documents", {
+      const response = await fetch(documentApiUrl(document.id), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(document),
@@ -57,7 +67,7 @@ export class HttpDocumentWriter implements DocumentWriter {
     document: SerializedEntry
   ): Promise<Result<EditionWriterError, SerializedEntry>> {
     try {
-      const response = await fetch("/api/" + documentId, {
+      const response = await fetch(documentApiUrl(documentId), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(toUpdateDocumentRequest(document)),

@@ -29,7 +29,7 @@ export interface ContentRepository {
     path: string
   ): Promise<Result<ContentRepositoryListError, Document | null>>;
   listChildren(
-    parentId: string | null
+    parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>>;
   create(document: Document): Promise<Result<ContentRepositoryError, void>>;
   update(document: Document): Promise<Result<ContentRepositoryError, void>>;

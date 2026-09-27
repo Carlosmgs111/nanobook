@@ -6,6 +6,7 @@ import type {
 } from "../../navigation/domain/types";
 import { toDocumentId } from "../../shared/utils/documentPath";
 import type { NavigationService } from "../../navigation";
+import { DocumentPath } from "../../document/domain/DocumentPath";
 import {
   GITHUB_WEBHOOK_SECRET,
   GITHUB_BRANCH,
@@ -38,15 +39,38 @@ function verifyGitHubWebhookSignature(
 function mapGitHubPathsToChanges(
   paths: string[],
   basePath: string,
-  kind: DocumentChange["kind"]
+  kind: DocumentChange["kind"],
+  navigationService: NavigationService
 ): DocumentChange[] {
   return paths
     .filter((path) => path.endsWith(".md"))
-    .map((path) => {
-      const id = toDocumentId(path, { basePath, lowercase: true });
-      return kind === "modified"
-        ? { id, kind: "modified", scope: "content" }
-        : { id, kind };
+    .flatMap((path) => {
+      const publicPath = toDocumentId(path, { basePath, lowercase: true });
+      const documentId = navigationService.getDocumentIdByPath(publicPath);
+
+      if (documentId) {
+        return kind === "modified"
+          ? [{ id: documentId, kind: "modified", scope: "content" as const }]
+          : [{ id: documentId, kind }];
+      }
+
+      // A newly added file is not in the graph yet, so it has no resolvable
+      // identity here. Invalidate its known parent instead of leaking the
+      // public path into DocumentChange.id.
+      if (kind === "added") {
+        const pathResult = DocumentPath.create(publicPath);
+        const parentPath = pathResult.isSuccess
+          ? pathResult.getValue().getParentPath()?.getValue() ?? "index"
+          : null;
+        const parentId = parentPath
+          ? navigationService.getDocumentIdByPath(parentPath)
+          : undefined;
+        if (parentId) {
+          return [{ id: parentId, kind: "modified", scope: "metadata" as const }];
+        }
+      }
+
+      return [];
     });
 }
 
@@ -93,12 +117,29 @@ export class GitHubWebhookHandler {
     const changes: DocumentChange[] = [];
 
     for (const commit of payload.commits) {
-      changes.push(...mapGitHubPathsToChanges(commit.added, basePath, "added"));
       changes.push(
-        ...mapGitHubPathsToChanges(commit.removed, basePath, "removed")
+        ...mapGitHubPathsToChanges(
+          commit.added,
+          basePath,
+          "added",
+          this.navigationService
+        )
       );
       changes.push(
-        ...mapGitHubPathsToChanges(commit.modified, basePath, "modified")
+        ...mapGitHubPathsToChanges(
+          commit.removed,
+          basePath,
+          "removed",
+          this.navigationService
+        )
+      );
+      changes.push(
+        ...mapGitHubPathsToChanges(
+          commit.modified,
+          basePath,
+          "modified",
+          this.navigationService
+        )
       );
     }
     if (changes.length === 0) {

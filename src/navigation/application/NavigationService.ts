@@ -47,6 +47,10 @@ export class NavigationService implements NavigationServicePort {
     return this.documentsGraph.getNode(value)?.id ?? value;
   }
 
+  getDocumentIdByPath(path: string): string | undefined {
+    return this.documentsGraph.getNodeByPath(path)?.id;
+  }
+
   getInvalidatedIds(changes: DocumentChange[]): InvalidationResult {
     const addedIds = new Set<string>();
     const removedIds = new Set<string>();

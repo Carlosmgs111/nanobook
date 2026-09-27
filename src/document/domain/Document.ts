@@ -229,7 +229,7 @@ export class Document {
       title: this.title,
       description: this.description,
       position: this.position,
-      parentId: this.parentPath?.getValue(),
+      parentPath: this.parentPath?.getValue(),
       metadata: this.metadata,
       rawFrontmatter: this.rawFrontmatter,
       content: this.content,

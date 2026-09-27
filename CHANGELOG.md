@@ -7,6 +7,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregida la invalidación del webhook de GitHub para resolver rutas públicas a IDs estables y evitar usar rutas como identidad; los documentos nuevos invalidan su padre conocido mientras se incorporan al grafo.
+- Renombrado `Entry.parentId` a `parentPath` y los contratos de `listChildren` para distinguir explícitamente ubicación de identidad.
+- Cambiada la API de documentos para usar el `id` estable como parámetro dinámico (`/api/<id>`), separándolo del `path` usado por las rutas de navegación y eliminando la dependencia de `/api/documents`.
+
 ### Added
 - Los flujos de creación y actualización separan el `id` estable del `path`: las operaciones de edición buscan siempre por `id` y reciben la ruta en el cuerpo.
 - `DocumentId` queda reservado para identidades estables y opacas; la lógica de rutas, índices y referencias relativas se concentra en `DocumentPath`.

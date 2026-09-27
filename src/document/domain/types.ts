@@ -35,7 +35,8 @@ export interface Entry {
   title: string;
   description: string;
   position: number;
-  parentId?: string;
+  /** Public path of the parent, not a document identity. */
+  parentPath?: string;
   rawFrontmatter: string;
   content: string;
   slug: string;

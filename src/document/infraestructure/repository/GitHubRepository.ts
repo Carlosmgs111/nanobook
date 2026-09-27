@@ -109,14 +109,14 @@ export class GitHubRepository implements ContentRepository {
   }
 
   async listChildren(
-    parentId: string | null
+    parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     const documentsResult = await this.list();
     if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
     return Result.ok(
       documentsResult
         .getValue()
-        .filter((document) => document.getParentPath()?.getValue() === parentId)
+        .filter((document) => document.getParentPath()?.getValue() === parentPath)
     );
   }
 

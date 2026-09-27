@@ -82,7 +82,7 @@ export class CreateDocument {
       input.content,
       undefined,
       undefined,
-      DocumentId.generate().getValue()
+      input.id ?? DocumentId.generate().getValue()
     );
     if (!documentResult.isSuccess) {
       return Result.fail(documentResult.getError());

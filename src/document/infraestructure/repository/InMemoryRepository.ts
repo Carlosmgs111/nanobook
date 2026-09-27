@@ -46,11 +46,11 @@ export class InMemoryRepository implements ContentRepository {
   }
 
   async listChildren(
-    parentId: string | null
+    parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     return Result.ok(
       Array.from(this.documents.values()).filter(
-        (doc) => doc.getParentPath()?.getValue() === parentId
+        (doc) => doc.getParentPath()?.getValue() === parentPath
       )
     );
   }

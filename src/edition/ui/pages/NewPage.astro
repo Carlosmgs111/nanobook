@@ -210,7 +210,9 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     if (!path) {
       throw new Error("Ruta no válida");
     }
+    const id = crypto.randomUUID();
     const result = await edition.createDocument.execute({
+      id,
       path,
       ...metadata,
       index,
