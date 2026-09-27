@@ -39,6 +39,10 @@ function matchesKind(
 export class NavigationService implements NavigationServicePort {
   constructor(private documentsGraph: DocumentsGraph) {}
 
+  replaceGraph(documentsGraph: DocumentsGraph): void {
+    this.documentsGraph = documentsGraph;
+  }
+
   private resolveGraphId(value: string): string {
     return this.documentsGraph.getNode(value)?.id
       ?? this.documentsGraph.getNodeByPath(value)?.id
@@ -161,7 +165,8 @@ export class NavigationService implements NavigationServicePort {
     if (!parent) return null;
 
     return {
-      id: parent.path,
+      id: parent.id,
+      path: parent.path,
       data: { title: parent.title },
     };
   }

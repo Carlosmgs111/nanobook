@@ -32,7 +32,7 @@ export class Application {
     publishingModule.registerEventHandlers()
     const documentModule = await DocumentModule.create(eventBus);
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
-    const navigationModule = await NavigationModule.create(documentProvider);
+    const navigationModule = await NavigationModule.create(documentProvider, eventBus);
 
     return new Application(
       documentModule,

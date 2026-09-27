@@ -53,6 +53,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- El grafo de navegación se reconstruye automáticamente después de eventos
+  `DocumentCreated` y `DocumentUpdated`, manteniendo actualizado el sidebar,
+  breadcrumbs, relaciones padre/hijo, orden y metadatos sin reiniciar el
+  proceso.
 - `GitHubRepository` normaliza su configuración en un único objeto, comparte la
   lógica de búsqueda y escritura entre operaciones CRUD y elimina duplicación
   en el acceso a GitHub sin alterar el contrato de `ContentRepository`.
@@ -87,6 +91,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Eliminada la fachada `src/edition/client/` y sus tests asociados; la funcionalidad equivalente ahora reside en `src/edition/application/`, `src/edition/domain/` y en los propios componentes Astro.
 
 ### Fixed
+- Corregido el enlace del header del sidebar: `ParentEntry` ahora conserva la
+  identidad estable en `id` y la ruta pública en `path`, evitando generar URLs
+  `/undefined/` al navegar hacia índices de carpetas.
 - El worker de `edition` resuelve las dependencias de Markdown con la condición
   `worker`, evitando que `remark-parse` cargue un decodificador que requiere
   `document` y bloqueaba el renderizado y guardado en el navegador.

@@ -67,7 +67,10 @@ export interface DependencyEdge {
 }
 
 export interface ParentEntry {
+  /** Stable document identity. */
   id: string;
+  /** Public document path used to build URLs. */
+  path: string;
   data: {
     title: string;
   };

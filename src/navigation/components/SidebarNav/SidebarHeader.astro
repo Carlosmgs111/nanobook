@@ -7,6 +7,7 @@ import ToolTip from "./ToolTip.astro";
 
 interface ParentEntry {
   id: string;
+  path: string;
   data: {
     title: string;
   };
@@ -40,7 +41,7 @@ function parentHref(parent: ParentEntry): string {
             class="sidebar-icon flex w-5 flex-shrink-0 justify-center"
             slot="icon"
           >
-            {parentEntry.id === "index" ? <HomeSVG /> : <FolderUpSVG />}
+            {parentEntry.path === "index" ? <HomeSVG /> : <FolderUpSVG />}
           </i>
           <span class="sidebar-text truncate" slot="label">
             {parentEntry.data.title}

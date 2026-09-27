@@ -6,17 +6,52 @@ export type {
   InvalidationResult,
 } from "./domain/types";
 export type { DocumentProvider } from "./domain/ports/DocumentProvider";
+import { DocumentCreated } from "../document/domain/events/DocumentCreated";
+import { DocumentUpdated } from "../document/domain/events/DocumentUpdated";
+import { Result } from "../shared/domain/Result";
+import { EventBusError } from "../shared/domain/bus/errors";
+import type { EventBus, EventHandler } from "../shared/domain/bus/EventBus";
 import { NavigationService } from "./application/NavigationService";
 import { DocumentsGraph } from "./infraestructure/DocumentsGraph";
 import type { DocumentProvider } from "./domain/ports/DocumentProvider";
 
 export class NavigationModule {
-  constructor(public readonly navigationService: NavigationService) {}
+  private constructor(
+    public readonly navigationService: NavigationService,
+    private readonly documentProvider: DocumentProvider
+  ) {}
 
-  static async create(documentProvider: DocumentProvider) {
+  static async create(documentProvider: DocumentProvider, eventBus?: EventBus) {
     const documents = await documentProvider.getAll();
     const documentGraph = new DocumentsGraph(documents);
     const navigationService = new NavigationService(documentGraph);
-    return new NavigationModule(navigationService);
+    const module = new NavigationModule(navigationService, documentProvider);
+
+    if (eventBus) {
+      const handler: EventHandler<DocumentCreated> & EventHandler<DocumentUpdated> = {
+        handle: async () => {
+          try {
+            await module.refresh();
+            return Result.ok();
+          } catch (error) {
+            return Result.fail(
+              new EventBusError("Failed to refresh navigation graph", {
+                cause: error,
+              })
+            );
+          }
+        },
+      };
+
+      eventBus.subscribe(DocumentCreated, handler);
+      eventBus.subscribe(DocumentUpdated, handler);
+    }
+
+    return module;
+  }
+
+  async refresh(): Promise<void> {
+    const documents = await this.documentProvider.getAll();
+    this.navigationService.replaceGraph(new DocumentsGraph(documents));
   }
 }
