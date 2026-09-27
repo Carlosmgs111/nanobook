@@ -40,7 +40,12 @@ const { entry, Content, childEntries } = Astro.props;
         <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
         <span>AUTHOR: {entry.metadata.author}</span>
       </div>
-      <div id="document-body" data-document-id={entry.documentId} set:html={Content} />
+      <div
+        id="document-body"
+        data-document-id={entry.documentId}
+        data-document-ref={entry.ref ?? ""}
+        set:html={Content}
+      />
     </Fragment>
   )
 }

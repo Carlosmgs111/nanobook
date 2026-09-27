@@ -30,7 +30,8 @@ function buildUpdateInput(
   overrides: Partial<DocumentInput> & { id?: string } = {}
 ): DocumentInput {
   return {
-    id: overrides.id ?? "guide/intro",
+    id: overrides.id ?? existingDocument.getDocumentId().getValue(),
+    path: overrides.path ?? "guide/intro",
     title: overrides.title ?? "New title",
     description: overrides.description ?? "New description",
     date: overrides.date ?? new Date("2024-01-02"),
@@ -41,9 +42,35 @@ function buildUpdateInput(
 }
 
 describe("UpdateDocument", () => {
+  it("locates by stable id and applies the path supplied in the body", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+    const input = buildUpdateInput({
+      id: existingDocument.getDocumentId().getValue(),
+      path: "guide/renamed",
+    });
+
+    const result = await useCase.execute(input);
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.getById).toHaveBeenCalledWith(
+      existingDocument.getDocumentId().getValue()
+    );
+    expect(repository.getByPath).not.toHaveBeenCalled();
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: expect.objectContaining({ value: existingDocument.getDocumentId().getValue() }),
+        path: expect.objectContaining({ value: "guide/renamed" }),
+      })
+    );
+  });
+
   it("updates an existing document and publishes DocumentUpdated", async () => {
     const repository = createRepository({
-      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
     });
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
@@ -62,7 +89,7 @@ describe("UpdateDocument", () => {
 
   it("returns DocumentNotFoundError when the document does not exist", async () => {
     const repository = createRepository({
-      getByPath: vi.fn().mockResolvedValue(Result.ok(null)),
+      getById: vi.fn().mockResolvedValue(Result.ok(null)),
     });
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
@@ -89,7 +116,7 @@ describe("UpdateDocument", () => {
 
   it("propagates repository.getById errors as Result failures", async () => {
     const repository = createRepository({
-      getByPath: vi
+      getById: vi
         .fn()
         .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
     });
@@ -105,7 +132,7 @@ describe("UpdateDocument", () => {
 
   it("propagates repository.update errors and does not publish events", async () => {
     const repository = createRepository({
-      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
       update: vi
         .fn()
         .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
@@ -122,7 +149,7 @@ describe("UpdateDocument", () => {
 
   it("propagates eventBus.publish errors", async () => {
     const repository = createRepository({
-      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
     });
     const eventBus = createEventBus();
     eventBus.publish = vi
@@ -138,7 +165,7 @@ describe("UpdateDocument", () => {
 
   it("returns InvalidDocumentError when Document construction fails", async () => {
     const repository = createRepository({
-      getByPath: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
     });
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);

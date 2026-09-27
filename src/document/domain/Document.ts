@@ -23,7 +23,7 @@ tags: []
 draft: false
 index: <%= index %>
 position: 0
-proxyTargetId: null
+ref: <%= ref %>
 ---
 `;
 
@@ -40,7 +40,7 @@ export class Document {
   private content: string;
   private metadata: DocumentMetadata;
   private rawFrontmatter: string;
-  private proxyTargetId: DocumentReference | null;
+  private reference: DocumentReference | null;
 
   private constructor(
     path: DocumentPath,
@@ -64,7 +64,7 @@ export class Document {
     this.title = overrides.title;
     this.description = overrides.description;
     this.content = body;
-    this.proxyTargetId = overrides.ref
+    this.reference = overrides.ref
       ? new DocumentReference(overrides.ref)
       : null;
     this.metadata = Document.toDocumentMetadata(
@@ -92,6 +92,7 @@ export class Document {
         date: this.metadata.date.toISOString(),
         author: this.metadata.author || "",
         index: String(this.metadata.index),
+        ref: overrides.ref ? JSON.stringify(overrides.ref) : "null",
       });
   }
 
@@ -156,7 +157,7 @@ export class Document {
     return {
       documentId: this.getDocumentId().getValue(),
       path: this.getPath(),
-      id: this.getPath(),
+      id: this.getDocumentId().getValue(),
       version,
       contentHash,
       metadataHash,
@@ -212,8 +213,8 @@ export class Document {
   getSlug(): string {
     return this.slug;
   }
-  getProxyTargetId(): DocumentReference | null {
-    return this.proxyTargetId;
+  getReference(): DocumentReference | null {
+    return this.reference;
   }
   getHeadings(): Heading[] {
     if (!this.parser) return [];
@@ -224,7 +225,7 @@ export class Document {
       documentId: this.getDocumentId().getValue(),
       path: this.getPath(),
       version: "",
-      id: this.getPath(),
+      id: this.getDocumentId().getValue(),
       title: this.title,
       description: this.description,
       position: this.position,
@@ -233,7 +234,7 @@ export class Document {
       rawFrontmatter: this.rawFrontmatter,
       content: this.content,
       slug: this.slug,
-      proxyTargetId: this.proxyTargetId?.getValue(),
+      ref: this.reference?.getValue(),
       headings: this.getHeadings(),
     };
   }

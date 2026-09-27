@@ -10,6 +10,9 @@ export class CreateDocumentController {
   handle: APIRoute = async ({ request }) => {
     try {
       const payload: CreateDocumentRequest = await request.json();
+      if (!payload.path) {
+        return jsonResponse({ error: "El path es obligatorio" }, 400);
+      }
       console.log({ payload });
 
       const result = await this.createDocument.execute(toDocumentInput(payload));

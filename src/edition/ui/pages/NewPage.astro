@@ -198,20 +198,20 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
   ): Promise<string> {
     const base = basePath ? `${basePath.replace(/\/$/, "")}` : "";
     const prefix = base ? `${base}/` : "";
-    let id: string | null = null;
+    let path: string | null = null;
     let index = false;
     if (type === "document") {
-      id = `${prefix}${name}`;
+      path = `${prefix}${name}`;
     }
     if (type === "directory") {
-      id = `${prefix}${name}/index`;
+      path = `${prefix}${name}/index`;
       index = true;
     }
-    if (!id) {
-      throw new Error("ID no válida");
+    if (!path) {
+      throw new Error("Ruta no válida");
     }
     const result = await edition.createDocument.execute({
-      id,
+      path,
       ...metadata,
       index,
       content: "",
@@ -220,7 +220,7 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     if (!result.isSuccess) {
       throw result.getError();
     }
-    return id;
+    return path;
   }
 
   document.addEventListener("astro:page-load", initForm);

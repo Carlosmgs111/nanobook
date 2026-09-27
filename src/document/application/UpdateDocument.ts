@@ -3,7 +3,6 @@ import type { EventBus } from "../../shared/domain/bus/EventBus";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { DocumentInput } from "./dto/DocumentInput";
 import { DocumentUpdated } from "../domain/events/DocumentUpdated";
-import { DocumentPath } from "../domain/DocumentPath";
 import {
   DocumentNotFoundError,
   DocumentRepositoryError,
@@ -29,30 +28,30 @@ export class UpdateDocument {
   async execute(
     documentDelta: DocumentInput
   ): Promise<Result<UpdateDocumentError, void>> {
-    const pathResult = DocumentPath.create(documentDelta.id);
-    if (!pathResult.isSuccess) {
-      return Result.fail(new InvalidDocumentIdError(documentDelta.id));
+    const documentId = documentDelta.id;
+    if (!documentId) {
+      return Result.fail(new InvalidDocumentIdError(documentId ?? ""));
     }
 
-    const documentResult = await this.contentRepository.getByPath(documentDelta.id);
+    const documentResult = await this.contentRepository.getById(documentId);
     if (!documentResult.isSuccess) {
       return Result.fail(documentResult.getError());
     }
 
     const existingDocument = documentResult.getValue();
     if (!existingDocument) {
-      return Result.fail(new DocumentNotFoundError(documentDelta.id));
+      return Result.fail(new DocumentNotFoundError(documentId));
     }
 
-    const { id, content, ...rest } = documentDelta;
+    const { id, path, content, ...rest } = documentDelta;
 
     const updatedDocumentResult = Document.create(
-      id,
+      path,
       rest,
       content,
       undefined,
       undefined,
-      existingDocument.getDocumentId().getValue()
+      documentId
     );
     if (!updatedDocumentResult.isSuccess) {
       return Result.fail(updatedDocumentResult.getError());

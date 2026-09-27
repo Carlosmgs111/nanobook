@@ -1,7 +1,8 @@
 import type { Ref } from "../../domain/DocumentReference";
 
 export interface DocumentInput {
-  id: string;
+  id?: string;
+  path: string;
   title: string;
   description: string;
   content: string;

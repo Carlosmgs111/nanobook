@@ -21,6 +21,7 @@ describe("Document identity and version", () => {
     const document = result.getValue();
     expect(document.getDocumentId().getValue()).toBe("doc-cache-01");
     expect(document.getPath()).toBe("guides/cache");
+    expect(document.parse().id).toBe("doc-cache-01");
 
     const hash = await document.hashDocument();
     expect(hash.documentId).toBe("doc-cache-01");

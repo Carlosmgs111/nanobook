@@ -8,9 +8,10 @@ interface Props {
   entry: Entry;
   previewHref?: string;
   viewHref?: string;
+  frontmatterOnly?: boolean;
 }
 
-const { entry, previewHref, viewHref } = Astro.props;
+const { entry, previewHref, viewHref, frontmatterOnly = false } = Astro.props;
 const serializedEntry = serializeEntry(entry);
 const initialContent = entry.rawFrontmatter + entry.content;
 ---
@@ -26,7 +27,8 @@ const initialContent = entry.rawFrontmatter + entry.content;
   <div
     data-document-id={entry.documentId}
     data-document={JSON.stringify(serializedEntry)}
-    data-initial-content={initialContent}
+    data-initial-content={frontmatterOnly ? entry.rawFrontmatter : initialContent}
+    data-frontmatter-only={frontmatterOnly ? "true" : "false"}
     class="editor-container"
     data-editor-container
   >
@@ -43,11 +45,13 @@ const initialContent = entry.rawFrontmatter + entry.content;
   import { debounce } from "../../../shared/utils/debounce";
 
   let view: EditorView | undefined;
-  const debouncedHandleEditorChange = debounce(async (document, content) => {
+  const debouncedHandleEditorChange = debounce(
+    async (document, content, preserveSourceBody) => {
     if (edition.handleEditorChange) {
       const result = await edition.handleEditorChange.execute(
         document,
-        content
+        content,
+        preserveSourceBody
       );
       if (!result.isSuccess) {
         console.error(result.getError());
@@ -55,7 +59,9 @@ const initialContent = entry.rawFrontmatter + entry.content;
       }
       edition.renderPreview.execute(result.getValue().documentId);
     }
-  }, 1000);
+    },
+    1000
+  );
 
   document.addEventListener("astro:page-load", () => {
     let container = document.querySelector<HTMLElement>(
@@ -65,6 +71,7 @@ const initialContent = entry.rawFrontmatter + entry.content;
       return;
     }
     let initialContent = container.dataset.initialContent;
+    const frontmatterOnly = container.dataset.frontmatterOnly === "true";
     const baseDocument = container.dataset.document;
     if (!baseDocument) {
       console.error("Missing base document");
@@ -74,17 +81,29 @@ const initialContent = entry.rawFrontmatter + entry.content;
       if (update.docChanged) {
         debouncedHandleEditorChange(
           JSON.parse(baseDocument),
-          update.state.doc.toString()
+          update.state.doc.toString(),
+          frontmatterOnly
         );
       }
     });
     function initializeCodeMirror(container: HTMLElement) {
+      const originalBody = extractBody(initialContent ?? "");
       const state = EditorState.create({
         doc: initialContent,
         extensions: [
           basicSetup,
           markdown(),
           keymap.of([indentWithTab]),
+          ...(frontmatterOnly
+            ? [
+                EditorState.transactionFilter.of((transaction) =>
+                  !transaction.docChanged ||
+                  extractBody(transaction.newDoc.toString()) === originalBody
+                    ? transaction
+                    : []
+                ),
+              ]
+            : []),
           updateListener,
           EditorView.theme({
             "&": {
@@ -117,7 +136,9 @@ const initialContent = entry.rawFrontmatter + entry.content;
       .execute(JSON.parse(baseDocument))
       .getValue();
     if (stagedDocument) {
-      initialContent = stagedDocument.rawFrontmatter + stagedDocument.content;
+      initialContent =
+        stagedDocument.rawFrontmatter +
+        (frontmatterOnly ? "" : stagedDocument.content);
     }
     initializeCodeMirror(container);
   });
@@ -125,6 +146,10 @@ const initialContent = entry.rawFrontmatter + entry.content;
     view?.destroy();
     // view = undefined;
   });
+
+  function extractBody(content: string): string {
+    return content.replace(/^---[\s\S]*?---\n?/, "");
+  }
 </script>
 
 <style>

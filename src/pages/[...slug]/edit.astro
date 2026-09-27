@@ -15,16 +15,20 @@ const { entry } = rendered;
 if (!entry) {
   return new Response("Document not found!", { status: 404 });
 }
-const viewHref = `/${entry.id}`;
-const previewHref = `/${entry.id}/preview`;
-const newHref = entry.metadata.index
-  ? `/${entry.id}/new`
+const sourceDocument = entry.ref
+  ? await app.documentModule.getDocument.executeRaw(slug)
+  : null;
+const editableEntry = sourceDocument?.parse() ?? entry;
+const viewHref = `/${editableEntry.path}`;
+const previewHref = `/${editableEntry.path}/preview`;
+const newHref = editableEntry.metadata.index
+  ? `/${editableEntry.path}/new`
   : "/new";
 ---
 
 <Layout
-  title={`Editar: ${entry.title}`}
-  description={entry.description}
+  title={`Editar: ${editableEntry.title}`}
+  description={editableEntry.description}
   breadcrumbs={breadcrumbs}
   sidebarEntries={sidebarEntries}
   parentEntry={parentEntry}
@@ -32,5 +36,5 @@ const newHref = entry.metadata.index
   viewHref={viewHref}
   newHref={newHref}
 >
-  <EditPage entry={entry} previewHref={previewHref} viewHref={viewHref} />
+  <EditPage entry={editableEntry} previewHref={previewHref} viewHref={viewHref} />
 </Layout>

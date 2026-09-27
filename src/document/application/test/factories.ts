@@ -30,13 +30,14 @@ export function createEventBus(): EventBus {
 export function buildDocumentInput(
   overrides: Partial<DocumentInput> & { id?: string } = {}
 ): DocumentInput {
-  const id = overrides.id ?? "intro";
+  const id = overrides.id ?? crypto.randomUUID();
   return {
     id,
+    path: overrides.path ?? "intro",
     title: "Introduction",
     description: "Getting started",
     date: new Date("2024-01-01"),
-    index: id === "index" || id.endsWith("/index"),
+    index: (overrides.path ?? "intro") === "index" || (overrides.path ?? "intro").endsWith("/index"),
     content: "# Intro\n\nHello.",
     ...overrides,
   };

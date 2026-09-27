@@ -33,4 +33,30 @@ describe("GetDocument", () => {
     expect(result).toBe(document);
     expect(getByPath).toHaveBeenCalledWith("guides");
   });
+
+  it("can load the source document without resolving its proxy", async () => {
+    const document = Document.create(
+      "new-dir/newfile3",
+      {
+        id: "doc-proxy",
+        title: "Proxy",
+        description: "Proxy",
+        date: new Date("2026-01-01"),
+        index: false,
+        ref: "/README.md",
+      },
+      ""
+    ).getValue();
+    const getByPath = vi.fn().mockResolvedValue(Result.ok(document));
+    const repository = { getByPath } as unknown as ContentRepository;
+    const parseProxies = vi.fn();
+    const proxyParser = { parseProxies } as unknown as ProxyParser;
+
+    const result = await new GetDocument(repository, proxyParser).executeRaw(
+      "new-dir/newfile3"
+    );
+
+    expect(result).toBe(document);
+    expect(parseProxies).not.toHaveBeenCalled();
+  });
 });

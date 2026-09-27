@@ -11,7 +11,8 @@ function toUpdateDocumentRequest(
   document: SerializedEntry
 ): UpdateDocumentRequest {
   return {
-    id: document.id,
+    id: document.documentId,
+    path: document.path,
     title: document.title,
     description: document.description,
     content: document.content,

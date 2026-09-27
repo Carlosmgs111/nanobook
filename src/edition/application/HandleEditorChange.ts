@@ -9,14 +9,18 @@ export class HandleEditorChange {
 
   async execute(
     base: SerializedEntry,
-    fullContent: string
+    fullContent: string,
+    preserveSourceBody = false
   ): Promise<Result<EditionRenderError, SerializedEntry>> {
     const buildResult = this.contentParser.parse(base, fullContent);
     if (!buildResult.isSuccess) {
       return Result.fail(buildResult.getError());
     }
-    const staged = buildResult.getValue();
-    const documentId = staged.documentId ?? staged.id;
+    const parsed = buildResult.getValue();
+    const staged = preserveSourceBody
+      ? { ...parsed, content: base.content }
+      : parsed;
+    const documentId = staged.documentId;
     const saveResult = this.storage.saveStagedDocument(documentId, staged);
     if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
 

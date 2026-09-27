@@ -31,7 +31,7 @@ export class CreateDocument {
   async execute(
     input: DocumentInput
   ): Promise<Result<CreateDocumentError, Document>> {
-    const pathResult = DocumentPath.create(input.id);
+    const pathResult = DocumentPath.create(input.path);
     if (!pathResult.isSuccess) {
       return Result.fail(pathResult.getError());
     }
@@ -66,7 +66,7 @@ export class CreateDocument {
     }
 
     const documentResult = Document.create(
-      input.id,
+      input.path,
       {
         title: input.title,
         description: input.description,

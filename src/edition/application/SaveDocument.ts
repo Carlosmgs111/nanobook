@@ -20,7 +20,7 @@ export class SaveDocument {
     const staged = stageResult.getValue();
     if (!staged) return Result.fail(new Error("Staged document not found"));
 
-    const writeResult = await this.writer.updateDocument(staged.path ?? staged.id, staged);
+    const writeResult = await this.writer.updateDocument(staged.documentId, staged);
     if (!writeResult.isSuccess) {
       return Result.fail(writeResult.getError());
     }

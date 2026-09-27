@@ -31,4 +31,23 @@ describe("HandleEditorChange", () => {
     expect(result.isSuccess).toBe(false);
     expect(storage.saveStagedDocument).not.toHaveBeenCalled();
   });
+
+  it("preserves the source body when editing proxy frontmatter only", async () => {
+    const storage = createDocumentStorage();
+    const base = buildSerializedEntry({
+      content: "source body must remain unchanged",
+      metadata: { ref: "/README.md" },
+    });
+    const result = await new HandleEditorChange(
+      new YamlDocumentContentParser(),
+      storage
+    ).execute(
+      base,
+      '---\ntitle: "Updated proxy"\n---\n',
+      true
+    );
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().content).toBe(base.content);
+  });
 });

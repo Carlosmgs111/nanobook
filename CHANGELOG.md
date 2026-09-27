@@ -8,6 +8,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Los flujos de creación y actualización separan el `id` estable del `path`: las operaciones de edición buscan siempre por `id` y reciben la ruta en el cuerpo.
 - `DocumentId` queda reservado para identidades estables y opacas; la lógica de rutas, índices y referencias relativas se concentra en `DocumentPath`.
 - Navegación, repositorios y resolutores usan explícitamente `path` para localizar documentos y `documentId` para identidad, eventos y dependencias.
 - La creación de documentos propaga eventos con la identidad estable del documento creado y de su padre.
@@ -53,6 +54,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tests unitarios para `CreateDocument` y `UpdateDocument` usando `InMemoryRepository` y mocks de `EventBus`/`DocumentChangeNotifier`.
 
 ### Changed
+- El frontmatter de los documentos usa `ref` para las referencias proxy; se
+  migraron los documentos existentes y la plantilla de serialización dejó de
+  generar `proxyTargetId`.
+- La entidad `Document`, el contrato `Entry` y el grafo de navegación usan
+  `ref`/`getReference()` en lugar de `proxyTargetId`/`getProxyTargetId()`.
 - El grafo de navegación se reconstruye automáticamente después de eventos
   `DocumentCreated` y `DocumentUpdated`, manteniendo actualizado el sidebar,
   breadcrumbs, relaciones padre/hijo, orden y metadatos sin reiniciar el
@@ -91,6 +97,21 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Eliminada la fachada `src/edition/client/` y sus tests asociados; la funcionalidad equivalente ahora reside en `src/edition/application/`, `src/edition/domain/` y en los propios componentes Astro.
 
 ### Fixed
+- La edición de proxies ahora carga el documento fuente y permite modificar
+  únicamente su frontmatter; el cuerpo referenciado no se carga ni se puede
+  sobrescribir al guardar.
+- Los documentos proxy ya no muestran el editor ni cargan el contenido
+  referenciado en la ruta de edición; ahora muestran una explicación de solo
+  lectura y ocultan el acceso “Editar” desde la vista pública.
+- Las páginas proxy conservan el contenido SSR resuelto y ya no son sustituidas
+  por previews almacenadas en el navegador durante la carga.
+- La página pública ya no reemplaza el contenido SSR de un proxy con una
+  preview confirmada de `sessionStorage` cuya referencia `ref` no coincide.
+- El editor descarta una copia staged antigua cuando coincide con la última
+  versión confirmada y el documento actual ya tiene un `ref` distinto,
+  evitando restaurar referencias proxy como `null`.
+- Los documentos proxy conservan su campo `ref` después de resolverse, evitando
+  que el editor lo pierda y lo vuelva a guardar como `null`.
 - Corregido el enlace del header del sidebar: `ParentEntry` ahora conserva la
   identidad estable en `id` y la ruta pública en `path`, evitando generar URLs
   `/undefined/` al navegar hacia índices de carpetas.

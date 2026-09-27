@@ -15,7 +15,7 @@ describe("SaveDocument", () => {
     const result = await new SaveDocument(storage, writer).execute(staged.documentId);
 
     expect(result.isSuccess).toBe(true);
-    expect(writer.updateDocument).toHaveBeenCalledWith(staged.path ?? staged.id, staged);
+    expect(writer.updateDocument).toHaveBeenCalledWith(staged.documentId, staged);
     expect(storage.saveConfirmedDocument).toHaveBeenCalledWith(staged.documentId, staged);
   });
 

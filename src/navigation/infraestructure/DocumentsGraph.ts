@@ -147,9 +147,9 @@ export class DocumentsGraph {
       }
 
       // proxy-target
-      const proxyTargetId = document.getProxyTargetId();
-      const proxyTarget = proxyTargetId
-        ? this.pathMap.get(proxyTargetId.getValue())
+      const reference = document.getReference();
+      const proxyTarget = reference
+        ? this.pathMap.get(reference.getValue())
         : undefined;
       if (proxyTarget) {
         this.addEdge(

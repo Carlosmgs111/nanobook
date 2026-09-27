@@ -1,7 +1,7 @@
 import type { Ref } from "../../domain/DocumentReference";
 
 export interface CreateDocumentRequest {
-  id: string;
+  path: string;
   title: string;
   description: string;
   content: string;

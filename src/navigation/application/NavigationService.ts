@@ -44,9 +44,7 @@ export class NavigationService implements NavigationServicePort {
   }
 
   private resolveGraphId(value: string): string {
-    return this.documentsGraph.getNode(value)?.id
-      ?? this.documentsGraph.getNodeByPath(value)?.id
-      ?? value;
+    return this.documentsGraph.getNode(value)?.id ?? value;
   }
 
   getInvalidatedIds(changes: DocumentChange[]): InvalidationResult {

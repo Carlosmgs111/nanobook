@@ -10,6 +10,12 @@ export class GetDocument {
   ) {}
 
   async execute(documentPathValue: string): Promise<Document | null> {
+    const document = await this.executeRaw(documentPathValue);
+    if (!document) return null;
+    return (await this.parseProxy.parseProxies([document]))[0];
+  }
+
+  async executeRaw(documentPathValue: string): Promise<Document | null> {
     const pathResult = DocumentPath.create(documentPathValue);
     if (!pathResult.isSuccess) return null;
 
@@ -22,6 +28,6 @@ export class GetDocument {
 
     const document = documentResult.getValue();
     if (!document) return null;
-    return (await this.parseProxy.parseProxies([document]))[0];
+    return document;
   }
 }

@@ -2,6 +2,7 @@ import type { Ref } from "../../domain/DocumentReference";
 
 export interface UpdateDocumentRequest {
   id: string;
+  path: string;
   title: string;
   description: string;
   content: string;

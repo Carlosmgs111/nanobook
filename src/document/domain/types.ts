@@ -39,7 +39,7 @@ export interface Entry {
   rawFrontmatter: string;
   content: string;
   slug: string;
-  proxyTargetId?: string;
+  ref?: string;
   headings: Heading[];
   metadata: DocumentMetadata;
 }

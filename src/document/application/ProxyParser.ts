@@ -40,7 +40,7 @@ export class ProxyParser {
         ...targetData,
         position: data.position,
         index: data.index,
-        ref: undefined,
+        ref: data.ref,
       };
       const proxyDocumentResult = Document.create(
         sourceDocument.getPath(),

@@ -39,6 +39,7 @@ export function buildSerializedEntry(
   return {
     documentId,
     id,
+    path: overrides.path ?? id,
     title: "Introduction",
     description: "Getting started",
     content: "# Intro\n\nHello.",

@@ -8,16 +8,20 @@ export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
   handle: APIRoute = async ({ params, request }) => {
     try {
-      const { slug } = params;
-      if (!slug) {
-        return jsonResponse({ error: "Falta el parámetro slug" }, 400);
+      const { slug: id } = params;
+      if (!id) {
+        return jsonResponse({ error: "Falta el parámetro id" }, 400);
       }
 
       const payload: UpdateDocumentRequest = JSON.parse(await request.text());
 
-      if (payload.id !== slug) {
+      if (!payload.id || !payload.path) {
+        return jsonResponse({ error: "El id y el path son obligatorios" }, 400);
+      }
+
+      if (payload.id !== id) {
         return jsonResponse(
-          { error: "El slug no coincide con el id del documento" },
+          { error: "El parámetro id no coincide con el id del documento" },
           400
         );
       }

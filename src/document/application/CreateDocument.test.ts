@@ -29,7 +29,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "index" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "index" }));
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().getDocumentId().getValue()).toMatch(
@@ -70,7 +70,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
@@ -83,7 +83,7 @@ describe("CreateDocument", () => {
     const useCase = new CreateDocument(repository, eventBus);
 
     const result = await useCase.execute({
-      ...buildDocumentInput({ id: "index" }),
+      ...buildDocumentInput({ path: "index" }),
       index: false,
     });
 
@@ -98,7 +98,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "intro" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "intro" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(ParentNotFoundError);
@@ -122,7 +122,7 @@ describe("CreateDocument", () => {
     const useCase = new CreateDocument(repository, eventBus);
 
     const result = await useCase.execute(
-      buildDocumentInput({ id: "intro/child" })
+      buildDocumentInput({ path: "intro/child" })
     );
 
     expect(result.isSuccess).toBe(false);
@@ -156,7 +156,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "index" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "index" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -171,7 +171,7 @@ describe("CreateDocument", () => {
       .mockResolvedValue(Result.fail(new EventBusError("boom")));
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "index" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "index" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EventBusError);
@@ -183,7 +183,7 @@ describe("CreateDocument", () => {
     const useCase = new CreateDocument(repository, eventBus);
 
     const result = await useCase.execute({
-      ...buildDocumentInput({ id: "index" }),
+      ...buildDocumentInput({ path: "index" }),
       // @ts-expect-error testing runtime validation
       title: undefined,
     });
@@ -202,7 +202,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "intro" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "intro" }));
 
     expect(result.isSuccess).toBe(true);
     expect(eventBus.publish).toHaveBeenCalledTimes(2);
@@ -234,7 +234,7 @@ describe("CreateDocument", () => {
       .mockResolvedValueOnce(Result.fail(new EventBusError("boom")));
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ id: "intro" }));
+    const result = await useCase.execute(buildDocumentInput({ path: "intro" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EventBusError);

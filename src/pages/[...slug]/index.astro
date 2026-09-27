@@ -23,14 +23,14 @@ const { entry, renderedBody } = rendered;
 const editHref = slug ? `/${slug}/edit` : `${Astro.request.url}edit`;
 
 const newHref = entry.metadata.index
-  ? entry.id === "index"
+  ? entry.path === "index"
     ? `${Astro.request.url}new`
-    : `/${entry.id}/new`
+    : `/${entry.path}/new`
   : "/new";
-const canonicalHref = entry.proxyTargetId
-  ? entry.proxyTargetId === "index"
+const canonicalHref = entry.ref
+  ? entry.ref === "index"
     ? "/"
-    : `/${entry.proxyTargetId}/`
+    : `/${entry.ref}/`
   : undefined;
 
 Astro.response.headers.set(
@@ -65,8 +65,19 @@ Astro.response.headers.set(
     const documentId = body?.dataset.documentId;
     if (!body || !documentId) return;
 
+    // Los proxies ya llegan resueltos desde el servidor. Una preview de
+    // sessionStorage puede pertenecer a una versión anterior del documento
+    // referenciado y ocultar temporalmente el contenido SSR correcto.
+    if (body.dataset.documentRef) return;
+
     const renderedResult = edition.getRenderedDocument.execute(documentId, true);
     if (!renderedResult.isSuccess) return;
+
+    const currentRef = body.dataset.documentRef ?? "";
+    const cachedRef = renderedResult.getValue().source.metadata.ref;
+    const normalizedCachedRef =
+      typeof cachedRef === "string" ? cachedRef : JSON.stringify(cachedRef ?? "");
+    if (normalizedCachedRef !== currentRef) return;
 
     body.innerHTML = renderedResult.getValue().rendered.Content;
     body.dataset.renderedFromEdition = "true";

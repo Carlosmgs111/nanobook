@@ -9,7 +9,7 @@ export class GetRenderedDocument {
     if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
     const cached = cachedResult.getValue();
     if (!cached) return Result.fail(new Error("Cached preview not found"));
-    if ((cached.source.documentId ?? cached.source.id) !== id) {
+    if (cached.source.documentId !== id) {
       return Result.fail(new Error("Cached preview does not match the document"));
     }
     if (!requireConfirmation) return Result.ok(cached);
