@@ -13,7 +13,7 @@ describe("GetDocument", () => {
         id: "doc-guides",
         title: "Guides",
         description: "Guides index",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
       },
       "# Guides"
     ).getValue();
@@ -40,7 +40,7 @@ describe("GetDocument", () => {
         id: "doc-proxy",
         title: "Proxy",
         description: "Proxy",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
         ref: "/README.md",
       },
       ""

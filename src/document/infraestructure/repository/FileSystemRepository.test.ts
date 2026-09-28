@@ -25,7 +25,7 @@ describe("FileSystemRepository", () => {
     await mkdir(join(contentDir, "guides"), { recursive: true });
     await writeFile(
       join(contentDir, "guides", "index.md"),
-      `---\nid: "doc-guides"\ntitle: "Guides"\ndescription: "Guides"\ndate: 2026-01-01\nauthor: "Nanobook"\n---\n# Guides\n`
+      `---\nid: "doc-guides"\ntitle: "Guides"\ndescription: "Guides"\ncreatedAt: 2026-01-01\nupdatedAt: 2026-01-01\nauthor: "Nanobook"\n---\n# Guides\n`
     );
 
     const repository = new FileSystemRepository(contentDir, parser);
@@ -35,7 +35,7 @@ describe("FileSystemRepository", () => {
         id: "doc-guides",
         title: "Guides",
         description: "Guides",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
         author: "Nanobook",
       },
       "# Guides\n"

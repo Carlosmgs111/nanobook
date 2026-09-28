@@ -1,13 +1,11 @@
 import type { Ref } from "../../domain/DocumentReference";
 
 export interface UpdateDocumentRequest {
-  id: string;
   path: string;
   title: string;
   description: string;
   content: string;
-  date: string;
-  author?: string;
+  /** Identity and audit fields are server-controlled on update. */
   cover?: string;
   tags?: string[];
   draft?: boolean;

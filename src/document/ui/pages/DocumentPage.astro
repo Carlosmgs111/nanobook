@@ -35,7 +35,7 @@ const { entry, Content, childEntries } = Astro.props;
         <span>PATH: {entry.path}</span>
         <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
         <span class="text-sm">
-          DATE: {entry.metadata.date.toISOString().slice(0, 10)}
+          DATE: {entry.metadata.createdAt?.toISOString().slice(0, 10)}
         </span>
         <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
         <span>AUTHOR: {entry.metadata.author}</span>

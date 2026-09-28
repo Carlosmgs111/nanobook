@@ -95,7 +95,8 @@ const intro = Document.create(
   {
     title: "Original intro",
     description: "Introduction",
-    date: new Date("2026-09-24T00:00:00.000Z"),
+    createdAt: new Date("2026-09-24T00:00:00.000Z"),
+    updatedAt: new Date("2026-09-24T00:00:00.000Z"),
     author: "Nanobook",
     index: false,
   },

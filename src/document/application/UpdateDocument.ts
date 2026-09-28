@@ -45,10 +45,18 @@ export class UpdateDocument {
     }
 
     const { id, path, content, ...rest } = documentDelta;
+    const existingMetadata = existingDocument.getMetadata();
 
     const updatedDocumentResult = Document.create(
       path,
-      rest,
+      {
+        ...rest,
+        // Identity and audit metadata are owned by the existing entity.
+        id: existingDocument.getDocumentId().getValue(),
+        author: existingMetadata.author,
+        createdAt: existingMetadata.createdAt,
+        updatedAt: new Date(),
+      },
       content,
       undefined,
       undefined,

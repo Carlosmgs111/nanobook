@@ -43,6 +43,36 @@ describe("HandleEditorChange", () => {
     });
   });
 
+  it("ignores protected metadata supplied through edited frontmatter", async () => {
+    const storage = createDocumentStorage();
+    const base = buildSerializedEntry({
+      documentId: "stable-id",
+      metadata: {
+        id: "stable-id",
+        author: "Original author",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-02T00:00:00.000Z",
+      },
+    });
+    const result = await new HandleEditorChange(
+      new YamlDocumentContentParser(),
+      storage
+    ).execute(
+      base,
+      '---\nid: "forged-id"\nauthor: "Forged author"\ncreatedAt: 2099-01-01\nupdatedAt: 2099-01-02\ntitle: "Updated"\n---\n'
+    );
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().documentId).toBe("stable-id");
+    expect(result.getValue().metadata).toMatchObject({
+      id: "stable-id",
+      author: "Original author",
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-02T00:00:00.000Z",
+      title: "Updated",
+    });
+  });
+
   it("returns an error for invalid frontmatter", async () => {
     const storage = createDocumentStorage();
     const useCase = new HandleEditorChange(new YamlDocumentContentParser(), storage);

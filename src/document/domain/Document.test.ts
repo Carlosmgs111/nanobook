@@ -9,7 +9,7 @@ describe("Document", () => {
         id: "document-id",
         title: "New file",
         description: "New file",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
         ref: "/README.md",
       },
       "# Content"
@@ -19,5 +19,23 @@ describe("Document", () => {
     expect(document.getRawFrontmatter()).not.toContain("proxyTargetId");
     expect(document.getReference()?.getValue()).toBe("/README.md");
     expect(document.parse().ref).toBe("/README.md");
+  });
+
+  it("stores creation and update timestamps separately", () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const document = Document.create(
+      "timestamps",
+      {
+        id: "timestamps-id",
+        title: "Timestamps",
+        description: "Timestamps",
+        createdAt,
+      }
+    ).getValue();
+
+    expect(document.getMetadata().createdAt).toEqual(createdAt);
+    expect(document.getMetadata().updatedAt).toEqual(createdAt);
+    expect(document.getRawFrontmatter()).toContain("createdAt:");
+    expect(document.getRawFrontmatter()).toContain("updatedAt:");
   });
 });

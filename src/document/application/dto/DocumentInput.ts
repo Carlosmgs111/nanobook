@@ -6,7 +6,8 @@ export interface DocumentInput {
   title: string;
   description: string;
   content: string;
-  date: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   author?: string;
   cover?: string;
   tags?: string[];

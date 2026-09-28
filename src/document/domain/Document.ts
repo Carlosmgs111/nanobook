@@ -16,7 +16,8 @@ const NEW_DOCUMENT_TEMPLATE = `---
 id: "<%= id %>"
 title: "<%= title %>"
 description: "<%= description %>"
-date: <%= date %>
+createdAt: <%= createdAt %>
+updatedAt: <%= updatedAt %>
 author: "<%= author %>"
 tags: []
 draft: false
@@ -64,12 +65,15 @@ export class Document {
     this.reference = overrides.ref
       ? new DocumentReference(overrides.ref)
       : null;
+    const createdAt = overrides.createdAt ?? now;
+    const updatedAt = overrides.updatedAt ?? createdAt;
     this.metadata = Document.toDocumentMetadata(
       {
         title: overrides.title,
         id: this.documentId.getValue(),
         description: overrides.description,
-        date: overrides.date ?? now,
+        createdAt,
+        updatedAt,
         author: overrides.author ?? "Nanobook",
         tags: overrides.tags ?? [],
         cover: overrides.cover,
@@ -84,7 +88,8 @@ export class Document {
         id: this.documentId.getValue(),
         title: this.metadata.title,
         description: this.metadata.description,
-        date: this.metadata.date.toISOString(),
+        createdAt: this.metadata.createdAt.toISOString(),
+        updatedAt: this.metadata.updatedAt.toISOString(),
         author: this.metadata.author || "",
         ref: overrides.ref ? JSON.stringify(overrides.ref) : "null",
       });
@@ -251,10 +256,8 @@ export class Document {
     return value;
   }
 
-  private static toDocumentMetadata(
-    data: DocumentMetadata,
-    documentId: string
-  ): DocumentMetadata {
+  private static toDocumentMetadata(data: DocumentMetadata): DocumentMetadata {
+    const documentId = data.id ?? "unknown";
     return {
       id: data.id,
       title: this.assertRequiredField(
@@ -267,7 +270,16 @@ export class Document {
         "description",
         documentId
       ),
-      date: this.assertRequiredField(data.date as Date, "date", documentId),
+      createdAt: this.assertRequiredField(
+        data.createdAt as Date,
+        "createdAt",
+        documentId
+      ),
+      updatedAt: this.assertRequiredField(
+        data.updatedAt as Date,
+        "updatedAt",
+        documentId
+      ),
       author: this.assertRequiredField(
         data.author as string,
         "author",

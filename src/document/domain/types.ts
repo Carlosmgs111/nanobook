@@ -7,7 +7,8 @@ export interface DocumentMetadata {
   id?: string;
   title: string;
   description: string;
-  date: Date;
+  createdAt: Date;
+  updatedAt: Date;
   author?: string;
   cover?: string;
   tags?: string[];

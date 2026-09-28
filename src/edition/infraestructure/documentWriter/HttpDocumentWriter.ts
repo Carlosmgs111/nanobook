@@ -21,13 +21,10 @@ function toUpdateDocumentRequest(
   document: SerializedEntry
 ): UpdateDocumentRequest {
   return {
-    id: document.documentId,
     path: document.path,
     title: document.title,
     description: document.description,
     content: document.content,
-    date: document.metadata.date,
-    author: document.metadata.author,
     cover: document.metadata.cover,
     tags: document.metadata.tags,
     draft: document.metadata.draft,

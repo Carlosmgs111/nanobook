@@ -9,7 +9,8 @@ function document(path: string, id: string) {
       id,
       title: path,
       description: path,
-      date: new Date("2026-01-01"),
+      createdAt: new Date("2026-01-01"),
+      updatedAt: new Date("2026-01-01"),
     },
     "# Document"
   ).getValue();

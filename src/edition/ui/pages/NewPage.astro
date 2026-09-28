@@ -214,7 +214,6 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
       path,
       ...metadata,
       content: "",
-      date: new Date().toISOString(),
     });
     if (!result.isSuccess) {
       throw result.getError();

@@ -43,14 +43,15 @@ function baseEntry(documentId: string, path: string): SerializedEntry {
     title: path,
     description: path,
     content: `# ${path}`,
-    rawFrontmatter: `---\nid: "${documentId}"\ntitle: "${path}"\ndescription: "${path}"\ndate: 2026-01-01T00:00:00.000Z\n---\n`,
+      rawFrontmatter: `---\nid: "${documentId}"\ntitle: "${path}"\ndescription: "${path}"\ncreatedAt: 2026-01-01T00:00:00.000Z\nupdatedAt: 2026-01-01T00:00:00.000Z\n---\n`,
     slug: path,
     position: 0,
     headings: [],
     metadata: {
       title: path,
       description: path,
-      date: "2026-01-01T00:00:00.000Z",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
     },
   };
 }

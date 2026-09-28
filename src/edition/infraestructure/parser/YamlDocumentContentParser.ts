@@ -26,10 +26,17 @@ export class YamlDocumentContentParser implements DocumentContentParser {
 
     const content = fullContent.replace(/^---[\s\S]*?---\n?/g, "");
 
-    const date: string =
-      data.date instanceof Date
-        ? data.date.toISOString()
-        : data.date ?? base.metadata.date;
+    const {
+      id: _id,
+      author: _author,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...editableData
+    } = data;
+    const baseMetadata = base.metadata;
+
+    const createdAt = base.metadata.createdAt;
+    const updatedAt = base.metadata.updatedAt;
 
     return Result.ok({
       ...base,
@@ -38,9 +45,12 @@ export class YamlDocumentContentParser implements DocumentContentParser {
       position: data.position ?? base.position,
       ref: typeof data.ref === "string" ? data.ref : base.ref,
       metadata: {
-        ...base.metadata,
-        ...data,
-        date,
+        ...baseMetadata,
+        ...editableData,
+        id: base.metadata.id ?? base.documentId,
+        author: base.metadata.author,
+        createdAt,
+        updatedAt,
       },
       content,
       rawFrontmatter,

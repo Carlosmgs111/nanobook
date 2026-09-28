@@ -16,6 +16,7 @@ export function serializeMetadata(metadata: DocumentMetadata): string {
     cover: metadata.cover,
     tags: metadata.tags,
     author: metadata.author,
-    date: metadata.date?.toISOString(),
+    createdAt: metadata.createdAt?.toISOString(),
+    updatedAt: metadata.updatedAt?.toISOString(),
   });
 }

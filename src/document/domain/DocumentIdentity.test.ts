@@ -11,7 +11,7 @@ describe("Document identity and version", () => {
         id: "doc-cache-01",
         title: "Cache",
         description: "Cache guide",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
       },
       "# Cache"
     );
@@ -35,7 +35,7 @@ describe("Document identity and version", () => {
         id: "doc-cache-01",
         title: "Cache",
         description: "Cache guide",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
       },
       "# Cache"
     );
@@ -56,7 +56,7 @@ describe("Document identity and version", () => {
         id: "doc-index-01",
         title: "New directory",
         description: "Directory index",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
       },
       "# New directory"
     );
@@ -76,7 +76,7 @@ describe("Document identity and version", () => {
       {
         title: "Cache",
         description: "Cache guide",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
       },
       "# Cache"
     );

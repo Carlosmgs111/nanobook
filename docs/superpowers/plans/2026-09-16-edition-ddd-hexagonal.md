@@ -60,10 +60,10 @@
 
 ```ts
 it("preserves the base metadata while replacing frontmatter and body", () => {
-  const result = buildEditionDraft(baseDocument, "---\ntitle: Nuevo\ndate: 2026-09-16\n---\n# Cuerpo", parser);
+  const result = buildEditionDraft(baseDocument, "---\ntitle: Nuevo\ncreatedAt: 2026-09-16\nupdatedAt: 2026-09-16\n---\n# Cuerpo", parser);
 
   expect(result.title).toBe("Nuevo");
-  expect(result.metadata.date).toBe("2026-09-16T00:00:00.000Z");
+  expect(result.metadata.createdAt).toBe("2026-09-16T00:00:00.000Z");
   expect(result.content).toBe("# Cuerpo");
   expect(result.metadata.index).toBe(baseDocument.metadata.index);
 });
@@ -95,8 +95,9 @@ export interface DraftParser {
 export function buildEditionDraft(base: SerializedEntry, source: string, parser: DraftParser): SerializedEntry {
   const { rawFrontmatter, content } = parser.removeFrontmatter(source);
   const data = parser.parse(rawFrontmatter);
-  const date = data.date instanceof Date ? data.date.toISOString() : data.date ?? base.metadata.date;
-  return { ...base, metadata: { ...base.metadata, ...data, date }, content, rawFrontmatter };
+  const createdAt = base.metadata.createdAt;
+  const updatedAt = base.metadata.updatedAt;
+  return { ...base, metadata: { ...base.metadata, ...data, createdAt, updatedAt }, content, rawFrontmatter };
 }
 
 export function sameEditionDraft(left: SerializedEntry, right: SerializedEntry): boolean {

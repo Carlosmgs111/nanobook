@@ -67,7 +67,6 @@ export class CreateDocument {
         title: input.title,
         description: input.description,
         author: input.author,
-        date: input.date,
         position: input.position,
         draft: input.draft,
         tags: input.tags,

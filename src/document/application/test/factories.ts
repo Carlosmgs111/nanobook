@@ -38,7 +38,7 @@ export function buildDocumentInput(
     path: overrides.path ?? "intro",
     title: "Introduction",
     description: "Getting started",
-    date: new Date("2024-01-01"),
+    createdAt: new Date("2024-01-01"),
     content: "# Intro\n\nHello.",
     ...overrides,
   };
@@ -58,7 +58,8 @@ export function createDocument(
       id: metadata.id ?? crypto.randomUUID(),
       title: metadata.title,
       description: metadata.description,
-      date: metadata.date ?? new Date(),
+      createdAt: metadata.createdAt ?? new Date(),
+      updatedAt: metadata.updatedAt ?? metadata.createdAt ?? new Date(),
       author: metadata.author,
       tags: metadata.tags,
       cover: metadata.cover,

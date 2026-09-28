@@ -13,7 +13,7 @@ describe("ProxyParser", () => {
         id: "source-id",
         title: "Proxy",
         description: "Proxy",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
         ref: "/README.md",
       },
       ""
@@ -23,7 +23,7 @@ describe("ProxyParser", () => {
       data: {
         title: "README",
         description: "README",
-        date: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
       },
       body: "# README",
     };

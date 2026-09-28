@@ -21,7 +21,7 @@ Nanobook es un sitio de documentación técnica construido con Astro. Organiza e
 - **Tabla de contenidos (TOC)** con scroll spy, indicador visual y modos estándar/compacto.
 - **Ordenamiento configurable** de documentos mediante el campo `position` en frontmatter.
 - **Soporte para borradores**: los documentos con `draft: true` no se generan.
-- **Etiquetas (`tags`)** y metadatos (`title`, `description`, `date`, `author`, `cover`).
+- **Etiquetas (`tags`)** y metadatos (`title`, `description`, `createdAt`, `updatedAt`, `author`, `cover`).
 
 ### Lectura y experiencia de usuario
 
@@ -127,7 +127,8 @@ src/content/
 ---
 title: "Título del documento"
 description: "Breve descripción del contenido"
-date: 2026-07-30
+createdAt: 2026-07-30
+updatedAt: 2026-07-30
 author: "Autor"
 tags: ["tag1", "tag2"]
 draft: false
@@ -141,7 +142,8 @@ Campos:
 
 - `title` (obligatorio): Título del documento o carpeta.
 - `description` (obligatorio): Descripción corta.
-- `date` (obligatorio): Fecha de publicación.
+- `createdAt` (obligatorio): Fecha de creación.
+- `updatedAt` (obligatorio): Fecha de última actualización.
 - `author` (obligatorio): Autor del contenido.
 - `tags` (obligatorio): Lista de etiquetas.
 - `draft` (opcional): Si es `true`, el documento no se genera.

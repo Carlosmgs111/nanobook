@@ -3,6 +3,7 @@ import type { UpdateDocument } from "../../application/UpdateDocument";
 import { jsonResponse, handleServiceError } from "./utils";
 import type { UpdateDocumentRequest } from "./dto/UpdateDocumentRequest";
 import { toDocumentInput } from "./mappers/toDocumentInput";
+import type { DocumentInput } from "../../application/dto/DocumentInput";
 
 export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
@@ -15,18 +16,15 @@ export class UpdateDocumentController {
 
       const payload: UpdateDocumentRequest = JSON.parse(await request.text());
 
-      if (!payload.id || !payload.path) {
-        return jsonResponse({ error: "El id y el path son obligatorios" }, 400);
+      if (!payload.path) {
+        return jsonResponse({ error: "El path es obligatorio" }, 400);
       }
 
-      if (payload.id !== id) {
-        return jsonResponse(
-          { error: "El parámetro id no coincide con el id del documento" },
-          400
-        );
-      }
-
-      const result = await this.updateDocument.execute(toDocumentInput(payload));
+      const result = await this.updateDocument.execute({
+        ...toDocumentInput(payload),
+        // The route is the sole external source of identity for updates.
+        id,
+      } as DocumentInput);
       if (!result.isSuccess) {
         return handleServiceError(result.getError());
       }

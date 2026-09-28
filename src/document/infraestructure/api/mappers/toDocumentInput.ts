@@ -7,6 +7,5 @@ export function toDocumentInput(
 ): DocumentInput {
   return {
     ...request,
-    date: new Date(request.date),
   };
 }

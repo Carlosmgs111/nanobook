@@ -17,9 +17,9 @@ const coerceDates = (value: unknown): unknown => {
   }
 
   if (typeof value === "string" && ISO_DATE_REGEX.test(value)) {
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) {
-      return date;
+    const parsedDate = new Date(value);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
     }
   }
 
@@ -44,6 +44,9 @@ export class FrontmatterParser {
 
     try {
       const data = parseYaml(frontmatter) as Record<string, unknown>;
+      if (data.updatedAt === undefined && data.createdAt !== undefined) {
+        data.updatedAt = data.createdAt;
+      }
       return { data: coerceDates(data) as DocumentMetadata, body, rawFrontmatter };
     } catch (error) {
       console.error(error);

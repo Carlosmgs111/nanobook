@@ -19,7 +19,7 @@ import {
 const rootIndex = createDocument("index", {
   title: "Root",
   description: "Root index",
-  date: new Date(),
+  createdAt: new Date(),
 });
 
 describe("CreateDocument", () => {
@@ -47,7 +47,7 @@ describe("CreateDocument", () => {
     const existing = createDocument("intro", {
       title: "Existing",
       description: "Existing doc",
-      date: new Date(),
+      createdAt: new Date(),
     });
     const repository = createRepository({
       getByPath: vi.fn().mockResolvedValue(Result.ok(existing)),
@@ -106,7 +106,7 @@ describe("CreateDocument", () => {
     const nonIndexParent = createDocument("intro", {
       title: "Intro",
       description: "Not an index",
-      date: new Date(),
+      createdAt: new Date(),
     });
     const repository = createRepository({
       getByPath: vi.fn(async (id: string) => {
@@ -220,7 +220,7 @@ describe("CreateDocument", () => {
     const parent = createDocument("new-dir/index", {
       title: "new-dir",
       description: "Directory",
-      date: new Date(),
+      createdAt: new Date(),
     });
     const repository = createRepository({
       getByPath: vi.fn(async (path: string) => {

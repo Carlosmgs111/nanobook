@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { HttpDocumentWriter } from "./HttpDocumentWriter";
-import type { CreateDocumentRequest } from "../../../document";
+import type { CreateDocumentRequest, SerializedEntry } from "../../../document";
 
 const documentRequest: CreateDocumentRequest = {
   id: "doc-new",
@@ -8,7 +8,6 @@ const documentRequest: CreateDocumentRequest = {
   title: "New file",
   description: "A new document",
   content: "# New file",
-  date: "2024-01-01T00:00:00.000Z",
 };
 
 describe("HttpDocumentWriter", () => {
@@ -29,5 +28,42 @@ describe("HttpDocumentWriter", () => {
       "/api/doc-new",
       expect.objectContaining({ method: "POST" })
     );
+  });
+
+  it("does not send identity or audit fields in an update payload", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const entry = {
+      documentId: "doc-immutable",
+      id: "doc-immutable",
+      path: "guide/intro",
+      isIndex: false,
+      version: "version",
+      title: "Intro",
+      description: "Intro",
+      position: 0,
+      rawFrontmatter: "",
+      content: "# Intro",
+      slug: "intro",
+      headings: [],
+      metadata: {
+        id: "doc-immutable",
+        title: "Intro",
+        description: "Intro",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-02T00:00:00.000Z",
+        author: "Author",
+      },
+    } as SerializedEntry;
+
+    await new HttpDocumentWriter().updateDocument("doc-immutable", entry);
+
+    const request = vi.mocked(fetchMock).mock.calls[0][1];
+    const payload = JSON.parse(String(request?.body));
+    expect(payload).not.toHaveProperty("id");
+    expect(payload).not.toHaveProperty("author");
+    expect(payload).not.toHaveProperty("createdAt");
+    expect(payload).not.toHaveProperty("updatedAt");
   });
 });

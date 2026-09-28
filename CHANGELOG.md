@@ -7,6 +7,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Separada la auditoría temporal en `createdAt` y `updatedAt`; la identidad, el autor y `createdAt` quedan protegidos durante las actualizaciones, y los payloads de edición ya no aceptan campos controlados por el servidor.
+- Ocultos en el editor los campos de identidad y auditoría (`id`, `author`, `createdAt` y `updatedAt`), que además se ignoran si se introducen manualmente en el frontmatter.
+- Eliminadas las referencias al atributo temporal legado `date`; el frontmatter y los contratos usan exclusivamente `createdAt` y `updatedAt`.
+- El borrado de directorios ahora informa explícitamente las eliminaciones parciales y publica eventos solo para documentos confirmados como eliminados.
 - Corregida la sincronización del editor para que `title`, `description`, `position` y `ref` editados en el frontmatter también actualicen los campos del documento staged enviados al backend.
 - El repath de directorios ahora mueve también todos sus documentos descendientes en filesystem, GitHub y memoria, conservando sus identidades estables.
 - El adaptador filesystem ahora elimina directorios padres vacíos después de un repath, sin borrar carpetas que aún contienen documentos.

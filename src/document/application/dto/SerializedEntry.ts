@@ -1,12 +1,16 @@
 import type { Entry, DocumentMetadata } from "../../domain/types";
 
 export interface SerializedEntry extends Omit<Entry, "metadata"> {
-  metadata: Omit<DocumentMetadata, "date"> & { date: string };
+  metadata: Omit<DocumentMetadata, "createdAt" | "updatedAt"> & {
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 export interface SerializedDocumentMetadata
-  extends Omit<DocumentMetadata, "date"> {
-  date: string;
+  extends Omit<DocumentMetadata, "createdAt" | "updatedAt"> {
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function serializeEntry(entry: Entry): SerializedEntry {
@@ -14,7 +18,8 @@ export function serializeEntry(entry: Entry): SerializedEntry {
     ...entry,
     metadata: {
       ...entry.metadata,
-      date: entry.metadata.date.toISOString(),
+      createdAt: entry.metadata.createdAt.toISOString(),
+      updatedAt: entry.metadata.updatedAt.toISOString(),
     },
   };
 }
@@ -24,7 +29,8 @@ export function deserializeEntry(serialized: SerializedEntry): Entry {
     ...serialized,
     metadata: {
       ...serialized.metadata,
-      date: new Date(serialized.metadata.date),
+      createdAt: new Date(serialized.metadata.createdAt),
+      updatedAt: new Date(serialized.metadata.updatedAt),
     },
   };
 }

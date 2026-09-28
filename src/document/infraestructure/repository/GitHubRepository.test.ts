@@ -28,7 +28,8 @@ describe("GitHubRepository", () => {
 id: "doc-guides-cache"
 title: "Original cache"
 description: "Initial document"
-date: 2026-09-24
+createdAt: 2026-09-24
+updatedAt: 2026-09-24
 author: "Nanobook"
 ---
 ## Original heading
@@ -85,7 +86,7 @@ author: "Nanobook"
         id: "doc-guides-cache",
         title: "Updated cache",
         description: "Updated document",
-        date: new Date("2026-09-24T00:00:00.000Z"),
+        createdAt: new Date("2026-09-24T00:00:00.000Z"),
         author: "Nanobook",
       },
       "## Updated heading\n"
@@ -133,7 +134,7 @@ author: "Nanobook"
         id: "doc-guides",
         title: "Guides",
         description: "Guides",
-        date: new Date("2026-09-24T00:00:00.000Z"),
+        createdAt: new Date("2026-09-24T00:00:00.000Z"),
         author: "Nanobook",
       },
       "# Guides\n"
@@ -174,7 +175,7 @@ author: "Nanobook"
         id: "doc-guides-cache",
         title: "Renamed",
         description: "Renamed document",
-        date: new Date("2026-09-24T00:00:00.000Z"),
+        createdAt: new Date("2026-09-24T00:00:00.000Z"),
         author: "Nanobook",
       },
       "# Renamed\n"

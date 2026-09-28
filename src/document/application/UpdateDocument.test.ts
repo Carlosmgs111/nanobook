@@ -20,7 +20,7 @@ const existingDocument = createDocument(
   {
     title: "Old title",
     description: "Old description",
-    date: new Date("2024-01-01"),
+    createdAt: new Date("2024-01-01"),
   },
   "# Old"
 );
@@ -33,7 +33,7 @@ function buildUpdateInput(
     path: overrides.path ?? "guide/intro",
     title: overrides.title ?? "New title",
     description: overrides.description ?? "New description",
-    date: overrides.date ?? new Date("2024-01-02"),
+    createdAt: overrides.createdAt ?? new Date("2024-01-02"),
     content: overrides.content ?? "# New",
     ...overrides,
   };
@@ -46,7 +46,7 @@ describe("UpdateDocument", () => {
       {
         title: "new-dir",
         description: "new-dir",
-        date: new Date("2026-08-29"),
+        createdAt: new Date("2026-08-29"),
       },
       "# Directory"
     );
@@ -61,7 +61,7 @@ describe("UpdateDocument", () => {
       path: "new-dir/index",
       title: "new-dir",
       description: "new-dir",
-      date: new Date("2026-08-29"),
+      createdAt: new Date("2026-08-29"),
       content: "# Updated directory",
     });
 
@@ -103,7 +103,7 @@ describe("UpdateDocument", () => {
       path: "reference/index",
       title: "Reference",
       description: "Reference",
-      date: new Date("2026-01-01"),
+      createdAt: new Date("2026-01-01"),
       content: "# Reference",
     });
 
@@ -160,6 +160,38 @@ describe("UpdateDocument", () => {
         documentId: existingDocument.getDocumentId().getValue(),
       })
     );
+  });
+
+  it("preserves identity, author, and creation time during updates", async () => {
+    const createdAt = new Date("2024-01-01T00:00:00.000Z");
+    const original = createDocument("guide/immutable", {
+      title: "Original",
+      description: "Original",
+      author: "Original author",
+      createdAt,
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(original)),
+    });
+    const useCase = new UpdateDocument(repository, createEventBus());
+
+    const result = await useCase.execute({
+      id: original.getDocumentId().getValue(),
+      path: "guide/immutable",
+      title: "Changed",
+      description: "Changed",
+      createdAt: new Date("2099-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2099-01-01T00:00:00.000Z"),
+      author: "Forged author",
+      content: "# Changed",
+    });
+
+    expect(result.isSuccess).toBe(true);
+    const updated = vi.mocked(repository.update).mock.calls[0][0];
+    expect(updated.getDocumentId().getValue()).toBe(original.getDocumentId().getValue());
+    expect(updated.getMetadata().author).toBe("Original author");
+    expect(updated.getMetadata().createdAt).toEqual(createdAt);
+    expect(updated.getMetadata().updatedAt!.getTime()).toBeGreaterThan(createdAt.getTime());
   });
 
   it("returns DocumentNotFoundError when the document does not exist", async () => {
