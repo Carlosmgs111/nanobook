@@ -1,9 +1,11 @@
 import { Result } from "../../shared/domain/Result";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
+import type { Document } from "../domain/Document";
 import { DocumentDeleted } from "../domain/events/DocumentDeleted";
 import {
   DocumentNotFoundError,
+  DocumentDeletionPartialError,
   type DocumentServiceError,
   DocumentRepositoryError,
   DocumentParseError,
@@ -22,18 +24,25 @@ export class DeleteDocument {
     private eventBus: EventBus
   ) {}
 
-  async execute(documentId: string): Promise<Result<DeleteDocumentError, void>> {
+  async execute(
+    documentId: string
+  ): Promise<Result<DeleteDocumentError, void>> {
     const documentResult = await this.repository.getById(documentId);
-    if (!documentResult.isSuccess) return Result.fail(documentResult.getError());
+    if (!documentResult.isSuccess)
+      return Result.fail(documentResult.getError());
     const document = documentResult.getValue();
     if (!document) return Result.fail(new DocumentNotFoundError(documentId));
 
     const documentsResult = await this.repository.list();
-    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    if (!documentsResult.isSuccess)
+      return Result.fail(documentsResult.getError());
 
     const publicPath = document.getDocumentPath().getPublicValue();
     const documentsToDelete = documentsResult.getValue().filter((candidate) => {
-      if (candidate.getDocumentId().getValue() === document.getDocumentId().getValue()) {
+      if (
+        candidate.getDocumentId().getValue() ===
+        document.getDocumentId().getValue()
+      ) {
         return true;
       }
 
@@ -44,17 +53,43 @@ export class DeleteDocument {
       const candidatePath = candidate.getDocumentPath().getPublicValue();
       return candidatePath.startsWith(`${publicPath}/`);
     });
+    const deletedDocuments = [] as typeof documentsToDelete;
 
     for (const documentToDelete of documentsToDelete) {
       const deleteResult = await this.repository.delete(documentToDelete);
-      if (!deleteResult.isSuccess) return Result.fail(deleteResult.getError());
+      if (!deleteResult.isSuccess) {
+        if (deletedDocuments.length === 0)
+          return Result.fail(deleteResult.getError());
 
-      const eventResult = await this.eventBus.publish(
-        new DocumentDeleted(documentToDelete.getDocumentId().getValue())
-      );
-      if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
+        const eventResult = await this.publishDeletedEvents(deletedDocuments);
+        if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
+
+        return Result.fail(
+          new DocumentDeletionPartialError(
+            deletedDocuments.map((deleted) =>
+              deleted.getDocumentId().getValue()
+            ),
+            documentToDelete.getDocumentId().getValue(),
+            { cause: deleteResult.getError() }
+          )
+        );
+      }
+      deletedDocuments.push(documentToDelete);
     }
 
+    const eventResult = await this.publishDeletedEvents(deletedDocuments);
+    if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
+
+    return Result.ok();
+  }
+
+  private async publishDeletedEvents(documents: Document[]) {
+    for (const document of documents) {
+      const eventResult = await this.eventBus.publish(
+        new DocumentDeleted(document.getDocumentId().getValue())
+      );
+      if (!eventResult.isSuccess) return eventResult;
+    }
     return Result.ok();
   }
 }

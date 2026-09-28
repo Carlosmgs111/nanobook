@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { DeleteDocument } from "./DeleteDocument";
 import { DocumentDeleted } from "../domain/events/DocumentDeleted";
-import { DocumentNotFoundError, DocumentRepositoryError } from "../domain/errors";
+import {
+  DocumentDeletionPartialError,
+  DocumentNotFoundError,
+  DocumentRepositoryError,
+} from "../domain/errors";
 import { Result } from "../../shared/domain/Result";
 import { createDocument, createEventBus, createRepository } from "./test/factories";
 
@@ -101,5 +105,42 @@ describe("DeleteDocument", () => {
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
     expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it("reports partial deletion and publishes only confirmed deletions", async () => {
+    const directory = createDocument("guides/index", {
+      title: "Guides",
+      description: "Guide directory",
+    });
+    const child = createDocument("guides/intro", {
+      title: "Intro",
+      description: "Introduction",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(directory)),
+      list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
+      delete: vi
+        .fn()
+        .mockResolvedValueOnce(Result.ok())
+        .mockResolvedValueOnce(Result.fail(new DocumentRepositoryError("boom"))),
+    });
+    const eventBus = createEventBus();
+
+    const result = await new DeleteDocument(repository, eventBus).execute(
+      directory.getDocumentId().getValue()
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentDeletionPartialError);
+    expect((result.getError() as DocumentDeletionPartialError).deletedDocumentIds).toEqual([
+      directory.getDocumentId().getValue(),
+    ]);
+    expect((result.getError() as DocumentDeletionPartialError).failedDocumentId).toBe(
+      child.getDocumentId().getValue()
+    );
+    expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ documentId: directory.getDocumentId().getValue() })
+    );
   });
 });
