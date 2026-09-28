@@ -20,7 +20,6 @@ const rootIndex = createDocument("index", {
   title: "Root",
   description: "Root index",
   date: new Date(),
-  index: true,
 });
 
 describe("CreateDocument", () => {
@@ -49,7 +48,6 @@ describe("CreateDocument", () => {
       title: "Existing",
       description: "Existing doc",
       date: new Date(),
-      index: false,
     });
     const repository = createRepository({
       getByPath: vi.fn().mockResolvedValue(Result.ok(existing)),
@@ -77,18 +75,17 @@ describe("CreateDocument", () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
-  it("returns InvalidDocumentIdError when an index id is marked as non-index", async () => {
+  it("derives the index type from the path instead of the legacy flag", async () => {
     const repository = createRepository();
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
     const result = await useCase.execute({
       ...buildDocumentInput({ path: "index" }),
-      index: false,
     });
 
-    expect(result.isSuccess).toBe(false);
-    expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().isIndex()).toBe(true);
   });
 
   it("returns ParentNotFoundError when the parent does not exist", async () => {
@@ -105,12 +102,11 @@ describe("CreateDocument", () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
-  it("returns InvalidDocumentIdError when the parent is not an index", async () => {
+  it("looks for child documents under the parent's internal index", async () => {
     const nonIndexParent = createDocument("intro", {
       title: "Intro",
       description: "Not an index",
       date: new Date(),
-      index: false,
     });
     const repository = createRepository({
       getByPath: vi.fn(async (id: string) => {
@@ -126,7 +122,7 @@ describe("CreateDocument", () => {
     );
 
     expect(result.isSuccess).toBe(false);
-    expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
+    expect(result.getError()).toBeInstanceOf(ParentNotFoundError);
     expect(repository.create).not.toHaveBeenCalled();
   });
 
@@ -218,6 +214,26 @@ describe("CreateDocument", () => {
         documentId: rootIndex.getDocumentId().getValue(),
       })
     );
+  });
+
+  it("resolves a directory parent through its internal index path", async () => {
+    const parent = createDocument("new-dir/index", {
+      title: "new-dir",
+      description: "Directory",
+      date: new Date(),
+    });
+    const repository = createRepository({
+      getByPath: vi.fn(async (path: string) => {
+        if (path === "new-dir/index") return Result.ok(parent);
+        return Result.ok(null);
+      }),
+    });
+    const useCase = new CreateDocument(repository, createEventBus());
+
+    const result = await useCase.execute(buildDocumentInput({ path: "new-dir/file" }));
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.getByPath).toHaveBeenCalledWith("new-dir/index");
   });
 
   it("stops and propagates when parent event publication fails", async () => {

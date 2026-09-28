@@ -10,7 +10,6 @@ tags:
   - renderizado
   - cache
 draft: false
-index: false
 ---
 
 # Renderizado local confirmado en edition

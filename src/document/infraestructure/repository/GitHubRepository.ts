@@ -108,6 +108,12 @@ export class GitHubRepository implements ContentRepository {
     return this.findDocument((document) => document.getPath() === path);
   }
 
+  async getByPublicPath(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    return this.findDocument((document) => document.getPublicPath() === path);
+  }
+
   async listChildren(
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
@@ -116,7 +122,7 @@ export class GitHubRepository implements ContentRepository {
     return Result.ok(
       documentsResult
         .getValue()
-        .filter((document) => document.getParentPath()?.getValue() === parentPath)
+        .filter((document) => document.getParentPath()?.getPublicValue() === parentPath)
     );
   }
 
@@ -176,7 +182,7 @@ export class GitHubRepository implements ContentRepository {
   ): Promise<
     Result<DocumentRepositoryError | DocumentAlreadyExistsError | DocumentNotFoundError, void>
   > {
-    const path = this.idToGitHubPath(document.getPath(), document.getMetadata().index);
+    const path = this.pathToGitHubPath(document.getPath());
     try {
       const sha = await this.fetchFileSha(path);
       if (operation === "create" && sha) {
@@ -212,12 +218,12 @@ export class GitHubRepository implements ContentRepository {
     return fetchFileSha({ ...this.config, path });
   }
 
-  private idToGitHubPath(id: string, isIndex: boolean): string {
+  private pathToGitHubPath(path: string): string {
     const base = this.config.path ? `${this.config.path}/` : "";
-    if (id === "index") {
+    if (path === "index") {
       return `${base}index.md`.replace(/^\/+/, "");
     }
-    const filePath = isIndex ? `${base}${id}/index.md` : `${base}${id}.md`;
+    const filePath = `${base}${path}.md`;
     return filePath.replace(/^\/+/, "");
   }
 

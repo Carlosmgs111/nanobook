@@ -52,7 +52,7 @@ export class Application {
   > {
     const document = await this.documentModule.getDocument.execute(slug);
     if (!document) throw new Error("Document not found");
-    const documentPath = DocumentPath.create(document.getPath()).getValue();
+    const documentPath = DocumentPath.create(document.getPath()).getPublicValue();
     const breadcrumbs =
       this.navigationModule.navigationService.getBreadcrumbs(documentPath);
     const sidebarEntries =

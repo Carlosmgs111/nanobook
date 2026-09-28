@@ -21,7 +21,6 @@ const existingDocument = createDocument(
     title: "Old title",
     description: "Old description",
     date: new Date("2024-01-01"),
-    index: false,
   },
   "# Old"
 );
@@ -35,13 +34,54 @@ function buildUpdateInput(
     title: overrides.title ?? "New title",
     description: overrides.description ?? "New description",
     date: overrides.date ?? new Date("2024-01-02"),
-    index: overrides.index ?? false,
     content: overrides.content ?? "# New",
     ...overrides,
   };
 }
 
 describe("UpdateDocument", () => {
+  it("updates an index document using its internal index path", async () => {
+    const indexDocument = createDocument(
+      "new-dir/index",
+      {
+        title: "new-dir",
+        description: "new-dir",
+        date: new Date("2026-08-29"),
+      },
+      "# Directory"
+    );
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(indexDocument)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute({
+      id: indexDocument.getDocumentId().getValue(),
+      path: "new-dir/index",
+      title: "new-dir",
+      description: "new-dir",
+      date: new Date("2026-08-29"),
+      content: "# Updated directory",
+    });
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: expect.objectContaining({
+          getInternalValue: expect.any(Function),
+        }),
+        documentId: expect.objectContaining({
+          value: indexDocument.getDocumentId().getValue(),
+        }),
+      })
+    );
+    const updatedDocument = vi.mocked(repository.update).mock.calls[0][0];
+    expect(updatedDocument.getDocumentPath().getInternalValue()).toBe(
+      "new-dir/index"
+    );
+  });
+
   it("locates by stable id and applies the path supplied in the body", async () => {
     const repository = createRepository({
       getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),

@@ -7,6 +7,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- `DocumentPath` ahora conserva explícitamente la ruta interna (`new-dir/index`) y expone por separado su ruta pública (`new-dir`), preparando la migración por capas sin cambiar aún el comportamiento de los consumidores existentes.
+- `Document` y los repositorios ahora conservan rutas internas de índice (`new-dir/index`); `navigation` y las páginas públicas usan explícitamente la ruta pública derivada, y `UpdateDocument` dejó de reconstruir `/index` desde `metadata.index`.
+- `Document.isIndex()` pasa a derivar el tipo de documento desde la ruta interna; creación, navegación, proxies y repositorios ya no usan `metadata.index` como fuente de verdad.
+- `DocumentMetadata` y los contratos HTTP ya no exponen `index`; la serialización nueva tampoco lo persiste, y la creación resuelve padres de directorio mediante su ruta interna `/index`.
+- Navegación, renderizado, webhook y repositorios usan explícitamente `getPublicValue()` para rutas públicas; el adaptador filesystem dejó de recibir el indicador histórico `isIndex` y ahora deriva el archivo desde la ruta interna.
+- Migrados los frontmatters de `src/content` para eliminar `index`; la presencia de `/index` en la ruta interna es ahora la única señal de documento índice, y la documentación arquitectónica fue ajustada a esta regla.
+- Corregida la actualización de documentos índice para conservar la forma canónica de su ruta (`new-dir/index`) durante la validación sin cambiar su ruta pública (`new-dir`) ni su ID estable.
 - Corregida la invalidación del webhook de GitHub para resolver rutas públicas a IDs estables y evitar usar rutas como identidad; los documentos nuevos invalidan su padre conocido mientras se incorporan al grafo.
 - Renombrado `Entry.parentId` a `parentPath` y los contratos de `listChildren` para distinguir explícitamente ubicación de identidad.
 - Cambiada la API de documentos para usar el `id` estable como parámetro dinámico (`/api/<id>`), separándolo del `path` usado por las rutas de navegación y eliminando la dependencia de `/api/documents`.

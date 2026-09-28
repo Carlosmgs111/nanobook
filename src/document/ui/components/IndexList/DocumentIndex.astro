@@ -6,10 +6,10 @@ const { page, index } = Astro.props;
 const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefined;
 ---
 
-<div class="index-card-wrapper" data-folder={String(page.metadata.index)}>
+<div class="index-card-wrapper" data-folder={String(page.isIndex)}>
   <a
     href={`/${page.path}`}
-    class={`index-card ${page.metadata.index ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
+    class={`index-card ${page.isIndex ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
     data-title={page.metadata.title}
     data-description={page.metadata.description}
     data-draft={String(page.metadata.draft)}
@@ -20,15 +20,15 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
       <span class="index-card-number">
         {String(index + 1).padStart(2, "0")}
       </span>
-      {page.metadata.index ? <FolderSvg /> : <FileSvg />}
+      {page.isIndex ? <FolderSvg /> : <FileSvg />}
       <div class="index-card-body">
         <span class="index-card-title" data-title={page.metadata.title}></span>
         <span class="index-card-desc" data-description={page.metadata.description}></span>
       </div>
     </div>
 
-    <span class="index-card-path" title={`/${page.path + (page.metadata.index ? "/" : ".md")}`}>
-      /{page.path + (page.metadata.index ? "/" : ".md")}
+    <span class="index-card-path" title={`/${page.path + (page.isIndex ? "/index.md" : ".md")}`}>
+      /{page.path + (page.isIndex ? "/index.md" : ".md")}
     </span>
   </a>
 </div>

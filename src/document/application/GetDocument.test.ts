@@ -14,13 +14,12 @@ describe("GetDocument", () => {
         title: "Guides",
         description: "Guides index",
         date: new Date("2026-01-01"),
-        index: true,
       },
       "# Guides"
     ).getValue();
-    const getByPath = vi.fn().mockResolvedValue(Result.ok(document));
+    const getByPublicPath = vi.fn().mockResolvedValue(Result.ok(document));
     const repository = {
-      getByPath,
+      getByPublicPath,
     } as unknown as ContentRepository;
     const proxyParser = {
       parseProxies: vi.fn().mockResolvedValue([document]),
@@ -31,7 +30,7 @@ describe("GetDocument", () => {
     );
 
     expect(result).toBe(document);
-    expect(getByPath).toHaveBeenCalledWith("guides");
+    expect(getByPublicPath).toHaveBeenCalledWith("guides");
   });
 
   it("can load the source document without resolving its proxy", async () => {
@@ -42,13 +41,12 @@ describe("GetDocument", () => {
         title: "Proxy",
         description: "Proxy",
         date: new Date("2026-01-01"),
-        index: false,
         ref: "/README.md",
       },
       ""
     ).getValue();
-    const getByPath = vi.fn().mockResolvedValue(Result.ok(document));
-    const repository = { getByPath } as unknown as ContentRepository;
+    const getByPublicPath = vi.fn().mockResolvedValue(Result.ok(document));
+    const repository = { getByPublicPath } as unknown as ContentRepository;
     const parseProxies = vi.fn();
     const proxyParser = { parseProxies } as unknown as ProxyParser;
 
@@ -57,6 +55,7 @@ describe("GetDocument", () => {
     );
 
     expect(result).toBe(document);
+    expect(getByPublicPath).toHaveBeenCalledWith("new-dir/newfile3");
     expect(parseProxies).not.toHaveBeenCalled();
   });
 });

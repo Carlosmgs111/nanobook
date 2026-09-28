@@ -9,27 +9,22 @@ function resolveContentDir(contentDir: string = DEFAULT_CONTENT_DIR): string {
 }
 
 /**
- * Convierte un id de documento en la ruta de archivo correspondiente.
+ * Convierte una ruta interna de documento en la ruta de archivo correspondiente.
  *
- * - "index" con isIndex=true -> src/content/index.md
- * - "blog" con isIndex=true -> src/content/blog/index.md
- * - "blog/post" con isIndex=false -> src/content/blog/post.md
+ * - "index" -> src/content/index.md
+ * - "blog/index" -> src/content/blog/index.md
+ * - "blog/post" -> src/content/blog/post.md
  */
-export function idToFilePath(
-  id: string,
-  isIndex: boolean,
+export function pathToFilePath(
+  path: string,
   contentDir: string = DEFAULT_CONTENT_DIR
 ): string {
   const contentRoot = resolveContentDir(contentDir);
-  const relativePath = isIndex
-    ? id === "index"
-      ? "index.md"
-      : `${id}/index.md`
-    : `${id}.md`;
+  const relativePath = path === "index" ? "index.md" : `${path}.md`;
   const filePath = resolve(join(contentRoot, relativePath));
 
   if (!filePath.startsWith(contentRoot + sep) && filePath !== contentRoot) {
-    throw new InvalidDocumentIdError(id);
+    throw new InvalidDocumentIdError(path);
   }
 
   return filePath;

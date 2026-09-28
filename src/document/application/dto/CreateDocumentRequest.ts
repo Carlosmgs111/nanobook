@@ -7,7 +7,6 @@ export interface CreateDocumentRequest {
   description: string;
   content: string;
   date: string;
-  index: boolean;
   author?: string;
   cover?: string;
   tags?: string[];

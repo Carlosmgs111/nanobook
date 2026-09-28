@@ -7,7 +7,6 @@ import type { DocumentParser } from "./ports/DocumentParser";
 import {
   InvalidDocumentError,
   InvalidDocumentIdError,
-  InvalidIndexDocumentError,
 } from "./errors";
 import type { Heading } from "./Heading";
 import type { DocumentHash } from "./DocumentHash";
@@ -21,7 +20,6 @@ date: <%= date %>
 author: "<%= author %>"
 tags: []
 draft: false
-index: <%= index %>
 position: 0
 ref: <%= ref %>
 ---
@@ -54,11 +52,10 @@ export class Document {
     rawFrontmatter?: string
   ) {
     const now = new Date();
-    const isIndex = path.isIndex();
     this.parser = parser;
     this.path = path;
     this.documentId = documentId;
-    this.slug = path.getValue();
+    this.slug = path.getPublicValue();
     this.parentPath = path.getParentPath();
     this.position = overrides.position ?? 0;
     this.title = overrides.title;
@@ -77,11 +74,9 @@ export class Document {
         tags: overrides.tags ?? [],
         cover: overrides.cover,
         draft: overrides.draft ?? false,
-        index: overrides.index ?? isIndex,
         position: overrides.position ?? 0,
         ref: overrides.ref,
-      },
-      path.getValue()
+      }
     );
     this.rawFrontmatter =
       rawFrontmatter ??
@@ -91,7 +86,6 @@ export class Document {
         description: this.metadata.description,
         date: this.metadata.date.toISOString(),
         author: this.metadata.author || "",
-        index: String(this.metadata.index),
         ref: overrides.ref ? JSON.stringify(overrides.ref) : "null",
       });
   }
@@ -104,7 +98,7 @@ export class Document {
     rawFrontmatter?: string,
     documentIdValue?: string
   ): Result<
-    InvalidDocumentError | InvalidDocumentIdError | InvalidIndexDocumentError,
+    InvalidDocumentError | InvalidDocumentIdError,
     Document
   > {
     const pathResult = DocumentPath.create(pathValue);
@@ -112,18 +106,9 @@ export class Document {
       return Result.fail(pathResult.getError());
     }
     const path = pathResult.getValue();
-    if (Boolean(data.index) !== path.isIndex()) {
-      return Result.fail(
-        new InvalidIndexDocumentError(
-          path.getValue(),
-          path.isIndex(),
-          data
-        )
-      );
-    }
     const identityValue = data.id ?? documentIdValue;
     if (!identityValue) {
-      return Result.fail(new InvalidDocumentIdError(path.getValue()));
+      return Result.fail(new InvalidDocumentIdError(path.getInternalValue()));
     }
     const documentIdResult = DocumentId.create(identityValue);
     if (!documentIdResult.isSuccess) return Result.fail(documentIdResult.getError());
@@ -171,7 +156,13 @@ export class Document {
     return this.documentId;
   }
   getPath(): string {
-    return this.path.getValue();
+    return this.path.getInternalValue();
+  }
+  getPublicPath(): string {
+    return this.path.getPublicValue();
+  }
+  isIndex(): boolean {
+    return this.path.isIndex();
   }
   getDocumentPath(): DocumentPath {
     return this.path;
@@ -179,7 +170,7 @@ export class Document {
   getDocumentVersion(): Promise<string> {
     return this.hashDocument().then((hash) => hash.version);
   }
-  moveTo(pathValue: string): Result<InvalidDocumentError | InvalidDocumentIdError | InvalidIndexDocumentError, Document> {
+  moveTo(pathValue: string): Result<InvalidDocumentError | InvalidDocumentIdError, Document> {
     return Document.create(
       pathValue,
       this.metadata,
@@ -224,12 +215,13 @@ export class Document {
     return {
       documentId: this.getDocumentId().getValue(),
       path: this.getPath(),
+      isIndex: this.isIndex(),
       version: "",
       id: this.getDocumentId().getValue(),
       title: this.title,
       description: this.description,
       position: this.position,
-      parentPath: this.parentPath?.getValue(),
+      parentPath: this.parentPath?.getPublicValue(),
       metadata: this.metadata,
       rawFrontmatter: this.rawFrontmatter,
       content: this.content,
@@ -284,7 +276,6 @@ export class Document {
       tags: (data.tags as string[]) ?? [],
       cover: data.cover as string | undefined,
       draft: (data.draft as boolean) ?? false,
-      index: (data.index as boolean) ?? false,
       position: (data.position as number) ?? 0,
       ref: data.ref as DocumentMetadata["ref"],
     };

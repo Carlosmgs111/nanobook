@@ -14,7 +14,6 @@ describe("ProxyParser", () => {
         title: "Proxy",
         description: "Proxy",
         date: new Date("2026-01-01"),
-        index: false,
         ref: "/README.md",
       },
       ""
@@ -25,7 +24,6 @@ describe("ProxyParser", () => {
         title: "README",
         description: "README",
         date: new Date("2026-01-01"),
-        index: false,
       },
       body: "# README",
     };

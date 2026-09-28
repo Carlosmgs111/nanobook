@@ -7,16 +7,26 @@ describe("DocumentPath", () => {
 
     expect(result.isSuccess).toBe(true);
     const path = result.getValue();
-    expect(path.getValue()).toBe("guides/cache");
-    expect(path.getParentPath()?.getValue()).toBe("guides");
+    expect(path.getPublicValue()).toBe("guides/cache");
+    expect(path.getParentPath()?.getPublicValue()).toBe("guides");
   });
 
   it("keeps index paths as directory paths", () => {
     const result = DocumentPath.create("guides/index");
 
     expect(result.isSuccess).toBe(true);
+    expect(result.getValue().getInternalValue()).toBe("guides/index");
+    expect(result.getValue().getPublicValue()).toBe("guides");
     expect(result.getValue().normalized()).toBe("guides");
-    expect(result.getValue().getParentPath()?.getValue()).toBe("index");
+    expect(result.getValue().getParentPath()?.getPublicValue()).toBe("index");
+  });
+
+  it("keeps the root index path in both representations", () => {
+    const path = DocumentPath.create("index").getValue();
+
+    expect(path.getInternalValue()).toBe("index");
+    expect(path.getPublicValue()).toBe("index");
+    expect(path.isIndex()).toBe(true);
   });
 
   it("ignores references that cannot be represented as document paths", () => {
@@ -29,10 +39,10 @@ describe("DocumentPath", () => {
   it("resolves the document path while ignoring anchors and query strings", () => {
     const source = DocumentPath.create("guides/cache").getValue();
 
-    expect(source.resolveReference("../architecture#overview")?.getValue()).toBe(
+    expect(source.resolveReference("../architecture#overview")?.getPublicValue()).toBe(
       "architecture"
     );
-    expect(source.resolveReference("../architecture?preview=true")?.getValue()).toBe(
+    expect(source.resolveReference("../architecture?preview=true")?.getPublicValue()).toBe(
       "architecture"
     );
     expect(source.resolveReference("#local-section")).toBeNull();

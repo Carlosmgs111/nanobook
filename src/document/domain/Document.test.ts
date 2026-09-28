@@ -10,7 +10,6 @@ describe("Document", () => {
         title: "New file",
         description: "New file",
         date: new Date("2026-01-01"),
-        index: false,
         ref: "/README.md",
       },
       "# Content"

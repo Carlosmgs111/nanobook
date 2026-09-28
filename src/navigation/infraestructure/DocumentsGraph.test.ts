@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Document } from "../../document/domain/Document";
 import { DocumentsGraph } from "./DocumentsGraph";
 
-function document(path: string, id: string, index: boolean) {
+function document(path: string, id: string) {
   return Document.create(
     path,
     {
@@ -10,7 +10,6 @@ function document(path: string, id: string, index: boolean) {
       title: path,
       description: path,
       date: new Date("2026-01-01"),
-      index,
     },
     "# Document"
   ).getValue();
@@ -18,9 +17,9 @@ function document(path: string, id: string, index: boolean) {
 
 describe("DocumentsGraph", () => {
   it("indexes nodes and dependency edges by stable identity", () => {
-    const root = document("index", "doc-root", true);
-    const section = document("guides/index", "doc-guides", true);
-    const child = document("guides/cache", "doc-cache", false);
+    const root = document("index", "doc-root");
+    const section = document("guides/index", "doc-guides");
+    const child = document("guides/cache", "doc-cache");
     const graph = new DocumentsGraph([root, section, child]);
 
     expect(graph.getNode("doc-cache")?.path).toBe("guides/cache");

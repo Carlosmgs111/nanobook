@@ -9,7 +9,6 @@ const documentRequest: CreateDocumentRequest = {
   description: "A new document",
   content: "# New file",
   date: "2024-01-01T00:00:00.000Z",
-  index: false,
 };
 
 describe("HttpDocumentWriter", () => {

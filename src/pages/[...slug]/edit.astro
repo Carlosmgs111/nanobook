@@ -19,10 +19,10 @@ const sourceDocument = entry.ref
   ? await app.documentModule.getDocument.executeRaw(slug)
   : null;
 const editableEntry = sourceDocument?.parse() ?? entry;
-const viewHref = `/${editableEntry.path}`;
-const previewHref = `/${editableEntry.path}/preview`;
-const newHref = editableEntry.metadata.index
-  ? `/${editableEntry.path}/new`
+const viewHref = `/${editableEntry.slug}`;
+const previewHref = `/${editableEntry.slug}/preview`;
+const newHref = editableEntry.isIndex
+  ? `/${editableEntry.slug}/new`
   : "/new";
 ---
 

@@ -7,7 +7,7 @@ import { InMemoryEventBus } from "../shared/infraestructure/InMemoryEventBus";
 import type { DocumentProvider } from "./domain/ports/DocumentProvider";
 import { NavigationModule } from "./index";
 
-function document(path: string, id: string, title = path, index = false) {
+function document(path: string, id: string, title = path) {
   return Document.create(
     path,
     {
@@ -15,7 +15,6 @@ function document(path: string, id: string, title = path, index = false) {
       title,
       description: path,
       date: new Date("2026-01-01"),
-      index,
     },
     "# Document"
   ).getValue();
@@ -23,8 +22,8 @@ function document(path: string, id: string, title = path, index = false) {
 
 describe("NavigationModule", () => {
   it("rebuilds the graph when a document is created", async () => {
-    const root = document("index", "doc-root", "Home", true);
-    const section = document("guides/index", "doc-guides", "Guides", true);
+    const root = document("index", "doc-root", "Home");
+    const section = document("guides/index", "doc-guides", "Guides");
     const child = document("guides/cache", "doc-cache", "Cache");
     let documents = [root, section];
     const provider: DocumentProvider = { getAll: async () => documents };
@@ -45,7 +44,7 @@ describe("NavigationModule", () => {
   });
 
   it("rebuilds the graph when document metadata changes", async () => {
-    const root = document("index", "doc-root", "Home", true);
+    const root = document("index", "doc-root", "Home");
     const oldChild = document("guides/cache", "doc-cache", "Old title");
     const newChild = document("guides/cache", "doc-cache", "New title");
     let documents = [root, oldChild];

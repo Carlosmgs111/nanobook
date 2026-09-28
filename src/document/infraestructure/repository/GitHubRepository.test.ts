@@ -30,7 +30,6 @@ title: "Original cache"
 description: "Initial document"
 date: 2026-09-24
 author: "Nanobook"
-index: false
 ---
 ## Original heading
 `;
@@ -88,7 +87,6 @@ index: false
         description: "Updated document",
         date: new Date("2026-09-24T00:00:00.000Z"),
         author: "Nanobook",
-        index: false,
       },
       "## Updated heading\n"
     );

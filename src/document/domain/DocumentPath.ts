@@ -13,6 +13,7 @@ const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 export class DocumentPath {
   private constructor(
     private readonly value: string,
+    private readonly internalValue: string,
     private readonly indexPath: boolean
   ) {}
 
@@ -25,14 +26,22 @@ export class DocumentPath {
     const canonical = indexPath && normalized !== "index"
       ? normalized.slice(0, -"/index".length)
       : normalized;
-    return Result.ok(new DocumentPath(canonical || "index", indexPath));
+    return Result.ok(
+      new DocumentPath(canonical || "index", normalized, indexPath)
+    );
   }
 
   static fromLegacyId(id: string): Result<InvalidDocumentIdError, DocumentPath> {
     return DocumentPath.create(id);
   }
 
-  getValue(): string {
+  /** Ruta interna, incluyendo `/index` cuando representa un índice. */
+  getInternalValue(): string {
+    return this.internalValue;
+  }
+
+  /** Ruta pública usada por navegación y URLs, sin el sufijo `/index`. */
+  getPublicValue(): string {
     return this.value;
   }
 
@@ -53,17 +62,32 @@ export class DocumentPath {
     return result.isSuccess ? result.getValue() : null;
   }
 
+  /** Ruta interna del índice que representa el directorio padre. */
+  getInternalParentPath(): DocumentPath | null {
+    const publicPath = this.getPublicValue();
+    if (publicPath === "index") return null;
+    const lastSlash = publicPath.lastIndexOf("/");
+    const parentPublic = lastSlash === -1
+      ? "index"
+      : publicPath.slice(0, lastSlash);
+    const parentInternal = parentPublic === "index"
+      ? "index"
+      : `${parentPublic}/index`;
+    const result = DocumentPath.create(parentInternal);
+    return result.isSuccess ? result.getValue() : null;
+  }
+
   resolveReference(reference: string): DocumentPath | null {
     const ref = reference.split(/[?#]/, 1)[0]
       .replace(/\.md$/, "")
       .replace(/\/index$/, "");
     if (!ref) return null;
     const sourceSegments =
-      this.getValue() === "index"
+      this.getPublicValue() === "index"
         ? []
         : this.isIndex()
-          ? this.getValue().split("/")
-          : this.getValue().split("/").slice(0, -1);
+          ? this.getPublicValue().split("/")
+          : this.getPublicValue().split("/").slice(0, -1);
 
     const targetSegments = [...sourceSegments];
     for (const segment of ref.split("/").filter(Boolean)) {
@@ -86,12 +110,12 @@ export class DocumentPath {
       }
       const target = href.startsWith("/")
         ? href.split(/[?#]/, 1)[0].replace(/^\//, "").replace(/\.md$/, "")
-        : this.resolveReference(href)?.getValue();
+        : this.resolveReference(href)?.getPublicValue();
       const targetResult = target ? DocumentPath.create(target) : null;
       const normalizedTarget = targetResult?.isSuccess
-        ? targetResult.getValue().getValue()
+        ? targetResult.getValue().getPublicValue()
         : null;
-      if (normalizedTarget && normalizedTarget !== this.getValue()) {
+      if (normalizedTarget && normalizedTarget !== this.getPublicValue()) {
         targets.add(normalizedTarget);
       }
     }

@@ -27,7 +27,6 @@ function toUpdateDocumentRequest(
     description: document.description,
     content: document.content,
     date: document.metadata.date,
-    index: document.metadata.index,
     author: document.metadata.author,
     cover: document.metadata.cover,
     tags: document.metadata.tags,

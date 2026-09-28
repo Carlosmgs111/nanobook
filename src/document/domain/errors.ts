@@ -52,21 +52,6 @@ export class InvalidDocumentError extends Error {
   }
 }
 
-export class InvalidIndexDocumentError extends Error {
-  constructor(
-    public readonly documentId: string,
-    public readonly isIndex: boolean,
-    public readonly metadata: any
-  ) {
-    super(
-      `Inconsistencia de índice: el id "${documentId}" ${
-        isIndex ? "es" : "no es"
-      } de índice pero metadata.index=${metadata.index}`
-    );
-    this.name = "InvalidIndexDocumentError";
-  }
-}
-
 export type DocumentServiceError =
   | DocumentAlreadyExistsError
   | DocumentNotFoundError

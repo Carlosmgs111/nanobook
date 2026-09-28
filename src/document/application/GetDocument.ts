@@ -19,8 +19,8 @@ export class GetDocument {
     const pathResult = DocumentPath.create(documentPathValue);
     if (!pathResult.isSuccess) return null;
 
-    const documentResult = await this.contentRepository.getByPath(
-      pathResult.getValue().getValue()
+    const documentResult = await this.contentRepository.getByPublicPath(
+      pathResult.getValue().getPublicValue()
     );
     if (!documentResult.isSuccess) {
       return null;

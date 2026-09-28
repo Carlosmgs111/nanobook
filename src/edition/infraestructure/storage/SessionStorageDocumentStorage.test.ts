@@ -17,6 +17,7 @@ function entry(documentId: string, path: string): SerializedEntry {
   return {
     documentId,
     path,
+    isIndex: path === "index" || path.endsWith("/index"),
     version: `version-${documentId}`,
     id: path,
     title: path,
@@ -30,7 +31,6 @@ function entry(documentId: string, path: string): SerializedEntry {
       title: path,
       description: path,
       date: "2026-01-01T00:00:00.000Z",
-      index: false,
     },
   };
 }

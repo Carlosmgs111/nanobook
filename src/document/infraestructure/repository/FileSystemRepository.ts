@@ -1,7 +1,7 @@
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { Result } from "../../../shared/domain/Result";
-import { idToFilePath, filePathToId } from "./fileSystemParsePath";
+import { pathToFilePath, filePathToId } from "./fileSystemParsePath";
 import type {
   ContentRepository,
   ContentRepositoryListError,
@@ -91,6 +91,16 @@ export class FileSystemRepository implements ContentRepository {
     );
   }
 
+  async getByPublicPath(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    const documentsResult = await this.list();
+    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    return Result.ok(
+      documentsResult.getValue().find((document) => document.getPublicPath() === path) ?? null
+    );
+  }
+
   async listChildren(
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
@@ -101,7 +111,7 @@ export class FileSystemRepository implements ContentRepository {
     const documents = documentsResult.getValue();
     return Result.ok(
       documents.filter(
-        (document) => document.getParentPath()?.getValue() === parentPath
+        (document) => document.getParentPath()?.getPublicValue() === parentPath
       )
     );
   }
@@ -110,11 +120,7 @@ export class FileSystemRepository implements ContentRepository {
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
     try {
-      const filePath = idToFilePath(
-        document.getPath(),
-        document.getMetadata().index,
-        this.contentDir
-      );
+      const filePath = pathToFilePath(document.getPath(), this.contentDir);
       if (await fileExists(filePath)) {
         return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
       }
@@ -139,11 +145,7 @@ export class FileSystemRepository implements ContentRepository {
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
     try {
-      const filePath = idToFilePath(
-        document.getPath(),
-        document.getMetadata().index,
-        this.contentDir
-      );
+      const filePath = pathToFilePath(document.getPath(), this.contentDir);
       if (!(await fileExists(filePath))) {
         return Result.fail(new DocumentNotFoundError(document.getPath()));
       }

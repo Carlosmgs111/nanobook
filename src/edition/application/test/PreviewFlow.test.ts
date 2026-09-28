@@ -37,12 +37,13 @@ function baseEntry(documentId: string, path: string): SerializedEntry {
   return {
     documentId,
     path,
+    isIndex: path === "index" || path.endsWith("/index"),
     version: `version-${documentId}`,
     id: path,
     title: path,
     description: path,
     content: `# ${path}`,
-    rawFrontmatter: `---\nid: "${documentId}"\ntitle: "${path}"\ndescription: "${path}"\ndate: 2026-01-01T00:00:00.000Z\nindex: false\n---\n`,
+    rawFrontmatter: `---\nid: "${documentId}"\ntitle: "${path}"\ndescription: "${path}"\ndate: 2026-01-01T00:00:00.000Z\n---\n`,
     slug: path,
     position: 0,
     headings: [],
@@ -50,7 +51,6 @@ function baseEntry(documentId: string, path: string): SerializedEntry {
       title: path,
       description: path,
       date: "2026-01-01T00:00:00.000Z",
-      index: false,
     },
   };
 }

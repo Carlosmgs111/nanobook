@@ -40,6 +40,7 @@ export function buildSerializedEntry(
     documentId,
     id,
     path: overrides.path ?? id,
+    isIndex: overrides.path === "index" || overrides.path?.endsWith("/index") || false,
     title: "Introduction",
     description: "Getting started",
     content: "# Intro\n\nHello.",
@@ -52,7 +53,6 @@ export function buildSerializedEntry(
       title: "Introduction",
       description: "Getting started",
       date: "2024-01-01T00:00:00.000Z",
-      index: id === "index" || id.endsWith("/index"),
     },
     ...overrides,
   };

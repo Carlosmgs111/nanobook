@@ -45,12 +45,22 @@ export class InMemoryRepository implements ContentRepository {
     );
   }
 
+  async getByPublicPath(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>> {
+    return Result.ok(
+      Array.from(this.documents.values()).find(
+        (document) => document.getPublicPath() === path
+      ) ?? null
+    );
+  }
+
   async listChildren(
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     return Result.ok(
       Array.from(this.documents.values()).filter(
-        (doc) => doc.getParentPath()?.getValue() === parentPath
+        (doc) => doc.getParentPath()?.getPublicValue() === parentPath
       )
     );
   }

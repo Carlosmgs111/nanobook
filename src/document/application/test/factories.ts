@@ -13,6 +13,7 @@ export function createRepository(
     list: vi.fn().mockResolvedValue(Result.ok([])),
     getById: vi.fn().mockResolvedValue(Result.ok(null)),
     getByPath: vi.fn().mockResolvedValue(Result.ok(null)),
+    getByPublicPath: vi.fn().mockResolvedValue(Result.ok(null)),
     listChildren: vi.fn().mockResolvedValue(Result.ok([])),
     create: vi.fn().mockResolvedValue(Result.ok()),
     update: vi.fn().mockResolvedValue(Result.ok()),
@@ -37,7 +38,6 @@ export function buildDocumentInput(
     title: "Introduction",
     description: "Getting started",
     date: new Date("2024-01-01"),
-    index: (overrides.path ?? "intro") === "index" || (overrides.path ?? "intro").endsWith("/index"),
     content: "# Intro\n\nHello.",
     ...overrides,
   };
@@ -58,7 +58,6 @@ export function createDocument(
       title: metadata.title,
       description: metadata.description,
       date: metadata.date ?? new Date(),
-      index: metadata.index ?? (id === "index" || id.endsWith("/index")),
       author: metadata.author,
       tags: metadata.tags,
       cover: metadata.cover,

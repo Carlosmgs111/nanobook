@@ -22,10 +22,10 @@ const { entry, renderedBody } = rendered;
 
 const editHref = slug ? `/${slug}/edit` : `${Astro.request.url}edit`;
 
-const newHref = entry.metadata.index
-  ? entry.path === "index"
+const newHref = entry.isIndex
+  ? entry.slug === "index"
     ? `${Astro.request.url}new`
-    : `/${entry.path}/new`
+    : `/${entry.slug}/new`
   : "/new";
 const canonicalHref = entry.ref
   ? entry.ref === "index"

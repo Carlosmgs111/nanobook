@@ -37,31 +37,27 @@ export class CreateDocument {
     }
     const path = pathResult.getValue();
 
-    if (path.isIndex() && input.index === false) {
-      return Result.fail(new InvalidDocumentIdError(path.getValue()));
-    }
-
-    const existingResult = await this.repository.getByPath(path.getValue());
+    const existingResult = await this.repository.getByPath(path.getInternalValue());
     if (!existingResult.isSuccess) {
       return Result.fail(existingResult.getError());
     }
     if (existingResult.getValue()) {
-      return Result.fail(new DocumentAlreadyExistsError(path.getValue()));
+      return Result.fail(new DocumentAlreadyExistsError(path.getInternalValue()));
     }
 
-    const parentPath = path.getParentPath();
+    const parentPath = path.getInternalParentPath();
     let parentDocument: Document | null = null;
     if (parentPath !== null) {
-      const parentResult = await this.repository.getByPath(parentPath.getValue());
+      const parentResult = await this.repository.getByPath(parentPath.getInternalValue());
       if (!parentResult.isSuccess) {
         return Result.fail(parentResult.getError());
       }
       parentDocument = parentResult.getValue();
       if (!parentDocument) {
-        return Result.fail(new ParentNotFoundError(parentPath.getValue()));
+        return Result.fail(new ParentNotFoundError(parentPath.getInternalValue()));
       }
-      if (!parentDocument.getMetadata().index) {
-        return Result.fail(new InvalidDocumentIdError(parentPath.getValue()));
+      if (!parentDocument.isIndex()) {
+        return Result.fail(new InvalidDocumentIdError(parentPath.getInternalValue()));
       }
     }
 
@@ -72,7 +68,6 @@ export class CreateDocument {
         description: input.description,
         author: input.author,
         date: input.date,
-        index: input.index,
         position: input.position,
         draft: input.draft,
         tags: input.tags,

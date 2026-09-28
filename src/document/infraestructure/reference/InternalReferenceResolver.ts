@@ -26,8 +26,8 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
     if (refStr.startsWith("/")) return null;
     const targetPath = context.sourcePath.resolveReference(refStr);
     if (!targetPath) return null;
-    const targetDocumentResult = await this.contentRepository.getByPath(
-      targetPath.getValue()
+    const targetDocumentResult = await this.contentRepository.getByPublicPath(
+      targetPath.getPublicValue()
     );
 
     // console.log({ targetDocumentResult });

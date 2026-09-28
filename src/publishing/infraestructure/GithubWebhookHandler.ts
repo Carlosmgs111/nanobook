@@ -60,7 +60,7 @@ function mapGitHubPathsToChanges(
       if (kind === "added") {
         const pathResult = DocumentPath.create(publicPath);
         const parentPath = pathResult.isSuccess
-          ? pathResult.getValue().getParentPath()?.getValue() ?? "index"
+          ? pathResult.getValue().getParentPath()?.getPublicValue() ?? "index"
           : null;
         const parentId = parentPath
           ? navigationService.getDocumentIdByPath(parentPath)

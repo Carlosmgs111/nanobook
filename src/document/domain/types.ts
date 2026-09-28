@@ -12,7 +12,6 @@ export interface DocumentMetadata {
   cover?: string;
   tags?: string[];
   draft?: boolean | undefined;
-  index: boolean;
   position?: number;
   ref?: Ref | string;
 }
@@ -29,6 +28,8 @@ export interface Entry {
   documentId: string;
   /** Mutable public/content path. */
   path: string;
+  /** Whether the internal path represents a directory index. */
+  isIndex: boolean;
   /** Hash of the current document state. */
   version: string;
   id: string;

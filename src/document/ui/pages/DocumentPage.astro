@@ -13,7 +13,7 @@ const { entry, Content, childEntries } = Astro.props;
 ---
 
 {
-  entry.metadata.index ? (
+  entry.isIndex ? (
     <IndexList
       title={entry.title}
       description={entry.description}

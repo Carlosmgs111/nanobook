@@ -10,11 +10,11 @@ import type {
 function toNavigationNode(document: Document): NavigationNode {
   return {
     id: document.getDocumentId().getValue(),
-    path: document.getPath(),
+    path: document.getPublicPath(),
     slug: document.getSlug(),
     title: document.getTitle(),
     description: document.getDescription(),
-    isIndex: document.getMetadata().index,
+    isIndex: document.isIndex(),
     parentId: undefined,
     position: document.getPosition(),
     metadata: document.getMetadata(),
@@ -50,7 +50,7 @@ export class DocumentsGraph {
 
     for (const document of documents) {
       const node = map.get(document.getDocumentId().getValue())!;
-      const parentPath = document.getParentPath()?.getValue();
+      const parentPath = document.getParentPath()?.getPublicValue();
       node.parentId = parentPath ? pathMap.get(parentPath)?.id : undefined;
     }
 
@@ -108,7 +108,7 @@ export class DocumentsGraph {
     const documentsByParent = new Map<string | undefined, Document[]>();
 
     for (const document of documents) {
-      const parentPath = document.getParentPath()?.getValue();
+      const parentPath = document.getParentPath()?.getPublicValue();
       const key = parentPath ? this.pathMap.get(parentPath)?.id : undefined;
       const siblings = documentsByParent.get(key) ?? [];
       siblings.push(document);
@@ -117,7 +117,7 @@ export class DocumentsGraph {
 
     for (const document of documents) {
       // parent-child: child -> parent
-      const parentPath = document.getParentPath()?.getValue();
+      const parentPath = document.getParentPath()?.getPublicValue();
       const parentId = parentPath ? this.pathMap.get(parentPath)?.id : undefined;
       if (parentId && this.nodeMap.has(parentId)) {
         this.addEdge(document.getDocumentId().getValue(), parentId, "parent-child");

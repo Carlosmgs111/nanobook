@@ -6,7 +6,6 @@ date: 2026-09-25
 author: "Nanobook"
 tags: ["document", "identity", "path", "version", "cache"]
 draft: false
-index: false
 ---
 
 # Identidad, ruta y versión de los documentos

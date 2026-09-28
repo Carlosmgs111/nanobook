@@ -28,6 +28,9 @@ export interface ContentRepository {
   getByPath(
     path: string
   ): Promise<Result<ContentRepositoryListError, Document | null>>;
+  getByPublicPath(
+    path: string
+  ): Promise<Result<ContentRepositoryListError, Document | null>>;
   listChildren(
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>>;

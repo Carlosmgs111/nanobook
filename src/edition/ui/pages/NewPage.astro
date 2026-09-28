@@ -199,13 +199,11 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     const base = basePath ? `${basePath.replace(/\/$/, "")}` : "";
     const prefix = base ? `${base}/` : "";
     let path: string | null = null;
-    let index = false;
     if (type === "document") {
       path = `${prefix}${name}`;
     }
     if (type === "directory") {
       path = `${prefix}${name}/index`;
-      index = true;
     }
     if (!path) {
       throw new Error("Ruta no válida");
@@ -215,14 +213,13 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
       id,
       path,
       ...metadata,
-      index,
       content: "",
       date: new Date().toISOString(),
     });
     if (!result.isSuccess) {
       throw result.getError();
     }
-    return path;
+    return result.getValue().slug;
   }
 
   document.addEventListener("astro:page-load", initForm);

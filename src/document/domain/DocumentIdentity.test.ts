@@ -12,7 +12,6 @@ describe("Document identity and version", () => {
         title: "Cache",
         description: "Cache guide",
         date: new Date("2026-01-01"),
-        index: false,
       },
       "# Cache"
     );
@@ -37,7 +36,6 @@ describe("Document identity and version", () => {
         title: "Cache",
         description: "Cache guide",
         date: new Date("2026-01-01"),
-        index: false,
       },
       "# Cache"
     );
@@ -51,6 +49,27 @@ describe("Document identity and version", () => {
     await expect(moved.getValue().getDocumentVersion()).resolves.toBe(before);
   });
 
+  it("keeps the internal index path and exposes its public path separately", () => {
+    const result = Document.create(
+      "new-dir/index",
+      {
+        id: "doc-index-01",
+        title: "New directory",
+        description: "Directory index",
+        date: new Date("2026-01-01"),
+      },
+      "# New directory"
+    );
+
+    expect(result.isSuccess).toBe(true);
+    const document = result.getValue();
+    expect(document.getPath()).toBe("new-dir/index");
+    expect(document.getPublicPath()).toBe("new-dir");
+    expect(document.getSlug()).toBe("new-dir");
+    expect(document.isIndex()).toBe(true);
+    expect(document.parse().path).toBe("new-dir/index");
+  });
+
   it("requires a persisted identity", () => {
     const result = Document.create(
       "guides/cache",
@@ -58,7 +77,6 @@ describe("Document identity and version", () => {
         title: "Cache",
         description: "Cache guide",
         date: new Date("2026-01-01"),
-        index: false,
       },
       "# Cache"
     );

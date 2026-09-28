@@ -121,12 +121,12 @@ export class NavigationService implements NavigationServicePort {
       { id: "index", title: homeTitle, href: "/", current: false },
     ];
 
-    if (documentPath.getValue() === "index") {
+    if (documentPath.getPublicValue() === "index") {
       crumbs[0].current = true;
       return crumbs;
     }
 
-    const segments = documentPath.getValue().split("/");
+    const segments = documentPath.getPublicValue().split("/");
     let path = "";
 
     for (let i = 0; i < segments.length; i++) {
@@ -149,7 +149,7 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getSidebarEntries(documentPath: DocumentPath): NavigationNode[] {
-    const node = this.documentsGraph.getNodeByPath(documentPath.getValue());
+    const node = this.documentsGraph.getNodeByPath(documentPath.getPublicValue());
     if (!node || node.parentId === null) return [];
 
     const parent = this.documentsGraph.getNode(node.parentId as string);
@@ -157,12 +157,12 @@ export class NavigationService implements NavigationServicePort {
 
     return parent.children.map((child) => ({
       ...child,
-      current: child.path === documentPath.getValue(),
+      current: child.path === documentPath.getPublicValue(),
     }));
   }
 
   getParentEntry(documentPath: DocumentPath): ParentEntry | null {
-    const node = this.documentsGraph.getNodeByPath(documentPath.getValue());
+    const node = this.documentsGraph.getNodeByPath(documentPath.getPublicValue());
     const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
     if (!parent) return null;
 
@@ -177,7 +177,7 @@ export class NavigationService implements NavigationServicePort {
     documentPath: DocumentPath,
     excludePath?: DocumentPath
   ): NavigationNode[] {
-    const folderPath = getFolderPath(documentPath.getValue());
+    const folderPath = getFolderPath(documentPath.getPublicValue());
     const folder =
       folderPath === ""
         ? this.documentsGraph.getNodeByPath("index")
@@ -185,6 +185,6 @@ export class NavigationService implements NavigationServicePort {
 
     if (!folder) return [];
 
-    return folder.children.filter((child) => child.path !== excludePath?.getValue());
+    return folder.children.filter((child) => child.path !== excludePath?.getPublicValue());
   }
 }
