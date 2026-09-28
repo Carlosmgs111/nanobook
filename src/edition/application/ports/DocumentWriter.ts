@@ -10,4 +10,7 @@ export interface DocumentWriter {
     documentId: string,
     document: SerializedEntry
   ): Promise<Result<EditionWriterError, SerializedEntry>>;
+  deleteDocument(
+    documentId: string
+  ): Promise<Result<EditionWriterError, void>>;
 }

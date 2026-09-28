@@ -2,6 +2,7 @@ import {
   fetchFileSha,
   fetchGitHubTree,
   fetchGitHubBlob,
+  deleteFileContent,
   updateFileContent,
 } from "../../../shared/github/api";
 import { filterContentFiles } from "../../../shared/github/parser";
@@ -138,6 +139,31 @@ export class GitHubRepository implements ContentRepository {
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
     return this.writeDocument(document, "update");
+  }
+
+  async delete(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
+    const path = this.idToGitHubPath(document.getPath(), document.isIndex());
+    try {
+      const sha = await this.fetchFileSha(path);
+      if (!sha) return Result.fail(new DocumentNotFoundError(document.getPath()));
+      await deleteFileContent({
+        ...this.config,
+        path,
+        sha,
+        message: `Delete ${path}`,
+      });
+      this.clearCache();
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to delete document "${document.getPath()}" on GitHub`,
+          { cause: error }
+        )
+      );
+    }
   }
 
   async list(): Promise<Result<ContentRepositoryListError, Document[]>> {

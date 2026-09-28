@@ -8,6 +8,7 @@ export type {
 export type { DocumentProvider } from "./domain/ports/DocumentProvider";
 import { DocumentCreated } from "../document/domain/events/DocumentCreated";
 import { DocumentUpdated } from "../document/domain/events/DocumentUpdated";
+import { DocumentDeleted } from "../document/domain/events/DocumentDeleted";
 import { Result } from "../shared/domain/Result";
 import { EventBusError } from "../shared/domain/bus/errors";
 import type { EventBus, EventHandler } from "../shared/domain/bus/EventBus";
@@ -28,7 +29,10 @@ export class NavigationModule {
     const module = new NavigationModule(navigationService, documentProvider);
 
     if (eventBus) {
-      const handler: EventHandler<DocumentCreated> & EventHandler<DocumentUpdated> = {
+      const handler:
+        & EventHandler<DocumentCreated>
+        & EventHandler<DocumentUpdated>
+        & EventHandler<DocumentDeleted> = {
         handle: async () => {
           try {
             await module.refresh();
@@ -45,6 +49,7 @@ export class NavigationModule {
 
       eventBus.subscribe(DocumentCreated, handler);
       eventBus.subscribe(DocumentUpdated, handler);
+      eventBus.subscribe(DocumentDeleted, handler);
     }
 
     return module;

@@ -85,4 +85,20 @@ export class HttpDocumentWriter implements DocumentWriter {
       return Result.fail(new EditionWriterError(message, { cause: error }));
     }
   }
+
+  async deleteDocument(
+    documentId: string
+  ): Promise<Result<EditionWriterError, void>> {
+    try {
+      const response = await fetch("/api/" + documentId, { method: "DELETE" });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        return Result.fail(new EditionWriterError(payload.error || "Error al eliminar"));
+      }
+      return Result.ok();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return Result.fail(new EditionWriterError(message, { cause: error }));
+    }
+  }
 }

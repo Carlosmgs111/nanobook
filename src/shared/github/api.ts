@@ -182,3 +182,24 @@ export async function updateFileContent(
     );
   }
 }
+
+export async function deleteFileContent(
+  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
+    Pick<GitHubRepositoryConfig, "token"> & {
+      path: string;
+      sha: string;
+      message?: string;
+    }
+): Promise<void> {
+  const { owner, repo, branch, path, sha, token, message = `Delete ${path}` } = options;
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: getHeaders(token),
+    body: JSON.stringify({ message, sha, branch }),
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => "Unknown error");
+    throw new Error(`GitHub API error ${response.status} ${response.statusText}: ${text}`);
+  }
+}

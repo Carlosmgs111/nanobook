@@ -3,11 +3,13 @@ import { GITHUB_TOKEN } from "astro:env/server";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
 import { UpdateDocument } from "./application/UpdateDocument";
+import { DeleteDocument } from "./application/DeleteDocument";
 import { GetAllDocuments } from "./application/GetAllDocuments";
 import { GetDocument } from "./application/GetDocument";
 import { createContentRepository } from "./infraestructure/repository";
 import { CreateDocumentController } from "./infraestructure/api/CreateDocumentController";
 import { UpdateDocumentController } from "./infraestructure/api/UpdateDocumentController";
+import { DeleteDocumentController } from "./infraestructure/api/DeleteDocumentController";
 import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
@@ -23,6 +25,7 @@ export type { SerializedEntry } from "./application/dto/SerializedEntry";
 
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
+export { DocumentDeleted } from "./domain/events/DocumentDeleted";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
 
@@ -30,6 +33,7 @@ export class DocumentModule {
   constructor(
     public readonly createDocumentController: CreateDocumentController,
     public readonly updateDocumentController: UpdateDocumentController,
+    public readonly deleteDocumentController: DeleteDocumentController,
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus
@@ -52,17 +56,20 @@ export class DocumentModule {
     const proxyParser = new ProxyParser(referenceResolver);
     const createDocument = new CreateDocument(contentRepository, eventBus);
     const updateDocument = new UpdateDocument(contentRepository, eventBus);
+    const deleteDocument = new DeleteDocument(contentRepository, eventBus);
     const getAllDocuments = new GetAllDocuments(contentRepository, proxyParser);
     const getDocument = new GetDocument(contentRepository, proxyParser);
     const updateDocumentController = new UpdateDocumentController(
       updateDocument
     );
+    const deleteDocumentController = new DeleteDocumentController(deleteDocument);
     const createDocumentController = new CreateDocumentController(
       createDocument
     );
     return new DocumentModule(
       createDocumentController,
       updateDocumentController,
+      deleteDocumentController,
       getAllDocuments,
       getDocument,
       eventBus

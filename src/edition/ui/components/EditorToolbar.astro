@@ -3,9 +3,11 @@ interface Props {
   previewHref?: string;
   viewHref?: string;
   documentId?: string;
+  parentHref?: string;
+  isDirectory?: boolean;
 }
 
-const { previewHref, viewHref, documentId } = Astro.props;
+const { previewHref, viewHref, documentId, parentHref = "/", isDirectory = false } = Astro.props;
 ---
 
 <div class="editor-toolbar">
@@ -15,6 +17,14 @@ const { previewHref, viewHref, documentId } = Astro.props;
     data-action="save"
     data-view-href={viewHref}
     data-document-id={documentId}>Guardar</button
+  >
+  <button
+    type="button"
+    class="delete-button"
+    data-action="delete"
+    data-parent-href={parentHref}
+    data-is-directory={isDirectory ? "true" : "false"}
+    data-document-id={documentId}>Eliminar</button
   >
   {
     previewHref && (
@@ -70,6 +80,27 @@ const { previewHref, viewHref, documentId } = Astro.props;
         );
       }
     });
+
+    const deleteButton = document.querySelector<HTMLButtonElement>("[data-action='delete']");
+    if (!deleteButton) return;
+    const cleanDeleteButton = deleteButton.cloneNode(true) as HTMLButtonElement;
+    deleteButton.replaceWith(cleanDeleteButton);
+    cleanDeleteButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const isDirectory = cleanDeleteButton.dataset.isDirectory === "true";
+      const message = isDirectory
+        ? "Este documento es un directorio. Se eliminarán también todos los documentos que contiene. Esta acción no se puede deshacer. ¿Deseas continuar?"
+        : "Este documento se eliminará permanentemente. ¿Deseas continuar?";
+      if (!window.confirm(message)) return;
+      const result = await edition.deleteDocument.execute(cleanDeleteButton.dataset.documentId as string);
+      if (!result.isSuccess) {
+        const error = result.getError();
+        console.error(error);
+        showStatus(error instanceof Error ? error.message : "Error al eliminar", true);
+        return;
+      }
+      window.location.href = cleanDeleteButton.dataset.parentHref || "/";
+    });
   });
 </script>
 
@@ -94,6 +125,19 @@ const { previewHref, viewHref, documentId } = Astro.props;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.15s ease;
+  }
+
+  .delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #b42318;
+    background: transparent;
+    color: #b42318;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
   }
 
   .save-button:hover {

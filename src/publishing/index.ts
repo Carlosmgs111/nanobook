@@ -1,9 +1,10 @@
 import type { EventBus } from "../shared/domain/bus/EventBus";
 import type { RenderedPageCache } from "./domain/cache";
-import { DocumentCreated, DocumentUpdated } from "../document";
+import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../document";
 import { PagePublisher } from "./application/PagePublisher";
 import { OnDocumentCreatedHandler } from "./application/event-handlers/OnDocumentCreatedHandler";
 import { OnDocumentUpdatedHandler } from "./application/event-handlers/OnDocumentUpdatedHandler";
+import { OnDocumentDeletedHandler } from "./application/event-handlers/OnDocumentDeletedHandler";
 import { createRenderedPageCache } from "./infraestructure/cache";
 import { UnifiedMarkdownRenderer } from "./infraestructure/renderer/UnifiedMarkdownRenderer";
 import { InvalidatePagesController } from "./infraestructure/api/InvalidatePagesController";
@@ -52,6 +53,12 @@ export class PublishingModule {
       this.eventBus.subscribe(
         DocumentUpdated,
         new OnDocumentUpdatedHandler(this.pagePublisher)
+      )
+    );
+    this.unsubscribes.push(
+      this.eventBus.subscribe(
+        DocumentDeleted,
+        new OnDocumentDeletedHandler(this.pagePublisher)
       )
     );
   }

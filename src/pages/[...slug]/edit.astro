@@ -24,6 +24,7 @@ const previewHref = `/${editableEntry.slug}/preview`;
 const newHref = editableEntry.isIndex
   ? `/${editableEntry.slug}/new`
   : "/new";
+const parentHref = editableEntry.parentPath ? `/${editableEntry.parentPath}` : "/";
 ---
 
 <Layout
@@ -36,5 +37,10 @@ const newHref = editableEntry.isIndex
   viewHref={viewHref}
   newHref={newHref}
 >
-  <EditPage entry={editableEntry} previewHref={previewHref} viewHref={viewHref} />
+  <EditPage
+    entry={editableEntry}
+    previewHref={previewHref}
+    viewHref={viewHref}
+    parentHref={parentHref}
+  />
 </Layout>

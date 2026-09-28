@@ -84,4 +84,15 @@ export class InMemoryRepository implements ContentRepository {
     this.documents.set(document.getDocumentId().getValue(), document);
     return Result.ok();
   }
+
+  async delete(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
+    const key = document.getDocumentId().getValue();
+    if (!this.documents.has(key)) {
+      return Result.fail(new DocumentNotFoundError(document.getPath()));
+    }
+    this.documents.delete(key);
+    return Result.ok();
+  }
 }

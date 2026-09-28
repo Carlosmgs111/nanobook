@@ -1,6 +1,7 @@
 import { RenderPreview } from "./application/RenderPreview";
 import { InitializeEditor } from "./application/InitializeEditor";
 import { SaveDocument } from "./application/SaveDocument";
+import { DeleteDocument } from "./application/DeleteDocument";
 import { HandleEditorChange } from "./application/HandleEditorChange";
 import { GetRenderedDocument } from "./application/GetRenderedDocument";
 import { SessionStorageDocumentStorage } from "./infraestructure/storage/SessionStorageDocumentStorage";
@@ -32,6 +33,7 @@ export class EditionModule {
     public readonly renderPreview: RenderPreview,
     public readonly initializeEditor: InitializeEditor,
     public readonly saveDocument: SaveDocument,
+    public readonly deleteDocument: DeleteDocument,
     public readonly createDocument: CreateDocument,
     public readonly getRenderedDocument: GetRenderedDocument,
     public readonly handleEditorChange: HandleEditorChange,
@@ -50,6 +52,7 @@ export class EditionModule {
       eventBus
     );
     const saveDocument = new SaveDocument(storage, documentWriter);
+    const deleteDocument = new DeleteDocument(storage, documentWriter);
     const createDocument = new CreateDocument(documentWriter);
     const handleEditorChange = new HandleEditorChange(contentParser, storage);
     const initializeEditor = new InitializeEditor(storage);
@@ -59,6 +62,7 @@ export class EditionModule {
       renderPreview,
       initializeEditor,
       saveDocument,
+      deleteDocument,
       createDocument,
       getRenderedDocument,
       handleEditorChange,

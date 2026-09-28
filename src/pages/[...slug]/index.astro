@@ -33,10 +33,7 @@ const canonicalHref = entry.ref
     : `/${entry.ref}/`
   : undefined;
 
-Astro.response.headers.set(
-  "Cache-Control",
-  "public, max-age=60, stale-while-revalidate=600"
-);
+Astro.response.headers.set("Cache-Control", "no-store");
 ---
 
 <Layout

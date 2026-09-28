@@ -8,10 +8,11 @@ interface Props {
   entry: Entry;
   previewHref?: string;
   viewHref?: string;
+  parentHref?: string;
   frontmatterOnly?: boolean;
 }
 
-const { entry, previewHref, viewHref, frontmatterOnly = false } = Astro.props;
+const { entry, previewHref, viewHref, parentHref, frontmatterOnly = false } = Astro.props;
 const serializedEntry = serializeEntry(entry);
 const initialContent = entry.rawFrontmatter + entry.content;
 ---
@@ -21,6 +22,8 @@ const initialContent = entry.rawFrontmatter + entry.content;
     previewHref={previewHref}
     viewHref={viewHref}
     documentId={entry.documentId}
+    parentHref={parentHref}
+    isDirectory={entry.isIndex}
   >
     <EditorStatus slot="status" />
   </EditorToolbar>

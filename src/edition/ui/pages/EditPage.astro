@@ -6,9 +6,10 @@ interface Props {
   entry: Entry;
   previewHref: string;
   viewHref: string;
+  parentHref: string;
 }
 
-const { entry, previewHref, viewHref } = Astro.props;
+const { entry, previewHref, viewHref, parentHref } = Astro.props;
 ---
 
 <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
@@ -43,5 +44,6 @@ const { entry, previewHref, viewHref } = Astro.props;
   entry={entry}
   previewHref={entry.ref ? undefined : previewHref}
   viewHref={viewHref}
+  parentHref={parentHref}
   frontmatterOnly={Boolean(entry.ref)}
 /> 

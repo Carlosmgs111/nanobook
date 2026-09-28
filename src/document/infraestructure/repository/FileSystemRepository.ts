@@ -1,4 +1,4 @@
-import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { Result } from "../../../shared/domain/Result";
 import { pathToFilePath, filePathToId } from "./fileSystemParsePath";
@@ -160,6 +160,26 @@ export class FileSystemRepository implements ContentRepository {
       return Result.fail(
         new DocumentRepositoryError(
           `Failed to update document "${document.getPath()}"`,
+          { cause: error }
+        )
+      );
+    }
+  }
+
+  async delete(
+    document: Document
+  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
+    try {
+      const filePath = pathToFilePath(document.getPath(), this.contentDir);
+      if (!(await fileExists(filePath))) {
+        return Result.fail(new DocumentNotFoundError(document.getPath()));
+      }
+      await unlink(filePath);
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new DocumentRepositoryError(
+          `Failed to delete document "${document.getPath()}"`,
           { cause: error }
         )
       );

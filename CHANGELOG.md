@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadido el borrado de documentos desde el editor, con confirmación explícita y borrado recursivo del contenido de los directorios.
+- Corregida la reconstrucción del árbol de navegación después de eliminar documentos o directorios.
+- Corregido el uso de HTML cacheado al volver al índice después de una eliminación; las páginas de documentos ahora se sirven con `no-store`.
 - `DocumentPath` ahora conserva explícitamente la ruta interna (`new-dir/index`) y expone por separado su ruta pública (`new-dir`), preparando la migración por capas sin cambiar aún el comportamiento de los consumidores existentes.
 - `Document` y los repositorios ahora conservan rutas internas de índice (`new-dir/index`); `navigation` y las páginas públicas usan explícitamente la ruta pública derivada, y `UpdateDocument` dejó de reconstruir `/index` desde `metadata.index`.
 - `Document.isIndex()` pasa a derivar el tipo de documento desde la ruta interna; creación, navegación, proxies y repositorios ya no usan `metadata.index` como fuente de verdad.

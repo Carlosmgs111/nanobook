@@ -17,6 +17,7 @@ export function createRepository(
     listChildren: vi.fn().mockResolvedValue(Result.ok([])),
     create: vi.fn().mockResolvedValue(Result.ok()),
     update: vi.fn().mockResolvedValue(Result.ok()),
+    delete: vi.fn().mockResolvedValue(Result.ok()),
     ...overrides,
   };
 }

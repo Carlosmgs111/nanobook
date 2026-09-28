@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Document } from "../document/domain/Document";
 import { DocumentCreated } from "../document/domain/events/DocumentCreated";
 import { DocumentUpdated } from "../document/domain/events/DocumentUpdated";
+import { DocumentDeleted } from "../document/domain/events/DocumentDeleted";
 import { DocumentPath } from "../document/domain/DocumentPath";
 import { InMemoryEventBus } from "../shared/infraestructure/InMemoryEventBus";
 import type { DocumentProvider } from "./domain/ports/DocumentProvider";
@@ -65,5 +66,25 @@ describe("NavigationModule", () => {
         expect.objectContaining({ id: "guides/cache", title: "New title" }),
       ])
     );
+  });
+
+  it("rebuilds the graph when a document is deleted", async () => {
+    const root = document("index", "doc-root", "Home");
+    const section = document("guides/index", "doc-guides", "Guides");
+    const child = document("guides/cache", "doc-cache", "Cache");
+    let documents = [root, section, child];
+    const provider: DocumentProvider = { getAll: async () => documents };
+    const eventBus = new InMemoryEventBus();
+    const module = await NavigationModule.create(provider, eventBus);
+
+    documents = [root];
+    const result = await eventBus.publish(new DocumentDeleted("doc-guides"));
+
+    expect(result.isSuccess).toBe(true);
+    expect(
+      module.navigationService.getImmediateChildren(
+        DocumentPath.create("index").getValue()
+      )
+    ).toEqual([]);
   });
 });
