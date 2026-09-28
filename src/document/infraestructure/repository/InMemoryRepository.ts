@@ -76,12 +76,24 @@ export class InMemoryRepository implements ContentRepository {
   }
 
   async update(
-    document: Document
-  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
-    if (!this.documents.has(document.getDocumentId().getValue())) {
+    document: Document,
+    previousPath?: string
+  ): Promise<
+    Result<DocumentRepositoryError | DocumentNotFoundError | DocumentAlreadyExistsError, void>
+  > {
+    const documentId = document.getDocumentId().getValue();
+    if (!this.documents.has(documentId)) {
       return Result.fail(new DocumentNotFoundError(document.getDocumentId().getValue()));
     }
-    this.documents.set(document.getDocumentId().getValue(), document);
+    const collision = Array.from(this.documents.values()).some(
+      (candidate) =>
+        candidate.getDocumentId().getValue() !== documentId &&
+        candidate.getPath() === document.getPath()
+    );
+    if (collision) {
+      return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
+    }
+    this.documents.set(documentId, document);
     return Result.ok();
   }
 

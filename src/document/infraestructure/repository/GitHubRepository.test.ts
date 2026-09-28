@@ -104,4 +104,87 @@ author: "Nanobook"
       { depth: 2, slug: "Updated heading", text: "Updated heading" },
     ]);
   });
+
+  it("deletes an index document using its GitHub path", async () => {
+    const requests: Array<{ url: string; method?: string }> = [];
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = String(input);
+      requests.push({ url, method: init?.method });
+
+      if (init?.method === "DELETE") return new Response(null, { status: 200 });
+      if (url.includes("/contents/") && init?.method !== "PUT") {
+        return Response.json({ sha: "index-sha" });
+      }
+      return Response.json({ tree: [] });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const repository = new GitHubRepository(
+      {
+        owner: "nanobook-test",
+        repo: "delete-document",
+        path: "content",
+      },
+      parser
+    );
+    const document = Document.create(
+      "guides/index",
+      {
+        id: "doc-guides",
+        title: "Guides",
+        description: "Guides",
+        date: new Date("2026-09-24T00:00:00.000Z"),
+        author: "Nanobook",
+      },
+      "# Guides\n"
+    );
+
+    expect(document.isSuccess).toBe(true);
+    const result = await repository.delete(document.getValue());
+
+    expect(result.isSuccess).toBe(true);
+    expect(requests.some((request) => request.method === "DELETE")).toBe(true);
+  });
+
+  it("moves a document by creating the new path and deleting the old path", async () => {
+    const requests: Array<{ url: string; method?: string }> = [];
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = String(input);
+      requests.push({ url, method: init?.method });
+
+      if (init?.method === "PUT") return new Response(null, { status: 200 });
+      if (init?.method === "DELETE") return new Response(null, { status: 200 });
+      if (url.includes("guides%2Fcache.md")) {
+        return Response.json({ sha: "old-sha" });
+      }
+      if (url.includes("guides%2Frenamed.md")) {
+        return new Response(null, { status: 404 });
+      }
+      return Response.json({ tree: [] });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const repository = new GitHubRepository(
+      { owner: "nanobook-test", repo: "repath-document", path: "content" },
+      parser
+    );
+    const document = Document.create(
+      "guides/renamed",
+      {
+        id: "doc-guides-cache",
+        title: "Renamed",
+        description: "Renamed document",
+        date: new Date("2026-09-24T00:00:00.000Z"),
+        author: "Nanobook",
+      },
+      "# Renamed\n"
+    );
+
+    expect(document.isSuccess).toBe(true);
+    const result = await repository.update(document.getValue(), "guides/cache");
+
+    expect(result.isSuccess).toBe(true);
+    expect(requests.some((request) => request.method === "PUT" && request.url.includes("guides%2Frenamed.md"))).toBe(true);
+    expect(requests.some((request) => request.method === "DELETE" && request.url.includes("guides%2Fcache.md"))).toBe(true);
+  });
 });

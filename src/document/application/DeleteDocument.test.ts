@@ -42,6 +42,34 @@ describe("DeleteDocument", () => {
     );
   });
 
+  it("does not delete descendants when the target is a regular document", async () => {
+    const file = createDocument("guides", {
+      title: "Guides file",
+      description: "A regular document",
+    });
+    const directory = createDocument("guides/index", {
+      title: "Guides directory",
+      description: "A directory with the same public name",
+    });
+    const child = createDocument("guides/intro", {
+      title: "Intro",
+      description: "Introduction",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(file)),
+      list: vi.fn().mockResolvedValue(Result.ok([file, directory, child])),
+    });
+    const eventBus = createEventBus();
+
+    const result = await new DeleteDocument(repository, eventBus).execute(
+      file.getDocumentId().getValue()
+    );
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.delete).toHaveBeenCalledTimes(1);
+    expect(repository.delete).toHaveBeenCalledWith(file);
+  });
+
   it("returns not found without deleting when the path does not exist", async () => {
     const repository = createRepository();
     const eventBus = createEventBus();

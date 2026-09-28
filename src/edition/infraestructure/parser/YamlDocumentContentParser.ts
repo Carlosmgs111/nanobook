@@ -33,6 +33,10 @@ export class YamlDocumentContentParser implements DocumentContentParser {
 
     return Result.ok({
       ...base,
+      title: data.title ?? base.title,
+      description: data.description ?? base.description,
+      position: data.position ?? base.position,
+      ref: typeof data.ref === "string" ? data.ref : base.ref,
       metadata: {
         ...base.metadata,
         ...data,

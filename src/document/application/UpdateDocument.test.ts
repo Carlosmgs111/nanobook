@@ -82,6 +82,40 @@ describe("UpdateDocument", () => {
     );
   });
 
+  it("moves the complete subtree when an index document is renamed", async () => {
+    const directory = createDocument("guides/index", {
+      title: "Guides",
+      description: "Guides",
+    });
+    const child = createDocument("guides/intro", {
+      title: "Intro",
+      description: "Intro",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(directory)),
+      list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute({
+      id: directory.getDocumentId().getValue(),
+      path: "reference/index",
+      title: "Reference",
+      description: "Reference",
+      date: new Date("2026-01-01"),
+      content: "# Reference",
+    });
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.update).toHaveBeenCalledTimes(2);
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: expect.objectContaining({ value: "reference/intro" }) }),
+      "guides/intro"
+    );
+    expect(eventBus.publish).toHaveBeenCalledTimes(2);
+  });
+
   it("locates by stable id and applies the path supplied in the body", async () => {
     const repository = createRepository({
       getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
@@ -104,7 +138,8 @@ describe("UpdateDocument", () => {
       expect.objectContaining({
         documentId: expect.objectContaining({ value: existingDocument.getDocumentId().getValue() }),
         path: expect.objectContaining({ value: "guide/renamed" }),
-      })
+      }),
+      "guide/intro"
     );
   });
 

@@ -33,8 +33,16 @@ export class DeleteDocument {
 
     const publicPath = document.getDocumentPath().getPublicValue();
     const documentsToDelete = documentsResult.getValue().filter((candidate) => {
+      if (candidate.getDocumentId().getValue() === document.getDocumentId().getValue()) {
+        return true;
+      }
+
+      // Only an index document represents a directory. A regular document
+      // named "guides" must not delete the separate "guides/*" subtree.
+      if (!document.isIndex()) return false;
+
       const candidatePath = candidate.getDocumentPath().getPublicValue();
-      return candidatePath === publicPath || candidatePath.startsWith(`${publicPath}/`);
+      return candidatePath.startsWith(`${publicPath}/`);
     });
 
     for (const documentToDelete of documentsToDelete) {

@@ -17,4 +17,9 @@ export class GetAllDocuments {
     const allDocuments = await this.proxyResolver.parseProxies(documents);
     return allDocuments;
   }
+
+  async refresh(): Promise<Document[]> {
+    await this.repository.clearCache?.();
+    return this.execute();
+  }
 }

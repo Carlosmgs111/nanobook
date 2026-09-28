@@ -3,11 +3,19 @@ interface Props {
   previewHref?: string;
   viewHref?: string;
   documentId?: string;
+  documentPath?: string;
   parentHref?: string;
   isDirectory?: boolean;
 }
 
-const { previewHref, viewHref, documentId, parentHref = "/", isDirectory = false } = Astro.props;
+const {
+  previewHref,
+  viewHref,
+  documentId,
+  documentPath,
+  parentHref = "/",
+  isDirectory = false,
+} = Astro.props;
 ---
 
 <div class="editor-toolbar">
@@ -25,6 +33,13 @@ const { previewHref, viewHref, documentId, parentHref = "/", isDirectory = false
     data-parent-href={parentHref}
     data-is-directory={isDirectory ? "true" : "false"}
     data-document-id={documentId}>Eliminar</button
+  >
+  <button
+    type="button"
+    class="rename-button"
+    data-action="rename"
+    data-document-path={documentPath}
+    data-document-id={documentId}>Renombrar</button
   >
   {
     previewHref && (
@@ -101,6 +116,37 @@ const { previewHref, viewHref, documentId, parentHref = "/", isDirectory = false
       }
       window.location.href = cleanDeleteButton.dataset.parentHref || "/";
     });
+
+    const renameButton = document.querySelector<HTMLButtonElement>("[data-action='rename']");
+    if (!renameButton) return;
+    const cleanRenameButton = renameButton.cloneNode(true) as HTMLButtonElement;
+    renameButton.replaceWith(cleanRenameButton);
+    cleanRenameButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const currentPath = cleanRenameButton.dataset.documentPath || "";
+      const nextPath = window.prompt(
+        "Nueva ruta interna del documento (usa /index para directorios):",
+        currentPath
+      );
+      if (nextPath === null || nextPath.trim() === currentPath) return;
+
+      const result = await edition.renameDocument.execute(
+        cleanRenameButton.dataset.documentId as string,
+        nextPath
+      );
+      if (!result.isSuccess) {
+        const error = result.getError();
+        console.error(error);
+        showStatus(error instanceof Error ? error.message : "Error al renombrar", true);
+        return;
+      }
+
+      const renamed = result.getValue();
+      const publicPath = renamed.isIndex && renamed.path !== "index"
+        ? renamed.path.slice(0, -"/index".length)
+        : renamed.path;
+      window.location.href = publicPath === "index" ? "/" : `/${publicPath}`;
+    });
   });
 </script>
 
@@ -134,6 +180,19 @@ const { previewHref, viewHref, documentId, parentHref = "/", isDirectory = false
     border: 1px solid #b42318;
     background: transparent;
     color: #b42318;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .rename-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--grid-line-strong);
+    background: transparent;
+    color: var(--text);
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     font-weight: 600;

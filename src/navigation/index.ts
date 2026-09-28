@@ -56,7 +56,7 @@ export class NavigationModule {
   }
 
   async refresh(): Promise<void> {
-    const documents = await this.documentProvider.getAll();
+    const documents = await (this.documentProvider.refresh?.() ?? this.documentProvider.getAll());
     this.navigationService.replaceGraph(new DocumentsGraph(documents));
   }
 }

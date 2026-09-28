@@ -7,4 +7,8 @@ export class DocumentModuleDocumentProvider implements DocumentProvider {
   async getAll() {
     return this.documentModule.getAllDocuments.execute();
   }
+
+  async refresh() {
+    return this.documentModule.refreshDocuments();
+  }
 }

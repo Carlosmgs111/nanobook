@@ -38,6 +38,11 @@ export class DocumentModule {
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus
   ) {}
+
+  async refreshDocuments() {
+    return this.getAllDocuments.refresh();
+  }
+
   static async create(eventBus: EventBus) {
     const contentRepository = await createContentRepository();
 

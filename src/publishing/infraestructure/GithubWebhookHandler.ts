@@ -77,7 +77,8 @@ function mapGitHubPathsToChanges(
 export class GitHubWebhookHandler {
   constructor(
     private renderedPageCache: RenderedPageCache,
-    private navigationService: NavigationService
+    private navigationService: NavigationService,
+    private refreshNavigation: () => Promise<void> = async () => {}
   ) {}
   async handle({
     headers,
@@ -150,6 +151,7 @@ export class GitHubWebhookHandler {
       };
     }
      const result = await this.navigationService.getInvalidatedIds(changes);
+     await this.refreshNavigation();
      const invalidateResult = await this.renderedPageCache.invalidate(
        result.invalidatedIds
      );

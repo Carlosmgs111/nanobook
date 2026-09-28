@@ -21,7 +21,8 @@ export class Application {
   ) {
     const githubWebhookHandler = new GitHubWebhookHandler(
       this.publishingModule.renderedPageCache,
-      this.navigationModule.navigationService
+      this.navigationModule.navigationService,
+      () => this.navigationModule.refresh()
     );
     this.githubWebhookController = new GitHubWebhookController(githubWebhookHandler);
   }

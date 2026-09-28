@@ -136,15 +136,21 @@ export class GitHubRepository implements ContentRepository {
   }
 
   async update(
-    document: Document
-  ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
-    return this.writeDocument(document, "update");
+    document: Document,
+    previousPath?: string
+  ): Promise<
+    Result<
+      DocumentRepositoryError | DocumentNotFoundError | DocumentAlreadyExistsError,
+      void
+    >
+  > {
+    return this.writeDocument(document, "update", previousPath);
   }
 
   async delete(
     document: Document
   ): Promise<Result<DocumentRepositoryError | DocumentNotFoundError, void>> {
-    const path = this.idToGitHubPath(document.getPath(), document.isIndex());
+    const path = this.pathToGitHubPath(document.getPath());
     try {
       const sha = await this.fetchFileSha(path);
       if (!sha) return Result.fail(new DocumentNotFoundError(document.getPath()));
@@ -154,7 +160,7 @@ export class GitHubRepository implements ContentRepository {
         sha,
         message: `Delete ${path}`,
       });
-      this.clearCache();
+      await this.clearCache();
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -204,31 +210,52 @@ export class GitHubRepository implements ContentRepository {
 
   private async writeDocument(
     document: Document,
-    operation: "create" | "update"
+    operation: "create" | "update",
+    previousPath?: string
   ): Promise<
     Result<DocumentRepositoryError | DocumentAlreadyExistsError | DocumentNotFoundError, void>
   > {
     const path = this.pathToGitHubPath(document.getPath());
     try {
-      const sha = await this.fetchFileSha(path);
+      const sourcePath = previousPath
+        ? this.pathToGitHubPath(previousPath)
+        : path;
+      const sha = await this.fetchFileSha(sourcePath);
       if (operation === "create" && sha) {
         return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
       }
       if (operation === "update" && !sha) {
-        return Result.fail(new DocumentNotFoundError(document.getPath()));
+        return Result.fail(new DocumentNotFoundError(previousPath ?? document.getPath()));
+      }
+      if (operation === "update" && sourcePath !== path) {
+        const targetSha = await this.fetchFileSha(path);
+        if (targetSha) {
+          return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
+        }
       }
 
       await updateFileContent({
         ...this.config,
         path,
-        sha: operation === "update" ? sha ?? undefined : undefined,
+        sha: operation === "update" && sourcePath === path ? sha ?? undefined : undefined,
         content: document.getRawFrontmatter() + document.getContent(),
         message: `${operation === "create" ? "Create" : "Update"} ${path}`,
       });
 
-      operation === "create"
-        ? this.clearCache()
-        : this.updateCachedDocument(document);
+      if (operation === "update" && sourcePath !== path) {
+        await deleteFileContent({
+          ...this.config,
+          path: sourcePath,
+          sha: sha!,
+          message: `Move ${sourcePath} to ${path}`,
+        });
+      }
+
+      if (operation === "create" || sourcePath !== path) {
+        await this.clearCache();
+      } else {
+        this.updateCachedDocument(document);
+      }
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -274,7 +301,7 @@ export class GitHubRepository implements ContentRepository {
       this.parser
     );
     if (!documentResult.isSuccess) {
-      this.clearCache();
+      this.clearDocumentCache();
       return;
     }
 
@@ -367,8 +394,16 @@ export class GitHubRepository implements ContentRepository {
     }
   }
 
-  /** Invalida el cache de documentos de esta instancia. */
-  clearCache(): void {
+  private clearDocumentCache(): void {
     globalCache.delete(this.cacheKey);
+  }
+
+  /** Invalida el catálogo local y el árbol remoto tras crear o borrar. */
+  async clearCache(): Promise<void> {
+    this.clearDocumentCache();
+    globalTreePromises.delete(this.treeCacheKey);
+    await withRedisClient(async (client) => {
+      await client.del(this.treeCacheKey);
+    });
   }
 }

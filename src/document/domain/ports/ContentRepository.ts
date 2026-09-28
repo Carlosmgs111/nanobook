@@ -35,6 +35,10 @@ export interface ContentRepository {
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>>;
   create(document: Document): Promise<Result<ContentRepositoryError, void>>;
-  update(document: Document): Promise<Result<ContentRepositoryError, void>>;
+  update(
+    document: Document,
+    previousPath?: string
+  ): Promise<Result<ContentRepositoryError, void>>;
   delete(document: Document): Promise<Result<ContentRepositoryError, void>>;
+  clearCache?(): Promise<void> | void;
 }

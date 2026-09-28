@@ -7,6 +7,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregida la sincronización del editor para que `title`, `description`, `position` y `ref` editados en el frontmatter también actualicen los campos del documento staged enviados al backend.
+- El repath de directorios ahora mueve también todos sus documentos descendientes en filesystem, GitHub y memoria, conservando sus identidades estables.
+- El adaptador filesystem ahora elimina directorios padres vacíos después de un repath, sin borrar carpetas que aún contienen documentos.
+- Añadida la acción de renombramiento desde el editor, conservando la identidad estable y redirigiendo a la nueva ruta pública.
+- El webhook de GitHub ahora refresca el catálogo remoto y reconstruye la navegación antes de invalidar las páginas afectadas.
+- Corregido el borrado de documentos con nombre coincidente con un directorio: solo los documentos índice eliminan descendientes.
+- Corregido el adaptador GitHub para borrar usando la ruta correcta e invalidar la caché local y Redis del árbol tras crear o borrar documentos.
+- Añadido soporte de repath en las actualizaciones: valida colisiones, mueve el archivo y conserva la identidad estable en filesystem, memoria y GitHub.
 - Añadido el borrado de documentos desde el editor, con confirmación explícita y borrado recursivo del contenido de los directorios.
 - Corregida la reconstrucción del árbol de navegación después de eliminar documentos o directorios.
 - Corregido el uso de HTML cacheado al volver al índice después de una eliminación; las páginas de documentos ahora se sirven con `no-store`.

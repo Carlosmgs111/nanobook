@@ -19,6 +19,30 @@ describe("HandleEditorChange", () => {
     expect(storage.clearConfirmedDocument).toHaveBeenCalledWith("doc-intro");
   });
 
+  it("keeps entry fields synchronized with edited frontmatter metadata", async () => {
+    const storage = createDocumentStorage();
+    const useCase = new HandleEditorChange(new YamlDocumentContentParser(), storage);
+
+    const result = await useCase.execute(
+      buildSerializedEntry(),
+      '---\ntitle: "Updated title"\ndescription: "Updated description"\nposition: 7\nref: "/README.md"\n---\n\n# Body'
+    );
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue()).toMatchObject({
+      title: "Updated title",
+      description: "Updated description",
+      position: 7,
+      ref: "/README.md",
+      metadata: {
+        title: "Updated title",
+        description: "Updated description",
+        position: 7,
+        ref: "/README.md",
+      },
+    });
+  });
+
   it("returns an error for invalid frontmatter", async () => {
     const storage = createDocumentStorage();
     const useCase = new HandleEditorChange(new YamlDocumentContentParser(), storage);
