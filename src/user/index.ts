@@ -5,6 +5,11 @@ import { GetUserByEmail } from "./application/GetUserByEmail";
 import { UpdateUser } from "./application/UpdateUser";
 import { createUserRepository } from "./infraestructure/repository";
 import type { EventBus } from "../shared/domain/bus/EventBus";
+import { CreateUserController } from "./infraestructure/rest/CreateUserController";
+import { GetUserController } from "./infraestructure/rest/GetUserController";
+import { GetUserByEmailController } from "./infraestructure/rest/GetUserByEmailController";
+import { UpdateUserController } from "./infraestructure/rest/UpdateUserController";
+import { DeleteUserController } from "./infraestructure/rest/DeleteUserController";
 
 export { User } from "./domain/User";
 export { UserId } from "./domain/UserId";
@@ -26,17 +31,32 @@ export class UserModule {
     public readonly getUser: GetUser,
     public readonly getUserByEmail: GetUserByEmail,
     public readonly updateUser: UpdateUser,
-    public readonly deleteUser: DeleteUser
+    public readonly deleteUser: DeleteUser,
+    public readonly createUserController: CreateUserController,
+    public readonly getUserController: GetUserController,
+    public readonly getUserByEmailController: GetUserByEmailController,
+    public readonly updateUserController: UpdateUserController,
+    public readonly deleteUserController: DeleteUserController
   ) {}
 
   static async create(_eventBus?: EventBus): Promise<UserModule> {
     const repository = createUserRepository();
+    const createUser = new CreateUser(repository);
+    const getUser = new GetUser(repository);
+    const getUserByEmail = new GetUserByEmail(repository);
+    const updateUser = new UpdateUser(repository);
+    const deleteUser = new DeleteUser(repository);
     return new UserModule(
-      new CreateUser(repository),
-      new GetUser(repository),
-      new GetUserByEmail(repository),
-      new UpdateUser(repository),
-      new DeleteUser(repository)
+      createUser,
+      getUser,
+      getUserByEmail,
+      updateUser,
+      deleteUser,
+      new CreateUserController(createUser),
+      new GetUserController(getUser),
+      new GetUserByEmailController(getUserByEmail),
+      new UpdateUserController(updateUser),
+      new DeleteUserController(deleteUser)
     );
   }
 }
