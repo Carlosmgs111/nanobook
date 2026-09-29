@@ -147,4 +147,30 @@ describe("UserProfileController", () => {
     cleanup();
     expect(form.listenerCount("submit")).toBe(0);
   });
+
+  it("enables profile fields after a successful load", async () => {
+    const emailInput = new FakeElement();
+    const displayNameInput = new FakeElement();
+    emailInput.disabled = true;
+    displayNameInput.disabled = true;
+    const root = new FakeElement({
+      form: new FakeElement(),
+      'input[name="email"]': emailInput,
+      'input[name="displayName"]': displayNameInput,
+      'button[type="submit"]': new FakeElement(),
+      '[data-profile-status]': new FakeElement(),
+    });
+    const client = fakeClient();
+    client.getUser.mockResolvedValue(
+      Result.ok(profile("user-1", "user@example.com", "User"))
+    );
+
+    const cleanup = mountUserProfileForm(root as unknown as HTMLElement, "user-1", client);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(emailInput.disabled).toBe(false);
+    expect(displayNameInput.disabled).toBe(false);
+    cleanup();
+  });
 });

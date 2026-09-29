@@ -146,6 +146,12 @@ export function mountUserProfileForm(
       emailInput.value = state.draft.email;
       displayNameInput.value = state.draft.displayName;
     }
+    const fieldsEditable =
+      state.phase === "ready" ||
+      state.phase === "saved" ||
+      state.phase === "save-error";
+    emailInput.disabled = !fieldsEditable;
+    displayNameInput.disabled = !fieldsEditable;
     submitButton.disabled = state.phase === "loading" || state.phase === "saving";
     status.textContent = state.message ?? phaseMessage(state.phase);
     status.dataset.state = state.phase;
