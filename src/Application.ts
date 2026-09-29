@@ -10,6 +10,7 @@ import { NavigationModule } from "./navigation";
 import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
 import type { RenderedDocumentPage } from "./publishing";
 import { DocumentModuleDocumentProvider } from "./document/infraestructure/navigation/DocumentModuleDocumentProvider";
+import { UserModule } from "./user";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -17,6 +18,7 @@ export class Application {
     public readonly documentModule: DocumentModule,
     public readonly navigationModule: NavigationModule,
     public readonly publishingModule: PublishingModule,
+    public readonly userModule: UserModule,
     public readonly eventBus: InMemoryEventBus
   ) {
     const githubWebhookHandler = new GitHubWebhookHandler(
@@ -34,11 +36,13 @@ export class Application {
     const documentModule = await DocumentModule.create(eventBus);
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await NavigationModule.create(documentProvider, eventBus);
+    const userModule = await UserModule.create();
 
     return new Application(
       documentModule,
       navigationModule,
       publishingModule,
+      userModule,
       eventBus
     );
   }
