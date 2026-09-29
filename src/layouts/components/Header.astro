@@ -9,9 +9,10 @@ interface Props {
   editHref?: string;
   viewHref?: string;
   newHref?: string;
+  profileHref?: string;
 }
 
-const { breadcrumbs, editHref, viewHref, newHref } = Astro.props;
+const { breadcrumbs, editHref, viewHref, newHref, profileHref } = Astro.props;
 ---
 
 <header
@@ -32,6 +33,15 @@ const { breadcrumbs, editHref, viewHref, newHref } = Astro.props;
     </div>
     <div class="flex flex-shrink-0 items-center gap-2">
       <DocumentControls editHref={editHref} viewHref={viewHref} newHref={newHref} />
+      {profileHref && (
+        <a
+          href={profileHref}
+          aria-label="Perfil de usuario"
+          class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--grid-line)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+        >
+          Perfil
+        </a>
+      )}
     </div>
   </div>
 </header>
