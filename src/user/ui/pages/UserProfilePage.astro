@@ -1,0 +1,41 @@
+---
+import UserProfileForm from "../components/UserProfileForm.astro";
+
+interface Props {
+  currentUserId?: string;
+}
+
+const { currentUserId } = Astro.props;
+---
+
+<div class="mx-auto w-full max-w-3xl px-6 py-10 md:px-0 md:py-14">
+  {currentUserId ? (
+    <>
+      <header class="mb-8">
+        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+          Mi cuenta
+        </div>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight">Perfil de usuario</h1>
+        <p class="mt-3 max-w-xl text-[var(--muted)]">
+          Gestiona los datos básicos de tu perfil de Nanobook.
+        </p>
+      </header>
+      <UserProfileForm userId={currentUserId} />
+    </>
+  ) : (
+    <section
+      class="border border-[var(--grid-line-strong)] bg-[var(--layer-1)] p-6 md:p-8"
+      aria-labelledby="profile-unavailable-title"
+    >
+      <div class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+        Mi cuenta
+      </div>
+      <h1 id="profile-unavailable-title" class="mt-2 text-2xl font-semibold">
+        Perfil no disponible
+      </h1>
+      <p class="mt-3 max-w-xl text-[var(--muted)]">
+        No hay una sesión de usuario activa para cargar este perfil.
+      </p>
+    </section>
+  )}
+</div>
