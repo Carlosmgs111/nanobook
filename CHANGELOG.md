@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadido el adaptador de salida `HttpUserApi` para el frontend, con operaciones tipadas de creación, consulta, actualización y eliminación de usuarios, serialización segura y errores HTTP normalizados.
 - Añadidos adaptadores de entrada REST para los casos de uso de `user`, con rutas `POST/GET /api/users` y `GET/PATCH/DELETE /api/users/:id`, validación de payloads y mapeo de errores HTTP.
 - Añadido el módulo `user` con identidad estable `UserId`, gestión de perfiles, casos de uso CRUD, repositorio en memoria reemplazable e integración con `Application`.
 - Separada la auditoría temporal en `createdAt` y `updatedAt`; la identidad, el autor y `createdAt` quedan protegidos durante las actualizaciones, y los payloads de edición ya no aceptan campos controlados por el servidor.
