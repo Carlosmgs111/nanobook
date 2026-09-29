@@ -1,4 +1,4 @@
-import type { UpdateUser } from "../../application/UpdateUser";
+import type { UpdateUser } from "../../../application/UpdateUser";
 import { handleUserError, jsonResponse, parseJsonObject, routeError } from "./utils";
 import type { UserRoute } from "./utils";
 

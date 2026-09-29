@@ -1,5 +1,5 @@
-import { Result } from "../../../shared/domain/Result";
-import type { UserProfile } from "../../domain/types";
+import { Result } from "../../../../shared/domain/Result";
+import type { UserProfile } from "../../../domain/types";
 
 export interface CreateUserApiInput {
   email: string;

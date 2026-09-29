@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CreateUser } from "./CreateUser";
 import { GetUser } from "./GetUser";
-import { InMemoryUserRepository } from "../infraestructure/repository/InMemoryUserRepository";
+import { InMemoryUserRepository } from "../infraestructure/outbound/repository/InMemoryUserRepository";
 import { UserNotFoundError } from "./errors";
 
 describe("GetUser", () => {

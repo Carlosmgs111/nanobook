@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { User } from "../../domain/User";
-import { UserEmailAlreadyExistsError } from "../errors";
+import { User } from "../../../domain/User";
+import { UserEmailAlreadyExistsError } from "../../errors";
 import { InMemoryUserRepository } from "./InMemoryUserRepository";
 
 const makeUser = (id: string, email: string, displayName = "User") =>

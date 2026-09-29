@@ -1,11 +1,11 @@
-import { Result } from "../../../shared/domain/Result";
-import { normalizeEmail, User } from "../../domain/User";
-import type { UserId } from "../../domain/UserId";
-import type { UserRepository } from "../../domain/ports/UserRepository";
+import { Result } from "../../../../shared/domain/Result";
+import { normalizeEmail, User } from "../../../domain/User";
+import type { UserId } from "../../../domain/UserId";
+import type { UserRepository } from "../../../domain/ports/UserRepository";
 import {
   UserEmailAlreadyExistsError,
-} from "../errors";
-import type { UserRepositoryResultError } from "../../domain/ports/UserRepository";
+} from "../../errors";
+import type { UserRepositoryResultError } from "../../../domain/ports/UserRepository";
 
 export class InMemoryUserRepository implements UserRepository {
   private readonly users = new Map<string, User>();

@@ -1,4 +1,4 @@
-import type { CreateUser } from "../../application/CreateUser";
+import type { CreateUser } from "../../../application/CreateUser";
 import { jsonResponse, handleUserError, parseJsonObject, routeError } from "./utils";
 import type { UserRoute } from "./utils";
 

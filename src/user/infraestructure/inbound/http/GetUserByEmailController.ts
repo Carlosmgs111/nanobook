@@ -1,4 +1,4 @@
-import type { GetUserByEmail } from "../../application/GetUserByEmail";
+import type { GetUserByEmail } from "../../../application/GetUserByEmail";
 import { handleUserError, jsonResponse } from "./utils";
 import type { UserRoute } from "./utils";
 

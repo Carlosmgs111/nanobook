@@ -1,4 +1,4 @@
-import { HttpUserApi, HttpUserApiError } from "./api/HttpUserApi";
+import { HttpUserApi, HttpUserApiError } from "../infraestructure/outbound/http/HttpUserApi";
 import type { UserProfile } from "../domain/types";
 import type { Result } from "../../shared/domain/Result";
 

@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Reorganizados los adaptadores del módulo `user` bajo `infraestructure/inbound/http` y `infraestructure/outbound`, separando transporte HTTP entrante, cliente HTTP saliente y repositorio.
 - Añadida la página dedicada `/profile` con formulario accesible, estados de carga/guardado/error, reintento y enlace global `Perfil`; consume `HttpUserApi` y requiere `Astro.locals.currentUserId`.
 - Añadido el adaptador de salida `HttpUserApi` para el frontend, con operaciones tipadas de creación, consulta, actualización y eliminación de usuarios, serialización segura y errores HTTP normalizados.
 - Añadidos adaptadores de entrada REST para los casos de uso de `user`, con rutas `POST/GET /api/users` y `GET/PATCH/DELETE /api/users/:id`, validación de payloads y mapeo de errores HTTP.

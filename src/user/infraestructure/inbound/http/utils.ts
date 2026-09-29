@@ -4,8 +4,8 @@ import {
   InvalidUserIdError,
   UserEmailAlreadyExistsError,
   UserRepositoryError,
-} from "../../domain/errors";
-import { UserNotFoundError } from "../../application/errors";
+} from "../../../domain/errors";
+import { UserNotFoundError } from "../../../application/errors";
 
 export function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

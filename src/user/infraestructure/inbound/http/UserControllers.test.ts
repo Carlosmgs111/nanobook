@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UserModule } from "../../index";
+import { UserModule } from "../../../index";
 import { CreateUserController } from "./CreateUserController";
 import { GetUserController } from "./GetUserController";
 import { GetUserByEmailController } from "./GetUserByEmailController";

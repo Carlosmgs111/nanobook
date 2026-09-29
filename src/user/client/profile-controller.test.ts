@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Result } from "../../shared/domain/Result";
 import type { UserProfile } from "../domain/types";
-import { HttpUserApiError } from "./api/HttpUserApi";
+import { HttpUserApiError } from "../infraestructure/outbound/http/HttpUserApi";
 import { UserProfileController, mountUserProfileForm } from "./profile-controller";
 
 function profile(
