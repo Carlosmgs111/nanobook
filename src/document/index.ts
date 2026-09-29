@@ -1,4 +1,3 @@
-
 import { GITHUB_TOKEN } from "astro:env/server";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
@@ -67,7 +66,9 @@ export class DocumentModule {
     const updateDocumentController = new UpdateDocumentController(
       updateDocument
     );
-    const deleteDocumentController = new DeleteDocumentController(deleteDocument);
+    const deleteDocumentController = new DeleteDocumentController(
+      deleteDocument
+    );
     const createDocumentController = new CreateDocumentController(
       createDocument
     );

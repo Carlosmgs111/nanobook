@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CreateUser } from "./CreateUser";
 import { GetUser } from "./GetUser";
 import { UpdateUser } from "./UpdateUser";
-import { InMemoryUserRepository } from "../infraestructure/outbound/repository/InMemoryUserRepository";
+import { InMemoryUserRepository } from "../infraestructure/server/repository/InMemoryUserRepository";
 import { UserNotFoundError } from "./errors";
 import { UserEmailAlreadyExistsError } from "../domain/errors";
 
