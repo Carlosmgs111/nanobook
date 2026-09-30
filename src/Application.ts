@@ -10,7 +10,7 @@ import { NavigationModule } from "./navigation";
 import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
 import type { RenderedDocumentPage } from "./publishing";
 import { DocumentModuleDocumentProvider } from "./document/infraestructure/navigation/DocumentModuleDocumentProvider";
-import { UserModule } from "./user";
+import { UserModule } from "./user/server";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
