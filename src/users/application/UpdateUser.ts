@@ -1,4 +1,4 @@
-import { Result } from "../../../shared/domain/Result";
+import { Result } from "../../shared/domain/Result";
 import { User } from "../domain/User";
 import { UserId } from "../domain/UserId";
 import type { UserRepository } from "../domain/ports/UserRepository";

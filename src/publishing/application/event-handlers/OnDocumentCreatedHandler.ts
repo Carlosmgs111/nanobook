@@ -1,5 +1,5 @@
 import type { EventHandler } from "../../../shared/domain/bus/EventBus";
-import { DocumentCreated } from "../../../document";
+import { DocumentCreated } from "../../../documents";
 import type { Result } from "../../../shared/domain/Result";
 import { Result as ResultUtils } from "../../../shared/domain/Result";
 import { EventBusError } from "../../../shared/domain/bus/errors";

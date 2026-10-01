@@ -6,7 +6,7 @@ import type {
 } from "../../navigation/domain/types";
 import { toDocumentId } from "../../shared/utils/documentPath";
 import type { NavigationService } from "../../navigation";
-import { DocumentPath } from "../../document/domain/DocumentPath";
+import { DocumentPath } from "../../documents/domain/DocumentPath";
 import {
   GITHUB_WEBHOOK_SECRET,
   GITHUB_BRANCH,

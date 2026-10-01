@@ -1,6 +1,6 @@
 import type { EventBus } from "../shared/domain/bus/EventBus";
 import type { RenderedPageCache } from "./domain/cache";
-import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../document";
+import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../documents";
 import { PagePublisher } from "./application/PagePublisher";
 import { OnDocumentCreatedHandler } from "./application/event-handlers/OnDocumentCreatedHandler";
 import { OnDocumentUpdatedHandler } from "./application/event-handlers/OnDocumentUpdatedHandler";

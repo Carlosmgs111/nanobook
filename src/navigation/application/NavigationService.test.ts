@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Document } from "../../document/domain/Document";
-import { DocumentPath } from "../../document/domain/DocumentPath";
+import { Document } from "../../documents/domain/Document";
+import { DocumentPath } from "../../documents/domain/DocumentPath";
 import { DocumentsGraph } from "../infraestructure/DocumentsGraph";
 import { NavigationService } from "./NavigationService";
 

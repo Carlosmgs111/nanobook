@@ -1,4 +1,4 @@
-import { Result } from "../../../shared/domain/Result";
+import { Result } from "../../shared/domain/Result";
 import type { UserRepository } from "../domain/ports/UserRepository";
 import type { UserProfile } from "../domain/types";
 import { UserNotFoundError } from "./errors";

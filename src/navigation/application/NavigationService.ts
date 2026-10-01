@@ -9,7 +9,7 @@ import type {
   DependencyKind,
 } from "../domain/types";
 
-import { DocumentPath } from "../../document/domain/DocumentPath";
+import { DocumentPath } from "../../documents/domain/DocumentPath";
 
 function getFolderPath(entryId: string): string {
   return entryId === "index" ? "" : entryId;

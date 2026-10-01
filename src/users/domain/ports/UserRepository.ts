@@ -1,4 +1,4 @@
-import type { Result } from "../../../../shared/domain/Result";
+import type { Result } from "../../../shared/domain/Result";
 import type { User } from "../User";
 import type { UserId } from "../UserId";
 import type { UserEmailAlreadyExistsError, UserRepositoryError } from "../errors";

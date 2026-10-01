@@ -1,4 +1,4 @@
-import type { SerializedEntry } from "../../../document";
+import type { SerializedEntry } from "../../../documents";
 
 export type { SerializedEntry };
 

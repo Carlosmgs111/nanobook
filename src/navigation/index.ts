@@ -6,9 +6,9 @@ export type {
   InvalidationResult,
 } from "./domain/types";
 export type { DocumentProvider } from "./domain/ports/DocumentProvider";
-import { DocumentCreated } from "../document/domain/events/DocumentCreated";
-import { DocumentUpdated } from "../document/domain/events/DocumentUpdated";
-import { DocumentDeleted } from "../document/domain/events/DocumentDeleted";
+import { DocumentCreated } from "../documents/domain/events/DocumentCreated";
+import { DocumentUpdated } from "../documents/domain/events/DocumentUpdated";
+import { DocumentDeleted } from "../documents/domain/events/DocumentDeleted";
 import { Result } from "../shared/domain/Result";
 import { EventBusError } from "../shared/domain/bus/errors";
 import type { EventBus, EventHandler } from "../shared/domain/bus/EventBus";

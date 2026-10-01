@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UserModule } from "./server/index";
+import { UserModule } from "./index";
 
 describe("UserModule", () => {
   it("wires all use cases to one working repository", async () => {

@@ -1,6 +1,6 @@
 import { createMarkdownProcessor } from "@astrojs/markdown-remark";
 import type { DocumentRenderer, RenderedDocument } from "../../domain/render";
-import type { Document } from "../../../document/domain/Document";
+import type { Document } from "../../../documents/domain/Document";
 
 export class AstroMarkdownRenderer implements DocumentRenderer {
   private processor: Awaited<

@@ -1,5 +1,5 @@
-import type { Heading } from "../../document/domain/Heading";
-import type { Entry } from "../../document/domain/types";
+import type { Heading } from "../../documents/domain/Heading";
+import type { Entry } from "../../documents/domain/types";
 
 export interface RenderedDocument {
   Content: any;

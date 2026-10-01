@@ -1,5 +1,5 @@
 import type { Result } from "../../../shared/domain/Result";
-import type { SerializedEntry, CreateDocumentRequest } from "../../../document";
+import type { SerializedEntry, CreateDocumentRequest } from "../../../documents";
 import type { EditionWriterError } from "../../domain/errors";
 
 export interface DocumentWriter {

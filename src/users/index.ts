@@ -4,7 +4,7 @@ import { GetUser } from "./application/GetUser";
 import { GetUserByEmail } from "./application/GetUserByEmail";
 import { UpdateUser } from "./application/UpdateUser";
 import { createUserRepository } from "./infraestructure/repository";
-import type { EventBus } from "../../shared/domain/bus/EventBus";
+import type { EventBus } from "../shared/domain/bus/EventBus";
 import { CreateUserController } from "./infraestructure/http/CreateUserController";
 import { GetUserController } from "./infraestructure/http/GetUserController";
 import { GetUserByEmailController } from "./infraestructure/http/GetUserByEmailController";

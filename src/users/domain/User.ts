@@ -1,4 +1,4 @@
-import { Result } from "../../../shared/domain/Result";
+import { Result } from "../../shared/domain/Result";
 import { UserId } from "./UserId";
 import { InvalidUserError, InvalidUserIdError } from "./errors";
 import type { CreateUserData, UpdateUserProfileData, UserProfile } from "./types";

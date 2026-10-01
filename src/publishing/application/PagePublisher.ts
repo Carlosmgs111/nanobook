@@ -1,7 +1,7 @@
 import type { Result } from "../../shared/domain/Result";
 import type { RenderedPageCache } from "../domain/cache";
 import type { DocumentRenderer, RenderedDocumentPage } from "../domain/render";
-import type { Document } from "../../document";
+import type { Document } from "../../documents";
 import type { PageCacheError } from "../infraestructure/errors";
 
 export class PagePublisher {

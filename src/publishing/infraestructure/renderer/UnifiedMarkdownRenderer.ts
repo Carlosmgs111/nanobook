@@ -6,7 +6,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import rehypeShiki from "@shikijs/rehype";
 import type { DocumentRenderer, RenderedDocument } from "../../domain/render";
-import type { Document } from "../../../document/domain/Document";
+import type { Document } from "../../../documents/domain/Document";
 
 // TODO: Hacer que el renderizador estraiga los headings para TOC
 

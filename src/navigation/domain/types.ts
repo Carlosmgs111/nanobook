@@ -1,5 +1,5 @@
-import type { DocumentPath } from "../../document/domain/DocumentPath";
-import type { DocumentMetadata } from "../../document/domain/types";
+import type { DocumentPath } from "../../documents/domain/DocumentPath";
+import type { DocumentMetadata } from "../../documents/domain/types";
 
 export interface NavigationNode {
   /** Stable document identity used by graph edges and invalidation. */

@@ -1,6 +1,6 @@
 import { InMemoryEventBus } from "./shared/infraestructure/InMemoryEventBus";
-import { DocumentModule } from "./document";
-import { DocumentPath } from "./document/domain/DocumentPath";
+import { DocumentModule } from "./documents";
+import { DocumentPath } from "./documents/domain/DocumentPath";
 import {
   GitHubWebhookHandler,
   GitHubWebhookController,
@@ -9,8 +9,8 @@ import {
 import { NavigationModule } from "./navigation";
 import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
 import type { RenderedDocumentPage } from "./publishing";
-import { DocumentModuleDocumentProvider } from "./document/infraestructure/navigation/DocumentModuleDocumentProvider";
-import { UserModule } from "./user/server";
+import { DocumentModuleDocumentProvider } from "./documents/infraestructure/navigation/DocumentModuleDocumentProvider";
+import { UserModule } from "./users";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;

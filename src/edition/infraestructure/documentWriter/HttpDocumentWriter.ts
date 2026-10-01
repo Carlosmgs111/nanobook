@@ -4,7 +4,7 @@ import type {
   SerializedEntry,
   CreateDocumentRequest,
   UpdateDocumentRequest,
-} from "../../../document";
+} from "../../../documents";
 import { EditionWriterError } from "../../domain/errors";
 
 function documentApiUrl(identifier: string): string {

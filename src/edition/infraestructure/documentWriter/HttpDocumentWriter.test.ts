@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { HttpDocumentWriter } from "./HttpDocumentWriter";
-import type { CreateDocumentRequest, SerializedEntry } from "../../../document";
+import type { CreateDocumentRequest, SerializedEntry } from "../../../documents";
 
 const documentRequest: CreateDocumentRequest = {
   id: "doc-new",

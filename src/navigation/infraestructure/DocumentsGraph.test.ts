@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Document } from "../../document/domain/Document";
+import { Document } from "../../documents/domain/Document";
 import { DocumentsGraph } from "./DocumentsGraph";
 
 function document(path: string, id: string) {

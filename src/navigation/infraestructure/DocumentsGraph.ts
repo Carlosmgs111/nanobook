@@ -1,4 +1,4 @@
-import type { Document } from "../../document";
+import type { Document } from "../../documents";
 import type {
   DependencyEdge,
   DependencyKind,

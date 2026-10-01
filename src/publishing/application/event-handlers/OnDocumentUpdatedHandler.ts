@@ -1,5 +1,5 @@
 import type { EventHandler } from "../../../shared/domain/bus/EventBus";
-import { DocumentUpdated } from "../../../document";
+import { DocumentUpdated } from "../../../documents";
 import { Result } from "../../../shared/domain/Result";
 import { EventBusError } from "../../../shared/domain/bus/errors";
 import { PagePublisher } from "../PagePublisher";

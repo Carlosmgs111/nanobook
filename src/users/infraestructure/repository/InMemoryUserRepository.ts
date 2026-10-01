@@ -1,4 +1,4 @@
-import { Result } from "../../../../shared/domain/Result";
+import { Result } from "../../../shared/domain/Result";
 import { normalizeEmail, User } from "../../domain/User";
 import type { UserId } from "../../domain/UserId";
 import type { UserRepository } from "../../domain/ports/UserRepository";
