@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { AuthApi, AuthenticatedUser, SignInRequest, SignUpRequest } from "./HttpAuthApi";
+import type {
+  AuthApi,
+  AuthenticatedUser,
+  SignInRequest,
+  SignUpRequest,
+  SocialAuthorization,
+} from "./HttpAuthApi";
 import { AuthFormComposer } from "./AuthFormComposer";
 
 const authenticatedUser: AuthenticatedUser = {
@@ -13,6 +19,7 @@ class FakeAuthApi implements AuthApi {
   readonly signInRequests: SignInRequest[] = [];
   readonly signUpRequests: SignUpRequest[] = [];
   error: Error | undefined;
+  githubAuthorizationUrl = "https://github.com/login/oauth/authorize?state=signed";
 
   async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     this.signInRequests.push(request);
@@ -24,6 +31,11 @@ class FakeAuthApi implements AuthApi {
     this.signUpRequests.push(request);
     if (this.error) throw this.error;
     return authenticatedUser;
+  }
+
+  async signInWithGitHub(): Promise<SocialAuthorization> {
+    if (this.error) throw this.error;
+    return { authorizationUrl: this.githubAuthorizationUrl };
   }
 }
 
@@ -84,6 +96,7 @@ function createForm(mode: "login" | "signup" = "login") {
   const copy = new FakeElement();
   const notice = new FakeElement();
   const submit = new FakeElement();
+  const githubButton = new FakeElement();
   const loginMode = new FakeElement();
   loginMode.dataset.authMode = "login";
   const signupMode = new FakeElement();
@@ -109,6 +122,7 @@ function createForm(mode: "login" | "signup" = "login") {
     .setQuery("[data-auth-copy]", copy)
     .setQuery("[data-auth-notice]", notice)
     .setQuery("[data-auth-submit]", submit)
+    .setQuery("[data-auth-provider=\"github\"]", githubButton)
     .setQuery("#auth-name", name)
     .setQuery("#auth-email", email)
     .setQuery("#auth-password", password)
@@ -121,6 +135,7 @@ function createForm(mode: "login" | "signup" = "login") {
     form,
     notice,
     submit,
+    githubButton,
     signupMode,
     nameField,
     confirmPasswordField,
@@ -198,7 +213,7 @@ describe("AuthFormComposer", () => {
     const composer = new AuthFormComposer({
       root: view.root as unknown as HTMLElement,
       authApi,
-      notifier: { show() {} },
+      notifier: { show: (message) => (view.notice.textContent = message) },
       navigate: (path) => destinations.push(path),
     });
 
@@ -208,5 +223,42 @@ describe("AuthFormComposer", () => {
     expect(view.notice.textContent).toBe("Credenciales inválidas");
     expect(view.submit.disabled).toBe(false);
     expect(destinations).toEqual([]);
+  });
+
+  it("navigates to GitHub only after the social authorization URL is returned", async () => {
+    const view = createForm();
+    const destinations: string[] = [];
+    const composer = new AuthFormComposer({
+      root: view.root as unknown as HTMLElement,
+      authApi: new FakeAuthApi(),
+      notifier: { show() {} },
+      navigate: (path) => destinations.push(path),
+    });
+
+    composer.mount();
+    await view.githubButton.trigger("click");
+
+    expect(destinations).toEqual([
+      "https://github.com/login/oauth/authorize?state=signed",
+    ]);
+    expect(view.githubButton.disabled).toBe(true);
+  });
+
+  it("restores the GitHub control when social sign-in fails", async () => {
+    const view = createForm();
+    const authApi = new FakeAuthApi();
+    authApi.error = new Error("GitHub no está disponible.");
+    const composer = new AuthFormComposer({
+      root: view.root as unknown as HTMLElement,
+      authApi,
+      notifier: { show: (message) => (view.notice.textContent = message) },
+      navigate: () => {},
+    });
+
+    composer.mount();
+    await view.githubButton.trigger("click");
+
+    expect(view.githubButton.disabled).toBe(false);
+    expect(view.notice.textContent).toBe("GitHub no está disponible.");
   });
 });

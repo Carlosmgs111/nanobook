@@ -57,6 +57,13 @@ export class AuthFormComposer {
       await this.submit(event);
     });
 
+    const githubButton = root.querySelector<HTMLButtonElement>(
+      '[data-auth-provider="github"]',
+    );
+    githubButton?.addEventListener("click", () => {
+      void this.submitGitHub(githubButton);
+    });
+
     this.setMode(this.readMode(root.dataset.mode));
   }
 
@@ -111,13 +118,13 @@ export class AuthFormComposer {
 
     try {
       if (mode === "signup") {
-        const result = await this.capabilities.authApi.signUp({
+        await this.capabilities.authApi.signUp({
           name,
           email,
           password,
         });
       } else {
-        const result = await this.capabilities.authApi.signIn({
+        await this.capabilities.authApi.signIn({
           email,
           password,
         });
@@ -128,7 +135,7 @@ export class AuthFormComposer {
           : "Sesión iniciada. Redirigiendo…",
         "success"
       );
-      window.setTimeout(() => this.capabilities.navigate("/"), 900);
+      this.capabilities.navigate("/");
     } catch (error) {
       this.capabilities.notifier.show(
         error instanceof Error ? error.message : "No fue posible autenticarte.",
@@ -136,6 +143,22 @@ export class AuthFormComposer {
       );
     } finally {
       this.setSubmitting(false);
+    }
+  }
+
+  private async submitGitHub(button: HTMLButtonElement): Promise<void> {
+    button.disabled = true;
+    this.capabilities.notifier.show("Conectando con GitHub…", "loading");
+
+    try {
+      const { authorizationUrl } = await this.capabilities.authApi.signInWithGitHub();
+      this.capabilities.navigate(authorizationUrl);
+    } catch (error) {
+      this.capabilities.notifier.show(
+        error instanceof Error ? error.message : "No fue posible autenticarte.",
+        "error",
+      );
+      button.disabled = false;
     }
   }
 
