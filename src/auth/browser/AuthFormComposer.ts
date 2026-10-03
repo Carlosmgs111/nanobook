@@ -34,7 +34,7 @@ const submitLabelByMode: Record<AuthFormMode, string> = {
   signup: "Crear cuenta",
 };
 
-export class AuthFormController {
+export class AuthFormComposer {
   private readonly formMode = new AuthFormModeCapability();
 
   constructor(private readonly capabilities: AuthFormComposerCapabilities) {}

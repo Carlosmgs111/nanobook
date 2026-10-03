@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AuthApi, AuthenticatedUser, SignInRequest, SignUpRequest } from "./HttpAuthApi";
-import { AuthFormController } from "./AuthFormController";
+import { AuthFormComposer } from "./AuthFormComposer";
 
 const authenticatedUser: AuthenticatedUser = {
   id: "user-123",
@@ -127,12 +127,12 @@ function createForm(mode: "login" | "signup" = "login") {
   };
 }
 
-describe("AuthFormController", () => {
+describe("AuthFormComposer", () => {
   it("submits login credentials through its injected authentication capability", async () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
     const destinations: string[] = [];
-    const composer = new AuthFormController({
+    const composer = new AuthFormComposer({
       root: view.root as unknown as HTMLElement,
       authApi,
       notifier: { show() {} },
@@ -151,7 +151,7 @@ describe("AuthFormController", () => {
   it("submits registration data after the user changes to signup", async () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
-    const composer = new AuthFormController({
+    const composer = new AuthFormComposer({
       root: view.root as unknown as HTMLElement,
       authApi,
       notifier: { show() {} },
@@ -173,7 +173,7 @@ describe("AuthFormController", () => {
 
   it("exposes the registration fields only in signup mode", async () => {
     const view = createForm();
-    const composer = new AuthFormController({
+    const composer = new AuthFormComposer({
       root: view.root as unknown as HTMLElement,
       authApi: new FakeAuthApi(),
       notifier: { show() {} },
@@ -195,7 +195,7 @@ describe("AuthFormController", () => {
     const authApi = new FakeAuthApi();
     authApi.error = new Error("Credenciales inválidas");
     const destinations: string[] = [];
-    const composer = new AuthFormController({
+    const composer = new AuthFormComposer({
       root: view.root as unknown as HTMLElement,
       authApi,
       notifier: { show() {} },
