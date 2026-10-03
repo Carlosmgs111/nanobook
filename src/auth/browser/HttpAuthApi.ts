@@ -16,7 +16,17 @@ export interface SignUpRequest extends SignInRequest {
 export interface AuthApi {
   signIn(request: SignInRequest): Promise<AuthenticatedUser>;
   signUp(request: SignUpRequest): Promise<AuthenticatedUser>;
+  signInWithGitHub(): Promise<SocialAuthorization>;
 }
+
+export interface SocialAuthorization {
+  authorizationUrl: string;
+}
+
+export type FetchLike = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>;
 
 export class AuthApiError extends Error {
   readonly name = "AuthApiError";
@@ -27,7 +37,10 @@ export class AuthApiError extends Error {
 }
 
 export class HttpAuthApi implements AuthApi {
-  constructor(private readonly baseUrl = "/api/auth") {}
+  constructor(
+    private readonly fetcher: FetchLike = globalThis.fetch,
+    private readonly baseUrl = "/api/auth",
+  ) {}
 
   signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     return this.post("/sign-in/email", request);
@@ -37,12 +50,30 @@ export class HttpAuthApi implements AuthApi {
     return this.post("/sign-up/email", request);
   }
 
+  async signInWithGitHub(): Promise<SocialAuthorization> {
+    const { payload, status } = await this.postJson("/sign-in/social", {
+      provider: "github",
+      callbackURL: "/",
+      disableRedirect: true,
+    });
+
+    return readAuthorizationUrl(payload, status);
+  }
+
   private async post(
     path: string,
-    body: SignInRequest | SignUpRequest
+    body: SignInRequest | SignUpRequest,
   ): Promise<AuthenticatedUser> {
+    const { payload, status } = await this.postJson(path, body);
+    return readUser(payload, status);
+  }
+
+  private async postJson(
+    path: string,
+    body: Record<string, unknown>,
+  ): Promise<{ payload: unknown; status: number }> {
     try {
-      const response = await fetch(`${this.baseUrl}${path}`, {
+      const response = await this.fetcher(`${this.baseUrl}${path}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -53,15 +84,14 @@ export class HttpAuthApi implements AuthApi {
       });
       const payload = await parseJson(response);
 
-      console.log({ payload });
-
       if (!response.ok) {
         throw new AuthApiError(readErrorMessage(payload), response.status);
       }
 
-      return readUser(payload, response.status);
-    } catch (error: any) {
-      throw new AuthApiError("No fue posible autenticarte.", error.message);
+      return { payload, status: response.status };
+    } catch (error) {
+      if (error instanceof AuthApiError) throw error;
+      throw new AuthApiError("No fue posible autenticarte.", 0);
     }
   }
 }
@@ -96,6 +126,22 @@ function readUser(payload: unknown, status: number): AuthenticatedUser {
   }
 
   return { id, name, email };
+}
+
+function readAuthorizationUrl(
+  payload: unknown,
+  status: number,
+): SocialAuthorization {
+  if (
+    !isRecord(payload) ||
+    payload.redirect !== true ||
+    typeof payload.url !== "string" ||
+    payload.url.length === 0
+  ) {
+    throw new AuthApiError("Respuesta de autenticación inválida.", status);
+  }
+
+  return { authorizationUrl: payload.url };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

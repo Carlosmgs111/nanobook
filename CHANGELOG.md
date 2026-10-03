@@ -9,12 +9,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - Añadida la ruta `/login` con `AuthForm`, una interfaz única de autenticación que alterna entre ingreso y registro integrada con Better Auth; el enlace global ahora dirige a esta página.
 - Añadido `HttpAuthApi` en la frontera de navegador para iniciar sesión y registrar usuarios contra los endpoints de Better Auth.
-- Añadido `AuthFormComposer`, que recibe sus capacidades por constructor y monta la interacción del formulario de autenticación.
-- Refactorizada la política de visibilidad por modo como capacidad interna de `AuthFormComposer`.
+- Añadido `AuthFormController`, que recibe sus capacidades por constructor y monta la interacción del formulario de autenticación.
+- Refactorizada la política de visibilidad por modo como capacidad interna de `AuthFormController`.
 - Añadida la capacidad global `Toast`, compuesta por `ToastHost` y `BrowserToastNotifier`, para publicar notificaciones desde cualquier módulo.
-- Inyectada la capacidad `ToastNotifier` en `AuthFormComposer`, con el contrato declarado junto a su implementación de navegador.
+- Inyectada la capacidad `ToastNotifier` en `AuthFormController`, con el contrato declarado junto a su implementación de navegador.
 - Declarado el markup de cada toast dentro de `ToastHost`, asegurando que sus estilos de Astro se apliquen correctamente.
 - Reubicado el esquema de Drizzle de autenticación dentro del módulo `auth` y mantenido el cliente de base de datos como infraestructura compartida.
+- Añadido el inicio de sesión con GitHub OAuth, activable con `GITHUB_OAUTH_CLIENT_ID` y `GITHUB_OAUTH_CLIENT_SECRET`, sin sustituir el acceso por correo y contraseña.
 - Reorganizados los adaptadores del módulo `user` bajo `infraestructure/inbound/http` y `infraestructure/outbound`, separando transporte HTTP entrante, cliente HTTP saliente y repositorio.
 - Añadida la página dedicada `/profile` con formulario accesible, estados de carga/guardado/error, reintento y enlace global `Perfil`; consume `HttpUserApi` y requiere `Astro.locals.currentUserId`.
 - Añadido el adaptador de salida `HttpUserApi` para el frontend, con operaciones tipadas de creación, consulta, actualización y eliminación de usuarios, serialización segura y errores HTTP normalizados.

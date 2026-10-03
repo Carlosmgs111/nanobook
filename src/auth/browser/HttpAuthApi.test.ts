@@ -78,4 +78,51 @@ describe("HttpAuthApi", () => {
       api.signIn({ email: "ada@example.com", password: "incorrecta" })
     ).rejects.toEqual(new AuthApiError("Credenciales inválidas", 401));
   });
+
+  it("returns Better Auth's GitHub authorization URL without following it", async () => {
+    const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const api = new HttpAuthApi(async (input, init) => {
+      requests.push({ input, init });
+      return new Response(
+        JSON.stringify({
+          redirect: true,
+          url: "https://github.com/login/oauth/authorize?state=signed",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
+
+    await expect(api.signInWithGitHub()).resolves.toEqual({
+      authorizationUrl: "https://github.com/login/oauth/authorize?state=signed",
+    });
+
+    expect(requests).toEqual([
+      {
+        input: "/api/auth/sign-in/social",
+        init: {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            provider: "github",
+            callbackURL: "/",
+            disableRedirect: true,
+          }),
+        },
+      },
+    ]);
+  });
+
+  it("rejects a successful social response without an authorization URL", async () => {
+    const api = new HttpAuthApi(async () =>
+      new Response(JSON.stringify({ redirect: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await expect(api.signInWithGitHub()).rejects.toEqual(
+      new AuthApiError("Respuesta de autenticación inválida.", 200),
+    );
+  });
 });

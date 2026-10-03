@@ -68,6 +68,21 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
+      GITHUB_OAUTH_CLIENT_ID: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      GITHUB_OAUTH_CLIENT_SECRET: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      BETTER_AUTH_URL: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
       REDIS_URL: envField.string({
         context: "server",
         access: "secret",

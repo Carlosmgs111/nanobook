@@ -67,6 +67,31 @@ npm install
 npm run dev
 ```
 
+### Autenticación con GitHub
+
+Nanobook mantiene el acceso con correo y contraseña y puede añadir inicio de
+sesión con GitHub mediante una GitHub OAuth App. Configura estas variables solo
+en el entorno de servidor:
+
+```text
+BETTER_AUTH_URL=http://localhost:4322
+GITHUB_OAUTH_CLIENT_ID=your-github-oauth-client-id
+GITHUB_OAUTH_CLIENT_SECRET=your-github-oauth-client-secret
+```
+
+Registra una URL de callback por entorno en la OAuth App:
+
+```text
+Local:      http://localhost:4322/api/auth/callback/github
+Producción: https://<your-domain>/api/auth/callback/github
+```
+
+La aplicación de GitHub debe solicitar el scope `user:email`. En producción,
+usa HTTPS y mantén alineados `BETTER_AUTH_URL`, el origen desde el que se abre
+Nanobook y el host configurado en la callback. Si solo se configura una de las
+dos credenciales de GitHub, Nanobook falla al iniciar para evitar publicar un
+botón de acceso que no pueda completarse.
+
 ## Scripts
 
 - `npm run dev` — Inicia el servidor de desarrollo.

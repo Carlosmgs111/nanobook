@@ -1,6 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import AuthForm from "../auth/browser/AuthForm.astro";
+import {
+  GITHUB_OAUTH_CLIENT_ID,
+  GITHUB_OAUTH_CLIENT_SECRET,
+} from "astro:env/server";
+import { isGitHubOAuthEnabled } from "../auth/server/GitHubOAuth";
+
+const githubEnabled = isGitHubOAuthEnabled({
+  clientId: GITHUB_OAUTH_CLIENT_ID,
+  clientSecret: GITHUB_OAUTH_CLIENT_SECRET,
+});
 ---
 
 <Layout
@@ -8,5 +18,5 @@ import AuthForm from "../auth/browser/AuthForm.astro";
   description="Ingresa o crea una cuenta en Nanobook."
   hideToc={true}
 >
-  <AuthForm />
+  <AuthForm githubEnabled={githubEnabled} />
 </Layout>
