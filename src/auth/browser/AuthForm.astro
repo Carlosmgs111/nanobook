@@ -1,0 +1,264 @@
+---
+interface Props {
+  initialMode?: "login" | "signup";
+}
+
+const { initialMode = "login" } = Astro.props;
+const isSignup = initialMode === "signup";
+---
+
+<section
+  class="auth-form"
+  data-auth-form
+  data-mode={initialMode}
+  aria-labelledby="auth-form-title"
+>
+  <div class="auth-form__frame">
+    <div class="auth-form__header">
+      <p class="auth-form__brand">nanobook</p>
+      <h1 id="auth-form-title">
+        {isSignup ? "Crea tu cuenta" : "Bienvenido de nuevo"}
+      </h1>
+      <p class="auth-form__intro" data-auth-copy>
+        {
+          isSignup
+            ? "Guarda tu espacio de escritura en un solo lugar."
+            : "Ingresa para volver a tus documentos."
+        }
+      </p>
+    </div>
+
+    <div class="auth-form__switch" aria-label="Tipo de acceso">
+      <button
+        type="button"
+        class="auth-form__mode"
+        data-auth-mode="login"
+        aria-pressed={!isSignup ? "true" : "false"}
+      >
+        Ingresar
+      </button>
+      <button
+        type="button"
+        class="auth-form__mode"
+        data-auth-mode="signup"
+        aria-pressed={isSignup ? "true" : "false"}
+      >
+        Registrarme
+      </button>
+    </div>
+
+    <form class="auth-form__fields" action="#" method="post">
+      <div data-auth-only="signup" hidden={!isSignup}>
+        <label for="auth-name">Nombre</label>
+        <input
+          id="auth-name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          required={isSignup}
+        />
+      </div>
+
+      <div>
+        <label for="auth-email">Correo electrónico</label>
+        <input
+          id="auth-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="auth-password">Contraseña</label>
+        <input
+          id="auth-password"
+          name="password"
+          type="password"
+          autocomplete={isSignup ? "new-password" : "current-password"}
+          required
+        />
+      </div>
+
+      <div data-auth-only="signup" hidden={!isSignup}>
+        <label for="auth-confirm-password">Confirmar contraseña</label>
+        <input
+          id="auth-confirm-password"
+          name="confirmPassword"
+          type="password"
+          autocomplete="new-password"
+          required={isSignup}
+        />
+      </div>
+
+      <button class="auth-form__submit" type="submit" data-auth-submit>
+        {isSignup ? "Crear cuenta" : "Ingresar"}
+      </button>
+    </form>
+  </div>
+</section>
+
+<script>
+  import { AuthFormComposer } from "./AuthFormComposer";
+  import { BrowserToastNotifier } from "../../toast/BrowserToastNotifier";
+  import { HttpAuthApi } from "./HttpAuthApi";
+
+  const authApi = new HttpAuthApi();
+
+  function mountAuthForms() {
+    document
+      .querySelectorAll<HTMLElement>("[data-auth-form]")
+      .forEach((form) => {
+        new AuthFormComposer({
+          root: form,
+          authApi,
+          notifier: new BrowserToastNotifier("auth-flow"),
+          navigate: (path) => window.location.assign(path),
+        }).mount();
+      });
+  }
+
+  document.addEventListener("astro:page-load", mountAuthForms);
+  mountAuthForms();
+</script>
+
+<style>
+  .auth-form {
+    --auth-panel: color-mix(in srgb, var(--bg) 86%, transparent);
+    --auth-rule: var(--grid-line-strong);
+    display: grid;
+    min-height: min(42rem, calc(100vh - 8rem));
+    place-items: center;
+    padding: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  .auth-form__frame {
+    width: min(100%, 29rem);
+    border: 1px solid var(--auth-rule);
+    background: var(--auth-panel);
+    box-shadow: 12px 12px 0 var(--grid-line-subtle);
+  }
+
+  .auth-form__header {
+    padding: clamp(1.5rem, 5vw, 2.75rem);
+    border-bottom: 1px solid var(--auth-rule);
+  }
+
+  .auth-form__brand {
+    margin: 0 0 2.75rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+  }
+
+  .auth-form h1 {
+    margin: 0;
+    color: var(--text);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 520;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+
+  .auth-form__intro {
+    max-width: 31ch;
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .auth-form__switch {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border-bottom: 1px solid var(--auth-rule);
+  }
+
+  .auth-form__mode,
+  .auth-form__submit {
+    min-height: 3rem;
+    border: 0;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .auth-form__mode {
+    color: var(--muted);
+    background: transparent;
+  }
+
+  .auth-form__mode + .auth-form__mode {
+    border-left: 1px solid var(--auth-rule);
+  }
+
+  .auth-form__mode[aria-pressed="true"] {
+    color: var(--bg);
+    background: var(--text);
+  }
+
+  .auth-form__fields {
+    display: grid;
+    gap: 1.125rem;
+    padding: clamp(1.5rem, 5vw, 2.75rem);
+  }
+
+  .auth-form__fields > div {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .auth-form label {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .auth-form input {
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid var(--auth-rule);
+    border-radius: 0;
+    outline: none;
+    padding: 0.6rem 0.75rem;
+    color: var(--text);
+    background: color-mix(in srgb, var(--bg) 76%, transparent);
+    font: inherit;
+    transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease;
+  }
+
+  .auth-form input:focus-visible,
+  .auth-form__mode:focus-visible,
+  .auth-form__submit:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 3px;
+  }
+
+  .auth-form input:focus {
+    border-color: var(--border-strong);
+    box-shadow: 4px 4px 0 var(--grid-line-subtle);
+  }
+
+  .auth-form__submit {
+    margin-top: 0.5rem;
+    color: var(--bg);
+    background: var(--text);
+  }
+
+  .auth-form__submit:hover {
+    color: var(--text);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-form input {
+      transition: none;
+    }
+  }
+</style>

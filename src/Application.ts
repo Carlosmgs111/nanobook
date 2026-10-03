@@ -1,4 +1,4 @@
-import { InMemoryEventBus } from "./shared/infraestructure/InMemoryEventBus";
+import { InMemoryEventBus } from "./shared/infrastructure/InMemoryEventBus";
 import { DocumentModule } from "./documents";
 import { DocumentPath } from "./documents/domain/DocumentPath";
 import {

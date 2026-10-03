@@ -30,7 +30,7 @@ interface Props {
   editHref?: string;
   viewHref?: string;
   newHref?: string;
-  profileHref?: string;
+  loginHref?: string;
   canonicalHref?: string;
 }
 
@@ -45,7 +45,7 @@ const {
   editHref,
   viewHref,
   newHref,
-  profileHref = "/profile",
+  loginHref = "/login",
   canonicalHref,
 } = Astro.props;
 ---
@@ -72,7 +72,7 @@ const {
     editHref={editHref}
     viewHref={viewHref}
     newHref={newHref}
-    profileHref={profileHref}
+    loginHref={loginHref}
   >
     <slot />
   </LayoutShell>

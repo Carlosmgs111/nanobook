@@ -10,7 +10,7 @@ import { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocument
 import { HttpDocumentWriter } from "./infraestructure/documentWriter/HttpDocumentWriter";
 import { CreateDocument } from "./application/CreateDocument";
 import { DelegatedMarkdownItRenderer } from "./infraestructure/renderer/DelegatedMarkdownItRenderer";
-import { EventTargetEventBus } from "../shared/infraestructure/EventTargetEventBus";
+import { EventTargetEventBus } from "../shared/infrastructure/EventTargetEventBus";
 import type { EventBus } from "../shared/domain/bus/EventBus";
 
 export { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
