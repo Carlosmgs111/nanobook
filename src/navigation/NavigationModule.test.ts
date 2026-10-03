@@ -4,7 +4,7 @@ import { DocumentCreated } from "../documents/domain/events/DocumentCreated";
 import { DocumentUpdated } from "../documents/domain/events/DocumentUpdated";
 import { DocumentDeleted } from "../documents/domain/events/DocumentDeleted";
 import { DocumentPath } from "../documents/domain/DocumentPath";
-import { InMemoryEventBus } from "../shared/infraestructure/InMemoryEventBus";
+import { InMemoryEventBus } from "../shared/infrastructure/InMemoryEventBus";
 import type { DocumentProvider } from "./domain/ports/DocumentProvider";
 import { NavigationModule } from "./index";
 

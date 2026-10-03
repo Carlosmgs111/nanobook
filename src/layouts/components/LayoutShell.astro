@@ -4,6 +4,7 @@ import Header from "./Header.astro";
 import Footer from "./Footer.astro";
 import SidebarNav from "../../navigation/components/SidebarNav/index.astro";
 import TableOfContents from "../../documents/ui/components/TableOfContents/index.astro";
+import ToastHost from "../../toast/ToastHost.astro";
 import type { NavigationNode } from "../../navigation/domain/types";
 import type { Crumb } from "../../navigation/components/Breadcrumb.astro";
 
@@ -32,7 +33,7 @@ interface Props {
   editHref?: string;
   viewHref?: string;
   newHref?: string;
-  profileHref?: string;
+  loginHref?: string;
 }
 
 const {
@@ -45,7 +46,7 @@ const {
   editHref,
   viewHref,
   newHref,
-  profileHref,
+  loginHref,
 } = Astro.props;
 ---
 
@@ -68,7 +69,7 @@ const {
     editHref={editHref}
     viewHref={viewHref}
     newHref={newHref}
-    profileHref={profileHref}
+    loginHref={loginHref}
   />
   <div
     id="content-wrapper"
@@ -88,6 +89,7 @@ const {
     <TableOfContents headings={headings} hide={hideToc} />
   </div>
   <Footer />
+  <ToastHost />
 
   <script type="module">
     document.addEventListener("astro:page-load", function () {

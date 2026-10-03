@@ -1,4 +1,4 @@
-import { getApp } from "../../Application";
+import { getApp } from "../../../Application";
 const app = await getApp();
 
 export const prerender = false;
