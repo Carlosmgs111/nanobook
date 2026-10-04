@@ -2,17 +2,27 @@ import { describe, expect, it } from "vitest";
 
 import type {
   AuthApi,
+  AuthenticatedSession,
   AuthenticatedUser,
   SignInRequest,
   SignUpRequest,
   SocialAuthorization,
 } from "./HttpAuthApi";
-import { AuthFormController } from "./AuthFormController";
+import {
+  AuthFormController,
+  type AuthFormControllerCapabilities,
+} from "./AuthFormController";
+import type { AuthSessionStorage } from "./AuthSessionStorage";
 
 const authenticatedUser: AuthenticatedUser = {
   id: "user-123",
   name: "Ada Lovelace",
   email: "ada@example.com",
+};
+
+const authenticatedSession: AuthenticatedSession = {
+  token: "session-token",
+  user: authenticatedUser,
 };
 
 class FakeAuthApi implements AuthApi {
@@ -21,10 +31,10 @@ class FakeAuthApi implements AuthApi {
   error: Error | undefined;
   githubAuthorizationUrl = "https://github.com/login/oauth/authorize?state=signed";
 
-  async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
+  async signIn(request: SignInRequest): Promise<AuthenticatedSession> {
     this.signInRequests.push(request);
     if (this.error) throw this.error;
-    return authenticatedUser;
+    return authenticatedSession;
   }
 
   async signUp(request: SignUpRequest): Promise<AuthenticatedUser> {
@@ -36,6 +46,18 @@ class FakeAuthApi implements AuthApi {
   async signInWithGitHub(): Promise<SocialAuthorization> {
     if (this.error) throw this.error;
     return { authorizationUrl: this.githubAuthorizationUrl };
+  }
+}
+
+class FakeAuthSessionStorage implements AuthSessionStorage {
+  savedSessions: AuthenticatedSession[] = [];
+
+  save(session: AuthenticatedSession): void {
+    this.savedSessions.push(session);
+  }
+
+  load(): AuthenticatedSession | null {
+    return this.savedSessions.at(-1) ?? null;
   }
 }
 
@@ -150,6 +172,7 @@ describe("AuthFormController", () => {
     const composer = new AuthFormController({
       root: view.root as unknown as HTMLElement,
       authApi,
+      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show() {} },
       navigate: (path) => destinations.push(path),
     });
@@ -160,6 +183,30 @@ describe("AuthFormController", () => {
     expect(authApi.signInRequests).toEqual([
       { email: "ada@example.com", password: "password123" },
     ]);
+    expect(destinations).toEqual(["/"]);
+  });
+
+  it("persists the authenticated session before navigating away from login", async () => {
+    const view = createForm();
+    const authApi = new FakeAuthApi();
+    const sessionStorage = new FakeAuthSessionStorage();
+    const destinations: string[] = [];
+    const capabilities = {
+      root: view.root as unknown as HTMLElement,
+      authApi,
+      sessionStorage: new FakeAuthSessionStorage(),
+      notifier: { show() {} },
+      navigate: (path: string) => destinations.push(path),
+      sessionStorage,
+    };
+    const composer = new AuthFormController(
+      capabilities as unknown as AuthFormControllerCapabilities,
+    );
+
+    composer.mount();
+    await view.form.trigger("submit");
+
+    expect(sessionStorage.savedSessions).toEqual([authenticatedSession]);
     expect(destinations).toEqual(["/"]);
   });
 
@@ -193,6 +240,7 @@ describe("AuthFormController", () => {
     const composer = new AuthFormController({
       root: view.root as unknown as HTMLElement,
       authApi: new FakeAuthApi(),
+      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show() {} },
       navigate: () => {},
     });
@@ -215,6 +263,7 @@ describe("AuthFormController", () => {
     const composer = new AuthFormController({
       root: view.root as unknown as HTMLElement,
       authApi,
+      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show: (message) => (view.notice.textContent = message) },
       navigate: (path) => destinations.push(path),
     });
@@ -233,6 +282,7 @@ describe("AuthFormController", () => {
     const composer = new AuthFormController({
       root: view.root as unknown as HTMLElement,
       authApi: new FakeAuthApi(),
+      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show() {} },
       navigate: (path) => destinations.push(path),
     });
@@ -253,6 +303,7 @@ describe("AuthFormController", () => {
     const composer = new AuthFormController({
       root: view.root as unknown as HTMLElement,
       authApi,
+      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show: (message) => (view.notice.textContent = message) },
       navigate: () => {},
     });

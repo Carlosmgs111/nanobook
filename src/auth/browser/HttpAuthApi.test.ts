@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 describe("HttpAuthApi", () => {
-  it("signs in with Better Auth's email endpoint and returns its user", async () => {
+  it("signs in with Better Auth's email endpoint and returns the session token with its user", async () => {
     const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       requests.push({ input, init });
@@ -26,7 +26,7 @@ describe("HttpAuthApi", () => {
 
     await expect(
       api.signIn({ email: "ada@example.com", password: "password123" })
-    ).resolves.toEqual(authenticatedUser);
+    ).resolves.toEqual({ token: "session-token", user: authenticatedUser });
 
     expect(requests).toEqual([
       {

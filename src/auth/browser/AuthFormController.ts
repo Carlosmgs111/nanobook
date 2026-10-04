@@ -1,4 +1,5 @@
 import type { AuthApi } from "./HttpAuthApi";
+import type { AuthSessionStorage } from "./LocalStorageAuthSessionStorage";
 import type { ToastNotifier } from "../../toast/BrowserToastNotifier";
 
 type AuthFormMode = "login" | "signup";
@@ -15,6 +16,7 @@ class AuthFormModeCapability {
 export interface AuthFormControllerCapabilities {
   root: HTMLElement;
   authApi: AuthApi;
+  sessionStorage: AuthSessionStorage;
   notifier: ToastNotifier;
   navigate(path: string): void;
 }
@@ -130,10 +132,11 @@ export class AuthFormController {
         this.capabilities.navigate("/verify-email");
         return;
       } else {
-        await this.capabilities.authApi.signIn({
+        const session = await this.capabilities.authApi.signIn({
           email,
           password,
         });
+        this.capabilities.sessionStorage.save(session);
       }
       this.capabilities.notifier.show(
         "Sesión iniciada. Redirigiendo…",

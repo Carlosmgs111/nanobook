@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadido `LocalStorageAuthSessionStorage`, adaptador de navegador que conserva el token y el usuario autenticado; el encabezado ahora muestra un indicador de sesión activa después de iniciar sesión.
 - Añadida la ruta `/login` con `AuthForm`, una interfaz única de autenticación que alterna entre ingreso y registro integrada con Better Auth; el enlace global ahora dirige a esta página.
 - Añadido `HttpAuthApi` en la frontera de navegador para iniciar sesión y registrar usuarios contra los endpoints de Better Auth.
 - Añadido `AuthFormController`, que recibe sus capacidades por constructor y monta la interacción del formulario de autenticación.

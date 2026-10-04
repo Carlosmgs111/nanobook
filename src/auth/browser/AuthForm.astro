@@ -119,8 +119,10 @@ const isSignup = initialMode === "signup";
   import { AuthFormController } from "./AuthFormController";
   import { BrowserToastNotifier } from "../../toast/BrowserToastNotifier";
   import { HttpAuthApi } from "./HttpAuthApi";
+  import { LocalStorageAuthSessionStorage } from "./LocalStorageAuthSessionStorage";
 
   const authApi = new HttpAuthApi();
+  const sessionStorage = new LocalStorageAuthSessionStorage();
 
   function mountAuthForms() {
     document
@@ -129,6 +131,7 @@ const isSignup = initialMode === "signup";
         new AuthFormController({
           root: form,
           authApi,
+          sessionStorage,
           notifier: new BrowserToastNotifier("auth-flow"),
           navigate: (path) => window.location.assign(path),
         }).mount();
