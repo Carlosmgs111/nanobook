@@ -123,6 +123,12 @@ export class AuthFormController {
           email,
           password,
         });
+        this.capabilities.notifier.show(
+          "Revisa tu correo para activar tu cuenta.",
+          "success",
+        );
+        this.capabilities.navigate("/verify-email");
+        return;
       } else {
         await this.capabilities.authApi.signIn({
           email,
@@ -130,15 +136,14 @@ export class AuthFormController {
         });
       }
       this.capabilities.notifier.show(
-        mode === "signup"
-          ? "Tu cuenta está lista. Redirigiendo—"
-          : "Sesión iniciada. Redirigiendo…",
+        "Sesión iniciada. Redirigiendo…",
         "success"
       );
       this.capabilities.navigate("/");
     } catch (error) {
+      console.error(error);
       this.capabilities.notifier.show(
-        error instanceof Error ? error.message : "No fue posible autenticarte.",
+        error instanceof Error ? error.message : "No fue posible autenticarte. 🙃",
         "error"
       );
     } finally {

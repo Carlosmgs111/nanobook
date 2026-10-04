@@ -166,11 +166,12 @@ describe("AuthFormController", () => {
   it("submits registration data after the user changes to signup", async () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
+    const destinations: string[] = [];
     const composer = new AuthFormController({
       root: view.root as unknown as HTMLElement,
       authApi,
       notifier: { show() {} },
-      navigate: () => {},
+      navigate: (path) => destinations.push(path),
     });
 
     composer.mount();
@@ -184,6 +185,7 @@ describe("AuthFormController", () => {
         password: "password123",
       },
     ]);
+    expect(destinations).toEqual(["/verify-email"]);
   });
 
   it("exposes the registration fields only in signup mode", async () => {

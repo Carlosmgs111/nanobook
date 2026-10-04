@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AuthApiError, HttpAuthApi } from "./HttpAuthApi";
 
@@ -8,16 +8,21 @@ const authenticatedUser = {
   email: "ada@example.com",
 };
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("HttpAuthApi", () => {
   it("signs in with Better Auth's email endpoint and returns its user", async () => {
     const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
-    const api = new HttpAuthApi(async (input, init) => {
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       requests.push({ input, init });
       return new Response(
         JSON.stringify({ token: "session-token", redirect: false, user: authenticatedUser }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     });
+    const api = new HttpAuthApi();
 
     await expect(
       api.signIn({ email: "ada@example.com", password: "password123" })
@@ -38,13 +43,14 @@ describe("HttpAuthApi", () => {
 
   it("registers with Better Auth's email endpoint and includes the name", async () => {
     const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
-    const api = new HttpAuthApi(async (input, init) => {
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       requests.push({ input, init });
       return new Response(
         JSON.stringify({ token: "session-token", user: authenticatedUser }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     });
+    const api = new HttpAuthApi();
 
     await expect(
       api.signUp({
@@ -61,36 +67,39 @@ describe("HttpAuthApi", () => {
           name: "Ada Lovelace",
           email: "ada@example.com",
           password: "password123",
+          callbackURL: "/",
         }),
       },
     });
   });
 
   it("exposes Better Auth's error message to the caller", async () => {
-    const api = new HttpAuthApi(async () =>
+    vi.stubGlobal("fetch", async () =>
       new Response(JSON.stringify({ message: "Credenciales inválidas" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       })
     );
+    const api = new HttpAuthApi();
 
     await expect(
       api.signIn({ email: "ada@example.com", password: "incorrecta" })
     ).rejects.toEqual(new AuthApiError("Credenciales inválidas", 401));
   });
 
-  it("returns Better Auth's GitHub authorization URL without following it", async () => {
+  it("returns Better Auth's GitHub authorization URL when the client handles the redirect", async () => {
     const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
-    const api = new HttpAuthApi(async (input, init) => {
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       requests.push({ input, init });
       return new Response(
         JSON.stringify({
-          redirect: true,
+          redirect: false,
           url: "https://github.com/login/oauth/authorize?state=signed",
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
     });
+    const api = new HttpAuthApi();
 
     await expect(api.signInWithGitHub()).resolves.toEqual({
       authorizationUrl: "https://github.com/login/oauth/authorize?state=signed",
@@ -114,12 +123,13 @@ describe("HttpAuthApi", () => {
   });
 
   it("rejects a successful social response without an authorization URL", async () => {
-    const api = new HttpAuthApi(async () =>
+    vi.stubGlobal("fetch", async () =>
       new Response(JSON.stringify({ redirect: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
     );
+    const api = new HttpAuthApi();
 
     await expect(api.signInWithGitHub()).rejects.toEqual(
       new AuthApiError("Respuesta de autenticación inválida.", 200),

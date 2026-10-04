@@ -83,6 +83,16 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
+      RESEND_API_KEY: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      EMAIL_FROM: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
       REDIS_URL: envField.string({
         context: "server",
         access: "secret",

@@ -1,0 +1,75 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Verifica tu correo | Nanobook"
+  description="Confirma tu correo electrónico para activar tu cuenta de Nanobook."
+  hideToc={true}
+>
+  <main class="verification-page">
+    <section class="verification-card" aria-labelledby="verification-title">
+      <p class="verification-card__brand">nanobook</p>
+      <h1 id="verification-title">Revisa tu correo</h1>
+      <p>
+        Te enviamos un enlace para confirmar tu dirección y activar tu cuenta.
+        Cuando lo abras, iniciarás sesión automáticamente.
+      </p>
+      <p class="verification-card__hint">
+        Si no aparece en unos minutos, revisa la carpeta de correo no deseado.
+      </p>
+      <a href="/login">Volver a ingresar</a>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .verification-page {
+    display: grid;
+    min-height: min(42rem, calc(100vh - 8rem));
+    place-items: center;
+    padding: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  .verification-card {
+    width: min(100%, 29rem);
+    border: 1px solid var(--grid-line-strong);
+    padding: clamp(1.5rem, 5vw, 2.75rem);
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    box-shadow: 12px 12px 0 var(--grid-line-subtle);
+  }
+
+  .verification-card__brand {
+    margin: 0 0 2.75rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+  }
+
+  .verification-card h1 {
+    margin: 0;
+    color: var(--text);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 520;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+
+  .verification-card p {
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .verification-card__hint {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .verification-card a {
+    display: inline-block;
+    margin-top: 1.25rem;
+    color: var(--text);
+    font-weight: 650;
+  }
+</style>

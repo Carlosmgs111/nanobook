@@ -23,11 +23,6 @@ export interface SocialAuthorization {
   authorizationUrl: string;
 }
 
-export type FetchLike = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>;
-
 export class AuthApiError extends Error {
   readonly name = "AuthApiError";
 
@@ -37,17 +32,14 @@ export class AuthApiError extends Error {
 }
 
 export class HttpAuthApi implements AuthApi {
-  constructor(
-    private readonly fetcher: FetchLike = globalThis.fetch,
-    private readonly baseUrl = "/api/auth",
-  ) {}
+  private readonly baseUrl = "/api/auth";
 
   signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     return this.post("/sign-in/email", request);
   }
 
   signUp(request: SignUpRequest): Promise<AuthenticatedUser> {
-    return this.post("/sign-up/email", request);
+    return this.post("/sign-up/email", { ...request, callbackURL: "/" });
   }
 
   async signInWithGitHub(): Promise<SocialAuthorization> {
@@ -73,7 +65,7 @@ export class HttpAuthApi implements AuthApi {
     body: Record<string, unknown>,
   ): Promise<{ payload: unknown; status: number }> {
     try {
-      const response = await this.fetcher(`${this.baseUrl}${path}`, {
+      const response = await fetch(`${this.baseUrl}${path}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -90,8 +82,9 @@ export class HttpAuthApi implements AuthApi {
 
       return { payload, status: response.status };
     } catch (error) {
+      console.error(error);
       if (error instanceof AuthApiError) throw error;
-      throw new AuthApiError("No fue posible autenticarte.", 0);
+      throw new AuthApiError("No fue posible autenticarte. 🙃", 0);
     }
   }
 }
@@ -113,7 +106,7 @@ function readErrorMessage(payload: unknown): string {
 
 function readUser(payload: unknown, status: number): AuthenticatedUser {
   if (!isRecord(payload) || !isRecord(payload.user)) {
-    throw new AuthApiError("Respuesta de autenticación inválida.", status);
+    throw new AuthApiError("Respuesta de autenticación inválida. 1️⃣", status);
   }
 
   const { id, name, email } = payload.user;
@@ -122,7 +115,7 @@ function readUser(payload: unknown, status: number): AuthenticatedUser {
     typeof name !== "string" ||
     typeof email !== "string"
   ) {
-    throw new AuthApiError("Respuesta de autenticación inválida.", status);
+    throw new AuthApiError("Respuesta de autenticación inválida. 2️⃣", status);
   }
 
   return { id, name, email };
@@ -132,13 +125,14 @@ function readAuthorizationUrl(
   payload: unknown,
   status: number,
 ): SocialAuthorization {
+  console.log({ payload });
   if (
     !isRecord(payload) ||
-    payload.redirect !== true ||
+    payload.redirect !== false ||
     typeof payload.url !== "string" ||
     payload.url.length === 0
   ) {
-    throw new AuthApiError("Respuesta de autenticación inválida.", status);
+    throw new AuthApiError("Respuesta de autenticación inválida. 3️⃣", status);
   }
 
   return { authorizationUrl: payload.url };

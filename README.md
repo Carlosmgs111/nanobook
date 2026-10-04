@@ -92,6 +92,22 @@ Nanobook y el host configurado en la callback. Si solo se configura una de las
 dos credenciales de GitHub, Nanobook falla al iniciar para evitar publicar un
 botón de acceso que no pueda completarse.
 
+### Verificación de correo
+
+Los registros por correo y contraseña requieren verificación antes de crear una
+sesión. Nanobook entrega los enlaces generados por Better Auth mediante Resend.
+Configura estas variables de servidor:
+
+```text
+RESEND_API_KEY=re_...
+EMAIL_FROM=Nanobook <no-reply@your-verified-domain.example>
+```
+
+Para una prueba local inicial puedes omitir `EMAIL_FROM`; se utilizará el
+remitente de prueba `Nanobook <onboarding@resend.dev>`. Antes de producción,
+verifica un dominio en Resend y define explícitamente `EMAIL_FROM` con ese
+dominio.
+
 ## Scripts
 
 - `npm run dev` — Inicia el servidor de desarrollo.

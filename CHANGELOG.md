@@ -16,6 +16,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Declarado el markup de cada toast dentro de `ToastHost`, asegurando que sus estilos de Astro se apliquen correctamente.
 - Reubicado el esquema de Drizzle de autenticación dentro del módulo `auth` y mantenido el cliente de base de datos como infraestructura compartida.
 - Añadido el inicio de sesión con GitHub OAuth, activable con `GITHUB_OAUTH_CLIENT_ID` y `GITHUB_OAUTH_CLIENT_SECRET`, sin sustituir el acceso por correo y contraseña.
+- Añadida la verificación de correo con Better Auth y Resend: los registros con contraseña requieren confirmar el enlace enviado antes de crear una sesión; la nueva ruta `/verify-email` guía al usuario mientras espera la confirmación.
 - Reorganizados los adaptadores del módulo `user` bajo `infraestructure/inbound/http` y `infraestructure/outbound`, separando transporte HTTP entrante, cliente HTTP saliente y repositorio.
 - Añadida la página dedicada `/profile` con formulario accesible, estados de carga/guardado/error, reintento y enlace global `Perfil`; consume `HttpUserApi` y requiere `Astro.locals.currentUserId`.
 - Añadido el adaptador de salida `HttpUserApi` para el frontend, con operaciones tipadas de creación, consulta, actualización y eliminación de usuarios, serialización segura y errores HTTP normalizados.
