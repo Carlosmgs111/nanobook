@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- El Header muestra el nombre de la persona autenticada como botón negro hacia `/profile`; `/login` y `/profile` incluyen botones negros para volver al inicio, y el perfil incorpora un cierre de sesión confirmado de forma nativa y respaldado por Better Auth.
 - Unificados los inicios de sesión por correo y GitHub bajo la cookie de Better Auth; Header consulta la sesión actual mediante `GET /api/auth/get-session` y ya no se guardan tokens de autenticación en `localStorage`.
 - Añadida la ruta `/login` con `AuthForm`, una interfaz única de autenticación que alterna entre ingreso y registro integrada con Better Auth; el enlace global ahora dirige a esta página.
 - Añadido `HttpAuthApi` en la frontera de navegador para iniciar sesión y registrar usuarios contra los endpoints de Better Auth.

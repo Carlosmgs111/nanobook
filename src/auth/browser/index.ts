@@ -2,6 +2,8 @@ import { BrowserToastNotifier } from "../../toast/BrowserToastNotifier";
 import { HttpAuthApi } from "./HttpAuthApi";
 import { AuthFormController } from "./AuthFormController";
 import { HttpAuthSessionReader } from "./HttpAuthSessionReader";
+import { SignOutController } from "./SignOutController";
+import { navigate } from "astro:transitions/client";
 import type {
   AuthenticatedSessionReader,
   AuthenticatedUser,
@@ -18,7 +20,8 @@ export class GetAuthenticatedSession {
 export class AuthModule {
   private constructor(
     private readonly authFormController: AuthFormController,
-    public readonly getAuthenticatedSession: GetAuthenticatedSession
+    public readonly getAuthenticatedSession: GetAuthenticatedSession,
+    public readonly signOutController: SignOutController
   ) {}
   static create() {
     const authApi = new HttpAuthApi();
@@ -29,7 +32,16 @@ export class AuthModule {
       notifier: toast,
     });
     const getAuthenticatedSession = new GetAuthenticatedSession(sessionReader);
-    return new AuthModule(authFormController, getAuthenticatedSession);
+    const signOutController = new SignOutController({
+      authApi,
+      confirm: () => globalThis.confirm("¿Seguro que deseas cerrar sesión?"),
+      navigate,
+    });
+    return new AuthModule(
+      authFormController,
+      getAuthenticatedSession,
+      signOutController
+    );
   }
   mount() {
     this.authFormController.mount();

@@ -24,11 +24,11 @@ class FakeAuthSessionQuery implements GetAuthenticatedSession {
 
 function createHeader() {
   const root = new FakeElement();
-  const status = new FakeElement();
+  const profile = new FakeElement();
   const login = new FakeElement();
-  root.elements.set("[data-auth-status]", status);
+  root.elements.set("[data-auth-profile]", profile);
   root.elements.set("[data-auth-login]", login);
-  return { root, status, login };
+  return { root, profile, login };
 }
 
 function useHeader(root: FakeElement): void {
@@ -42,7 +42,7 @@ afterEach(() => {
 });
 
 describe("AuthStatusController", () => {
-  it("replaces the login action with an authenticated status when Better Auth reports a user", async () => {
+  it("replaces the login action with the authenticated user's profile action", async () => {
     const header = createHeader();
     useHeader(header.root);
     const getAuthenticatedSession = new FakeAuthSessionQuery({
@@ -53,8 +53,8 @@ describe("AuthStatusController", () => {
 
     await new AuthStatusController(getAuthenticatedSession).mount();
 
-    expect(header.status.hidden).toBe(false);
-    expect(header.status.textContent).toBe("Conectado: Ada Lovelace");
+    expect(header.profile.hidden).toBe(false);
+    expect(header.profile.textContent).toBe("Ada Lovelace");
     expect(header.login.hidden).toBe(true);
   });
 
@@ -64,7 +64,7 @@ describe("AuthStatusController", () => {
 
     await new AuthStatusController(new FakeAuthSessionQuery(null)).mount();
 
-    expect(header.status.hidden).toBe(true);
+    expect(header.profile.hidden).toBe(true);
     expect(header.login.hidden).toBe(false);
   });
 });

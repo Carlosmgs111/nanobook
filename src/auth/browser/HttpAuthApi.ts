@@ -17,6 +17,10 @@ export interface AuthApi {
   signInWithGitHub(): Promise<SocialAuthorization>;
 }
 
+export interface AuthSignOutApi {
+  signOut(): Promise<void>;
+}
+
 export interface SocialAuthorization {
   authorizationUrl: string;
 }
@@ -29,7 +33,7 @@ export class AuthApiError extends Error {
   }
 }
 
-export class HttpAuthApi implements AuthApi {
+export class HttpAuthApi implements AuthApi, AuthSignOutApi {
   private readonly baseUrl = "/api/auth";
 
   async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
@@ -49,6 +53,10 @@ export class HttpAuthApi implements AuthApi {
     });
 
     return readAuthorizationUrl(payload, status);
+  }
+
+  async signOut(): Promise<void> {
+    await this.postJson("/sign-out", {});
   }
 
   private async postUser(

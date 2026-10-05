@@ -73,6 +73,32 @@ describe("HttpAuthApi", () => {
     });
   });
 
+  it("ends the current Better Auth session", async () => {
+    const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      requests.push({ input, init });
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    const api = new HttpAuthApi();
+
+    await expect(api.signOut()).resolves.toBeUndefined();
+
+    expect(requests).toEqual([
+      {
+        input: "/api/auth/sign-out",
+        init: {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({}),
+        },
+      },
+    ]);
+  });
+
   it("exposes Better Auth's error message to the caller", async () => {
     vi.stubGlobal("fetch", async () =>
       new Response(JSON.stringify({ message: "Credenciales inválidas" }), {

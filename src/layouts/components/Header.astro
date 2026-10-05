@@ -13,6 +13,7 @@ interface Props {
 }
 
 const { breadcrumbs, editHref, viewHref, newHref, loginHref } = Astro.props;
+const isProfilePage = Astro.url.pathname === "/profile";
 ---
 
 <header
@@ -38,9 +39,14 @@ const { breadcrumbs, editHref, viewHref, newHref, loginHref } = Astro.props;
         viewHref={viewHref}
         newHref={newHref}
       />
-      <span class="auth-status" data-auth-status hidden role="status"></span>
+      <a
+        href="/profile"
+        data-auth-profile
+        hidden
+        class="inline-flex items-center justify-center bg-black px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+      ></a>
       {
-        loginHref && (
+        loginHref && !isProfilePage && (
           <a
             href={loginHref}
             data-auth-login
@@ -75,23 +81,6 @@ const { breadcrumbs, editHref, viewHref, newHref, loginHref } = Astro.props;
   }
   .header-inner[data-content-mode="full"] {
     max-width: none;
-  }
-  .auth-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.35rem 0.5rem;
-    color: var(--text);
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-  .auth-status::before {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: #5aa469;
-    box-shadow: 0 0 0 3px color-mix(in srgb, #5aa469 20%, transparent);
-    content: "";
   }
   @media (max-width: 1279px) {
     :global(#content-width-toggle) {

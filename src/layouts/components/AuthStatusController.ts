@@ -9,19 +9,19 @@ export class AuthStatusController {
   ) {}
 
   async mount(): Promise<void> {
-    const status = this.root.querySelector<HTMLElement>("[data-auth-status]");
+    const profile = this.root.querySelector<HTMLElement>("[data-auth-profile]");
     const login = this.root.querySelector<HTMLElement>("[data-auth-login]");
     const user = await this.getAuthenticatedSession.execute();
 
     if (!user) {
-      if (status) status.hidden = true;
+      if (profile) profile.hidden = true;
       if (login) login.hidden = false;
       return;
     }
 
-    if (status) {
-      status.textContent = `Conectado: ${user.name}`;
-      status.hidden = false;
+    if (profile) {
+      profile.textContent = user.name;
+      profile.hidden = false;
     }
     if (login) login.hidden = true;
   }

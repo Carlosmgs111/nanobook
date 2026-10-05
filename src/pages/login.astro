@@ -18,5 +18,11 @@ const githubEnabled = isGitHubOAuthEnabled({
   description="Ingresa o crea una cuenta en Nanobook."
   hideToc={true}
 >
+  <a
+    href="/"
+    class="mb-6 inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 !no-underline"
+  >
+    ← Volver al inicio
+  </a>
   <AuthForm githubEnabled={githubEnabled} />
 </Layout>

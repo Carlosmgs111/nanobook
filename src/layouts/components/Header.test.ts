@@ -15,4 +15,11 @@ describe("global login link contract", () => {
     expect(layout).toContain('loginHref = "/login"');
     expect(header).toContain("Ingresar");
   });
+
+  it("does not render the login link on the profile page", () => {
+    const header = read("src/layouts/components/Header.astro");
+
+    expect(header).toContain('const isProfilePage = Astro.url.pathname === "/profile"');
+    expect(header).toContain("loginHref && !isProfilePage");
+  });
 });
