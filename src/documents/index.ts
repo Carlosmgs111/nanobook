@@ -13,6 +13,11 @@ import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
+import {
+  protectDocumentMutationRoutes,
+  type DocumentMutationRoutes,
+  type RouteProtector,
+} from "./infraestructure/rest/protectDocumentMutationRoutes";
 import type { EventBus } from "../shared/domain/bus/EventBus";
 
 export type { Document } from "./domain/Document";
@@ -35,14 +40,15 @@ export class DocumentModule {
     public readonly deleteDocumentController: DeleteDocumentController,
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
-    public readonly eventBus: EventBus
+    public readonly eventBus: EventBus,
+    public readonly mutationRoutes: DocumentMutationRoutes
   ) {}
 
   async refreshDocuments() {
     return this.getAllDocuments.refresh();
   }
 
-  static async create(eventBus: EventBus) {
+  static async create(eventBus: EventBus, routeProtector: RouteProtector) {
     const contentRepository = await createContentRepository();
 
     const internalReferenceResolver = new InternalReferenceResolver(
@@ -72,13 +78,19 @@ export class DocumentModule {
     const createDocumentController = new CreateDocumentController(
       createDocument
     );
+    const mutationRoutes = protectDocumentMutationRoutes(routeProtector, {
+      POST: createDocumentController.handle,
+      PATCH: updateDocumentController.handle,
+      DELETE: deleteDocumentController.handle,
+    });
     return new DocumentModule(
       createDocumentController,
       updateDocumentController,
       deleteDocumentController,
       getAllDocuments,
       getDocument,
-      eventBus
+      eventBus,
+      mutationRoutes
     );
   }
 }

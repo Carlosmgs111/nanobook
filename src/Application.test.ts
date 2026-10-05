@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Application } from "./Application";
 
+const { protect } = vi.hoisted(() => ({
+  protect: vi.fn((handler) => handler),
+}));
+
 vi.mock(
   "astro:env/server",
   () => ({
@@ -18,6 +22,10 @@ vi.mock(
   { virtual: true }
 );
 
+vi.mock("./auth/server", () => ({
+  authModule: { protect },
+}));
+
 describe("Application", () => {
   it("exposes the composed user module alongside existing modules", async () => {
     const app = await Application.create();
@@ -26,5 +34,24 @@ describe("Application", () => {
     expect(app.documentModule).toBeDefined();
     expect(app.navigationModule).toBeDefined();
     expect(app.publishingModule).toBeDefined();
+  });
+
+  it("exposes document mutation routes already protected by auth", async () => {
+    const app = await Application.create();
+
+    expect(app.documentModule.mutationRoutes).toEqual({
+      POST: app.documentModule.createDocumentController.handle,
+      PATCH: app.documentModule.updateDocumentController.handle,
+      DELETE: app.documentModule.deleteDocumentController.handle,
+    });
+    expect(protect).toHaveBeenCalledWith(
+      app.documentModule.createDocumentController.handle,
+    );
+    expect(protect).toHaveBeenCalledWith(
+      app.documentModule.updateDocumentController.handle,
+    );
+    expect(protect).toHaveBeenCalledWith(
+      app.documentModule.deleteDocumentController.handle,
+    );
   });
 });

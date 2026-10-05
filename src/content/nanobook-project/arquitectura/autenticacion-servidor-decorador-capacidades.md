@@ -16,6 +16,6 @@ draft: false
 
 `protect()` es un decorador de rutas HTTP. Antes de invocar la capacidad que envuelve, obtiene la sesión mediante el adaptador `BetterAuthSessionReader`. Si no existe una persona autenticada, termina con `401`; si existe, continúa el flujo y deja el usuario en `Astro.locals.currentUser` y su identidad en `Astro.locals.currentUserId`.
 
-El decorador no contiene reglas de autorización de documentos, roles ni propiedad. Es una capacidad de autenticación reutilizable. Las mutaciones HTTP de documentos (`POST`, `PATCH` y `DELETE`) se componen mediante `protectDocumentMutationRoutes()`, que recibe el contrato mínimo `RouteProtector`; por eso el módulo de documentos no importa Better Auth ni las capacidades internas de `auth`.
+El decorador no contiene reglas de autorización de documentos, roles ni propiedad. Es una capacidad de autenticación reutilizable. `DocumentModule` consume el contrato mínimo `RouteProtector` y compone sus mutaciones HTTP (`POST`, `PATCH` y `DELETE`) mediante `protectDocumentMutationRoutes()`. Por eso el módulo de documentos no importa Better Auth ni las capacidades internas de `auth`, y el endpoint solo expone las rutas ya protegidas por el módulo.
 
 Con una sesión válida, el decorador deja el actor en `Astro.locals`. Las reglas futuras de propietario, editor o administrador se aplicarán en el controlador y sus casos de uso usando ese actor, sin cambiar la integración con Better Auth.
