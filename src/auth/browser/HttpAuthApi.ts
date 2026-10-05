@@ -1,9 +1,6 @@
-import type {
-  AuthenticatedSession,
-  AuthenticatedUser,
-} from "./LocalStorageAuthSessionStorage";
+import type { AuthenticatedUser } from "../model/AuthSession";
 
-export type { AuthenticatedSession, AuthenticatedUser } from "./LocalStorageAuthSessionStorage";
+export type { AuthenticatedUser } from "../model/AuthSession";
 
 export interface SignInRequest {
   email: string;
@@ -15,7 +12,7 @@ export interface SignUpRequest extends SignInRequest {
 }
 
 export interface AuthApi {
-  signIn(request: SignInRequest): Promise<AuthenticatedSession>;
+  signIn(request: SignInRequest): Promise<AuthenticatedUser>;
   signUp(request: SignUpRequest): Promise<AuthenticatedUser>;
   signInWithGitHub(): Promise<SocialAuthorization>;
 }
@@ -35,9 +32,9 @@ export class AuthApiError extends Error {
 export class HttpAuthApi implements AuthApi {
   private readonly baseUrl = "/api/auth";
 
-  async signIn(request: SignInRequest): Promise<AuthenticatedSession> {
+  async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     const { payload, status } = await this.postJson("/sign-in/email", request);
-    return readSession(payload, status);
+    return readUser(payload, status);
   }
 
   signUp(request: SignUpRequest): Promise<AuthenticatedUser> {
@@ -121,14 +118,6 @@ function readUser(payload: unknown, status: number): AuthenticatedUser {
   }
 
   return { id, name, email };
-}
-
-function readSession(payload: unknown, status: number): AuthenticatedSession {
-  if (!isRecord(payload) || typeof payload.token !== "string" || payload.token.length === 0) {
-    throw new AuthApiError("Respuesta de autenticación inválida. 3️⃣", status);
-  }
-
-  return { token: payload.token, user: readUser(payload, status) };
 }
 
 function readAuthorizationUrl(

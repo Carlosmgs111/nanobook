@@ -9,6 +9,9 @@ dist/
 # incremental build cache and snapshots
 .nanobook/
 
+# local development database
+/data/nanobook.db
+
 # dependencies
 node_modules/
 

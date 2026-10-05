@@ -1,6 +1,6 @@
 import type { AuthApi } from "./HttpAuthApi";
-import type { AuthSessionStorage } from "./LocalStorageAuthSessionStorage";
 import type { ToastNotifier } from "../../toast/BrowserToastNotifier";
+import { navigate } from "astro:transitions/client";
 
 type AuthFormMode = "login" | "signup";
 
@@ -14,11 +14,8 @@ class AuthFormModeCapability {
 }
 
 export interface AuthFormControllerCapabilities {
-  root: HTMLElement;
   authApi: AuthApi;
-  sessionStorage: AuthSessionStorage;
   notifier: ToastNotifier;
-  navigate(path: string): void;
 }
 
 const copyByMode: Record<AuthFormMode, string> = {
@@ -38,15 +35,22 @@ const submitLabelByMode: Record<AuthFormMode, string> = {
 
 export class AuthFormController {
   private readonly formMode = new AuthFormModeCapability();
+  private root: HTMLElement | undefined;
 
   constructor(private readonly capabilities: AuthFormControllerCapabilities) {}
 
-  mount(): void {
-    const { root } = this.capabilities;
-    if (root.dataset.authFormReady === "true") return;
-    root.dataset.authFormReady = "true";
+  private getRoot() {
+    if (!this.root)
+      return document.querySelectorAll<HTMLElement>("[data-auth-form]")[0];
+    return this.root;
+  }
 
-    root
+  mount(): void {
+    this.root = this.getRoot();
+    if (this.root.dataset.authFormReady === "true") return;
+    this.root.dataset.authFormReady = "true";
+
+    this.root
       .querySelectorAll<HTMLButtonElement>("[data-auth-mode]")
       .forEach((button) => {
         button.addEventListener("click", () => {
@@ -54,23 +58,23 @@ export class AuthFormController {
         });
       });
 
-    const form = root.querySelector<HTMLFormElement>(".auth-form__fields");
+    const form = this.root.querySelector<HTMLFormElement>(".auth-form__fields");
     form?.addEventListener("submit", async (event) => {
       await this.submit(event);
     });
 
-    const githubButton = root.querySelector<HTMLButtonElement>(
-      '[data-auth-provider="github"]',
+    const githubButton = this.root.querySelector<HTMLButtonElement>(
+      '[data-auth-provider="github"]'
     );
     githubButton?.addEventListener("click", () => {
       void this.submitGitHub(githubButton);
     });
 
-    this.setMode(this.readMode(root.dataset.mode));
+    this.setMode(this.readMode(this.getRoot().dataset.mode));
   }
 
   private setMode(mode: AuthFormMode): void {
-    const { root } = this.capabilities;
+    const root = this.getRoot();
     root.dataset.mode = mode;
 
     root.querySelectorAll<HTMLElement>("[data-auth-mode]").forEach((button) => {
@@ -101,7 +105,7 @@ export class AuthFormController {
 
   private async submit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    const mode = this.readMode(this.capabilities.root.dataset.mode);
+    const mode = this.readMode(this.getRoot().dataset.mode);
     const email = this.readValue("#auth-email");
     const password = this.readValue("#auth-password");
     const name = this.readValue("#auth-name");
@@ -127,26 +131,27 @@ export class AuthFormController {
         });
         this.capabilities.notifier.show(
           "Revisa tu correo para activar tu cuenta.",
-          "success",
+          "success"
         );
-        this.capabilities.navigate("/verify-email");
+        navigate("/verify-email");
         return;
       } else {
-        const session = await this.capabilities.authApi.signIn({
+        await this.capabilities.authApi.signIn({
           email,
           password,
         });
-        this.capabilities.sessionStorage.save(session);
       }
       this.capabilities.notifier.show(
         "Sesión iniciada. Redirigiendo…",
         "success"
       );
-      this.capabilities.navigate("/");
+      navigate("/");
     } catch (error) {
       console.error(error);
       this.capabilities.notifier.show(
-        error instanceof Error ? error.message : "No fue posible autenticarte. 🙃",
+        error instanceof Error
+          ? error.message
+          : "No fue posible autenticarte. 🙃",
         "error"
       );
     } finally {
@@ -159,12 +164,13 @@ export class AuthFormController {
     this.capabilities.notifier.show("Conectando con GitHub…", "loading");
 
     try {
-      const { authorizationUrl } = await this.capabilities.authApi.signInWithGitHub();
-      this.capabilities.navigate(authorizationUrl);
+      const { authorizationUrl } =
+        await this.capabilities.authApi.signInWithGitHub();
+      navigate(authorizationUrl);
     } catch (error) {
       this.capabilities.notifier.show(
         error instanceof Error ? error.message : "No fue posible autenticarte.",
-        "error",
+        "error"
       );
       button.disabled = false;
     }
@@ -172,9 +178,8 @@ export class AuthFormController {
 
   private readValue(selector: string): string {
     return (
-      this.capabilities.root
-        .querySelector<HTMLInputElement>(selector)
-        ?.value.trim() ?? ""
+      this.getRoot().querySelector<HTMLInputElement>(selector)?.value.trim() ??
+      ""
     );
   }
 
@@ -183,16 +188,14 @@ export class AuthFormController {
   }
 
   private setText(selector: string, value: string): void {
-    const element = this.capabilities.root.querySelector<HTMLElement>(selector);
+    const element = this.getRoot().querySelector<HTMLElement>(selector);
     if (element) element.textContent = value;
   }
 
   private setSubmitting(isSubmitting: boolean): void {
-    this.capabilities.root.setAttribute("aria-busy", String(isSubmitting));
+    this.getRoot().setAttribute("aria-busy", String(isSubmitting));
     const submit =
-      this.capabilities.root.querySelector<HTMLButtonElement>(
-        "[data-auth-submit]"
-      );
+      this.getRoot().querySelector<HTMLButtonElement>("[data-auth-submit]");
     if (submit) submit.disabled = isSubmitting;
   }
 }

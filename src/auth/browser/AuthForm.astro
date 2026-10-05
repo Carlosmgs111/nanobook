@@ -116,30 +116,11 @@ const isSignup = initialMode === "signup";
 </section>
 
 <script>
-  import { AuthFormController } from "./AuthFormController";
-  import { BrowserToastNotifier } from "../../toast/BrowserToastNotifier";
-  import { HttpAuthApi } from "./HttpAuthApi";
-  import { LocalStorageAuthSessionStorage } from "./LocalStorageAuthSessionStorage";
-
-  const authApi = new HttpAuthApi();
-  const sessionStorage = new LocalStorageAuthSessionStorage();
-
-  function mountAuthForms() {
-    document
-      .querySelectorAll<HTMLElement>("[data-auth-form]")
-      .forEach((form) => {
-        new AuthFormController({
-          root: form,
-          authApi,
-          sessionStorage,
-          notifier: new BrowserToastNotifier("auth-flow"),
-          navigate: (path) => window.location.assign(path),
-        }).mount();
-      });
-  }
-
-  document.addEventListener("astro:page-load", mountAuthForms);
-  mountAuthForms();
+  import { authModule } from "./";
+  document.addEventListener("astro:page-load", () =>
+    authModule.mount()
+  );
+  authModule.mount();
 </script>
 
 <style>
@@ -228,7 +209,7 @@ const isSignup = initialMode === "signup";
   .auth-form__provider {
     display: grid;
     gap: 0.75rem;
-    padding: 0  clamp(1.5rem, 5vw, 2.75rem) clamp(1.5rem, 5vw, 2.75rem);
+    padding: 0 clamp(1.5rem, 5vw, 2.75rem) clamp(1.5rem, 5vw, 2.75rem);
   }
 
   .auth-form__provider > span {

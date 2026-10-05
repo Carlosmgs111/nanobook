@@ -33,36 +33,40 @@ const { breadcrumbs, editHref, viewHref, newHref, loginHref } = Astro.props;
       <Breadcrumb crumbs={breadcrumbs} />
     </div>
     <div class="flex flex-shrink-0 items-center gap-2">
-      <DocumentControls editHref={editHref} viewHref={viewHref} newHref={newHref} />
+      <DocumentControls
+        editHref={editHref}
+        viewHref={viewHref}
+        newHref={newHref}
+      />
       <span class="auth-status" data-auth-status hidden role="status"></span>
-      {loginHref && (
-        <a
-          href={loginHref}
-          data-auth-login
-          aria-label="Ingresar a tu cuenta"
-          class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--grid-line)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-        >
-          Ingresar
-        </a>
-      )}
+      {
+        loginHref && (
+          <a
+            href={loginHref}
+            data-auth-login
+            aria-label="Ingresar a tu cuenta"
+            class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--grid-line)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+          >
+            Ingresar
+          </a>
+        )
+      }
     </div>
   </div>
 </header>
 
 <script>
-  import { AuthStatusController } from "../../auth/browser/AuthStatusController";
-  import { LocalStorageAuthSessionStorage } from "../../auth/browser/LocalStorageAuthSessionStorage";
+  import { AuthStatusController } from "./AuthStatusController";
+  import { authModule } from "../../auth/browser";
 
-  const sessionStorage = new LocalStorageAuthSessionStorage();
+  const authStatusController = new AuthStatusController(
+    authModule.getAuthenticatedSession
+  );
 
-  function mountAuthStatuses() {
-    document.querySelectorAll<HTMLElement>("[data-auth-header]").forEach((header) => {
-      new AuthStatusController({ root: header, sessionStorage }).mount();
-    });
-  }
-
-  document.addEventListener("astro:page-load", mountAuthStatuses);
-  mountAuthStatuses();
+  document.addEventListener("astro:page-load", () =>
+    authStatusController.mount()
+  );
+  authStatusController.mount();
 </script>
 
 <style>

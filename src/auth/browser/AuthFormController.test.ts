@@ -1,8 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   AuthApi,
-  AuthenticatedSession,
   AuthenticatedUser,
   SignInRequest,
   SignUpRequest,
@@ -10,19 +9,16 @@ import type {
 } from "./HttpAuthApi";
 import {
   AuthFormController,
-  type AuthFormControllerCapabilities,
 } from "./AuthFormController";
-import type { AuthSessionStorage } from "./AuthSessionStorage";
+
+const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
+
+vi.mock("astro:transitions/client", () => ({ navigate }));
 
 const authenticatedUser: AuthenticatedUser = {
   id: "user-123",
   name: "Ada Lovelace",
   email: "ada@example.com",
-};
-
-const authenticatedSession: AuthenticatedSession = {
-  token: "session-token",
-  user: authenticatedUser,
 };
 
 class FakeAuthApi implements AuthApi {
@@ -31,10 +27,10 @@ class FakeAuthApi implements AuthApi {
   error: Error | undefined;
   githubAuthorizationUrl = "https://github.com/login/oauth/authorize?state=signed";
 
-  async signIn(request: SignInRequest): Promise<AuthenticatedSession> {
+  async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     this.signInRequests.push(request);
     if (this.error) throw this.error;
-    return authenticatedSession;
+    return authenticatedUser;
   }
 
   async signUp(request: SignUpRequest): Promise<AuthenticatedUser> {
@@ -46,18 +42,6 @@ class FakeAuthApi implements AuthApi {
   async signInWithGitHub(): Promise<SocialAuthorization> {
     if (this.error) throw this.error;
     return { authorizationUrl: this.githubAuthorizationUrl };
-  }
-}
-
-class FakeAuthSessionStorage implements AuthSessionStorage {
-  savedSessions: AuthenticatedSession[] = [];
-
-  save(session: AuthenticatedSession): void {
-    this.savedSessions.push(session);
-  }
-
-  load(): AuthenticatedSession | null {
-    return this.savedSessions.at(-1) ?? null;
   }
 }
 
@@ -152,6 +136,10 @@ function createForm(mode: "login" | "signup" = "login") {
     .setQueries("[data-auth-mode]", [loginMode, signupMode])
     .setQueries("[data-auth-only]", [nameField, confirmPasswordField]);
 
+  vi.stubGlobal("document", {
+    querySelectorAll: () => [root],
+  });
+
   return {
     root,
     form,
@@ -164,17 +152,21 @@ function createForm(mode: "login" | "signup" = "login") {
   };
 }
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("AuthFormController", () => {
   it("submits login credentials through its injected authentication capability", async () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
-    const destinations: string[] = [];
     const composer = new AuthFormController({
-      root: view.root as unknown as HTMLElement,
       authApi,
-      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show() {} },
-      navigate: (path) => destinations.push(path),
     });
 
     composer.mount();
@@ -183,42 +175,27 @@ describe("AuthFormController", () => {
     expect(authApi.signInRequests).toEqual([
       { email: "ada@example.com", password: "password123" },
     ]);
-    expect(destinations).toEqual(["/"]);
+    expect(navigate).toHaveBeenCalledWith("/");
   });
 
-  it("persists the authenticated session before navigating away from login", async () => {
+  it("relies on Better Auth's cookie before navigating away from login", async () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
-    const sessionStorage = new FakeAuthSessionStorage();
-    const destinations: string[] = [];
-    const capabilities = {
-      root: view.root as unknown as HTMLElement,
-      authApi,
-      sessionStorage: new FakeAuthSessionStorage(),
-      notifier: { show() {} },
-      navigate: (path: string) => destinations.push(path),
-      sessionStorage,
-    };
-    const composer = new AuthFormController(
-      capabilities as unknown as AuthFormControllerCapabilities,
-    );
+    const composer = new AuthFormController({ authApi, notifier: { show() {} } });
 
     composer.mount();
     await view.form.trigger("submit");
 
-    expect(sessionStorage.savedSessions).toEqual([authenticatedSession]);
-    expect(destinations).toEqual(["/"]);
+    expect(authApi.signInRequests).toHaveLength(1);
+    expect(navigate).toHaveBeenCalledWith("/");
   });
 
   it("submits registration data after the user changes to signup", async () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
-    const destinations: string[] = [];
     const composer = new AuthFormController({
-      root: view.root as unknown as HTMLElement,
       authApi,
       notifier: { show() {} },
-      navigate: (path) => destinations.push(path),
     });
 
     composer.mount();
@@ -232,17 +209,14 @@ describe("AuthFormController", () => {
         password: "password123",
       },
     ]);
-    expect(destinations).toEqual(["/verify-email"]);
+    expect(navigate).toHaveBeenCalledWith("/verify-email");
   });
 
   it("exposes the registration fields only in signup mode", async () => {
     const view = createForm();
     const composer = new AuthFormController({
-      root: view.root as unknown as HTMLElement,
       authApi: new FakeAuthApi(),
-      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show() {} },
-      navigate: () => {},
     });
 
     composer.mount();
@@ -259,13 +233,9 @@ describe("AuthFormController", () => {
     const view = createForm();
     const authApi = new FakeAuthApi();
     authApi.error = new Error("Credenciales inválidas");
-    const destinations: string[] = [];
     const composer = new AuthFormController({
-      root: view.root as unknown as HTMLElement,
       authApi,
-      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show: (message) => (view.notice.textContent = message) },
-      navigate: (path) => destinations.push(path),
     });
 
     composer.mount();
@@ -273,26 +243,22 @@ describe("AuthFormController", () => {
 
     expect(view.notice.textContent).toBe("Credenciales inválidas");
     expect(view.submit.disabled).toBe(false);
-    expect(destinations).toEqual([]);
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("navigates to GitHub only after the social authorization URL is returned", async () => {
     const view = createForm();
-    const destinations: string[] = [];
     const composer = new AuthFormController({
-      root: view.root as unknown as HTMLElement,
       authApi: new FakeAuthApi(),
-      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show() {} },
-      navigate: (path) => destinations.push(path),
     });
 
     composer.mount();
     await view.githubButton.trigger("click");
 
-    expect(destinations).toEqual([
+    expect(navigate).toHaveBeenCalledWith(
       "https://github.com/login/oauth/authorize?state=signed",
-    ]);
+    );
     expect(view.githubButton.disabled).toBe(true);
   });
 
@@ -301,11 +267,8 @@ describe("AuthFormController", () => {
     const authApi = new FakeAuthApi();
     authApi.error = new Error("GitHub no está disponible.");
     const composer = new AuthFormController({
-      root: view.root as unknown as HTMLElement,
       authApi,
-      sessionStorage: new FakeAuthSessionStorage(),
       notifier: { show: (message) => (view.notice.textContent = message) },
-      navigate: () => {},
     });
 
     composer.mount();
