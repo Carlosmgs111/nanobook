@@ -5,7 +5,7 @@ import {
   GITHUB_OAUTH_CLIENT_ID,
   GITHUB_OAUTH_CLIENT_SECRET,
 } from "astro:env/server";
-import { isGitHubOAuthEnabled } from "../auth/server/GitHubOAuth";
+import { isGitHubOAuthEnabled } from "../auth/server/infrastructure/better-auth/GitHubOAuth";
 
 const githubEnabled = isGitHubOAuthEnabled({
   clientId: GITHUB_OAUTH_CLIENT_ID,

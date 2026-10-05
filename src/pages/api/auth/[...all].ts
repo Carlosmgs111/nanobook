@@ -1,2 +1,3 @@
-import { AuthController } from "../../../auth/server/AuthController";
-export const ALL = AuthController;
+import { authModule } from "../../../auth/server";
+
+export const ALL = authModule.authController;
