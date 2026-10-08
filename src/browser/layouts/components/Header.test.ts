@@ -22,4 +22,14 @@ describe("global login link contract", () => {
     expect(header).toContain('const isProfilePage = Astro.url.pathname === "/profile"');
     expect(header).toContain("loginHref && !isProfilePage");
   });
+
+  it("resolves authentication through the browser application", () => {
+    const header = read("src/browser/layouts/components/Header.astro");
+    const authForm = read("src/browser/auth/AuthForm.astro");
+
+    expect(header).toContain("getApp()");
+    expect(authForm).toContain("getApp()");
+    expect(header).not.toMatch(/import\s+\{\s*authModule\s*\}\s+from\s+["']\.\.\/auth["']/);
+    expect(authForm).not.toMatch(/import\s+\{\s*authModule\s*\}\s+from\s+["']\.\/["']/);
+  });
 });

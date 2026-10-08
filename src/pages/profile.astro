@@ -27,7 +27,9 @@ import Layout from "../browser/layouts/Layout.astro";
 </Layout>
 
 <script>
-  import { authModule } from "../browser/auth";
+  import { getApp } from "../browser/Application";
+
+  const app = getApp();
 
   function mountSignOut(): void {
     const button = document.querySelector<HTMLButtonElement>("[data-sign-out]");
@@ -35,7 +37,7 @@ import Layout from "../browser/layouts/Layout.astro";
 
     button.dataset.signOutReady = "true";
     button.addEventListener("click", () => {
-      void authModule.signOutController.execute();
+      void app.authModule.signOutController.execute();
     });
   }
 

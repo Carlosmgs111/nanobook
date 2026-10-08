@@ -116,11 +116,11 @@ const isSignup = initialMode === "signup";
 </section>
 
 <script>
-  import { authModule } from "./";
-  document.addEventListener("astro:page-load", () =>
-    authModule.mount()
-  );
-  authModule.mount();
+  import { getApp } from "../Application";
+
+  const app = getApp();
+  document.addEventListener("astro:page-load", () => app.authModule.mount());
+  app.authModule.mount();
 </script>
 
 <style>

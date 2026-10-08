@@ -11,6 +11,8 @@ describe("profile page", () => {
     expect(profile).toContain("data-sign-out");
     expect(profile).toContain("bg-black");
     expect(profile).toContain("signOutController.execute()");
+    expect(profile).toContain("getApp()");
+    expect(profile).not.toContain('import { authModule }');
   });
 
   it("offers a black button back to the home page", () => {

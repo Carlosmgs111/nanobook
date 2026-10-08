@@ -63,10 +63,12 @@ const isProfilePage = Astro.url.pathname === "/profile";
 
 <script>
   import { AuthStatusController } from "./AuthStatusController";
-  import { authModule } from "../../auth";
+  import { getApp } from "../../Application";
+
+  const app = getApp();
 
   const authStatusController = new AuthStatusController(
-    authModule.getAuthenticatedSession
+    app.authModule.getAuthenticatedSession
   );
 
   document.addEventListener("astro:page-load", () =>
