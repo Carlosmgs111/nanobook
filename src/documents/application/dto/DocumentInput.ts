@@ -8,6 +8,7 @@ export interface DocumentInput {
   content: string;
   createdAt?: Date;
   updatedAt?: Date;
+  ownerId?: string;
   author?: string;
   cover?: string;
   tags?: string[];

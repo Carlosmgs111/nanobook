@@ -39,6 +39,7 @@ export class ProxyParser {
         ...data,
         ...targetData,
         position: data.position,
+        ownerId: data.ownerId,
         ref: data.ref,
       };
       const proxyDocumentResult = Document.create(

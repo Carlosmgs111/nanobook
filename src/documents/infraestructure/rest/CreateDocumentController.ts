@@ -7,7 +7,7 @@ import { toDocumentResponse } from "./mappers/toDocumentResponse";
 
 export class CreateDocumentController {
   constructor(private createDocument: CreateDocument) {}
-  handle: APIRoute = async ({ params, request }) => {
+  handle: APIRoute = async ({ params, request, locals }) => {
     try {
       const { slug: id } = params;
       if (!id) {
@@ -26,7 +26,14 @@ export class CreateDocumentController {
         );
       }
 
-      const result = await this.createDocument.execute(toDocumentInput(payload));
+      if (!locals.currentUserId) {
+        return jsonResponse({ error: "Autenticación requerida" }, 401);
+      }
+
+      const result = await this.createDocument.execute({
+        ...toDocumentInput(payload),
+        ownerId: locals.currentUserId,
+      });
 
       if (!result.isSuccess) {
         return handleServiceError(result.getError());

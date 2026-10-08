@@ -5,6 +5,7 @@ import {
   InvalidDocumentError,
   InvalidDocumentIdError,
   DocumentRepositoryError,
+  DocumentAccessDeniedError,
 } from "../domain/errors";
 import { Result } from "../../shared/domain/Result";
 import { EventBusError } from "../../shared/domain/bus/errors";
@@ -40,6 +41,33 @@ function buildUpdateInput(
 }
 
 describe("UpdateDocument", () => {
+  it("denies an authenticated actor who does not own the document", async () => {
+    const document = createDocument("private", {
+      title: "Private",
+      description: "Owned by someone else",
+      ownerId: "owner-1",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(document)),
+    });
+    const useCase = new UpdateDocument(repository, createEventBus());
+
+    const result = await useCase.execute(
+      {
+        id: document.getDocumentId().getValue(),
+        path: "private",
+        title: "Changed",
+        description: "Changed",
+        content: "# Changed",
+      },
+      "another-user",
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
   it("updates an index document using its internal index path", async () => {
     const indexDocument = createDocument(
       "new-dir/index",
@@ -63,7 +91,7 @@ describe("UpdateDocument", () => {
       description: "new-dir",
       createdAt: new Date("2026-08-29"),
       content: "# Updated directory",
-    });
+    }, "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.update).toHaveBeenCalledWith(
@@ -105,7 +133,7 @@ describe("UpdateDocument", () => {
       description: "Reference",
       createdAt: new Date("2026-01-01"),
       content: "# Reference",
-    });
+    }, "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.update).toHaveBeenCalledTimes(2);
@@ -114,6 +142,38 @@ describe("UpdateDocument", () => {
       "guides/intro"
     );
     expect(eventBus.publish).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not move an owned directory when it contains another owner's document", async () => {
+    const directory = createDocument("guides/index", {
+      title: "Guides",
+      description: "Guides",
+      ownerId: "owner-1",
+    });
+    const child = createDocument("guides/intro", {
+      title: "Intro",
+      description: "Another owner's document",
+      ownerId: "owner-2",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(directory)),
+      list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
+    });
+
+    const result = await new UpdateDocument(repository, createEventBus()).execute(
+      {
+        id: directory.getDocumentId().getValue(),
+        path: "reference/index",
+        title: "Reference",
+        description: "Reference",
+        content: "# Reference",
+      },
+      "owner-1",
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(repository.update).not.toHaveBeenCalled();
   });
 
   it("locates by stable id and applies the path supplied in the body", async () => {
@@ -127,7 +187,7 @@ describe("UpdateDocument", () => {
       path: "guide/renamed",
     });
 
-    const result = await useCase.execute(input);
+    const result = await useCase.execute(input, "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.getById).toHaveBeenCalledWith(
@@ -150,7 +210,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput());
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.update).toHaveBeenCalledTimes(1);
@@ -162,11 +222,12 @@ describe("UpdateDocument", () => {
     );
   });
 
-  it("preserves identity, author, and creation time during updates", async () => {
+  it("preserves identity, owner, author, and creation time during updates", async () => {
     const createdAt = new Date("2024-01-01T00:00:00.000Z");
     const original = createDocument("guide/immutable", {
       title: "Original",
       description: "Original",
+      ownerId: "original-owner",
       author: "Original author",
       createdAt,
     });
@@ -182,13 +243,15 @@ describe("UpdateDocument", () => {
       description: "Changed",
       createdAt: new Date("2099-01-01T00:00:00.000Z"),
       updatedAt: new Date("2099-01-01T00:00:00.000Z"),
+      ownerId: "forged-owner",
       author: "Forged author",
       content: "# Changed",
-    });
+    }, "original-owner");
 
     expect(result.isSuccess).toBe(true);
     const updated = vi.mocked(repository.update).mock.calls[0][0];
     expect(updated.getDocumentId().getValue()).toBe(original.getDocumentId().getValue());
+    expect(updated.getMetadata().ownerId).toBe("original-owner");
     expect(updated.getMetadata().author).toBe("Original author");
     expect(updated.getMetadata().createdAt).toEqual(createdAt);
     expect(updated.getMetadata().updatedAt!.getTime()).toBeGreaterThan(createdAt.getTime());
@@ -201,7 +264,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput({ id: "missing" }));
+    const result = await useCase.execute(buildUpdateInput({ id: "missing" }), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentNotFoundError);
@@ -214,7 +277,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput({ id: "" }));
+    const result = await useCase.execute(buildUpdateInput({ id: "" }), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
@@ -230,7 +293,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput());
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -247,7 +310,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput());
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -264,7 +327,7 @@ describe("UpdateDocument", () => {
       .mockResolvedValue(Result.fail(new EventBusError("boom")));
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput());
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EventBusError);
@@ -281,7 +344,7 @@ describe("UpdateDocument", () => {
       ...buildUpdateInput(),
       // @ts-expect-error testing runtime validation
       title: undefined,
-    });
+    }, "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(InvalidDocumentError);

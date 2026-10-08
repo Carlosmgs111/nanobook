@@ -5,11 +5,14 @@ import { handleServiceError, jsonResponse } from "./utils";
 export class DeleteDocumentController {
   constructor(private deleteDocument: DeleteDocument) {}
 
-  handle: APIRoute = async ({ params }) => {
+  handle: APIRoute = async ({ params, locals }) => {
     try {
       const { slug: documentId } = params;
       if (!documentId) return jsonResponse({ error: "Falta el parámetro id" }, 400);
-      const result = await this.deleteDocument.execute(documentId);
+      if (!locals.currentUserId) {
+        return jsonResponse({ error: "Autenticación requerida" }, 401);
+      }
+      const result = await this.deleteDocument.execute(documentId, locals.currentUserId);
       if (!result.isSuccess) return handleServiceError(result.getError());
       return jsonResponse({ ok: true }, 200);
     } catch (error) {

@@ -9,6 +9,7 @@ import {
   type DocumentServiceError,
   DocumentRepositoryError,
   DocumentParseError,
+  DocumentAccessDeniedError,
 } from "../domain/errors";
 import type { EventBusError } from "../../shared/domain/bus/errors";
 
@@ -25,13 +26,17 @@ export class DeleteDocument {
   ) {}
 
   async execute(
-    documentId: string
+    documentId: string,
+    actorId: string
   ): Promise<Result<DeleteDocumentError, void>> {
     const documentResult = await this.repository.getById(documentId);
     if (!documentResult.isSuccess)
       return Result.fail(documentResult.getError());
     const document = documentResult.getValue();
     if (!document) return Result.fail(new DocumentNotFoundError(documentId));
+    if (document.getMetadata().ownerId !== actorId) {
+      return Result.fail(new DocumentAccessDeniedError(documentId));
+    }
 
     const documentsResult = await this.repository.list();
     if (!documentsResult.isSuccess)
@@ -54,6 +59,16 @@ export class DeleteDocument {
       return candidatePath.startsWith(`${publicPath}/`);
     });
     const deletedDocuments = [] as typeof documentsToDelete;
+    const unauthorizedDocument = documentsToDelete.find(
+      (documentToDelete) => documentToDelete.getMetadata().ownerId !== actorId
+    );
+    if (unauthorizedDocument) {
+      return Result.fail(
+        new DocumentAccessDeniedError(
+          unauthorizedDocument.getDocumentId().getValue()
+        )
+      );
+    }
 
     for (const documentToDelete of documentsToDelete) {
       const deleteResult = await this.repository.delete(documentToDelete);

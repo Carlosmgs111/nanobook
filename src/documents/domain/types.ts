@@ -9,6 +9,8 @@ export interface DocumentMetadata {
   description: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Stable Better Auth account identity that owns this document. */
+  ownerId?: string;
   author?: string;
   cover?: string;
   tags?: string[];

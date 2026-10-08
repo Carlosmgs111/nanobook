@@ -7,7 +7,7 @@ import type { DocumentInput } from "../../application/dto/DocumentInput";
 
 export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
-  handle: APIRoute = async ({ params, request }) => {
+  handle: APIRoute = async ({ params, request, locals }) => {
     try {
       const { slug: id } = params;
       if (!id) {
@@ -19,12 +19,15 @@ export class UpdateDocumentController {
       if (!payload.path) {
         return jsonResponse({ error: "El path es obligatorio" }, 400);
       }
+      if (!locals.currentUserId) {
+        return jsonResponse({ error: "Autenticación requerida" }, 401);
+      }
 
       const result = await this.updateDocument.execute({
         ...toDocumentInput(payload),
         // The route is the sole external source of identity for updates.
         id,
-      } as DocumentInput);
+      } as DocumentInput, locals.currentUserId);
       if (!result.isSuccess) {
         return handleServiceError(result.getError());
       }

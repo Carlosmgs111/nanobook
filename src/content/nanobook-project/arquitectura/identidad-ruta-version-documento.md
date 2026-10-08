@@ -1,5 +1,6 @@
 ---
 id: "8d1d0ceb-2515-4942-a6f3-e653ac79fdb1"
+ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"
 title: "Identidad, ruta y versión de los documentos"
 description: "Separación entre identidad estable, ubicación mutable y versión de estado."
 date: 2026-09-25

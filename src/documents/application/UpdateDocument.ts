@@ -8,6 +8,7 @@ import {
   DocumentAlreadyExistsError,
   DocumentRepositoryError,
   DocumentParseError,
+  DocumentAccessDeniedError,
   InvalidDocumentIdError,
   type DocumentServiceError,
 } from "../domain/errors";
@@ -27,7 +28,8 @@ export class UpdateDocument {
   ) {}
 
   async execute(
-    documentDelta: DocumentInput
+    documentDelta: DocumentInput,
+    actorId: string,
   ): Promise<Result<UpdateDocumentError, void>> {
     const documentId = documentDelta.id;
     if (!documentId) {
@@ -43,6 +45,9 @@ export class UpdateDocument {
     if (!existingDocument) {
       return Result.fail(new DocumentNotFoundError(documentId));
     }
+    if (existingDocument.getMetadata().ownerId !== actorId) {
+      return Result.fail(new DocumentAccessDeniedError(documentId));
+    }
 
     const { id, path, content, ...rest } = documentDelta;
     const existingMetadata = existingDocument.getMetadata();
@@ -54,6 +59,7 @@ export class UpdateDocument {
         // Identity and audit metadata are owned by the existing entity.
         id: existingDocument.getDocumentId().getValue(),
         author: existingMetadata.author,
+        ownerId: existingMetadata.ownerId,
         createdAt: existingMetadata.createdAt,
         updatedAt: new Date(),
       },
@@ -72,6 +78,18 @@ export class UpdateDocument {
       updatedDocument
     );
     if (!documentsToUpdate.isSuccess) return Result.fail(documentsToUpdate.getError());
+
+    const unauthorizedDocument = documentsToUpdate
+      .getValue()
+      .map(({ document }) => document)
+      .find((document) => document.getMetadata().ownerId !== actorId);
+    if (unauthorizedDocument) {
+      return Result.fail(
+        new DocumentAccessDeniedError(
+          unauthorizedDocument.getDocumentId().getValue()
+        )
+      );
+    }
 
     for (const item of documentsToUpdate.getValue()) {
       const updateResult = await this.contentRepository.update(

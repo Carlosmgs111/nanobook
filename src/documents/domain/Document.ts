@@ -18,7 +18,7 @@ title: "<%= title %>"
 description: "<%= description %>"
 createdAt: <%= createdAt %>
 updatedAt: <%= updatedAt %>
-author: "<%= author %>"
+<%= ownerLine %>author: "<%= author %>"
 tags: []
 draft: false
 position: 0
@@ -74,6 +74,7 @@ export class Document {
         description: overrides.description,
         createdAt,
         updatedAt,
+        ownerId: overrides.ownerId,
         author: overrides.author ?? "Nanobook",
         tags: overrides.tags ?? [],
         cover: overrides.cover,
@@ -90,6 +91,9 @@ export class Document {
         description: this.metadata.description,
         createdAt: this.metadata.createdAt.toISOString(),
         updatedAt: this.metadata.updatedAt.toISOString(),
+        ownerLine: this.metadata.ownerId
+          ? `ownerId: "${this.metadata.ownerId}"\n`
+          : "",
         author: this.metadata.author || "",
         ref: overrides.ref ? JSON.stringify(overrides.ref) : "null",
       });
@@ -280,6 +284,7 @@ export class Document {
         "updatedAt",
         documentId
       ),
+      ownerId: data.ownerId,
       author: this.assertRequiredField(
         data.author as string,
         "author",

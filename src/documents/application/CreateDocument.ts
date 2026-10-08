@@ -66,6 +66,7 @@ export class CreateDocument {
       {
         title: input.title,
         description: input.description,
+        ownerId: input.ownerId,
         author: input.author,
         position: input.position,
         draft: input.draft,

@@ -15,6 +15,7 @@ export function serializeMetadata(metadata: DocumentMetadata): string {
     ref: metadata.ref,
     cover: metadata.cover,
     tags: metadata.tags,
+    ownerId: metadata.ownerId,
     author: metadata.author,
     createdAt: metadata.createdAt?.toISOString(),
     updatedAt: metadata.updatedAt?.toISOString(),

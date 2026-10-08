@@ -60,6 +60,7 @@ export function createDocument(
       description: metadata.description,
       createdAt: metadata.createdAt ?? new Date(),
       updatedAt: metadata.updatedAt ?? metadata.createdAt ?? new Date(),
+      ownerId: metadata.ownerId ?? "owner-1",
       author: metadata.author,
       tags: metadata.tags,
       cover: metadata.cover,

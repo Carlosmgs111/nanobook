@@ -1,5 +1,6 @@
 ---
 id: "caa4e3f9-350d-460b-a8e0-e8a825c286ee"
+ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"
 title: "Verificación de correo en autenticación"
 description: "Decisión de seguridad para verificar cuentas locales antes de crear sesiones o vincular identidades sociales."
 date: 2026-10-03

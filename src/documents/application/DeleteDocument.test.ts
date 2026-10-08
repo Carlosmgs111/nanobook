@@ -5,11 +5,59 @@ import {
   DocumentDeletionPartialError,
   DocumentNotFoundError,
   DocumentRepositoryError,
+  DocumentAccessDeniedError,
 } from "../domain/errors";
 import { Result } from "../../shared/domain/Result";
 import { createDocument, createEventBus, createRepository } from "./test/factories";
 
 describe("DeleteDocument", () => {
+  it("denies an authenticated actor who does not own the document", async () => {
+    const document = createDocument("private", {
+      title: "Private",
+      description: "Owned by someone else",
+      ownerId: "owner-1",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(document)),
+    });
+    const useCase = new DeleteDocument(repository, createEventBus());
+
+    const result = await useCase.execute(
+      document.getDocumentId().getValue(),
+      "another-user",
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(repository.delete).not.toHaveBeenCalled();
+  });
+
+  it("does not delete an owned directory when it contains another owner's document", async () => {
+    const directory = createDocument("guides/index", {
+      title: "Guides",
+      description: "Guide directory",
+      ownerId: "owner-1",
+    });
+    const child = createDocument("guides/private", {
+      title: "Private",
+      description: "Another owner's document",
+      ownerId: "owner-2",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(directory)),
+      list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
+    });
+
+    const result = await new DeleteDocument(repository, createEventBus()).execute(
+      directory.getDocumentId().getValue(),
+      "owner-1",
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(repository.delete).not.toHaveBeenCalled();
+  });
+
   it("deletes a directory and all its descendants, then publishes events", async () => {
     const directory = createDocument("guides/index", {
       title: "Guides",
@@ -30,7 +78,8 @@ describe("DeleteDocument", () => {
     const eventBus = createEventBus();
 
     const result = await new DeleteDocument(repository, eventBus).execute(
-      directory.getDocumentId().getValue()
+      directory.getDocumentId().getValue(),
+      "owner-1",
     );
 
     expect(result.isSuccess).toBe(true);
@@ -66,7 +115,8 @@ describe("DeleteDocument", () => {
     const eventBus = createEventBus();
 
     const result = await new DeleteDocument(repository, eventBus).execute(
-      file.getDocumentId().getValue()
+      file.getDocumentId().getValue(),
+      "owner-1",
     );
 
     expect(result.isSuccess).toBe(true);
@@ -78,7 +128,10 @@ describe("DeleteDocument", () => {
     const repository = createRepository();
     const eventBus = createEventBus();
 
-    const result = await new DeleteDocument(repository, eventBus).execute("missing");
+    const result = await new DeleteDocument(repository, eventBus).execute(
+      "missing",
+      "owner-1",
+    );
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentNotFoundError);
@@ -99,7 +152,8 @@ describe("DeleteDocument", () => {
     const eventBus = createEventBus();
 
     const result = await new DeleteDocument(repository, eventBus).execute(
-      document.getDocumentId().getValue()
+      document.getDocumentId().getValue(),
+      "owner-1",
     );
 
     expect(result.isSuccess).toBe(false);
@@ -127,7 +181,8 @@ describe("DeleteDocument", () => {
     const eventBus = createEventBus();
 
     const result = await new DeleteDocument(repository, eventBus).execute(
-      directory.getDocumentId().getValue()
+      directory.getDocumentId().getValue(),
+      "owner-1",
     );
 
     expect(result.isSuccess).toBe(false);

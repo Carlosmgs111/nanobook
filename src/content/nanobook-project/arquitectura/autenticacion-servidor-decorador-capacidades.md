@@ -1,5 +1,6 @@
 ---
 id: "9174049e-c3a7-4ea4-b284-97f56048b23f"
+ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"
 title: "Autenticación del servidor y decorador de capacidades"
 description: "Composición de Better Auth y protección reutilizable de rutas HTTP."
 date: 2026-10-05

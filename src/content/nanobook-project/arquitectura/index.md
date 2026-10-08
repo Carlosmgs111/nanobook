@@ -1,5 +1,6 @@
 ---
 id: "eb9f6c0c-a4eb-4bcd-95dd-c7787e2e2703"
+ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"
 title: "Arquitectura"
 description: "Decisiones y propuestas arquitectónicas del proyecto Nanobook."
 date: 2026-08-23

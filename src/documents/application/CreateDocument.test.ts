@@ -43,6 +43,22 @@ describe("CreateDocument", () => {
     );
   });
 
+  it("persists the owner assigned by the authenticated flow", async () => {
+    const useCase = new CreateDocument(createRepository(), createEventBus());
+
+    const result = await useCase.execute(
+      buildDocumentInput({
+        path: "index",
+        ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
+      }),
+    );
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().getMetadata().ownerId).toBe(
+      "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
+    );
+  });
+
   it("returns DocumentAlreadyExistsError when the document already exists", async () => {
     const existing = createDocument("intro", {
       title: "Existing",

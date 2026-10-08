@@ -4,6 +4,7 @@ import {
   InvalidDocumentError,
   DocumentNotFoundError,
   DocumentAlreadyExistsError,
+  DocumentAccessDeniedError,
   ParentNotFoundError,
 } from "../../domain/errors";
 import type { InfrastructureError } from "../../../shared/errors";
@@ -32,6 +33,10 @@ export function handleServiceError(
 
   if (error instanceof DocumentAlreadyExistsError) {
     return jsonResponse({ error: error.message }, 409);
+  }
+
+  if (error instanceof DocumentAccessDeniedError) {
+    return jsonResponse({ error: error.message }, 403);
   }
 
   if (error instanceof ParentNotFoundError) {

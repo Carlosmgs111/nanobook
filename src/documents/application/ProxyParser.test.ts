@@ -14,6 +14,7 @@ describe("ProxyParser", () => {
         title: "Proxy",
         description: "Proxy",
         createdAt: new Date("2026-01-01"),
+        ownerId: "proxy-owner",
         ref: "/README.md",
       },
       ""
@@ -24,6 +25,7 @@ describe("ProxyParser", () => {
         title: "README",
         description: "README",
         createdAt: new Date("2026-01-01"),
+        ownerId: "target-owner",
       },
       body: "# README",
     };
@@ -37,6 +39,7 @@ describe("ProxyParser", () => {
     const resolved = await new ProxyParser(resolver).parseProxy(source);
 
     expect(resolved?.getMetadata().ref).toBe("/README.md");
+    expect(resolved?.getMetadata().ownerId).toBe("proxy-owner");
     expect(resolved?.getRawFrontmatter()).toContain('ref: "/README.md"');
   });
 });

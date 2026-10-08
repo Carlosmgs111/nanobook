@@ -31,6 +31,13 @@ export class DocumentNotFoundError extends Error {
   }
 }
 
+export class DocumentAccessDeniedError extends Error {
+  constructor(public readonly documentId: string) {
+    super(`No tienes permiso para modificar el documento "${documentId}"`);
+    this.name = "DocumentAccessDeniedError";
+  }
+}
+
 export class DocumentDeletionPartialError extends InfrastructureError {
   constructor(
     public readonly deletedDocumentIds: string[],
@@ -68,6 +75,7 @@ export class InvalidDocumentError extends Error {
 
 export type DocumentServiceError =
   | DocumentAlreadyExistsError
+  | DocumentAccessDeniedError
   | DocumentNotFoundError
   | DocumentDeletionPartialError
   | InvalidDocumentIdError
