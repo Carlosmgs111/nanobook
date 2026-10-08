@@ -1,0 +1,353 @@
+import { describe, it, expect, vi } from "vitest";
+import { UpdateDocument } from "./UpdateDocument";
+import {
+  DocumentNotFoundError,
+  InvalidDocumentError,
+  InvalidDocumentIdError,
+  DocumentRepositoryError,
+  DocumentAccessDeniedError,
+} from "../domain/errors";
+import { Result } from "../../../shared/domain/Result";
+import { EventBusError } from "../../../shared/domain/bus/errors";
+import {
+  createRepository,
+  createEventBus,
+  createDocument,
+} from "./test/factories";
+import type { DocumentInput } from "./dto/DocumentInput";
+
+const existingDocument = createDocument(
+  "guide/intro",
+  {
+    title: "Old title",
+    description: "Old description",
+    createdAt: new Date("2024-01-01"),
+  },
+  "# Old"
+);
+
+function buildUpdateInput(
+  overrides: Partial<DocumentInput> & { id?: string } = {}
+): DocumentInput {
+  return {
+    id: overrides.id ?? existingDocument.getDocumentId().getValue(),
+    path: overrides.path ?? "guide/intro",
+    title: overrides.title ?? "New title",
+    description: overrides.description ?? "New description",
+    createdAt: overrides.createdAt ?? new Date("2024-01-02"),
+    content: overrides.content ?? "# New",
+    ...overrides,
+  };
+}
+
+describe("UpdateDocument", () => {
+  it("denies an authenticated actor who does not own the document", async () => {
+    const document = createDocument("private", {
+      title: "Private",
+      description: "Owned by someone else",
+      ownerId: "owner-1",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(document)),
+    });
+    const useCase = new UpdateDocument(repository, createEventBus());
+
+    const result = await useCase.execute(
+      {
+        id: document.getDocumentId().getValue(),
+        path: "private",
+        title: "Changed",
+        description: "Changed",
+        content: "# Changed",
+      },
+      "another-user",
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it("updates an index document using its internal index path", async () => {
+    const indexDocument = createDocument(
+      "new-dir/index",
+      {
+        title: "new-dir",
+        description: "new-dir",
+        createdAt: new Date("2026-08-29"),
+      },
+      "# Directory"
+    );
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(indexDocument)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute({
+      id: indexDocument.getDocumentId().getValue(),
+      path: "new-dir/index",
+      title: "new-dir",
+      description: "new-dir",
+      createdAt: new Date("2026-08-29"),
+      content: "# Updated directory",
+    }, "owner-1");
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: expect.objectContaining({
+          getInternalValue: expect.any(Function),
+        }),
+        documentId: expect.objectContaining({
+          value: indexDocument.getDocumentId().getValue(),
+        }),
+      })
+    );
+    const updatedDocument = vi.mocked(repository.update).mock.calls[0][0];
+    expect(updatedDocument.getDocumentPath().getInternalValue()).toBe(
+      "new-dir/index"
+    );
+  });
+
+  it("moves the complete subtree when an index document is renamed", async () => {
+    const directory = createDocument("guides/index", {
+      title: "Guides",
+      description: "Guides",
+    });
+    const child = createDocument("guides/intro", {
+      title: "Intro",
+      description: "Intro",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(directory)),
+      list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute({
+      id: directory.getDocumentId().getValue(),
+      path: "reference/index",
+      title: "Reference",
+      description: "Reference",
+      createdAt: new Date("2026-01-01"),
+      content: "# Reference",
+    }, "owner-1");
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.update).toHaveBeenCalledTimes(2);
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: expect.objectContaining({ value: "reference/intro" }) }),
+      "guides/intro"
+    );
+    expect(eventBus.publish).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not move an owned directory when it contains another owner's document", async () => {
+    const directory = createDocument("guides/index", {
+      title: "Guides",
+      description: "Guides",
+      ownerId: "owner-1",
+    });
+    const child = createDocument("guides/intro", {
+      title: "Intro",
+      description: "Another owner's document",
+      ownerId: "owner-2",
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(directory)),
+      list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
+    });
+
+    const result = await new UpdateDocument(repository, createEventBus()).execute(
+      {
+        id: directory.getDocumentId().getValue(),
+        path: "reference/index",
+        title: "Reference",
+        description: "Reference",
+        content: "# Reference",
+      },
+      "owner-1",
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it("locates by stable id and applies the path supplied in the body", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+    const input = buildUpdateInput({
+      id: existingDocument.getDocumentId().getValue(),
+      path: "guide/renamed",
+    });
+
+    const result = await useCase.execute(input, "owner-1");
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.getById).toHaveBeenCalledWith(
+      existingDocument.getDocumentId().getValue()
+    );
+    expect(repository.getByPath).not.toHaveBeenCalled();
+    expect(repository.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentId: expect.objectContaining({ value: existingDocument.getDocumentId().getValue() }),
+        path: expect.objectContaining({ value: "guide/renamed" }),
+      }),
+      "guide/intro"
+    );
+  });
+
+  it("updates an existing document and publishes DocumentUpdated", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.update).toHaveBeenCalledTimes(1);
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "document.updated",
+        documentId: existingDocument.getDocumentId().getValue(),
+      })
+    );
+  });
+
+  it("preserves identity, owner, author, and creation time during updates", async () => {
+    const createdAt = new Date("2024-01-01T00:00:00.000Z");
+    const original = createDocument("guide/immutable", {
+      title: "Original",
+      description: "Original",
+      ownerId: "original-owner",
+      author: "Original author",
+      createdAt,
+    });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(original)),
+    });
+    const useCase = new UpdateDocument(repository, createEventBus());
+
+    const result = await useCase.execute({
+      id: original.getDocumentId().getValue(),
+      path: "guide/immutable",
+      title: "Changed",
+      description: "Changed",
+      createdAt: new Date("2099-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2099-01-01T00:00:00.000Z"),
+      ownerId: "forged-owner",
+      author: "Forged author",
+      content: "# Changed",
+    }, "original-owner");
+
+    expect(result.isSuccess).toBe(true);
+    const updated = vi.mocked(repository.update).mock.calls[0][0];
+    expect(updated.getDocumentId().getValue()).toBe(original.getDocumentId().getValue());
+    expect(updated.getMetadata().ownerId).toBe("original-owner");
+    expect(updated.getMetadata().author).toBe("Original author");
+    expect(updated.getMetadata().createdAt).toEqual(createdAt);
+    expect(updated.getMetadata().updatedAt!.getTime()).toBeGreaterThan(createdAt.getTime());
+  });
+
+  it("returns DocumentNotFoundError when the document does not exist", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(null)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute(buildUpdateInput({ id: "missing" }), "owner-1");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentNotFoundError);
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it("returns InvalidDocumentIdError for malformed ids", async () => {
+    const repository = createRepository();
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute(buildUpdateInput({ id: "" }), "owner-1");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it("propagates repository.getById errors as Result failures", async () => {
+    const repository = createRepository({
+      getById: vi
+        .fn()
+        .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it("propagates repository.update errors and does not publish events", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      update: vi
+        .fn()
+        .mockResolvedValue(Result.fail(new DocumentRepositoryError("boom"))),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
+    expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it("propagates eventBus.publish errors", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+    });
+    const eventBus = createEventBus();
+    eventBus.publish = vi
+      .fn()
+      .mockResolvedValue(Result.fail(new EventBusError("boom")));
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(EventBusError);
+  });
+
+  it("returns InvalidDocumentError when Document construction fails", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+    });
+    const eventBus = createEventBus();
+    const useCase = new UpdateDocument(repository, eventBus);
+
+    const result = await useCase.execute({
+      ...buildUpdateInput(),
+      // @ts-expect-error testing runtime validation
+      title: undefined,
+    }, "owner-1");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(InvalidDocumentError);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+});

@@ -1,7 +1,7 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import DocumentPage from "../../documents/ui/pages/DocumentPage.astro";
-import { getApp } from "../../Application";
+import Layout from "../../browser/layouts/Layout.astro";
+import DocumentPage from "../../server/documents/ui/pages/DocumentPage.astro";
+import { getApp } from "../../server/Application";
 
 const app = await getApp();
 
@@ -54,7 +54,7 @@ Astro.response.headers.set("Cache-Control", "no-store");
 </Layout>
 
 <script>
-  import { edition } from "../../edition";
+  import { edition } from "../../browser/edition";
 
   document.addEventListener("astro:page-load", () => {
     const body = document.querySelector<HTMLElement>("#document-body");

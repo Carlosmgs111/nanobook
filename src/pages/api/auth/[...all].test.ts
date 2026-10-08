@@ -1,17 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 
 const authController = vi.fn();
-const create = vi.fn(() => ({ authController }));
+const getApp = vi.fn(async () => ({
+  authServerModule: { authController },
+}));
 
-vi.mock("../../../auth/server", () => ({
-  AuthServerModule: { create },
+vi.mock("../../../server/Application", () => ({
+  getApp,
 }));
 
 describe("Better Auth API route", () => {
-  it("uses the server module factory to expose its controller", async () => {
+  it("uses the composed application to expose its controller", async () => {
     const route = await import("./[...all]");
 
-    expect(create).toHaveBeenCalledOnce();
+    expect(getApp).toHaveBeenCalledOnce();
     expect(route.ALL).toBe(authController);
   });
 });

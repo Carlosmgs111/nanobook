@@ -1,5 +1,5 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import Layout from "../browser/layouts/Layout.astro";
 ---
 
 <Layout
@@ -27,7 +27,7 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
-  import { authModule } from "../auth/browser";
+  import { authModule } from "../browser/auth";
 
   function mountSignOut(): void {
     const button = document.querySelector<HTMLButtonElement>("[data-sign-out]");

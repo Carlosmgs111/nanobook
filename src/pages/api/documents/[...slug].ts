@@ -1,4 +1,4 @@
-import { getApp } from "../../../Application";
+import { getApp } from "../../../server/Application";
 
 const app = await getApp();
 

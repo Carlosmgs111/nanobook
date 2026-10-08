@@ -1,0 +1,79 @@
+---
+import "../../shared/styles/global.css";
+import { ClientRouter } from "astro:transitions";
+import LayoutShell from "./components/LayoutShell.astro";
+import type { NavigationNode } from "../../server/navigation/domain/types";
+import type { Crumb } from "../../server/navigation/components/Breadcrumb.astro";
+
+interface ParentEntry {
+  id: string;
+  path: string;
+  data: {
+    title: string;
+  };
+}
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  title?: string;
+  description?: string;
+  breadcrumbs?: Crumb[];
+  sidebarEntries?: NavigationNode[];
+  parentEntry?: ParentEntry | null;
+  headings?: Heading[];
+  hideToc?: boolean;
+  editHref?: string;
+  viewHref?: string;
+  newHref?: string;
+  loginHref?: string;
+  canonicalHref?: string;
+}
+
+const {
+  title = "Astro",
+  description,
+  breadcrumbs,
+  sidebarEntries,
+  parentEntry,
+  headings,
+  hideToc = false,
+  editHref,
+  viewHref,
+  newHref,
+  loginHref = "/login",
+  canonicalHref,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href="/favicon.ico" />
+    {canonicalHref && <link rel="canonical" href={canonicalHref} />}
+    <title>{title}</title>
+    <ClientRouter transition:animate="none"/>
+  </head>
+  <LayoutShell
+    description={description}
+    breadcrumbs={breadcrumbs}
+    sidebarEntries={sidebarEntries}
+    parentEntry={parentEntry}
+    headings={headings}
+    hideToc={hideToc}
+    editHref={editHref}
+    viewHref={viewHref}
+    newHref={newHref}
+    loginHref={loginHref}
+  >
+    <slot />
+  </LayoutShell>
+</html>

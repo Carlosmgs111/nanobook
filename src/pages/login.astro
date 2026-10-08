@@ -1,11 +1,11 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import AuthForm from "../auth/browser/AuthForm.astro";
+import Layout from "../browser/layouts/Layout.astro";
+import AuthForm from "../browser/auth/AuthForm.astro";
 import {
   GITHUB_OAUTH_CLIENT_ID,
   GITHUB_OAUTH_CLIENT_SECRET,
 } from "astro:env/server";
-import { isGitHubOAuthEnabled } from "../auth/server/infrastructure/better-auth/GitHubOAuth";
+import { isGitHubOAuthEnabled } from "../server/auth/infrastructure/better-auth/GitHubOAuth";
 
 const githubEnabled = isGitHubOAuthEnabled({
   clientId: GITHUB_OAUTH_CLIENT_ID,
