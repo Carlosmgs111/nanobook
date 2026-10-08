@@ -14,7 +14,7 @@ export class CreateCurrentProfile {
     if (!existing.isSuccess) return Result.fail(existing.getError());
     if (existing.getValue()) return Result.fail(new ProfileAlreadyExistsError(actorId));
 
-    const profile = Profile.create({ userId: actorId, ...input });
+    const profile = Profile.create({ ...input, userId: actorId });
     if (!profile.isSuccess) return Result.fail(profile.getError());
 
     const saved = await this.repository.create(profile.getValue());

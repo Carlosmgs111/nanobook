@@ -12,6 +12,7 @@ import type { RenderedDocumentPage } from "./publishing";
 import { DocumentModuleDocumentProvider } from "./documents/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { UserModule } from "./users";
 import { AuthServerModule } from "./auth";
+import { ProfileModule } from "./profiles";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -20,6 +21,7 @@ export class Application {
     public readonly documentModule: DocumentModule,
     public readonly navigationModule: NavigationModule,
     public readonly publishingModule: PublishingModule,
+    public readonly profileModule: ProfileModule,
     public readonly userModule: UserModule,
     public readonly eventBus: InMemoryEventBus
   ) {
@@ -36,6 +38,7 @@ export class Application {
     const publishingModule = await PublishingModule.create(eventBus);
     publishingModule.registerEventHandlers()
     const authModule = await AuthServerModule.create();
+    const profileModule = ProfileModule.create(authModule);
     const documentModule = await DocumentModule.create(eventBus, authModule);
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await NavigationModule.create(documentProvider, eventBus);
@@ -46,6 +49,7 @@ export class Application {
       documentModule,
       navigationModule,
       publishingModule,
+      profileModule,
       userModule,
       eventBus
     );
