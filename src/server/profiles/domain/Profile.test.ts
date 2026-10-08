@@ -26,4 +26,18 @@ describe("Profile", () => {
     expect(result.isSuccess).toBe(false);
     expect(profile.toPublic()).toEqual({ username: "carlos", displayName: "Carlos" });
   });
+
+  it("preserves persisted audit timestamps when it is rehydrated", () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const updatedAt = new Date("2026-02-01T00:00:00.000Z");
+    const profile = Profile.create({
+      userId: "auth-user-1",
+      username: "carlos",
+      displayName: "Carlos",
+      createdAt,
+      updatedAt,
+    }).getValue();
+
+    expect(profile.toPersistence()).toMatchObject({ createdAt, updatedAt });
+  });
 });

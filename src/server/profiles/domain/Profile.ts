@@ -1,6 +1,6 @@
 import { Result } from "../../../shared/domain/Result";
 import { InvalidProfileError, type InvalidUsernameError } from "./errors";
-import type { CreateProfileData, PublicProfile } from "./types";
+import type { CreateProfileData, PersistedProfile, PublicProfile } from "./types";
 import { Username } from "./Username";
 
 export class Profile {
@@ -21,8 +21,9 @@ export class Profile {
     const displayName = data.displayName.trim();
     if (!displayName) return Result.fail(new InvalidProfileError("displayName es obligatorio"));
 
-    const now = data.now ?? new Date();
-    return Result.ok(new Profile(data.userId, username.getValue(), displayName, now, now));
+    const createdAt = data.createdAt ?? data.now ?? new Date();
+    const updatedAt = data.updatedAt ?? createdAt;
+    return Result.ok(new Profile(data.userId, username.getValue(), displayName, createdAt, updatedAt));
   }
 
   updateDisplayName(input: string, now = new Date()): Result<InvalidProfileError, void> {
@@ -42,6 +43,15 @@ export class Profile {
     return {
       username: this.username.getValue(),
       displayName: this.displayName,
+    };
+  }
+
+  toPersistence(): PersistedProfile {
+    return {
+      userId: this.userId,
+      ...this.toPublic(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
   }
 }
