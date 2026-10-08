@@ -39,8 +39,8 @@
       domain/ports/ProfileRepository.ts
       infraestructure/database/DrizzleProfileSchema.ts
       infraestructure/repository/DrizzleProfileRepository.ts
-      infraestructure/http/{controllers,requireUsername}.ts
-      browser/{HttpProfileApi,ProfileController,returnTo}.ts
+      infraestructure/rest/{controllers,requireUsername}.ts
+      client/{HttpProfileApi,ProfileController,returnTo}.ts
       ui/{ProfilePage,ProfileForm,PublicProfilePage}.astro
       index.ts
     src/pages/api/me/profile.ts
@@ -217,7 +217,7 @@ Expected: FAIL because persistent repository and script helper do not exist.
       updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
     });
 
-Include both auth and profiles schemas in drizzle.config.ts. The provision helper returns { created: false } only when actor and username already match; otherwise it reports conflict and never rewrites identity.
+Include both auth and profiles schemas in drizzle.config.ts, replacing the stale auth path ./src/auth/server/DrizzleAuthSchema.ts with ./src/auth/server/infrastructure/better-auth/DrizzleAuthSchema.ts. DrizzleProfileSchema may import only the exported auth user table to declare its foreign key. The provision helper returns { created: false } only when actor and username already match; otherwise it reports conflict and never rewrites identity.
 
 - [ ] **Step 4: Verify GREEN**
 
@@ -235,13 +235,13 @@ Expected: tests pass and generated SQL creates only user_profile plus its unique
 ### Task 4: Profile REST endpoints and composition
 
 **Files:**
-- Create: src/profiles/infraestructure/http/utils.ts, CreateCurrentProfileController.ts, GetCurrentProfileController.ts, UpdateCurrentProfileController.ts, GetPublicProfileController.ts
-- Create: src/profiles/infraestructure/http/ProfileControllers.test.ts, src/profiles/index.ts
+- Create: src/profiles/infraestructure/rest/utils.ts, CreateCurrentProfileController.ts, GetCurrentProfileController.ts, UpdateCurrentProfileController.ts, GetPublicProfileController.ts
+- Create: src/profiles/infraestructure/rest/ProfileControllers.test.ts, src/profiles/index.ts
 - Create: src/pages/api/me/profile.ts, src/pages/api/profiles/[username].ts
 - Modify: src/Application.ts
 
 **Interfaces:**
-- Produces ProfileModule and private/profile-public route handlers.
+- Produces ProfileModule.create(routeProtector) and private/profile-public route handlers.
 - Private handlers consume locals.currentUserId; public DTO is exactly { username, displayName }.
 
 - [ ] **Step 1: Write failing controller tests**
@@ -258,7 +258,7 @@ Expected: tests pass and generated SQL creates only user_profile plus its unique
 
 - [ ] **Step 2: Verify RED**
 
-Run: npm test -- src/profiles/infraestructure/http/ProfileControllers.test.ts
+Run: npm test -- src/profiles/infraestructure/rest/ProfileControllers.test.ts
 
 Expected: FAIL because controllers and ProfileModule do not exist.
 
@@ -268,11 +268,11 @@ Expected: FAIL because controllers and ProfileModule do not exist.
     export const POST = app.profileModule.createCurrentProfileController.handle;
     export const PATCH = app.profileModule.updateCurrentProfileController.handle;
 
-Decorate /api/me/profile with authServerModule.protect(); leave /api/profiles/[username] public. Do not accept username in the PATCH DTO.
+ProfileModule receives the auth RouteProtector and composes its private routes internally, following DocumentModule. Thus /api/me/profile exports module.privateProfileRoutes, while /api/profiles/[username] exports the raw public controller. Do not accept username in the PATCH DTO.
 
 - [ ] **Step 4: Verify GREEN**
 
-Run: npm test -- src/profiles/infraestructure/http/ProfileControllers.test.ts src/Application.test.ts
+Run: npm test -- src/profiles/infraestructure/rest/ProfileControllers.test.ts src/Application.test.ts
 
 Expected: PASS.
 
@@ -326,7 +326,7 @@ Expected: PASS.
 ### Task 6: Username decorator and /api/me/documents
 
 **Files:**
-- Create: src/profiles/infraestructure/http/requireUsername.ts, requireUsername.test.ts
+- Create: src/profiles/infraestructure/rest/requireUsername.ts, requireUsername.test.ts
 - Modify: src/profiles/index.ts, src/documents/index.ts, src/Application.ts
 - Create: src/pages/api/me/documents/[...slug].ts
 - Delete: src/pages/api/documents/[...slug].ts
@@ -357,17 +357,17 @@ Expected: PASS.
 
 - [ ] **Step 2: Verify RED**
 
-Run: npm test -- src/profiles/infraestructure/http/requireUsername.test.ts src/documents/infraestructure/rest/protectDocumentMutationRoutes.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts
+Run: npm test -- src/profiles/infraestructure/rest/requireUsername.test.ts src/documents/infraestructure/rest/protectDocumentMutationRoutes.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts
 
 Expected: FAIL because username guard and current-user URL do not exist.
 
 - [ ] **Step 3: Implement ordered guards and private endpoint**
 
-The username decorator checks only locals.currentUserId and profile existence. A missing profile returns exactly the tested 428; a repository failure maps to 500. Compose auth outside profile in Application, expose POST/PATCH/DELETE from /api/me/documents/[...slug].ts, and use /api/me/documents plus encoded id in HttpDocumentWriter.
+The username decorator checks only locals.currentUserId and profile existence. A missing profile returns exactly the tested 428; a repository failure maps to 500. In Application, create a RouteProtector object whose protect method returns authServerModule.protect(profileModule.requireUsername(route)); pass that object to DocumentModule. Expose POST/PATCH/DELETE from /api/me/documents/[...slug].ts, and use /api/me/documents plus encoded id in HttpDocumentWriter.
 
 - [ ] **Step 4: Verify GREEN**
 
-Run: npm test -- src/profiles/infraestructure/http/requireUsername.test.ts src/documents/infraestructure/rest/protectDocumentMutationRoutes.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts src/documents/infraestructure/rest/CreateDocumentController.test.ts
+Run: npm test -- src/profiles/infraestructure/rest/requireUsername.test.ts src/documents/infraestructure/rest/protectDocumentMutationRoutes.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts src/documents/infraestructure/rest/CreateDocumentController.test.ts
 
 Expected: PASS; owner mismatches still return the existing document 403.
 
@@ -380,8 +380,8 @@ Expected: PASS; owner mismatches still return the existing document 403.
 ### Task 7: Profile UI and 428 recovery
 
 **Files:**
-- Create: src/profiles/browser/HttpProfileApi.ts, ProfileController.ts, returnTo.ts
-- Test: src/profiles/browser/returnTo.test.ts, ProfileController.test.ts
+- Create: src/profiles/client/HttpProfileApi.ts, ProfileController.ts, returnTo.ts
+- Test: src/profiles/client/returnTo.test.ts, ProfileController.test.ts
 - Create: src/profiles/ui/ProfilePage.astro, ProfileForm.astro
 - Modify: src/pages/profile.astro
 - Modify: src/edition/domain/errors.ts, src/edition/infrastructure/documentWriter/HttpDocumentWriter.ts
@@ -391,7 +391,7 @@ Expected: PASS; owner mismatches still return the existing document 403.
 - Produces safeReturnTo(value): string | null.
 - Adds EditionWriterError.code?: PROFILE_REQUIRED.
 
-- [ ] **Step 1: Write failing browser tests**
+- [ ] **Step 1: Write failing client tests**
 
     it("allows local return targets and rejects open redirects", () => {
       expect(safeReturnTo("/guide/new")).toBe("/guide/new");
@@ -409,17 +409,17 @@ Expected: PASS; owner mismatches still return the existing document 403.
 
 - [ ] **Step 2: Verify RED**
 
-Run: npm test -- src/profiles/browser/returnTo.test.ts src/profiles/browser/ProfileController.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts
+Run: npm test -- src/profiles/client/returnTo.test.ts src/profiles/client/ProfileController.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts
 
 Expected: FAIL because profile client and typed recovery do not exist.
 
 - [ ] **Step 3: Implement UI and recovery**
 
-Use HttpProfileApi as the sole browser adapter for GET, POST, and PATCH /api/me/profile. /profile renders creation after 404, otherwise display-name editing with readonly username. New-document UI redirects to profile setup before submit when profile is absent. Keep staged editor entries when writer exposes PROFILE_REQUIRED and redirect using validated returnTo.
+Use HttpProfileApi as the sole client adapter for GET, POST, and PATCH /api/me/profile. /profile renders creation after 404, otherwise display-name editing with readonly username. New-document UI redirects to profile setup before submit when profile is absent. Keep staged editor entries when writer exposes PROFILE_REQUIRED and redirect using validated returnTo.
 
 - [ ] **Step 4: Verify GREEN**
 
-Run: npm test -- src/profiles/browser/returnTo.test.ts src/profiles/browser/ProfileController.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts src/edition/application/test/SaveDocument.test.ts
+Run: npm test -- src/profiles/client/returnTo.test.ts src/profiles/client/ProfileController.test.ts src/edition/infraestructure/documentWriter/HttpDocumentWriter.test.ts src/edition/application/test/SaveDocument.test.ts
 
 Expected: PASS.
 
@@ -432,7 +432,9 @@ Expected: PASS.
 
 **Files:**
 - Create: src/profiles/application/GetPublicDocumentsByUsername.ts, test
-- Create: src/profiles/infraestructure/http/GetPublicProfileDocumentsController.ts, test
+- Create: src/profiles/application/ports/PublicDocumentsReader.ts
+- Create: src/profiles/infraestructure/rest/GetPublicProfileDocumentsController.ts, test
+- Create: src/documents/infraestructure/profiles/DocumentModulePublicDocumentsReader.ts, test
 - Create: src/pages/api/profiles/[username]/documents.ts
 - Create: src/profiles/ui/PublicProfilePage.astro
 - Create: src/pages/u/[username]/index.astro, src/pages/u/[username]/[...slug]/index.astro
@@ -442,7 +444,8 @@ Expected: PASS.
 - Test: src/Application.test.ts
 
 **Interfaces:**
-- DocumentModule exposes owner-id-only read queries.
+- PublicDocumentsReader defines listByOwnerId(ownerId) and getByPublicPathForOwner(ownerId, path).
+- DocumentModulePublicDocumentsReader implements that consumer-owned port using DocumentModule reads; after both modules are constructed, Application composes GetPublicDocumentsByUsername and its REST controller.
 - Application exposes profileModule, not userModule.
 
 - [ ] **Step 1: Write failing query and composition tests**
@@ -463,13 +466,13 @@ Expected: PASS.
 
 - [ ] **Step 2: Verify RED**
 
-Run: npm test -- src/profiles/application/GetPublicDocumentsByUsername.test.ts src/profiles/infraestructure/http/GetPublicProfileDocumentsController.test.ts src/Application.test.ts
+Run: npm test -- src/profiles/application/GetPublicDocumentsByUsername.test.ts src/profiles/infraestructure/rest/GetPublicProfileDocumentsController.test.ts src/Application.test.ts
 
 Expected: FAIL because owner-scoped reads, canonical pages, and profile-only composition do not exist.
 
 - [ ] **Step 3: Implement owner-scoped public reading and removal**
 
-DocumentModule receives ownerId, never username, for list and detail reads. Profiles resolves username first. /u/[username]/index.astro renders profile plus owned list. /u/[username]/[...slug]/index.astro returns Astro 404 unless document metadata owner equals profile user id. Remove independent users code and routes. Provision the existing owner:
+DocumentModulePublicDocumentsReader receives ownerId, never username, for list and detail reads. Profiles resolves username first, then calls its PublicDocumentsReader port. /u/[username]/index.astro renders profile plus owned list. /u/[username]/[...slug]/index.astro returns Astro 404 unless document metadata owner equals profile user id. Remove independent users code and routes. Provision the existing owner:
 
     npm run profiles:provision -- --user-id toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv --username carlosmgs111 --display-name "Carlos Muñoz"
 

@@ -56,6 +56,36 @@ authServerModule.protect(profileModule.requireUsername(route));
 
 El mismo principio evita dependencias inversas: auth no importa profiles, y profiles no importa documents. Una consulta de perfil puede recibir un puerto de lectura de documentos en el compositor cuando necesite construir una vista pública.
 
+## Alineación con los módulos existentes
+
+`profiles` adopta la estructura que ya usan los módulos activos `documents`, `edition`, `navigation` y `publishing`:
+
+```text
+src/profiles/
+  domain/            entidad, value objects, errores y puertos
+  application/       casos de uso y puertos consumidores
+  infraestructure/   repositorio Drizzle y adaptadores REST
+    repository/
+    rest/
+  client/            adaptadores y controladores que usan APIs del navegador
+  ui/                componentes Astro
+  index.ts           compositor del módulo
+```
+
+Los controladores REST residen en `infraestructure/rest/`, igual que en documents. El código que usa `fetch`, `location` o DOM reside en `client/`, conforme a la frontera de ejecución de AGENTS.md. Solo `auth` conserva sus fronteras específicas `browser/` y `server/`. Las capas `domain`, `application`, `client` y `ui` de profiles no importan auth; exclusivamente `DrizzleProfileSchema` importa la tabla `user` exportada por el esquema Drizzle de auth para declarar la clave foránea física.
+
+`ProfileModule.create(routeProtector)` recibe el contrato mínimo `RouteProtector` que ya consume DocumentModule y compone sus rutas privadas. Application crea primero auth, después profiles, y compone el protector de documentos sin acoplar los módulos:
+
+```ts
+const profileModule = await ProfileModule.create(authServerModule);
+const documentRouteProtector: RouteProtector = {
+  protect: (route) => authServerModule.protect(profileModule.requireUsername(route)),
+};
+const documentModule = await DocumentModule.create(eventBus, documentRouteProtector);
+```
+
+Para consultas públicas, profiles define en `application/ports/` el puerto consumidor `PublicDocumentsReader`. Después de construir ProfileModule y DocumentModule, Application adapta las capacidades de lectura de DocumentModule a ese puerto y construye el controlador/consulta pública compuesta. Así profiles expresa lo que necesita (`listByOwnerId` y `getByPublicPathForOwner`) sin importar documents desde dominio o aplicación, sin crear un ciclo de construcción entre módulos.
+
 ## Capacidades de profiles
 
 ```text
