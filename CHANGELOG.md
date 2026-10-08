@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadidos módulos de perfiles separados por entorno: `src/server/profiles` expone dominio, casos de uso, persistencia Drizzle y rutas privadas/públicas; `src/browser/profiles` contiene el cliente HTTP tipado. Los perfiles usan usernames normalizados, únicos e inmutables vinculados a Better Auth, sin migrar ni modificar el módulo legado `users`.
 - La aplicación de navegador ahora compone `AuthModule` y `EditionModule` mediante `src/browser/Application.ts` y `getApp()`, eliminando los singletones directos de los consumidores cliente.
 - Reorganizado el código fuente por entorno: los módulos de navegador residen bajo `src/browser/`, los de servidor bajo `src/server/`, y las rutas y pruebas consumen las nuevas ubicaciones.
 - Añadida una prueba de la ruta comodín de Better Auth para comprobar que expone el controlador compuesto por el módulo de servidor.
