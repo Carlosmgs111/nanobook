@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- La aplicación de navegador ahora compone `AuthModule` y `EditionModule` mediante `src/browser/Application.ts` y `getApp()`, eliminando los singletones directos de los consumidores cliente.
 - Reorganizado el código fuente por entorno: los módulos de navegador residen bajo `src/browser/`, los de servidor bajo `src/server/`, y las rutas y pruebas consumen las nuevas ubicaciones.
 - Añadida una prueba de la ruta comodín de Better Auth para comprobar que expone el controlador compuesto por el módulo de servidor.
 - Los documentos ahora conservan `ownerId`, la identidad estable de Better Auth de su propietario. Las altas asignan el actor autenticado en servidor, y actualización, renombramiento y borrado —incluidos subárboles— rechazan con `403` a quien no sea propietario. El contenido existente fue asignado a `carlosmgs111@outlook.com` mediante una migración explícita.
