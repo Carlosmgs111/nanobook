@@ -3,6 +3,8 @@ import { HttpAuthApi } from "./HttpAuthApi";
 import { AuthFormController } from "./AuthFormController";
 import { HttpAuthSessionReader } from "./HttpAuthSessionReader";
 import { SignOutController } from "./SignOutController";
+import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
+import { SessionCachingAuthApi } from "./SessionCachingAuthApi";
 import { navigate } from "astro:transitions/client";
 import type {
   AuthenticatedSessionReader,
@@ -24,8 +26,10 @@ export class AuthModule {
     public readonly signOutController: SignOutController
   ) {}
   static create() {
-    const authApi = new HttpAuthApi();
-    const sessionReader = new HttpAuthSessionReader();
+    const sessionReader = new CachedAuthSessionReader(
+      new HttpAuthSessionReader()
+    );
+    const authApi = new SessionCachingAuthApi(new HttpAuthApi(), sessionReader);
     const toast = new BrowserToastNotifier("auth-flow");
     const authFormController = new AuthFormController({
       authApi,

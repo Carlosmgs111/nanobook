@@ -1,13 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { GetAuthenticatedSession } from "../../application/GetAuthenticatedSession";
+import { BetterAuthSessionReader } from "../better-auth/BetterAuthSessionReader";
 import { withAuthenticatedSession } from "./withAuthenticatedSession";
 
 describe("withAuthenticatedSession", () => {
   it("terminates the request with 401 when there is no session", async () => {
     const handler = vi.fn();
     const route = withAuthenticatedSession(
-      new GetAuthenticatedSession({ getSession: async () => null }),
+      new BetterAuthSessionReader({
+        api: { getSession: async () => null },
+      }),
       handler,
     );
 
@@ -26,12 +28,16 @@ describe("withAuthenticatedSession", () => {
   it("continues the wrapped capability and exposes the authenticated user", async () => {
     const handler = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     const route = withAuthenticatedSession(
-      new GetAuthenticatedSession({
-        getSession: async () => ({
-          id: "user-1",
-          name: "Ada Lovelace",
-          email: "ada@example.com",
-        }),
+      new BetterAuthSessionReader({
+        api: {
+          getSession: async () => ({
+            user: {
+              id: "user-1",
+              name: "Ada Lovelace",
+              email: "ada@example.com",
+            },
+          }),
+        },
       }),
       handler,
     );

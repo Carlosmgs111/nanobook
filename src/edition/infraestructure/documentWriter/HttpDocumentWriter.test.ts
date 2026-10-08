@@ -25,7 +25,7 @@ describe("HttpDocumentWriter", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/doc-new",
+      "/api/documents/doc-new",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -59,11 +59,29 @@ describe("HttpDocumentWriter", () => {
 
     await new HttpDocumentWriter().updateDocument("doc-immutable", entry);
 
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-immutable",
+      expect.objectContaining({ method: "PATCH" })
+    );
     const request = vi.mocked(fetchMock).mock.calls[0][1];
     const payload = JSON.parse(String(request?.body));
     expect(payload).not.toHaveProperty("id");
     expect(payload).not.toHaveProperty("author");
     expect(payload).not.toHaveProperty("createdAt");
     expect(payload).not.toHaveProperty("updatedAt");
+  });
+
+  it("deletes a document through the protected documents endpoint", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
+    const result = await new HttpDocumentWriter().deleteDocument("doc-delete");
+
+    expect(result.isSuccess).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/documents/doc-delete",
+      expect.objectContaining({ method: "DELETE" })
+    );
   });
 });

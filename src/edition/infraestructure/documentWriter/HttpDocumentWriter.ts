@@ -14,7 +14,7 @@ function documentApiUrl(identifier: string): string {
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `/api/${path}`;
+  return `/api/documents/${path}`;
 }
 
 function toUpdateDocumentRequest(
@@ -87,7 +87,9 @@ export class HttpDocumentWriter implements DocumentWriter {
     documentId: string
   ): Promise<Result<EditionWriterError, void>> {
     try {
-      const response = await fetch("/api/" + documentId, { method: "DELETE" });
+      const response = await fetch(documentApiUrl(documentId), {
+        method: "DELETE",
+      });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         return Result.fail(new EditionWriterError(payload.error || "Error al eliminar"));

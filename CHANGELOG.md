@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Las acciones mutantes de la interfaz de documentos (`Nuevo`, `Editar`, `Guardar`, `Eliminar`, `Renombrar` y crear) solo se muestran tras resolver una sesión autenticada; la lectura pública sigue disponible.
+- Corregidas las mutaciones de edición para usar `/api/documents/<id>`, evitando que `/api/<id>` sea resuelta por la ruta pública capturadora y asegurando que alcancen el decorador de autenticación.
+- La sesión de navegador se conserva durante las navegaciones con `ClientRouter`: las consultas concurrentes a Better Auth se unifican y los flujos de ingreso, registro y cierre actualizan el estado en memoria. El servidor sigue verificando la cookie en cada ruta protegida.
 - Reorganizado el entorno de servidor de `auth` bajo `src/auth/server/infrastructure`; su compositor crea un único `authModule` con Better Auth y sus adaptadores. Añadida la capacidad `authModule.protect()` para decorar rutas HTTP, resolver la sesión mediante Better Auth y detener con `401` las solicitudes no autenticadas. Las capacidades HTTP mutantes de documentos (`POST`, `PATCH` y `DELETE`) ya se exponen a través de ese decorador.
 - El Header muestra el nombre de la persona autenticada como botón negro hacia `/profile`; `/login` y `/profile` incluyen botones negros para volver al inicio, y el perfil incorpora un cierre de sesión confirmado de forma nativa y respaldado por Better Auth.
 - Unificados los inicios de sesión por correo y GitHub bajo la cookie de Better Auth; Header consulta la sesión actual mediante `GET /api/auth/get-session` y ya no se guardan tokens de autenticación en `localStorage`.

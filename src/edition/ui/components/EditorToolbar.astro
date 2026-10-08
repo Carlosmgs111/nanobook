@@ -23,23 +23,29 @@ const {
     type="button"
     class="save-button"
     data-action="save"
+    data-auth-document-mutation
     data-view-href={viewHref}
-    data-document-id={documentId}>Guardar</button
+    data-document-id={documentId}
+    hidden>Guardar</button
   >
   <button
     type="button"
     class="delete-button"
     data-action="delete"
+    data-auth-document-mutation
     data-parent-href={parentHref}
     data-is-directory={isDirectory ? "true" : "false"}
-    data-document-id={documentId}>Eliminar</button
+    data-document-id={documentId}
+    hidden>Eliminar</button
   >
   <button
     type="button"
     class="rename-button"
     data-action="rename"
+    data-auth-document-mutation
     data-document-path={documentPath}
-    data-document-id={documentId}>Renombrar</button
+    data-document-id={documentId}
+    hidden>Renombrar</button
   >
   {
     previewHref && (

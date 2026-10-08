@@ -1,3 +1,5 @@
-import { authModule } from "../../../auth/server";
+import { getApp } from "../../../Application";
 
-export const ALL = authModule.authController;
+const app = await getApp();
+
+export const ALL = app.authServerModule.authController;

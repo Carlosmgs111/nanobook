@@ -1,18 +1,21 @@
 import type { APIRoute } from "astro";
 
-import type { GetAuthenticatedSession } from "../../application/GetAuthenticatedSession";
+import { BetterAuthSessionReader } from "../better-auth/BetterAuthSessionReader";
 
 export function withAuthenticatedSession(
-  getAuthenticatedSession: GetAuthenticatedSession,
-  handler: APIRoute,
+  sessionReader: BetterAuthSessionReader,
+  handler: APIRoute
 ): APIRoute {
   return async (context) => {
-    const user = await getAuthenticatedSession.execute(context.request.headers);
+    const user = await sessionReader.getSession(context.request.headers);
     if (!user) {
-      return new Response(JSON.stringify({ error: "Autenticación requerida" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Autenticación requerida" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     context.locals.currentUser = user;

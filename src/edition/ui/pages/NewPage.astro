@@ -7,7 +7,10 @@ const { baseId } = Astro.props;
 const basePath = baseId === "index" ? "" : `${baseId}/`;
 ---
 
-<div class="new-document-form" data-base-path={basePath}>
+<div
+  class="new-document-form"
+  data-base-path={basePath}
+>
   <form class="space-y-6" data-new-document-form>
     <div class="space-y-2">
       <label class="block text-sm font-medium" for="new-doc-type">Tipo</label>
@@ -95,6 +98,8 @@ const basePath = baseId === "index" ? "" : `${baseId}/`;
     <div class="flex gap-3">
       <button
         type="submit"
+        data-auth-document-mutation
+        hidden
         class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--text)] px-4 py-2 text-sm font-medium text-[var(--bg)] hover:opacity-90"
       >
         Crear y editar

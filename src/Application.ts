@@ -11,11 +11,12 @@ import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
 import type { RenderedDocumentPage } from "./publishing";
 import { DocumentModuleDocumentProvider } from "./documents/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { UserModule } from "./users";
-import { authModule } from "./auth/server";
+import { AuthServerModule } from "./auth/server";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
   private constructor(
+    public readonly authServerModule: AuthServerModule,
     public readonly documentModule: DocumentModule,
     public readonly navigationModule: NavigationModule,
     public readonly publishingModule: PublishingModule,
@@ -34,12 +35,14 @@ export class Application {
     const eventBus = new InMemoryEventBus();
     const publishingModule = await PublishingModule.create(eventBus);
     publishingModule.registerEventHandlers()
+    const authModule = await AuthServerModule.create();
     const documentModule = await DocumentModule.create(eventBus, authModule);
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await NavigationModule.create(documentProvider, eventBus);
     const userModule = await UserModule.create();
 
     return new Application(
+      authModule,
       documentModule,
       navigationModule,
       publishingModule,

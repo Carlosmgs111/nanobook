@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { Application } from "./Application";
 
-const { protect } = vi.hoisted(() => ({
-  protect: vi.fn((handler) => handler),
-}));
+const { protect, create } = vi.hoisted(() => {
+  const protect = vi.fn((handler) => handler);
+  return {
+    protect,
+    create: vi.fn(() => ({ protect })),
+  };
+});
 
 vi.mock(
   "astro:env/server",
@@ -23,7 +27,7 @@ vi.mock(
 );
 
 vi.mock("./auth/server", () => ({
-  authModule: { protect },
+  AuthServerModule: { create },
 }));
 
 describe("Application", () => {

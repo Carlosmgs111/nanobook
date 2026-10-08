@@ -1,5 +1,4 @@
 import type { AuthenticatedUser } from "../../../model/AuthSession";
-import type { SessionReader } from "../../application/ports/SessionReader";
 
 interface BetterAuthSessionApi {
   api: {
@@ -7,7 +6,7 @@ interface BetterAuthSessionApi {
   };
 }
 
-export class BetterAuthSessionReader implements SessionReader {
+export class BetterAuthSessionReader {
   constructor(private readonly auth: BetterAuthSessionApi) {}
 
   async getSession(headers: Headers): Promise<AuthenticatedUser | null> {
