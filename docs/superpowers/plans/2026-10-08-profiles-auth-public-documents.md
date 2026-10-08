@@ -1,8 +1,8 @@
-# Profiles, Auth and Public Documents Implementation Plan
+# Profile Module, Auth and Public Documents Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
-**Goal:** Replace the independent users module with public profiles linked to Better Auth identities and require a verified profile username for document mutations.
+**Goal:** Build a new public profiles module linked to Better Auth identities and require a verified profile username for document mutations.
 
 **Architecture:** Better Auth remains the source of identity and exposes a verified actor in Astro.locals. The new profiles module owns the public profile and persists user_profile.user_id as a one-to-one foreign key to Better Auth user.id. Application composes auth.protect(profile.requireUsername(route)) before document mutation controllers, while documents retain their owner-id authorization.
 
@@ -17,7 +17,7 @@
 - A document mutation needs session, verified email, profile username, and document ownership where applicable.
 - Public profile responses never include email, session data, or userId.
 - returnTo accepts only local absolute paths beginning with one slash, not two.
-- Existing unscoped public document URLs remain available during this increment.
+- Existing unscoped public document URLs and the legacy `users` module remain unchanged during this increment.
 - Run npm run build before every commit and use Conventional Commits.
 
 ## Review Focus
@@ -32,7 +32,7 @@
 
 ## File Structure
 
-    src/profiles/
+    src/server/profiles/
       domain/{Username,Profile,errors,types}.ts
       application/{CreateCurrentProfile,GetCurrentProfile,
         GetPublicProfileByUsername,UpdateCurrentProfile}.ts
@@ -40,9 +40,10 @@
       infraestructure/database/DrizzleProfileSchema.ts
       infraestructure/repository/DrizzleProfileRepository.ts
       infraestructure/rest/{controllers,requireUsername}.ts
+      index.ts
+    src/browser/profiles/
       client/{HttpProfileApi,ProfileController,returnTo}.ts
       ui/{ProfilePage,ProfileForm,PublicProfilePage}.astro
-      index.ts
     src/pages/api/me/profile.ts
     src/pages/api/me/documents/[...slug].ts
     src/pages/api/profiles/[username].ts
@@ -51,13 +52,13 @@
     src/pages/u/[username]/[...slug]/index.astro
     scripts/provision-profile.ts
 
-The legacy src/users module and src/pages/api/users routes are removed only after profiles has replaced all Application references. The old mutation route is removed only after /api/me/documents is live.
+The legacy `src/server/users` module and `src/pages/api/users` routes are outside this work and remain unchanged. The existing document mutation route also remains available during this increment.
 
 ### Task 1: Profile domain and username invariant
 
 **Files:**
-- Create: src/profiles/domain/Username.ts, Profile.ts, errors.ts, types.ts
-- Test: src/profiles/domain/Username.test.ts, Profile.test.ts
+- Create: src/server/profiles/domain/Username.ts, Profile.ts, errors.ts, types.ts
+- Test: src/server/profiles/domain/Username.test.ts, Profile.test.ts
 
 **Interfaces:**
 - Produces Username.create(input): Result<InvalidUsernameError, Username>.
@@ -119,10 +120,10 @@ Expected: PASS.
 ### Task 2: Profile use cases and repository contract
 
 **Files:**
-- Create: src/profiles/domain/ports/ProfileRepository.ts
-- Create: src/profiles/application/CreateCurrentProfile.ts, GetCurrentProfile.ts, GetPublicProfileByUsername.ts, UpdateCurrentProfile.ts, errors.ts
-- Create: src/profiles/infraestructure/repository/InMemoryProfileRepository.ts
-- Test: src/profiles/application/CreateCurrentProfile.test.ts, UpdateCurrentProfile.test.ts, GetPublicProfileByUsername.test.ts
+- Create: src/server/profiles/domain/ports/ProfileRepository.ts
+- Create: src/server/profiles/application/CreateCurrentProfile.ts, GetCurrentProfile.ts, GetPublicProfileByUsername.ts, UpdateCurrentProfile.ts, errors.ts
+- Create: src/server/profiles/infraestructure/repository/InMemoryProfileRepository.ts
+- Test: src/server/profiles/application/CreateCurrentProfile.test.ts, UpdateCurrentProfile.test.ts, GetPublicProfileByUsername.test.ts
 
 **Interfaces:**
 - Produces CreateCurrentProfile.execute(actorId, { username, displayName }).
@@ -428,7 +429,7 @@ Expected: PASS.
     git add src/profiles src/pages/profile.astro src/edition
     git commit -m "feat(profiles): add profile setup and mutation recovery"
 
-### Task 8: Public profile document queries, pages, and legacy removal
+### Task 8: Public profile document queries and pages
 
 **Files:**
 - Create: src/profiles/application/GetPublicDocumentsByUsername.ts, test
@@ -439,14 +440,13 @@ Expected: PASS.
 - Create: src/profiles/ui/PublicProfilePage.astro
 - Create: src/pages/u/[username]/index.astro, src/pages/u/[username]/[...slug]/index.astro
 - Modify: src/documents/index.ts, src/Application.ts, CHANGELOG.md
-- Delete: src/users/, src/pages/api/users/index.ts, src/pages/api/users/[id].ts
 - Create: src/content/nanobook-project/arquitectura/perfiles-publicos-auth.md
 - Test: src/Application.test.ts
 
 **Interfaces:**
 - PublicDocumentsReader defines listByOwnerId(ownerId) and getByPublicPathForOwner(ownerId, path).
 - DocumentModulePublicDocumentsReader implements that consumer-owned port using DocumentModule reads; after both modules are constructed, Application composes GetPublicDocumentsByUsername and its REST controller.
-- Application exposes profileModule, not userModule.
+- Application exposes profileModule; the unused legacy users module remains uncomposed and unchanged.
 
 - [ ] **Step 1: Write failing query and composition tests**
 
@@ -458,10 +458,9 @@ Expected: PASS.
       expect((await renderPublicDocument("alice", "bob-private")).status).toBe(404);
     });
 
-    it("composes profiles instead of the independent legacy user module", async () => {
+    it("composes profiles without depending on the legacy user module", async () => {
       const app = await Application.create();
       expect(app.profileModule).toBeDefined();
-      expect("userModule" in app).toBe(false);
     });
 
 - [ ] **Step 2: Verify RED**
@@ -472,26 +471,22 @@ Expected: FAIL because owner-scoped reads, canonical pages, and profile-only com
 
 - [ ] **Step 3: Implement owner-scoped public reading and removal**
 
-DocumentModulePublicDocumentsReader receives ownerId, never username, for list and detail reads. Profiles resolves username first, then calls its PublicDocumentsReader port. /u/[username]/index.astro renders profile plus owned list. /u/[username]/[...slug]/index.astro returns Astro 404 unless document metadata owner equals profile user id. Remove independent users code and routes. Provision the existing owner:
-
-    npm run profiles:provision -- --user-id toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv --username carlosmgs111 --display-name "Carlos Muñoz"
-
-Add the mapping to architecture content and the completed behavior to CHANGELOG Unreleased.
+DocumentModulePublicDocumentsReader receives ownerId, never username, for list and detail reads. Profiles resolves username first, then calls its PublicDocumentsReader port. /u/[username]/index.astro renders profile plus owned list. /u/[username]/[...slug]/index.astro returns Astro 404 unless document metadata owner equals profile user id. Do not alter, delete, provision, or import the independent users code or routes. Add the completed behavior to CHANGELOG Unreleased.
 
 - [ ] **Step 4: Verify GREEN**
 
 Run: npm test -- src/profiles src/documents/application/GetDocument.test.ts src/Application.test.ts
 
-Run: rg -n "userModule|from .*users" src --glob "*.{ts,astro}"
+Run: rg -n "from .*users" src/server/Application.ts
 
-Expected: tests pass; ripgrep returns no legacy runtime imports.
+Expected: tests pass; Application has no legacy users import.
 
 - [ ] **Step 5: Full verification and commit**
 
     npm test
     npm run build
     git -c core.whitespace=cr-at-eol diff --check
-    git add -A src/users src/pages/api/users src/profiles src/pages/u src/pages/api/profiles src/documents src/Application.ts CHANGELOG.md src/content/nanobook-project/arquitectura
-    git commit -m "refactor(profiles): replace legacy user module"
+    git add src/server/profiles src/pages/u src/pages/api/profiles src/server/documents src/server/Application.ts CHANGELOG.md src/content/nanobook-project/arquitectura
+    git commit -m "feat(profiles): add public profile document views"
 
 Expected: build succeeds. If the full suite retains an unrelated failure, record its exact file and error; never report it as green.

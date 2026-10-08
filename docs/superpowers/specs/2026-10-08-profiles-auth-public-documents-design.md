@@ -2,7 +2,7 @@
 
 ## Propósito
 
-Sustituir el módulo `users` independiente por `profiles`, cuyo único cometido es representar el perfil público de una identidad autenticada. Cada perfil aporta un `username` inmutable que permite navegar documentos públicos por propietario, sin convertir ese nombre en una credencial ni en la base de la autorización.
+Crear `profiles` como un módulo nuevo e independiente, cuyo único cometido es representar el perfil público de una identidad autenticada. Cada perfil aporta un `username` inmutable que permite navegar documentos públicos por propietario, sin convertir ese nombre en una credencial ni en la base de la autorización.
 
 ## Decisiones
 
@@ -11,7 +11,7 @@ Sustituir el módulo `users` independiente por `profiles`, cuyo único cometido 
 3. `Document.ownerId` continúa almacenando el `user.id` de Better Auth. Nunca almacena ni autoriza mediante `username`.
 4. `username` se normaliza a minúsculas, es único e inmutable en esta versión. El patrón será `^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$` (3 a 32 caracteres); futuros cambios requerirán una política de alias y redirecciones.
 5. Un perfil es opcional hasta que la persona lo crea, pero todas las mutaciones de documentos requieren una sesión autenticada, correo verificado y perfil con username.
-6. El módulo `profiles` sustituye el módulo `users`. Se eliminarán sus identidades, repositorio en memoria, casos de uso y endpoints actuales, porque no representan las identidades de Better Auth.
+6. `profiles` no depende ni migra el módulo legado `users`. Ese código queda sin cambios y fuera de la composición de la aplicación; su retirada, si se desea, será un trabajo independiente.
 
 ## Modelo y persistencia
 
@@ -28,7 +28,7 @@ user_profile
 
 El esquema de Drizzle de profiles declara la clave foránea hacia la tabla `user` de Better Auth. Es una dependencia física de persistencia, no una dependencia entre sus capas de dominio o aplicación. `drizzle.config.ts` incluirá ambos esquemas y la migración creará la tabla e índice único.
 
-El perfil se crea explícitamente; Better Auth no inventa usernames. Para el contenido existente se provisionará al propietario `toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv` con el username `carlosmgs111` antes de hacer canónicas las rutas públicas.
+El perfil se crea explícitamente; Better Auth no inventa usernames. Esta entrega no aprovisiona ni transforma perfiles o datos existentes.
 
 ## Límites y composición
 
@@ -58,21 +58,22 @@ El mismo principio evita dependencias inversas: auth no importa profiles, y prof
 
 ## Alineación con los módulos existentes
 
-`profiles` adopta la estructura que ya usan los módulos activos `documents`, `edition`, `navigation` y `publishing`:
+`profiles` se divide en dos módulos por entorno, siguiendo la separación que ya usa `auth`: `server/profiles` contiene dominio, aplicación, persistencia, controladores y composición; `browser/profiles` contiene los adaptadores HTTP, controladores y componentes Astro del navegador. Ninguno importa implementaciones del otro:
 
 ```text
-src/profiles/
+src/server/profiles/
   domain/            entidad, value objects, errores y puertos
   application/       casos de uso y puertos consumidores
   infraestructure/   repositorio Drizzle y adaptadores REST
     repository/
     rest/
-  client/            adaptadores y controladores que usan APIs del navegador
-  ui/                componentes Astro
   index.ts           compositor del módulo
+src/browser/profiles/
+  client/            adaptadores HTTP, controladores y returnTo
+  ui/                componentes Astro
 ```
 
-Los controladores REST residen en `infraestructure/rest/`, igual que en documents. El código que usa `fetch`, `location` o DOM reside en `client/`, conforme a la frontera de ejecución de AGENTS.md. Solo `auth` conserva sus fronteras específicas `browser/` y `server/`. Las capas `domain`, `application`, `client` y `ui` de profiles no importan auth; exclusivamente `DrizzleProfileSchema` importa la tabla `user` exportada por el esquema Drizzle de auth para declarar la clave foránea física.
+Los controladores REST residen en `server/profiles/infraestructure/rest/`, igual que en documents. El código que usa `fetch`, `location` o DOM reside en `browser/profiles/`, conforme a la frontera de ejecución de AGENTS.md. Las capas de `server/profiles` no importan browser, y las de `browser/profiles` no importan auth ni infraestructura del servidor; exclusivamente `DrizzleProfileSchema` importa la tabla `user` exportada por el esquema Drizzle de auth para declarar la clave foránea física.
 
 `ProfileModule.create(routeProtector)` recibe el contrato mínimo `RouteProtector` que ya consume DocumentModule y compone sus rutas privadas. Application crea primero auth, después profiles, y compone el protector de documentos sin acoplar los módulos:
 
@@ -153,14 +154,12 @@ Las rutas públicas resuelven primero el perfil y después verifican que el docu
 
 Los controles de creación, edición, renombrado y borrado se muestran solo al actor verificado que coincide con `ownerId`. Al intentar crear sin perfil, la UI navega a `/profile?returnTo=…`. Si el servidor devuelve `PROFILE_REQUIRED` durante una mutación, el editor conserva el borrador local y realiza la misma navegación; el servidor sigue siendo la barrera de seguridad.
 
-## Migración
+## Implementación sin migración de usuarios
 
-1. Crear esquema y migración `user_profile`.
-2. Renombrar `src/users` a `src/profiles` y reemplazar sus contratos independientes por perfiles enlazados a `user.id`.
-3. Eliminar `/api/users` y sus controladores en memoria.
-4. Provisionar explícitamente el perfil de Carlos con `carlosmgs111` y verificar que coincide con todos los documentos existentes de su propiedad.
-5. Añadir las rutas `/api/me/profile`, `/api/profiles/:username`, `/api/me/documents/*` y las páginas `/u/:username/*`.
-6. Cuando la provisión cubra todos los propietarios, convertir las rutas actuales de documentos en redirecciones de compatibilidad hacia la URL canónica.
+1. Crear el esquema y la migración de base de datos `user_profile`; esta migración solo añade la tabla nueva y no transforma datos existentes.
+2. Añadir las rutas `/api/me/profile`, `/api/profiles/:username`, `/api/me/documents/*` y las páginas `/u/:username/*`.
+3. Conservar el módulo y las rutas `users` sin cambios y fuera de la composición de `Application`.
+4. Conservar las rutas públicas actuales de documentos durante este incremento, sin redirecciones canónicas ni aprovisionamiento de propietarios existentes.
 
 ## Pruebas
 
