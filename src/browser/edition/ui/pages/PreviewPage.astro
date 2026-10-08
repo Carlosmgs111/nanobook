@@ -12,7 +12,10 @@ const { slug, documentId } = Astro.props;
 
 <script>
   import { Result } from "../../../../shared/domain/Result";
-  import { edition, DocumentChanged } from "../../index";
+  import { getApp } from "../../../Application";
+  import { DocumentChanged } from "../../index";
+
+  const app = getApp();
 
   async function renderPreview() {
     const container = document.getElementById("preview-container") as
@@ -22,7 +25,7 @@ const { slug, documentId } = Astro.props;
     if (!container) throw new Error("Missing preview container");
 
     function setRenderedPage(pageId: string, container: HTMLElement) {
-      const renderedResult = edition.getRenderedDocument.execute(pageId);
+      const renderedResult = app.editionModule.getRenderedDocument.execute(pageId);
       if (!renderedResult.isSuccess) {
         console.error(renderedResult.getError());
         return;
@@ -32,7 +35,7 @@ const { slug, documentId } = Astro.props;
       container.innerHTML = rendered.Content;
     }
     setRenderedPage(container.dataset.documentId as string, container);
-    edition.eventBus.subscribe(DocumentChanged, {
+    app.editionModule.eventBus.subscribe(DocumentChanged, {
       async handle(event) {
         setRenderedPage(event.documentId as string, container);
         return Result.ok();

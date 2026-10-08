@@ -54,7 +54,9 @@ Astro.response.headers.set("Cache-Control", "no-store");
 </Layout>
 
 <script>
-  import { edition } from "../../browser/edition";
+  import { getApp } from "../../browser/Application";
+
+  const app = getApp();
 
   document.addEventListener("astro:page-load", () => {
     const body = document.querySelector<HTMLElement>("#document-body");
@@ -66,7 +68,7 @@ Astro.response.headers.set("Cache-Control", "no-store");
     // referenciado y ocultar temporalmente el contenido SSR correcto.
     if (body.dataset.documentRef) return;
 
-    const renderedResult = edition.getRenderedDocument.execute(
+    const renderedResult = app.editionModule.getRenderedDocument.execute(
       documentId,
       true
     );

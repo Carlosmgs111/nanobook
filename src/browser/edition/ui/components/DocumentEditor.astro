@@ -42,7 +42,7 @@ const initialContent = editableRawFrontmatter + entry.content;
 </div>
 
 <script>
-  import { edition } from "../../index";
+  import { getApp } from "../../../Application";
   import { hideProtectedFrontmatter } from "../../application/protectedFrontmatter";
   import { basicSetup } from "codemirror";
   import { EditorView, keymap } from "@codemirror/view";
@@ -51,11 +51,13 @@ const initialContent = editableRawFrontmatter + entry.content;
   import { indentWithTab } from "@codemirror/commands";
   import { debounce } from "../../../../shared/utils/debounce";
 
+  const app = getApp();
+
   let view: EditorView | undefined;
   const debouncedHandleEditorChange = debounce(
     async (document, content, preserveSourceBody) => {
-    if (edition.handleEditorChange) {
-      const result = await edition.handleEditorChange.execute(
+    if (app.editionModule.handleEditorChange) {
+      const result = await app.editionModule.handleEditorChange.execute(
         document,
         content,
         preserveSourceBody
@@ -64,7 +66,7 @@ const initialContent = editableRawFrontmatter + entry.content;
         console.error(result.getError());
         return;
       }
-      edition.renderPreview.execute(result.getValue().documentId);
+      app.editionModule.renderPreview.execute(result.getValue().documentId);
     }
     },
     1000
@@ -139,7 +141,7 @@ const initialContent = editableRawFrontmatter + entry.content;
         parent: container,
       });
     }
-    const stagedDocument = edition.initializeEditor
+    const stagedDocument = app.editionModule.initializeEditor
       .execute(JSON.parse(baseDocument))
       .getValue();
     if (stagedDocument) {
