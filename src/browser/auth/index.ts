@@ -18,7 +18,6 @@ export class GetAuthenticatedSession {
     return this.sessionReader.getCurrentUser();
   }
 }
-
 export class AuthModule {
   private constructor(
     private readonly authFormController: AuthFormController,
@@ -51,5 +50,3 @@ export class AuthModule {
     this.authFormController.mount();
   }
 }
-
-export const authModule = AuthModule.create();

@@ -74,5 +74,3 @@ export class EditionModule {
     );
   }
 }
-
-export const edition = EditionModule.create();
