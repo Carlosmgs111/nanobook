@@ -1,4 +1,12 @@
-import { access, mkdir, readdir, readFile, rmdir, unlink, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  readdir,
+  readFile,
+  rmdir,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { Result } from "../../../shared/domain/Result";
 import { pathToFilePath, filePathToId } from "./fileSystemParsePath";
@@ -63,7 +71,9 @@ export class FileSystemRepository implements ContentRepository {
       return Result.ok(documents);
     } catch (error) {
       return Result.fail(
-        new DocumentRepositoryError("Failed to list documents", { cause: error })
+        new DocumentRepositoryError("Failed to list documents", {
+          cause: error,
+        })
       );
     }
   }
@@ -77,7 +87,9 @@ export class FileSystemRepository implements ContentRepository {
     }
     const documents = documentsResult.getValue();
     return Result.ok(
-      documents.find((document) => document.getDocumentId().getValue() === id) ?? null
+      documents.find(
+        (document) => document.getDocumentId().getValue() === id
+      ) ?? null
     );
   }
 
@@ -85,9 +97,12 @@ export class FileSystemRepository implements ContentRepository {
     path: string
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
     const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    if (!documentsResult.isSuccess)
+      return Result.fail(documentsResult.getError());
     return Result.ok(
-      documentsResult.getValue().find((document) => document.getPath() === path) ?? null
+      documentsResult
+        .getValue()
+        .find((document) => document.getPath() === path) ?? null
     );
   }
 
@@ -95,9 +110,12 @@ export class FileSystemRepository implements ContentRepository {
     path: string
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
     const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    if (!documentsResult.isSuccess)
+      return Result.fail(documentsResult.getError());
     return Result.ok(
-      documentsResult.getValue().find((document) => document.getPublicPath() === path) ?? null
+      documentsResult
+        .getValue()
+        .find((document) => document.getPublicPath() === path) ?? null
     );
   }
 
@@ -118,7 +136,9 @@ export class FileSystemRepository implements ContentRepository {
 
   async create(
     document: Document
-  ): Promise<Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>> {
+  ): Promise<
+    Result<DocumentRepositoryError | DocumentAlreadyExistsError, void>
+  > {
     try {
       const filePath = pathToFilePath(document.getPath(), this.contentDir);
       if (await fileExists(filePath)) {
@@ -146,7 +166,9 @@ export class FileSystemRepository implements ContentRepository {
     previousPath?: string
   ): Promise<
     Result<
-      DocumentRepositoryError | DocumentNotFoundError | DocumentAlreadyExistsError,
+      | DocumentRepositoryError
+      | DocumentNotFoundError
+      | DocumentAlreadyExistsError,
       void
     >
   > {
@@ -157,7 +179,9 @@ export class FileSystemRepository implements ContentRepository {
         : filePath;
 
       if (!(await fileExists(sourcePath))) {
-        return Result.fail(new DocumentNotFoundError(previousPath ?? document.getPath()));
+        return Result.fail(
+          new DocumentNotFoundError(previousPath ?? document.getPath())
+        );
       }
       if (sourcePath !== filePath && (await fileExists(filePath))) {
         return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
@@ -170,7 +194,10 @@ export class FileSystemRepository implements ContentRepository {
       );
       if (sourcePath !== filePath) {
         await unlink(sourcePath);
-        await removeEmptyParentDirectories(dirname(sourcePath), resolve(this.contentDir));
+        await removeEmptyParentDirectories(
+          dirname(sourcePath),
+          resolve(this.contentDir)
+        );
       }
       return Result.ok();
     } catch (error) {
@@ -213,11 +240,17 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-async function removeEmptyParentDirectories(directory: string, contentRoot: string): Promise<void> {
+async function removeEmptyParentDirectories(
+  directory: string,
+  contentRoot: string
+): Promise<void> {
   let currentDirectory = resolve(directory);
   const root = resolve(contentRoot);
 
-  while (currentDirectory !== root && currentDirectory.startsWith(`${root}${sep}`)) {
+  while (
+    currentDirectory !== root &&
+    currentDirectory.startsWith(`${root}${sep}`)
+  ) {
     const entries = await readdir(currentDirectory);
     if (entries.length > 0) return;
     await rmdir(currentDirectory);

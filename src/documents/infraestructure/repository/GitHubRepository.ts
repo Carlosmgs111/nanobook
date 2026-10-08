@@ -40,7 +40,10 @@ export interface GitHubRepositoryOptions {
 }
 
 type NormalizedGitHubRepositoryOptions = Required<
-  Pick<GitHubRepositoryOptions, "owner" | "repo" | "branch" | "path" | "pattern">
+  Pick<
+    GitHubRepositoryOptions,
+    "owner" | "repo" | "branch" | "path" | "pattern"
+  >
 > &
   Pick<GitHubRepositoryOptions, "token">;
 
@@ -100,7 +103,9 @@ export class GitHubRepository implements ContentRepository {
   async getById(
     id: string
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    return this.findDocument((document) => document.getDocumentId().getValue() === id);
+    return this.findDocument(
+      (document) => document.getDocumentId().getValue() === id
+    );
   }
 
   async getByPath(
@@ -119,11 +124,15 @@ export class GitHubRepository implements ContentRepository {
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
     const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    if (!documentsResult.isSuccess)
+      return Result.fail(documentsResult.getError());
     return Result.ok(
       documentsResult
         .getValue()
-        .filter((document) => document.getParentPath()?.getPublicValue() === parentPath)
+        .filter(
+          (document) =>
+            document.getParentPath()?.getPublicValue() === parentPath
+        )
     );
   }
 
@@ -140,7 +149,9 @@ export class GitHubRepository implements ContentRepository {
     previousPath?: string
   ): Promise<
     Result<
-      DocumentRepositoryError | DocumentNotFoundError | DocumentAlreadyExistsError,
+      | DocumentRepositoryError
+      | DocumentNotFoundError
+      | DocumentAlreadyExistsError,
       void
     >
   > {
@@ -153,7 +164,8 @@ export class GitHubRepository implements ContentRepository {
     const path = this.pathToGitHubPath(document.getPath());
     try {
       const sha = await this.fetchFileSha(path);
-      if (!sha) return Result.fail(new DocumentNotFoundError(document.getPath()));
+      if (!sha)
+        return Result.fail(new DocumentNotFoundError(document.getPath()));
       await deleteFileContent({
         ...this.config,
         path,
@@ -204,7 +216,8 @@ export class GitHubRepository implements ContentRepository {
     predicate: (document: Document) => boolean
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
     const documentsResult = await this.list();
-    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    if (!documentsResult.isSuccess)
+      return Result.fail(documentsResult.getError());
     return Result.ok(documentsResult.getValue().find(predicate) ?? null);
   }
 
@@ -213,7 +226,12 @@ export class GitHubRepository implements ContentRepository {
     operation: "create" | "update",
     previousPath?: string
   ): Promise<
-    Result<DocumentRepositoryError | DocumentAlreadyExistsError | DocumentNotFoundError, void>
+    Result<
+      | DocumentRepositoryError
+      | DocumentAlreadyExistsError
+      | DocumentNotFoundError,
+      void
+    >
   > {
     const path = this.pathToGitHubPath(document.getPath());
     try {
@@ -225,19 +243,26 @@ export class GitHubRepository implements ContentRepository {
         return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
       }
       if (operation === "update" && !sha) {
-        return Result.fail(new DocumentNotFoundError(previousPath ?? document.getPath()));
+        return Result.fail(
+          new DocumentNotFoundError(previousPath ?? document.getPath())
+        );
       }
       if (operation === "update" && sourcePath !== path) {
         const targetSha = await this.fetchFileSha(path);
         if (targetSha) {
-          return Result.fail(new DocumentAlreadyExistsError(document.getPath()));
+          return Result.fail(
+            new DocumentAlreadyExistsError(document.getPath())
+          );
         }
       }
 
       await updateFileContent({
         ...this.config,
         path,
-        sha: operation === "update" && sourcePath === path ? sha ?? undefined : undefined,
+        sha:
+          operation === "update" && sourcePath === path
+            ? sha ?? undefined
+            : undefined,
         content: document.getRawFrontmatter() + document.getContent(),
         message: `${operation === "create" ? "Create" : "Update"} ${path}`,
       });
@@ -361,7 +386,11 @@ export class GitHubRepository implements ContentRepository {
     try {
       const tree = await this.fetchTree();
 
-      const contentFiles = filterContentFiles(tree, this.config.path, this.config.pattern);
+      const contentFiles = filterContentFiles(
+        tree,
+        this.config.path,
+        this.config.pattern
+      );
       const documents: Document[] = [];
 
       for (const file of contentFiles) {

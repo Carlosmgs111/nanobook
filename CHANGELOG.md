@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadida una prueba de la ruta comodín de Better Auth para comprobar que expone el controlador compuesto por el módulo de servidor.
 - Los documentos ahora conservan `ownerId`, la identidad estable de Better Auth de su propietario. Las altas asignan el actor autenticado en servidor, y actualización, renombramiento y borrado —incluidos subárboles— rechazan con `403` a quien no sea propietario. El contenido existente fue asignado a `carlosmgs111@outlook.com` mediante una migración explícita.
 - Las acciones mutantes de la interfaz de documentos (`Nuevo`, `Editar`, `Guardar`, `Eliminar`, `Renombrar` y crear) solo se muestran tras resolver una sesión autenticada; la lectura pública sigue disponible.
 - Corregidas las mutaciones de edición para usar `/api/documents/<id>`, evitando que `/api/<id>` sea resuelta por la ruta pública capturadora y asegurando que alcancen el decorador de autenticación.
