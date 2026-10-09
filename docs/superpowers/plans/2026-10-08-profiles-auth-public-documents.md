@@ -17,7 +17,7 @@
 - A document mutation needs session, verified email, profile username, and document ownership where applicable.
 - Public profile responses never include email, session data, or userId.
 - returnTo accepts only local absolute paths beginning with one slash, not two.
-- Existing unscoped public document URLs and the legacy `users` module remain unchanged during this increment.
+- Existing unscoped public document URLs remain unchanged during this increment; the legacy `users` module is removed after its references are replaced.
 - Run npm run build before every commit and use Conventional Commits.
 
 ## Review Focus
@@ -52,7 +52,7 @@
     src/pages/u/[username]/[...slug]/index.astro
     scripts/provision-profile.ts
 
-The legacy `src/server/users` module and `src/pages/api/users` routes are outside this work and remain unchanged. The existing document mutation route also remains available during this increment.
+The legacy `src/server/users` module and `src/pages/api/users` routes are removed only after `Application` and Astro routes have no remaining references. The existing document mutation route remains available during this increment.
 
 ### Task 1: Profile domain and username invariant
 
@@ -446,7 +446,7 @@ Expected: PASS.
 **Interfaces:**
 - PublicDocumentsReader defines listByOwnerId(ownerId) and getByPublicPathForOwner(ownerId, path).
 - DocumentModulePublicDocumentsReader implements that consumer-owned port using DocumentModule reads; after both modules are constructed, Application composes GetPublicDocumentsByUsername and its REST controller.
-- Application exposes profileModule; the unused legacy users module remains uncomposed and unchanged.
+- Application exposes profileModule and no longer exposes the legacy user module.
 
 - [ ] **Step 1: Write failing query and composition tests**
 
@@ -471,7 +471,7 @@ Expected: FAIL because owner-scoped reads, canonical pages, and profile-only com
 
 - [ ] **Step 3: Implement owner-scoped public reading and removal**
 
-DocumentModulePublicDocumentsReader receives ownerId, never username, for list and detail reads. Profiles resolves username first, then calls its PublicDocumentsReader port. /u/[username]/index.astro renders profile plus owned list. /u/[username]/[...slug]/index.astro returns Astro 404 unless document metadata owner equals profile user id. Do not alter, delete, provision, or import the independent users code or routes. Add the completed behavior to CHANGELOG Unreleased.
+DocumentModulePublicDocumentsReader receives ownerId, never username, for list and detail reads. Profiles resolves username first, then calls its PublicDocumentsReader port. /u/[username]/index.astro renders profile plus owned list. /u/[username]/[...slug]/index.astro returns Astro 404 unless document metadata owner equals profile user id. Remove the independent users code and routes only after the reference scan is empty. Add the completed behavior to CHANGELOG Unreleased.
 
 - [ ] **Step 4: Verify GREEN**
 

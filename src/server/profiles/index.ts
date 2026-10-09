@@ -10,7 +10,9 @@ import { GetPublicProfileController } from "./infraestructure/rest/GetPublicProf
 import { UpdateCurrentProfileController } from "./infraestructure/rest/UpdateCurrentProfileController";
 import { DrizzleProfileRepository } from "./infraestructure/repository/DrizzleProfileRepository";
 
-export interface RouteProtector { protect(route: APIRoute): APIRoute; }
+export interface RouteProtector {
+  protect(route: APIRoute): APIRoute;
+}
 
 export class ProfileModule {
   private constructor(
@@ -18,18 +20,36 @@ export class ProfileModule {
     public readonly getCurrentProfileController: GetCurrentProfileController,
     public readonly updateCurrentProfileController: UpdateCurrentProfileController,
     public readonly getPublicProfileController: GetPublicProfileController,
-    public readonly privateProfileRoutes: { GET: APIRoute; POST: APIRoute; PATCH: APIRoute },
+    public readonly privateProfileRoutes: {
+      GET: APIRoute;
+      POST: APIRoute;
+      PATCH: APIRoute;
+    }
   ) {}
 
   static create(routeProtector: RouteProtector): ProfileModule {
     const repository = new DrizzleProfileRepository(db);
-    const createCurrentProfileController = new CreateCurrentProfileController(new CreateCurrentProfile(repository));
-    const getCurrentProfileController = new GetCurrentProfileController(new GetCurrentProfile(repository));
-    const updateCurrentProfileController = new UpdateCurrentProfileController(new UpdateCurrentProfile(repository));
-    return new ProfileModule(createCurrentProfileController, getCurrentProfileController, updateCurrentProfileController, new GetPublicProfileController(new GetPublicProfileByUsername(repository)), {
-      GET: routeProtector.protect(getCurrentProfileController.handle),
-      POST: routeProtector.protect(createCurrentProfileController.handle),
-      PATCH: routeProtector.protect(updateCurrentProfileController.handle),
-    });
+    const createCurrentProfileController = new CreateCurrentProfileController(
+      new CreateCurrentProfile(repository)
+    );
+    const getCurrentProfileController = new GetCurrentProfileController(
+      new GetCurrentProfile(repository)
+    );
+    const updateCurrentProfileController = new UpdateCurrentProfileController(
+      new UpdateCurrentProfile(repository)
+    );
+    return new ProfileModule(
+      createCurrentProfileController,
+      getCurrentProfileController,
+      updateCurrentProfileController,
+      new GetPublicProfileController(
+        new GetPublicProfileByUsername(repository)
+      ),
+      {
+        GET: routeProtector.protect(getCurrentProfileController.handle),
+        POST: routeProtector.protect(createCurrentProfileController.handle),
+        PATCH: routeProtector.protect(updateCurrentProfileController.handle),
+      }
+    );
   }
 }

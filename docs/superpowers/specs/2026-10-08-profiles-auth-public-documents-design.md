@@ -11,7 +11,7 @@ Crear `profiles` como un módulo nuevo e independiente, cuyo único cometido es 
 3. `Document.ownerId` continúa almacenando el `user.id` de Better Auth. Nunca almacena ni autoriza mediante `username`.
 4. `username` se normaliza a minúsculas, es único e inmutable en esta versión. El patrón será `^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$` (3 a 32 caracteres); futuros cambios requerirán una política de alias y redirecciones.
 5. Un perfil es opcional hasta que la persona lo crea, pero todas las mutaciones de documentos requieren una sesión autenticada, correo verificado y perfil con username.
-6. `profiles` no depende ni migra el módulo legado `users`. Ese código queda sin cambios y fuera de la composición de la aplicación; su retirada, si se desea, será un trabajo independiente.
+6. `profiles` no depende ni migra datos del módulo legado `users`. Una vez reemplazadas sus referencias de composición y rutas, el código legado se retira del repositorio sin transformar datos.
 
 ## Modelo y persistencia
 
@@ -158,7 +158,7 @@ Los controles de creación, edición, renombrado y borrado se muestran solo al a
 
 1. Crear el esquema y la migración de base de datos `user_profile`; esta migración solo añade la tabla nueva y no transforma datos existentes.
 2. Añadir las rutas `/api/me/profile`, `/api/profiles/:username`, `/api/me/documents/*` y las páginas `/u/:username/*`.
-3. Conservar el módulo y las rutas `users` sin cambios y fuera de la composición de `Application`.
+3. Retirar el módulo y las rutas `users` después de comprobar que `Application` y las rutas Astro no los referencian.
 4. Conservar las rutas públicas actuales de documentos durante este incremento, sin redirecciones canónicas ni aprovisionamiento de propietarios existentes.
 
 ## Pruebas

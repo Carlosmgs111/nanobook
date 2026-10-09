@@ -36,10 +36,11 @@ vi.mock("./auth", () => ({
 }));
 
 describe("Application", () => {
-  it("exposes the composed user module alongside existing modules", async () => {
+  it("composes profiles without retaining the legacy user module", async () => {
     const app = await Application.create();
 
-    expect(app.userModule).toBeDefined();
+    expect(app.profileModule).toBeDefined();
+    expect("userModule" in app).toBe(false);
     expect(app.documentModule).toBeDefined();
     expect(app.navigationModule).toBeDefined();
     expect(app.publishingModule).toBeDefined();

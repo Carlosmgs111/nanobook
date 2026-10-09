@@ -1,0 +1,59 @@
+<form class="mt-8 grid gap-6" data-profile-form novalidate>
+  <div class="grid gap-2">
+    <label class="text-sm font-medium" for="profile-username"
+      >Nombre de usuario</label
+    >
+    <input
+      id="profile-username"
+      name="username"
+      type="text"
+      autocomplete="username"
+      minlength="3"
+      maxlength="32"
+      pattern="[a-zA-Z0-9][a-zA-Z0-9-]{1,30}[a-zA-Z0-9]"
+      required
+      class="border border-[var(--grid-line-strong)] bg-transparent px-3 py-2"
+    />
+    <p class="text-sm text-[var(--muted)]">
+      Será público y no podrá cambiarse.
+    </p>
+  </div>
+
+  <div class="grid gap-2">
+    <label class="text-sm font-medium" for="profile-display-name"
+      >Nombre visible</label
+    >
+    <input
+      id="profile-display-name"
+      name="displayName"
+      type="text"
+      autocomplete="name"
+      required
+      class="border border-[var(--grid-line-strong)] bg-transparent px-3 py-2"
+    />
+  </div>
+
+  <p
+    data-profile-status
+    aria-live="polite"
+    class="min-h-6 text-sm text-[var(--muted)]"
+  >
+  </p>
+
+  <button
+    type="submit"
+    data-profile-submit
+    class="inline-flex w-fit items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+  >
+    Guardar perfil
+  </button>
+</form>
+
+<script>
+  import { HttpProfileApi } from "./HttpProfileApi";
+  import { ProfileFormController } from "./ProfileFormController";
+
+  const profileFormController = new ProfileFormController(new HttpProfileApi());
+  document.addEventListener("astro:page-load", () => void profileFormController.mount());
+  void profileFormController.mount();
+</script>

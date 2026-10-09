@@ -1,5 +1,6 @@
 ---
 import Layout from "../browser/layouts/Layout.astro";
+import ProfilePage from "../browser/profiles/ProfilePage.astro";
 ---
 
 <Layout
@@ -7,23 +8,15 @@ import Layout from "../browser/layouts/Layout.astro";
   description="Administra tu sesión de Nanobook."
   hideToc={true}
 >
-  <section class="mx-auto max-w-xl px-6 py-16">
-    <a
-      href="/"
-      class="mb-6 inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 !no-underline"
-    >
-      ← Volver al inicio
-    </a>
-    <h1>Perfil</h1>
-    <p>Gestiona la sesión de tu cuenta.</p>
+  <ProfilePage>
     <button
       type="button"
       data-sign-out
-      class="inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+      class="mt-10 inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
     >
       Cerrar sesión
     </button>
-  </section>
+  </ProfilePage>
 </Layout>
 
 <script>
