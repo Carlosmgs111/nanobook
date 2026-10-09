@@ -61,17 +61,22 @@ export class CreateDocument {
       }
     }
 
+    const now = new Date();
     const documentResult = Document.create(
       input.path,
       {
         title: input.title,
         description: input.description,
+        // La auditoría se origina en el servidor; no puede venir del editor.
+        createdAt: now,
+        updatedAt: now,
         ownerId: input.ownerId,
         author: input.author,
         position: input.position,
         draft: input.draft,
         tags: input.tags,
         cover: input.cover,
+        nanobook: input.nanobook,
         ref: input.ref,
       },
       input.content,

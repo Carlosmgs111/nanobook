@@ -12,6 +12,7 @@ export function serializeMetadata(metadata: DocumentMetadata): string {
     description: metadata.description,
     position: metadata.position,
     draft: metadata.draft,
+    nanobook: metadata.nanobook,
     ref: metadata.ref,
     cover: metadata.cover,
     tags: metadata.tags,

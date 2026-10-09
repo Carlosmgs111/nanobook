@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { Document } from "../../documents/domain/Document";
 import { DocumentPath } from "../../documents/domain/DocumentPath";
+import type { DocumentMetadata } from "../../documents/domain/types";
 import { DocumentsGraph } from "../infraestructure/DocumentsGraph";
 import { NavigationService } from "./NavigationService";
 
-function document(path: string, id: string, title: string) {
+function document(
+  path: string,
+  id: string,
+  title: string,
+  metadata: Partial<DocumentMetadata> = {},
+) {
   return Document.create(
     path,
     {
@@ -13,6 +19,7 @@ function document(path: string, id: string, title: string) {
       description: title,
       createdAt: new Date("2026-01-01"),
       updatedAt: new Date("2026-01-01"),
+      ...metadata,
     },
     "# Document"
   ).getValue();
@@ -46,5 +53,98 @@ describe("NavigationService", () => {
       path: "new-dir",
       data: { title: "New directory" },
     });
+  });
+
+  it("starts breadcrumbs from the closest nanobook index", () => {
+    const root = document("index", "root", "Home");
+    const books = document("books/index", "books", "Books");
+    const programming = document("books/programming/index", "programming", "Programming");
+    const nanobook = document(
+      "books/programming/typescript-ddd/index",
+      "typescript-ddd",
+      "TypeScript DDD",
+      { nanobook: true },
+    );
+    const chapter = document(
+      "books/programming/typescript-ddd/chapter-1",
+      "chapter-1",
+      "Chapter 1",
+    );
+    const service = new NavigationService(
+      new DocumentsGraph([root, books, programming, nanobook, chapter]),
+    );
+
+    expect(
+      service.getBreadcrumbs(
+        DocumentPath.create("books/programming/typescript-ddd/index").getValue(),
+      ),
+    ).toEqual([
+      {
+        id: "books/programming/typescript-ddd",
+        title: "Inicio",
+        href: "/books/programming/typescript-ddd/",
+        current: true,
+      },
+    ]);
+    expect(
+      service.getBreadcrumbs(
+        DocumentPath.create("books/programming/typescript-ddd/chapter-1").getValue(),
+      ),
+    ).toEqual([
+      {
+        id: "books/programming/typescript-ddd",
+        title: "Inicio",
+        href: "/books/programming/typescript-ddd/",
+        current: false,
+      },
+      {
+        id: "books/programming/typescript-ddd/chapter-1",
+        title: "Chapter 1",
+        href: "/books/programming/typescript-ddd/chapter-1/",
+        current: true,
+      },
+    ]);
+  });
+
+  it("does not expose navigation above a nanobook index", () => {
+    const root = document("index", "root", "Home");
+    const books = document("books/index", "books", "Books");
+    const nanobook = document("books/typescript-ddd/index", "typescript-ddd", "TypeScript DDD", {
+      nanobook: true,
+    });
+    const chapter = document("books/typescript-ddd/chapter-1", "chapter-1", "Chapter 1");
+    const appendix = document("books/typescript-ddd/appendix", "appendix", "Appendix");
+    const service = new NavigationService(
+      new DocumentsGraph([root, books, nanobook, chapter, appendix]),
+    );
+
+    expect(
+      service.getSidebarEntries(
+        DocumentPath.create("books/typescript-ddd/index").getValue(),
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "chapter-1", path: "books/typescript-ddd/chapter-1" }),
+        expect.objectContaining({ id: "appendix", path: "books/typescript-ddd/appendix" }),
+      ]),
+    );
+    expect(
+      service.getParentEntry(
+        DocumentPath.create("books/typescript-ddd/index").getValue(),
+      ),
+    ).toBeNull();
+  });
+
+  it("uses the closest nanobook when they are nested", () => {
+    const outer = document("books/outer/index", "outer", "Outer", { nanobook: true });
+    const inner = document("books/outer/inner/index", "inner", "Inner", { nanobook: true });
+    const chapter = document("books/outer/inner/chapter", "chapter", "Chapter");
+    const service = new NavigationService(new DocumentsGraph([outer, inner, chapter]));
+
+    expect(
+      service.getBreadcrumbs(
+        DocumentPath.create("books/outer/inner/chapter").getValue(),
+      )[0],
+    ).toMatchObject({ id: "books/outer/inner", title: "Inicio" });
   });
 });

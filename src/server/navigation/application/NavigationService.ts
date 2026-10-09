@@ -36,6 +36,10 @@ function matchesKind(
   return allowed === "all" || allowed.includes(kind);
 }
 
+function toHref(path: string): string {
+  return path === "index" ? "/" : `/${path}/`;
+}
+
 export class NavigationService implements NavigationServicePort {
   constructor(private documentsGraph: DocumentsGraph) {}
 
@@ -117,16 +121,44 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getBreadcrumbs(documentPath: DocumentPath, homeTitle: string = "Inicio"): Crumb[] {
+    const currentPath = documentPath.getPublicValue();
+    const nanobookRoot = this.getNanobookRoot(currentPath);
+    if (nanobookRoot) {
+      const crumbs: Crumb[] = [
+        {
+          id: nanobookRoot.path,
+          title: homeTitle,
+          href: toHref(nanobookRoot.path),
+          current: nanobookRoot.path === currentPath,
+        },
+      ];
+      if (nanobookRoot.path === currentPath) return crumbs;
+
+      const relativePath = currentPath.slice(nanobookRoot.path.length + 1);
+      let path = nanobookRoot.path;
+      for (const segment of relativePath.split("/")) {
+        path = `${path}/${segment}`;
+        const node = this.documentsGraph.getNodeByPath(path);
+        crumbs.push({
+          id: path,
+          title: node?.title ?? segment,
+          href: toHref(path),
+          current: path === currentPath,
+        });
+      }
+      return crumbs;
+    }
+
     const crumbs: Crumb[] = [
       { id: "index", title: homeTitle, href: "/", current: false },
     ];
 
-    if (documentPath.getPublicValue() === "index") {
+    if (currentPath === "index") {
       crumbs[0].current = true;
       return crumbs;
     }
 
-    const segments = documentPath.getPublicValue().split("/");
+    const segments = currentPath.split("/");
     let path = "";
 
     for (let i = 0; i < segments.length; i++) {
@@ -149,7 +181,15 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getSidebarEntries(documentPath: DocumentPath): NavigationNode[] {
-    const node = this.documentsGraph.getNodeByPath(documentPath.getPublicValue());
+    const currentPath = documentPath.getPublicValue();
+    const node = this.documentsGraph.getNodeByPath(currentPath);
+    const nanobookRoot = this.getNanobookRoot(currentPath);
+    if (node && nanobookRoot?.id === node.id) {
+      return node.children.map((child) => ({
+        ...child,
+        current: child.path === currentPath,
+      }));
+    }
     if (!node || node.parentId === null) return [];
 
     const parent = this.documentsGraph.getNode(node.parentId as string);
@@ -162,7 +202,9 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getParentEntry(documentPath: DocumentPath): ParentEntry | null {
-    const node = this.documentsGraph.getNodeByPath(documentPath.getPublicValue());
+    const currentPath = documentPath.getPublicValue();
+    const node = this.documentsGraph.getNodeByPath(currentPath);
+    if (node && this.getNanobookRoot(currentPath)?.id === node.id) return null;
     const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
     if (!parent) return null;
 
@@ -186,5 +228,14 @@ export class NavigationService implements NavigationServicePort {
     if (!folder) return [];
 
     return folder.children.filter((child) => child.path !== excludePath?.getPublicValue());
+  }
+
+  private getNanobookRoot(path: string): NavigationNode | undefined {
+    let current = this.documentsGraph.getNodeByPath(path);
+    while (current) {
+      if (current.isIndex && current.metadata.nanobook === true) return current;
+      current = this.documentsGraph.getParent(current.id);
+    }
+    return undefined;
   }
 }

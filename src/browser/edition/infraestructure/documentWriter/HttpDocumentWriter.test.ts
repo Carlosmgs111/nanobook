@@ -54,6 +54,7 @@ describe("HttpDocumentWriter", () => {
         createdAt: "2024-01-01T00:00:00.000Z",
         updatedAt: "2024-01-02T00:00:00.000Z",
         author: "Author",
+        nanobook: true,
       },
     } as SerializedEntry;
 
@@ -69,6 +70,7 @@ describe("HttpDocumentWriter", () => {
     expect(payload).not.toHaveProperty("author");
     expect(payload).not.toHaveProperty("createdAt");
     expect(payload).not.toHaveProperty("updatedAt");
+    expect(payload.nanobook).toBe(true);
   });
 
   it("deletes a document through the protected documents endpoint", async () => {

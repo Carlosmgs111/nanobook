@@ -7,6 +7,7 @@ date: 2026-08-23
 author: "Nanobook"
 tags: ["nanobook", "arquitectura", "decisiones"]
 draft: false
+nanobook: true
 ---
 
 ## Decisiones recientes
@@ -20,3 +21,17 @@ draft: false
 - [Thundering herd contra la API de GitHub](./thundering-herd-github): el error `503 Backend.max_conn reached` tras la refactorización y la solución con in-flight promises.
 - [Cardinalidad de la notificación document/publishing](./notificacion-cambio-document): por qué la fuente del cambio siempre debe activar el flujo de notificación y cómo mantener el desacoplamiento si la necesidad la declara `publishing`.
 - [Tipos de buses de eventos](./tipos-de-buses-de-eventos): un bus de eventos no es una sola categoría; diferencias entre intra-proceso, inter-proceso y distribuido.
+
+## Navegación contextual de Nanobooks
+
+Un documento índice puede declarar `nanobook: true` en su frontmatter. La
+marca conserva la ruta pública y la jerarquía física, pero convierte ese índice
+en la raíz visible de navegación de su propio subárbol. Solo es válida en
+documentos índice.
+
+Al abrir un documento, la navegación busca el índice Nanobook ancestro más
+cercano. El breadcrumb inicia entonces en `Inicio`, enlazado a dicho índice, y
+omite sus ancestros externos. El sidebar del propio índice muestra sus hijos
+inmediatos y no permite subir a la colección contenedora. Un Nanobook anidado
+define un contexto nuevo y prevalece sobre su contenedor; sin una marca
+ancestro se conserva la navegación global existente.

@@ -59,4 +59,36 @@ describe("Document", () => {
       'ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"',
     );
   });
+
+  it("marks an index document as a nanobook", () => {
+    const document = Document.create(
+      "books/typescript-ddd/index",
+      {
+        id: "typescript-ddd",
+        title: "TypeScript DDD",
+        description: "A nanobook",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        nanobook: true,
+      },
+    ).getValue();
+
+    expect(document.getMetadata()).toMatchObject({ nanobook: true });
+    expect(document.getRawFrontmatter()).toContain("nanobook: true");
+  });
+
+  it("rejects the nanobook marker on a document that is not an index", () => {
+    const result = Document.create(
+      "books/typescript-ddd/chapter-1",
+      {
+        id: "chapter-1",
+        title: "Chapter 1",
+        description: "A chapter",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        nanobook: true,
+      },
+    );
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError().message).toContain("only be marked on an index");
+  });
 });

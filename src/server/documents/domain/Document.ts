@@ -21,7 +21,7 @@ updatedAt: <%= updatedAt %>
 <%= ownerLine %>author: "<%= author %>"
 tags: []
 draft: false
-position: 0
+<%= nanobookLine %>position: 0
 ref: <%= ref %>
 ---
 `;
@@ -79,6 +79,7 @@ export class Document {
         tags: overrides.tags ?? [],
         cover: overrides.cover,
         draft: overrides.draft ?? false,
+        nanobook: overrides.nanobook ?? false,
         position: overrides.position ?? 0,
         ref: overrides.ref,
       }
@@ -94,6 +95,7 @@ export class Document {
         ownerLine: this.metadata.ownerId
           ? `ownerId: "${this.metadata.ownerId}"\n`
           : "",
+        nanobookLine: this.metadata.nanobook ? "nanobook: true\n" : "",
         author: this.metadata.author || "",
         ref: overrides.ref ? JSON.stringify(overrides.ref) : "null",
       });
@@ -115,6 +117,14 @@ export class Document {
       return Result.fail(pathResult.getError());
     }
     const path = pathResult.getValue();
+    if (data.nanobook === true && !path.isIndex()) {
+      return Result.fail(
+        new InvalidDocumentError(
+          pathValue,
+          "A nanobook can only be marked on an index document"
+        )
+      );
+    }
     const identityValue = data.id ?? documentIdValue;
     if (!identityValue) {
       return Result.fail(new InvalidDocumentIdError(path.getInternalValue()));
@@ -293,6 +303,7 @@ export class Document {
       tags: (data.tags as string[]) ?? [],
       cover: data.cover as string | undefined,
       draft: (data.draft as boolean) ?? false,
+      nanobook: (data.nanobook as boolean) ?? false,
       position: (data.position as number) ?? 0,
       ref: data.ref as DocumentMetadata["ref"],
     };

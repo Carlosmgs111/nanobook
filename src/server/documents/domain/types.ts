@@ -15,6 +15,8 @@ export interface DocumentMetadata {
   cover?: string;
   tags?: string[];
   draft?: boolean | undefined;
+  /** Declares an index document as the root of an independently navigable Nanobook. */
+  nanobook?: boolean;
   position?: number;
   ref?: Ref | string;
 }
