@@ -14,7 +14,7 @@ describe("CreateDocumentController", () => {
 
     await controller.handle({
       params: { slug: "new-doc" },
-      request: new Request("https://nanobook.test/api/documents/new-doc", {
+      request: new Request("https://nanobook.test/api/me/documents/new-doc", {
         method: "POST",
         body: JSON.stringify({
           id: "new-doc",

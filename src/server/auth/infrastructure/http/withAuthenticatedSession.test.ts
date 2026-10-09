@@ -14,7 +14,7 @@ describe("withAuthenticatedSession", () => {
     );
 
     const response = await route({
-      request: new Request("https://nanobook.test/api/documents/guide"),
+      request: new Request("https://nanobook.test/api/me/documents/guide"),
       locals: {},
     } as never);
 
@@ -42,7 +42,7 @@ describe("withAuthenticatedSession", () => {
       handler,
     );
     const context = {
-      request: new Request("https://nanobook.test/api/documents/guide"),
+      request: new Request("https://nanobook.test/api/me/documents/guide"),
       locals: {},
     };
 

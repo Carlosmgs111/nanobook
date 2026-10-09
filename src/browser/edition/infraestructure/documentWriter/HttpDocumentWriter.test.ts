@@ -25,7 +25,7 @@ describe("HttpDocumentWriter", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/documents/doc-new",
+      "/api/me/documents/doc-new",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -61,7 +61,7 @@ describe("HttpDocumentWriter", () => {
     await new HttpDocumentWriter().updateDocument("doc-immutable", entry);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/documents/doc-immutable",
+      "/api/me/documents/doc-immutable",
       expect.objectContaining({ method: "PATCH" })
     );
     const request = vi.mocked(fetchMock).mock.calls[0][1];
@@ -82,7 +82,7 @@ describe("HttpDocumentWriter", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/documents/doc-delete",
+      "/api/me/documents/doc-delete",
       expect.objectContaining({ method: "DELETE" })
     );
   });

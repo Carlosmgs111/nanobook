@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Las mutaciones de documentos ahora viven bajo `/api/me/documents/:id`; la sesión determina al propietario. Los webhooks administrativos de documentos conservan sus rutas fuera de `/me`.
 - Un índice de contenido puede declarar `nanobook: true` para delimitar una navegación contextual: breadcrumbs, sidebar e índice comienzan en ese directorio, sin mostrar sus ancestros externos. La marca solo es válida en documentos índice.
 - Añadidos módulos de perfiles separados por entorno: `src/server/profiles` expone dominio, casos de uso, persistencia Drizzle y rutas privadas/públicas; `src/browser/profiles` contiene el cliente HTTP tipado y el formulario de perfil. Los perfiles usan usernames normalizados, únicos e inmutables vinculados a Better Auth.
 - Retirado el módulo legado `src/server/users`, sus rutas `/api/users` y su composición en `Application`, sin migrar datos de usuario.

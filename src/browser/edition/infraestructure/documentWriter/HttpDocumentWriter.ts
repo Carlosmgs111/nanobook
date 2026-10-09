@@ -14,7 +14,7 @@ function documentApiUrl(identifier: string): string {
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `/api/documents/${path}`;
+  return `/api/me/documents/${path}`;
 }
 
 function toUpdateDocumentRequest(
