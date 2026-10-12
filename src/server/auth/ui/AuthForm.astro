@@ -1,127 +1,141 @@
 ---
+import Layout from "../../../browser/layouts/Layout.astro";
+import {
+  GITHUB_OAUTH_CLIENT_ID,
+  GITHUB_OAUTH_CLIENT_SECRET,
+} from "astro:env/server";
+import { isGitHubOAuthEnabled } from "../infrastructure/better-auth/GitHubOAuth";
+
+const githubEnabled = isGitHubOAuthEnabled({
+  clientId: GITHUB_OAUTH_CLIENT_ID,
+  clientSecret: GITHUB_OAUTH_CLIENT_SECRET,
+});
 interface Props {
   initialMode?: "login" | "signup";
-  githubEnabled?: boolean;
 }
 
-const { initialMode = "login", githubEnabled = false } = Astro.props;
+const { initialMode = "login" } = Astro.props;
 const isSignup = initialMode === "signup";
 ---
 
-<section
-  class="auth-form"
-  data-auth-form
-  data-mode={initialMode}
-  aria-labelledby="auth-form-title"
+<Layout
+  title="Ingresar | Nanobook"
+  description="Ingresa o crea una cuenta en Nanobook."
+  hideToc={true}
 >
-  <div class="auth-form__frame">
-    <div class="auth-form__header">
-      <p class="auth-form__brand">nanobook</p>
-      <h1 id="auth-form-title">
-        {isSignup ? "Crea tu cuenta" : "Bienvenido de nuevo"}
-      </h1>
-      <p class="auth-form__intro" data-auth-copy>
-        {
-          isSignup
-            ? "Guarda tu espacio de escritura en un solo lugar."
-            : "Ingresa para volver a tus documentos."
-        }
-      </p>
-    </div>
-
-    <div class="auth-form__switch" aria-label="Tipo de acceso">
-      <button
-        type="button"
-        class="auth-form__mode"
-        data-auth-mode="login"
-        aria-pressed={!isSignup ? "true" : "false"}
-      >
-        Ingresar
-      </button>
-      <button
-        type="button"
-        class="auth-form__mode"
-        data-auth-mode="signup"
-        aria-pressed={isSignup ? "true" : "false"}
-      >
-        Registrarme
-      </button>
-    </div>
-
-    <form class="auth-form__fields" action="#" method="post">
-      <div data-auth-only="signup" hidden={!isSignup}>
-        <label for="auth-name">Nombre</label>
-        <input
-          id="auth-name"
-          name="name"
-          type="text"
-          autocomplete="name"
-          required={isSignup}
-        />
+  <a
+    href="/"
+    class="mb-6 inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 !no-underline"
+  >
+    ← Volver al inicio
+  </a>
+  <section
+    class="auth-form"
+    data-auth-form
+    data-mode={initialMode}
+    aria-labelledby="auth-form-title"
+  >
+    <div class="auth-form__frame">
+      <div class="auth-form__header">
+        <p class="auth-form__brand">nanobook</p>
+        <h1 id="auth-form-title">
+          {isSignup ? "Crea tu cuenta" : "Bienvenido de nuevo"}
+        </h1>
+        <p class="auth-form__intro" data-auth-copy>
+          {
+            isSignup
+              ? "Guarda tu espacio de escritura en un solo lugar."
+              : "Ingresa para volver a tus documentos."
+          }
+        </p>
       </div>
 
-      <div>
-        <label for="auth-email">Correo electrónico</label>
-        <input
-          id="auth-email"
-          name="email"
-          type="email"
-          autocomplete="email"
-          required
-        />
+      <div class="auth-form__switch" aria-label="Tipo de acceso">
+        <button
+          type="button"
+          class="auth-form__mode"
+          data-auth-mode="login"
+          aria-pressed={!isSignup ? "true" : "false"}
+        >
+          Ingresar
+        </button>
+        <button
+          type="button"
+          class="auth-form__mode"
+          data-auth-mode="signup"
+          aria-pressed={isSignup ? "true" : "false"}
+        >
+          Registrarme
+        </button>
       </div>
 
-      <div>
-        <label for="auth-password">Contraseña</label>
-        <input
-          id="auth-password"
-          name="password"
-          type="password"
-          autocomplete={isSignup ? "new-password" : "current-password"}
-          required
-        />
-      </div>
-
-      <div data-auth-only="signup" hidden={!isSignup}>
-        <label for="auth-confirm-password">Confirmar contraseña</label>
-        <input
-          id="auth-confirm-password"
-          name="confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          required={isSignup}
-        />
-      </div>
-
-      <button class="auth-form__submit" type="submit" data-auth-submit>
-        {isSignup ? "Crear cuenta" : "Ingresar"}
-      </button>
-    </form>
-
-    {
-      githubEnabled && (
-        <div class="auth-form__provider">
-          <span aria-hidden="true">o</span>
-          <button
-            class="auth-form__github"
-            type="button"
-            data-auth-provider="github"
-          >
-            Continuar con GitHub
-          </button>
+      <form class="auth-form__fields" action="#" method="post">
+        <div data-auth-only="signup" hidden={!isSignup}>
+          <label for="auth-name">Nombre</label>
+          <input
+            id="auth-name"
+            name="name"
+            type="text"
+            autocomplete="name"
+            required={isSignup}
+          />
         </div>
-      )
-    }
-  </div>
-</section>
 
-<script>
-  import { getApp } from "../Application";
+        <div>
+          <label for="auth-email">Correo electrónico</label>
+          <input
+            id="auth-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+          />
+        </div>
 
-  const app = getApp();
-  document.addEventListener("astro:page-load", () => app.authModule.mount());
-  app.authModule.mount();
-</script>
+        <div>
+          <label for="auth-password">Contraseña</label>
+          <input
+            id="auth-password"
+            name="password"
+            type="password"
+            autocomplete={isSignup ? "new-password" : "current-password"}
+            required
+          />
+        </div>
+
+        <div data-auth-only="signup" hidden={!isSignup}>
+          <label for="auth-confirm-password">Confirmar contraseña</label>
+          <input
+            id="auth-confirm-password"
+            name="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            required={isSignup}
+          />
+        </div>
+
+        <button class="auth-form__submit" type="submit" data-auth-submit>
+          {isSignup ? "Crear cuenta" : "Ingresar"}
+        </button>
+      </form>
+
+      {
+        githubEnabled && (
+          <div class="auth-form__provider">
+            <span aria-hidden="true">o</span>
+            <button
+              class="auth-form__github"
+              type="button"
+              data-auth-provider="github"
+            >
+              Continuar con GitHub
+            </button>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</Layout>
 
 <style>
   .auth-form {

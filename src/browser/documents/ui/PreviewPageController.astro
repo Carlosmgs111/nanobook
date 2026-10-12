@@ -1,0 +1,36 @@
+<script>
+  import { Result } from "../../../shared/domain/Result";
+  import { getApp } from "../../Application";
+  import { DocumentChanged } from "../index";
+
+  const app = await getApp();
+
+  async function renderPreview() {
+    const container = document.getElementById("preview-container") as
+      | HTMLElement
+      | undefined;
+
+    if (!container) throw new Error("Missing preview container");
+
+    function setRenderedPage(pageId: string, container: HTMLElement) {
+      const renderedResult =
+        app.editionModule.getRenderedDocument.execute(pageId);
+      if (!renderedResult.isSuccess) {
+        console.error(renderedResult.getError());
+        return;
+      }
+      const renderedContent = renderedResult.getValue();
+      const { rendered } = renderedContent;
+      container.innerHTML = rendered.Content;
+    }
+    setRenderedPage(container.dataset.documentId as string, container);
+    app.editionModule.eventBus.subscribe(DocumentChanged, {
+      async handle(event) {
+        setRenderedPage(event.documentId as string, container);
+        return Result.ok();
+      },
+    });
+  }
+
+  document.addEventListener("astro:page-load", renderPreview);
+</script>

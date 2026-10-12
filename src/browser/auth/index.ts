@@ -1,8 +1,5 @@
-import { BrowserToastNotifier } from "../toast/BrowserToastNotifier";
-import { HttpAuthApi } from "./HttpAuthApi";
-import { AuthFormController } from "./AuthFormController";
+import { HttpAuthApi, type AuthApi } from "./HttpAuthApi";
 import { HttpAuthSessionReader } from "./HttpAuthSessionReader";
-import { SignOutController } from "./SignOutController";
 import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
 import { SessionCachingAuthApi } from "./SessionCachingAuthApi";
 import { navigate } from "astro:transitions/client";
@@ -18,35 +15,38 @@ export class GetAuthenticatedSession {
     return this.sessionReader.getCurrentUser();
   }
 }
+
+class Signout {
+  constructor(
+    private readonly authApi: AuthApi,
+    private readonly confirm: () => boolean,
+    private readonly navigate: (destination: string) => void
+  ) {}
+
+  async execute(): Promise<void> {
+    if (!this.confirm()) return;
+
+    await this.authApi.signOut();
+    this.navigate("/");
+  }
+}
+
 export class AuthModule {
   private constructor(
-    private readonly authFormController: AuthFormController,
     public readonly getAuthenticatedSession: GetAuthenticatedSession,
-    public readonly signOutController: SignOutController
+    public readonly signOut: Signout
   ) {}
   static create() {
     const sessionReader = new CachedAuthSessionReader(
       new HttpAuthSessionReader()
     );
     const authApi = new SessionCachingAuthApi(new HttpAuthApi(), sessionReader);
-    const toast = new BrowserToastNotifier("auth-flow");
-    const authFormController = new AuthFormController({
+    const signOut = new Signout(
       authApi,
-      notifier: toast,
-    });
-    const getAuthenticatedSession = new GetAuthenticatedSession(sessionReader);
-    const signOutController = new SignOutController({
-      authApi,
-      confirm: () => globalThis.confirm("¿Seguro que deseas cerrar sesión?"),
-      navigate,
-    });
-    return new AuthModule(
-      authFormController,
-      getAuthenticatedSession,
-      signOutController
+      () => globalThis.confirm("¿Seguro que deseas cerrar sesión?"),
+      () => navigate("/")
     );
-  }
-  mount() {
-    this.authFormController.mount();
+    const getAuthenticatedSession = new GetAuthenticatedSession(sessionReader);
+    return new AuthModule(getAuthenticatedSession, signOut);
   }
 }

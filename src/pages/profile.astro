@@ -1,39 +1,7 @@
 ---
-import Layout from "../browser/layouts/Layout.astro";
-import ProfilePage from "../browser/profiles/ProfilePage.astro";
+import ProfilePage from "../server/profiles/ui/ProfilePage.astro";
+import ProfileFormController from "../browser/profiles/ProfileFormController.astro";
 ---
 
-<Layout
-  title="Perfil | Nanobook"
-  description="Administra tu sesión de Nanobook."
-  hideToc={true}
->
-  <ProfilePage>
-    <button
-      type="button"
-      data-sign-out
-      class="mt-10 inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-    >
-      Cerrar sesión
-    </button>
-  </ProfilePage>
-</Layout>
-
-<script>
-  import { getApp } from "../browser/Application";
-
-  const app = getApp();
-
-  function mountSignOut(): void {
-    const button = document.querySelector<HTMLButtonElement>("[data-sign-out]");
-    if (!button || button.dataset.signOutReady === "true") return;
-
-    button.dataset.signOutReady = "true";
-    button.addEventListener("click", () => {
-      void app.authModule.signOutController.execute();
-    });
-  }
-
-  document.addEventListener("astro:page-load", mountSignOut);
-  mountSignOut();
-</script>
+<ProfilePage />
+<ProfileFormController />

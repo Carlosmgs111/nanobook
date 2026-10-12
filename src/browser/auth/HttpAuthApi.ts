@@ -15,9 +15,6 @@ export interface AuthApi {
   signIn(request: SignInRequest): Promise<AuthenticatedUser>;
   signUp(request: SignUpRequest): Promise<AuthenticatedUser>;
   signInWithGitHub(): Promise<SocialAuthorization>;
-}
-
-export interface AuthSignOutApi {
   signOut(): Promise<void>;
 }
 
@@ -33,7 +30,7 @@ export class AuthApiError extends Error {
   }
 }
 
-export class HttpAuthApi implements AuthApi, AuthSignOutApi {
+export class HttpAuthApi implements AuthApi {
   private readonly baseUrl = "/api/auth";
 
   async signIn(request: SignInRequest): Promise<AuthenticatedUser> {

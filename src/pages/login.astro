@@ -1,28 +1,7 @@
 ---
-import Layout from "../browser/layouts/Layout.astro";
-import AuthForm from "../browser/auth/AuthForm.astro";
-import {
-  GITHUB_OAUTH_CLIENT_ID,
-  GITHUB_OAUTH_CLIENT_SECRET,
-} from "astro:env/server";
-import { isGitHubOAuthEnabled } from "../server/auth/infrastructure/better-auth/GitHubOAuth";
-
-const githubEnabled = isGitHubOAuthEnabled({
-  clientId: GITHUB_OAUTH_CLIENT_ID,
-  clientSecret: GITHUB_OAUTH_CLIENT_SECRET,
-});
+import AuthForm from "../server/auth/ui/AuthForm.astro";
+import AuthFormController from "../browser/auth/AuthFormController.astro";
 ---
 
-<Layout
-  title="Ingresar | Nanobook"
-  description="Ingresa o crea una cuenta en Nanobook."
-  hideToc={true}
->
-  <a
-    href="/"
-    class="mb-6 inline-flex items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 !no-underline"
-  >
-    ← Volver al inicio
-  </a>
-  <AuthForm githubEnabled={githubEnabled} />
-</Layout>
+<AuthForm />
+<AuthFormController />

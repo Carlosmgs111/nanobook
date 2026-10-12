@@ -1,14 +1,11 @@
 import { InMemoryEventBus } from "../shared/infrastructure/InMemoryEventBus";
 import { DocumentModule } from "./documents";
-import { DocumentPath } from "./documents/domain/DocumentPath";
 import {
   GitHubWebhookHandler,
   GitHubWebhookController,
   PublishingModule,
 } from "./publishing";
 import { NavigationModule } from "./navigation";
-import type { Crumb, NavigationNode, ParentEntry } from "./navigation";
-import type { RenderedDocumentPage } from "./publishing";
 import { DocumentModuleDocumentProvider } from "./documents/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { AuthServerModule } from "./auth";
 import { ProfileModule } from "./profiles";

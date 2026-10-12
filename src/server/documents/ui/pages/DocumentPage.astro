@@ -1,5 +1,5 @@
 ---
-import IndexList from "../../../navigation/components/IndexList/index.astro";
+import IndexList from "../../../navigation/ui/components/IndexList/index.astro";
 import Layout from "../../../../browser/layouts/Layout.astro";
 import { getApp } from "../../../../server/Application";
 
@@ -8,9 +8,11 @@ const app = await getApp();
 export const prerender = false;
 
 const slug = Astro.params.slug || "index";
+console.log({slug});
 if (!slug) return new Response("Document not found", { status: 404 });
 
 const document = await app.documentModule.getDocument.execute(slug);
+
 if (!document) throw new Error("Document not found");
 const renderedPage = await app.publishingModule.pagePublisher.publish(document);
 if (!renderedPage) throw new Error("Page not found");

@@ -48,12 +48,3 @@
     Guardar perfil
   </button>
 </form>
-
-<script>
-  import { HttpProfileApi } from "./HttpProfileApi";
-  import { ProfileFormController } from "./ProfileFormController";
-
-  const profileFormController = new ProfileFormController(new HttpProfileApi());
-  document.addEventListener("astro:page-load", () => void profileFormController.mount());
-  void profileFormController.mount();
-</script>
