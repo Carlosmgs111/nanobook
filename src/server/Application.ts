@@ -28,18 +28,23 @@ export class Application {
       this.navigationModule.navigationService,
       () => this.navigationModule.refresh()
     );
-    this.githubWebhookController = new GitHubWebhookController(githubWebhookHandler);
+    this.githubWebhookController = new GitHubWebhookController(
+      githubWebhookHandler
+    );
   }
 
   static async create(): Promise<Application> {
     const eventBus = new InMemoryEventBus();
     const publishingModule = await PublishingModule.create(eventBus);
-    publishingModule.registerEventHandlers()
+    publishingModule.registerEventHandlers();
     const authModule = await AuthServerModule.create();
     const profileModule = ProfileModule.create(authModule);
     const documentModule = await DocumentModule.create(eventBus, authModule);
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
-    const navigationModule = await NavigationModule.create(documentProvider, eventBus);
+    const navigationModule = await NavigationModule.create(
+      documentProvider,
+      eventBus
+    );
 
     return new Application(
       authModule,
@@ -49,40 +54,6 @@ export class Application {
       profileModule,
       eventBus
     );
-  }
-
-  async renderPage(slug: string): Promise<
-    {
-      breadcrumbs: Crumb[];
-      sidebarEntries: NavigationNode[];
-      parentEntry: ParentEntry | null;
-      childEntries: NavigationNode[];
-    } & RenderedDocumentPage
-  > {
-    const document = await this.documentModule.getDocument.execute(slug);
-    if (!document) throw new Error("Document not found");
-    const pathResult = DocumentPath.create(document.getPath());
-    if (!pathResult.isSuccess) throw new Error("Invalid document path");
-    const documentPath = pathResult.getValue();
-    const breadcrumbs =
-      this.navigationModule.navigationService.getBreadcrumbs(documentPath);
-    const sidebarEntries =
-      this.navigationModule.navigationService.getSidebarEntries(documentPath);
-    const parentEntry =
-      this.navigationModule.navigationService.getParentEntry(documentPath);
-    const childEntries =
-      this.navigationModule.navigationService.getImmediateChildren(documentPath);
-    const renderedPage = await this.publishingModule.pagePublisher.publish(
-      document
-    );
-    if (!renderedPage) throw new Error("Page not found");
-    return {
-      ...renderedPage,
-      breadcrumbs,
-      sidebarEntries,
-      parentEntry,
-      childEntries,
-    };
   }
 }
 

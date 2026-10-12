@@ -9,8 +9,6 @@ import type {
   DependencyKind,
 } from "../domain/types";
 
-import { DocumentPath } from "../../documents/domain/DocumentPath";
-
 function getFolderPath(entryId: string): string {
   return entryId === "index" ? "" : entryId;
 }
@@ -120,8 +118,8 @@ export class NavigationService implements NavigationServicePort {
     };
   }
 
-  getBreadcrumbs(documentPath: DocumentPath, homeTitle: string = "Inicio"): Crumb[] {
-    const currentPath = documentPath.getPublicValue();
+  getBreadcrumbs(documentPath: string, homeTitle: string = "Inicio"): Crumb[] {
+    const currentPath = documentPath;
     const nanobookRoot = this.getNanobookRoot(currentPath);
     if (nanobookRoot) {
       const crumbs: Crumb[] = [
@@ -180,8 +178,8 @@ export class NavigationService implements NavigationServicePort {
     return crumbs;
   }
 
-  getSidebarEntries(documentPath: DocumentPath): NavigationNode[] {
-    const currentPath = documentPath.getPublicValue();
+  getSidebarEntries(documentPath: string): NavigationNode[] {
+    const currentPath = documentPath;
     const node = this.documentsGraph.getNodeByPath(currentPath);
     const nanobookRoot = this.getNanobookRoot(currentPath);
     if (node && nanobookRoot?.id === node.id) {
@@ -197,12 +195,12 @@ export class NavigationService implements NavigationServicePort {
 
     return parent.children.map((child) => ({
       ...child,
-      current: child.path === documentPath.getPublicValue(),
+      current: child.path === documentPath,
     }));
   }
 
-  getParentEntry(documentPath: DocumentPath): ParentEntry | null {
-    const currentPath = documentPath.getPublicValue();
+  getParentEntry(documentPath: string): ParentEntry | null {
+    const currentPath = documentPath;
     const node = this.documentsGraph.getNodeByPath(currentPath);
     if (node && this.getNanobookRoot(currentPath)?.id === node.id) return null;
     const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
@@ -216,10 +214,10 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getImmediateChildren(
-    documentPath: DocumentPath,
-    excludePath?: DocumentPath
+    documentPath: string,
+    excludePath?: string
   ): NavigationNode[] {
-    const folderPath = getFolderPath(documentPath.getPublicValue());
+    const folderPath = getFolderPath(documentPath);
     const folder =
       folderPath === ""
         ? this.documentsGraph.getNodeByPath("index")
@@ -227,7 +225,7 @@ export class NavigationService implements NavigationServicePort {
 
     if (!folder) return [];
 
-    return folder.children.filter((child) => child.path !== excludePath?.getPublicValue());
+    return folder.children.filter((child) => child.path !== excludePath);
   }
 
   private getNanobookRoot(path: string): NavigationNode | undefined {

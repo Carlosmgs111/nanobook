@@ -1,18 +1,24 @@
 ---
-import DocumentIndex from "./DocumentIndex.astro";
-import type { NavigationNode } from "../../../../navigation/domain/types";
+import { getApp } from "../../../Application";
+import DocumentIndex from "./DocumentIndex.astro"
+import type { NavigationNode } from "../../../navigation/domain/types";
 
 interface Props {
   title: string;
   description?: string;
   label?: string;
-  entries: NavigationNode[];
   art?: string;
 }
+const slug = Astro.params.slug || "index";
 
-const { title, description, label = "Index", entries, art } = Astro.props;
+const {
+  navigationModule: { navigationService },
+} = await getApp();
 
-const sortedEntries = entries
+
+const { title, description, label = "Index" } = Astro.props;
+
+const sortedEntries = navigationService.getImmediateChildren(slug)
   .filter((page) => !page.metadata.draft)
   .sort((a, b) => {
     const posA = a.metadata.position ?? 0;

@@ -1,17 +1,5 @@
 ---
-import Layout from "../../browser/layouts/Layout.astro";
 import PreviewPage from "../../browser/edition/ui/pages/PreviewPage.astro";
-import { getApp } from "../../server/Application";
-
-export const prerender = false;
-
-const { slug } = Astro.params;
-const app = await getApp();
-const rendered = await app.renderPage(slug || "index");
-const documentId = rendered.rendered.entry.documentId;
-const editHref = slug ? `/${slug}/edit` : "/edit";
 ---
 
-<Layout editHref={editHref}>
-  <PreviewPage slug={slug} documentId={documentId}/>
-</Layout>
+<PreviewPage />

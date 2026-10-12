@@ -1,4 +1,3 @@
-import type { DocumentPath } from "../../documents/domain/DocumentPath";
 import type { DocumentMetadata } from "../../documents/domain/types";
 
 export interface NavigationNode {
@@ -80,15 +79,15 @@ export interface NavigationService {
   /** Resuelve una ruta pública a la identidad estable del documento. */
   getDocumentIdByPath(path: string): string | undefined;
   /** Breadcrumbs desde la raíz hasta el documento indicado. */
-  getBreadcrumbs(documentPath: DocumentPath, homeTitle?: string): Crumb[];
+  getBreadcrumbs(documentPath: string, homeTitle?: string): Crumb[];
   /** Entradas del sidebar contextual (hermanos del documento). */
-  getSidebarEntries(documentPath: DocumentPath): NavigationNode[];
+  getSidebarEntries(documentPath: string): NavigationNode[];
   /** Padre inmediato formateado para el layout. */
-  getParentEntry(documentPath: DocumentPath): ParentEntry | null;
+  getParentEntry(documentPath: string): ParentEntry | null;
   /** Hijos inmediatos de un documento índice. */
   getImmediateChildren(
-    documentPath: DocumentPath,
-    excludePath?: DocumentPath
+    documentPath: string,
+    excludePath?: string
   ): NavigationNode[];
   getInvalidatedIds(changes: DocumentChange[]): InvalidationResult;
 }

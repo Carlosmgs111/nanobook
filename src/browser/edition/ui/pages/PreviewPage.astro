@@ -1,14 +1,27 @@
 ---
-interface Props {
-  slug: string | undefined;
-  documentId: string;
-}
+import Layout from "../../../../browser/layouts/Layout.astro";
+import { getApp } from "../../../../server/Application";
 
-const { slug, documentId } = Astro.props;
+export const prerender = false;
+
+const { slug } = Astro.params;
+const app = await getApp();
+if (!slug) return new Response("Document not found", { status: 404 });
+
+const document = await app.documentModule.getDocument.execute(slug);
+if (!document) throw new Error("Document not found");
+const renderedPage = await app.publishingModule.pagePublisher.publish(document);
+if (!renderedPage) throw new Error("Page not found");
+const { rendered } = renderedPage;
+const { entry } = rendered;
+const documentId = entry.documentId;
+const editHref = slug ? `/${slug}/edit` : "/edit";
 ---
 
-<h1><mark>Preview de {slug || "index"}</mark></h1>
-<div id="preview-container" data-document-id={documentId}></div>
+<Layout editHref={editHref}>
+  <h1><mark>Preview de {slug || "index"}</mark></h1>
+  <div id="preview-container" data-document-id={documentId}></div>
+</Layout>
 
 <script>
   import { Result } from "../../../../shared/domain/Result";
@@ -25,7 +38,8 @@ const { slug, documentId } = Astro.props;
     if (!container) throw new Error("Missing preview container");
 
     function setRenderedPage(pageId: string, container: HTMLElement) {
-      const renderedResult = app.editionModule.getRenderedDocument.execute(pageId);
+      const renderedResult =
+        app.editionModule.getRenderedDocument.execute(pageId);
       if (!renderedResult.isSuccess) {
         console.error(renderedResult.getError());
         return;

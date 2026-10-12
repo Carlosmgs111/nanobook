@@ -1,24 +1,53 @@
 ---
-import IndexList from "../components/IndexList/index.astro";
-import type { Entry } from "../../domain/types";
-import type { NavigationNode } from "../../../navigation/domain/types";
+import IndexList from "../../../navigation/components/IndexList/index.astro";
+import Layout from "../../../../browser/layouts/Layout.astro";
+import { getApp } from "../../../../server/Application";
 
-interface Props {
-  entry: Entry;
-  Content: any;
-  childEntries: NavigationNode[];
-}
+const app = await getApp();
 
-const { entry, Content, childEntries } = Astro.props;
+export const prerender = false;
+
+const slug = Astro.params.slug || "index";
+if (!slug) return new Response("Document not found", { status: 404 });
+
+const document = await app.documentModule.getDocument.execute(slug);
+if (!document) throw new Error("Document not found");
+const renderedPage = await app.publishingModule.pagePublisher.publish(document);
+if (!renderedPage) throw new Error("Page not found");
+const { rendered, headings } = renderedPage;
+const { entry, renderedBody } = rendered;
+
+const editHref = slug ? `/${slug}/edit` : `${Astro.request.url}edit`;
+
+const newHref = entry.isIndex
+  ? entry.slug === "index"
+    ? `${Astro.request.url}new`
+    : `/${entry.slug}/new`
+  : "/new";
+const canonicalHref = entry.ref
+  ? entry.ref === "index"
+    ? "/"
+    : `/${entry.ref}/`
+  : undefined;
+
+Astro.response.headers.set("Cache-Control", "no-store");
+
 ---
 
+<Layout
+  title={entry.title}
+  description={entry.description}
+  headings={headings}
+  editHref={editHref}
+  newHref={newHref}
+  canonicalHref={canonicalHref}
+>
 {
   entry.isIndex ? (
     <IndexList
       title={entry.title}
       description={entry.description}
       label="Index"
-      entries={childEntries}
     />
   ) : (
     <Fragment>
@@ -44,8 +73,45 @@ const { entry, Content, childEntries } = Astro.props;
         id="document-body"
         data-document-id={entry.documentId}
         data-document-ref={entry.ref ?? ""}
-        set:html={Content}
+        set:html={renderedBody}
       />
     </Fragment>
   )
 }
+
+</Layout>
+
+
+<script>
+  import { getApp } from "../../../../browser/Application";
+
+  const app = getApp();
+
+  document.addEventListener("astro:page-load", () => {
+    const body = document.querySelector<HTMLElement>("#document-body");
+    const documentId = body?.dataset.documentId;
+    if (!body || !documentId) return;
+
+    // Los proxies ya llegan resueltos desde el servidor. Una preview de
+    // sessionStorage puede pertenecer a una versión anterior del documento
+    // referenciado y ocultar temporalmente el contenido SSR correcto.
+    if (body.dataset.documentRef) return;
+
+    const renderedResult = app.editionModule.getRenderedDocument.execute(
+      documentId,
+      true
+    );
+    if (!renderedResult.isSuccess) return;
+
+    const currentRef = body.dataset.documentRef ?? "";
+    const cachedRef = renderedResult.getValue().source.metadata.ref;
+    const normalizedCachedRef =
+      typeof cachedRef === "string"
+        ? cachedRef
+        : JSON.stringify(cachedRef ?? "");
+    if (normalizedCachedRef !== currentRef) return;
+
+    body.innerHTML = renderedResult.getValue().rendered.Content;
+    body.dataset.renderedFromEdition = "true";
+  });
+</script>

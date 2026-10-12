@@ -1,22 +1,16 @@
 ---
 import SidebarHeader from "./SidebarHeader.astro";
 import SidebarList from "./SidebarList.astro";
-import type { NavigationNode } from "../../domain/types";
+import { getApp } from "../../../Application";
 
-interface ParentEntry {
-  id: string;
-  path: string;
-  data: {
-    title: string;
-  };
-}
+const {
+  navigationModule: { navigationService },
+} = await getApp();
 
-interface Props {
-  entries?: NavigationNode[];
-  parentEntry?: ParentEntry | null;
-}
+const slug = Astro.params.slug || "index";
 
-const { entries = [], parentEntry } = Astro.props;
+const entries = navigationService.getSidebarEntries(slug);
+const parentEntry = navigationService.getParentEntry(slug);
 
 const sortedEntries = entries
   .filter((page) => !page.metadata.draft)

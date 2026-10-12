@@ -37,9 +37,6 @@ interface Props {
 const {
   title = "Astro",
   description,
-  breadcrumbs,
-  sidebarEntries,
-  parentEntry,
   headings,
   hideToc = false,
   editHref,
@@ -64,9 +61,6 @@ const {
   </head>
   <LayoutShell
     description={description}
-    breadcrumbs={breadcrumbs}
-    sidebarEntries={sidebarEntries}
-    parentEntry={parentEntry}
     headings={headings}
     hideToc={hideToc}
     editHref={editHref}

@@ -1,16 +1,19 @@
 ---
+import { getApp } from "../../Application";
+
+const slug = Astro.params.slug || "index";
+
+const {
+  navigationModule: { navigationService },
+} = await getApp();
+
 export interface Crumb {
   id: string;
   title: string;
   href: string;
   current: boolean;
 }
-
-interface Props {
-  crumbs?: Crumb[];
-}
-
-const { crumbs = [] } = Astro.props;
+const crumbs = navigationService.getBreadcrumbs(slug);
 const display = Boolean(crumbs.length);
 ---
 
