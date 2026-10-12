@@ -1,6 +1,6 @@
 import type { SerializedEntry } from "../model/StagedDocument";
 import { Result } from "../../../../shared/domain/Result";
-import { InvalidDocumentContentError } from "../../domain/errors";
+import { InvalidDocumentContentError } from "../errors";
 
 export interface DocumentContentParser {
   parse(

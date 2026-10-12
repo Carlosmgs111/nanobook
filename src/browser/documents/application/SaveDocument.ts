@@ -2,7 +2,7 @@ import { Result } from "../../../shared/domain/Result";
 import type { SerializedEntry } from "../domain/model/StagedDocument";
 import type { EditionStorageError, EditionWriterError } from "../domain/errors";
 import type { DocumentStorage } from "../domain/ports/DocumentStorage";
-import type { DocumentWriter } from "../application/ports/DocumentWriter";
+import type { DocumentWriter } from "./ports/DocumentWriter";
 
 export type SaveDocumentError = EditionStorageError | EditionWriterError;
 

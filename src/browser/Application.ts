@@ -1,5 +1,5 @@
 import { AuthModule } from "./auth";
-import { EditionModule } from "./edition";
+import { EditionModule } from "./documents";
 
 export class Application {
   private constructor(
