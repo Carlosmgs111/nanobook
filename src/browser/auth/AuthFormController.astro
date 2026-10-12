@@ -35,7 +35,7 @@
   const httpApi = new HttpAuthApi();
   const httpSessionReader = new HttpAuthSessionReader();
   const cache = new CachedAuthSessionReader(httpSessionReader);
-
+  // TODO: refactor to capabilities
   export class AuthFormController {
     private readonly formMode = new AuthFormModeCapability();
     private root: HTMLElement | undefined;

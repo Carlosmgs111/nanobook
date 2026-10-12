@@ -1,7 +1,7 @@
 ---
-import Breadcrumb from "../../../server/navigation/ui/components/Breadcrumb.astro";
+import Breadcrumb from "../../server/navigation/ui/components/Breadcrumb.astro";
 import DocumentControls from "./DocumentControls.astro";
-import OpenSidebar from "../../../server/navigation/ui/components/SidebarNav/OpenSidebar.astro";
+import OpenSidebar from "../../server/navigation/ui/components/SidebarNav/OpenSidebar.astro";
 
 interface Props {
   editHref?: string;
@@ -61,7 +61,7 @@ const isProfilePage = Astro.url.pathname === "/profile";
 
 <script>
   import { AuthStatusController } from "./AuthStatusController";
-  import { getApp } from "../../Application";
+  import { getApp } from "../../browser/Application";
 
   const app = getApp();
 
