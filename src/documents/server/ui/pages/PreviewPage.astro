@@ -1,0 +1,24 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import { getApp } from "../../../../application/server/Application";
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+const app = await getApp();
+if (!slug) return new Response("Document not found", { status: 404 });
+
+const document = await app.documentModule.getDocument.execute(slug);
+if (!document) throw new Error("Document not found");
+const renderedPage = await app.publishingModule.pagePublisher.publish(document);
+if (!renderedPage) throw new Error("Page not found");
+const { rendered } = renderedPage;
+const { entry } = rendered;
+const documentId = entry.documentId;
+const editHref = slug ? `/${slug}/edit` : "/edit";
+---
+
+<Layout editHref={editHref}>
+  <h1><mark>Preview de {slug || "index"}</mark></h1>
+  <div id="preview-container" data-document-id={documentId}></div>
+</Layout>

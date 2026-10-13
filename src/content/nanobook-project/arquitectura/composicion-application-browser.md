@@ -19,7 +19,7 @@ draft: false
 ## Contexto
 
 El entorno de servidor ya tenía un punto de composición explícito en
-`src/server/Application.ts`. En el navegador, `AuthModule` y `EditionModule`
+`src/application/server/Application.ts`. En el navegador, `AuthModule` y `EditionModule`
 construían y exportaban sus propios singletones desde sus índices. Los
 componentes podían funcionar, pero el ciclo de vida quedaba distribuido y la
 incorporación de un módulo nuevo podía crear composiciones parciales.
@@ -27,13 +27,13 @@ incorporación de un módulo nuevo podía crear composiciones parciales.
 ## Decisión
 
 El navegador tiene un único composition root en
-`src/browser/Application.ts`:
+`src/application/browser/Application.ts`:
 
 ```text
 scripts cliente de pages y browser
                 │
                 ▼
-       browser/Application.getApp()
+       application/browser/Application.getApp()
           ├── AuthModule
           └── EditionModule
                 │
@@ -64,7 +64,7 @@ app.editionModule.saveDocument.execute(documentId);
   de sus scripts cliente.
 - Los scripts cliente no importan módulos de `server`, secretos ni APIs de
   Node.
-- `src/pages/` delega en `server` durante SSR y en `browser/Application` en
+- `src/pages/` delega en `server` durante SSR y en `application/browser/Application` en
   el cliente, sin ensamblar dependencias por su cuenta.
 - `toast` permanece fuera de `Application`: es un adaptador global de UI y no
   forma parte de la composición de autenticación o edición.

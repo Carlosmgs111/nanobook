@@ -1,6 +1,6 @@
 import { createClient, type Client } from "@libsql/client";
 
-import { Username } from "../src/server/profiles/domain/Username";
+import { Username } from "../src/profiles/server/domain/Username";
 
 export interface ChangeProfileUsernameInput {
   email: string;

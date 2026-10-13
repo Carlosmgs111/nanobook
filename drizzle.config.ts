@@ -4,8 +4,8 @@ export default defineConfig({
   dialect: "sqlite",
 
   schema: [
-    "./src/server/auth/infrastructure/better-auth/DrizzleAuthSchema.ts",
-    "./src/server/profiles/infraestructure/database/DrizzleProfileSchema.ts",
+    "./src/auth/server/infrastructure/better-auth/DrizzleAuthSchema.ts",
+    "./src/profiles/server/infraestructure/database/DrizzleProfileSchema.ts",
   ],
 
   out: "./drizzle",

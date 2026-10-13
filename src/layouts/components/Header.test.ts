@@ -5,9 +5,9 @@ const read = (path: string) => readFileSync(path, "utf8");
 
 describe("global login link contract", () => {
   it("threads loginHref through the layout shell and header", () => {
-    const layout = read("src/browser/layouts/Layout.astro");
-    const shell = read("src/browser/layouts/components/LayoutShell.astro");
-    const header = read("src/browser/layouts/components/Header.astro");
+    const layout = read("src/layouts/Layout.astro");
+    const shell = read("src/layouts/components/LayoutShell.astro");
+    const header = read("src/layouts/components/Header.astro");
 
     expect(layout).toContain("loginHref");
     expect(shell).toContain("loginHref");
@@ -17,15 +17,15 @@ describe("global login link contract", () => {
   });
 
   it("does not render the login link on the profile page", () => {
-    const header = read("src/browser/layouts/components/Header.astro");
+    const header = read("src/layouts/components/Header.astro");
 
     expect(header).toContain('const isProfilePage = Astro.url.pathname === "/profile"');
     expect(header).toContain("loginHref && !isProfilePage");
   });
 
   it("resolves authentication through the browser application", () => {
-    const header = read("src/browser/layouts/components/Header.astro");
-    const authForm = read("src/browser/auth/AuthForm.astro");
+    const header = read("src/layouts/components/Header.astro");
+    const authForm = read("src/auth/browser/AuthFormController.astro");
 
     expect(header).toContain("getApp()");
     expect(authForm).toContain("getApp()");

@@ -1,4 +1,4 @@
-import type { GetAuthenticatedSession } from "../../browser/auth";
+import type { GetAuthenticatedSession } from "../../auth/browser";
 
 export class AuthStatusController {
   constructor(

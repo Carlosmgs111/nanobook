@@ -1,0 +1,113 @@
+<script>
+  import { getApp } from "../../../application/browser/Application";
+  import { prefetch } from "astro:prefetch";
+
+  const app = getApp();
+  let statusElement: HTMLElement;
+  function showStatus(message: string, isError = false) {
+    if (!statusElement) return;
+    statusElement.textContent = message;
+    statusElement.className = `status ${isError ? "status-error" : "status-success"}`;
+    window.setTimeout(() => {
+      if (!statusElement) return;
+      statusElement.textContent = "";
+      statusElement.className = "status";
+    }, 4000);
+  }
+  document.addEventListener("astro:page-load", () => {
+    statusElement = document.querySelector<HTMLElement>(
+      "[data-edition-result]"
+    ) as HTMLElement;
+    const saveButton = document.querySelector<HTMLButtonElement>(
+      "[data-action='save']"
+    );
+    if (!saveButton) return;
+
+    const viewHref = saveButton.dataset.viewHref;
+    const documentId = saveButton.dataset.documentId;
+    const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
+    saveButton.replaceWith(cleanButton);
+    cleanButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const result = await app.editionModule.saveDocument.execute(
+        saveButton.dataset.documentId as string
+      );
+      if (result.isSuccess) {
+        prefetch(viewHref as string);
+        showStatus("Guardado correctamente");
+      } else {
+        const error = result.getError();
+        console.error(error);
+        showStatus(
+          error instanceof Error ? error.message : "Error al guardar",
+          true
+        );
+      }
+    });
+
+    const deleteButton = document.querySelector<HTMLButtonElement>(
+      "[data-action='delete']"
+    );
+    if (!deleteButton) return;
+    const cleanDeleteButton = deleteButton.cloneNode(true) as HTMLButtonElement;
+    deleteButton.replaceWith(cleanDeleteButton);
+    cleanDeleteButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const isDirectory = cleanDeleteButton.dataset.isDirectory === "true";
+      const message = isDirectory
+        ? "Este documento es un directorio. Se eliminarán también todos los documentos que contiene. Esta acción no se puede deshacer. ¿Deseas continuar?"
+        : "Este documento se eliminará permanentemente. ¿Deseas continuar?";
+      if (!window.confirm(message)) return;
+      const result = await app.editionModule.deleteDocument.execute(
+        cleanDeleteButton.dataset.documentId as string
+      );
+      if (!result.isSuccess) {
+        const error = result.getError();
+        console.error(error);
+        showStatus(
+          error instanceof Error ? error.message : "Error al eliminar",
+          true
+        );
+        return;
+      }
+      window.location.href = cleanDeleteButton.dataset.parentHref || "/";
+    });
+
+    const renameButton = document.querySelector<HTMLButtonElement>(
+      "[data-action='rename']"
+    );
+    if (!renameButton) return;
+    const cleanRenameButton = renameButton.cloneNode(true) as HTMLButtonElement;
+    renameButton.replaceWith(cleanRenameButton);
+    cleanRenameButton.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const currentPath = cleanRenameButton.dataset.documentPath || "";
+      const nextPath = window.prompt(
+        "Nueva ruta interna del documento (usa /index para directorios):",
+        currentPath
+      );
+      if (nextPath === null || nextPath.trim() === currentPath) return;
+
+      const result = await app.editionModule.renameDocument.execute(
+        cleanRenameButton.dataset.documentId as string,
+        nextPath
+      );
+      if (!result.isSuccess) {
+        const error = result.getError();
+        console.error(error);
+        showStatus(
+          error instanceof Error ? error.message : "Error al renombrar",
+          true
+        );
+        return;
+      }
+
+      const renamed = result.getValue();
+      const publicPath =
+        renamed.isIndex && renamed.path !== "index"
+          ? renamed.path.slice(0, -"/index".length)
+          : renamed.path;
+      window.location.href = publicPath === "index" ? "/" : `/${publicPath}`;
+    });
+  });
+</script>

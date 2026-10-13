@@ -5,7 +5,7 @@ const getApp = vi.fn(async () => ({
   authServerModule: { authController },
 }));
 
-vi.mock("../../../server/Application", () => ({
+vi.mock("../../../application/server/Application", () => ({
   getApp,
 }));
 

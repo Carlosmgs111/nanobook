@@ -1,0 +1,125 @@
+---
+import EditorToolbarController from "./EditorToolbarController.astro";
+---
+
+<script>
+  import { getApp } from "../../../application/browser/Application";
+  import { hideProtectedFrontmatter } from "../application/protectedFrontmatter";
+  import { basicSetup } from "codemirror";
+  import { EditorView, keymap } from "@codemirror/view";
+  import { EditorState } from "@codemirror/state";
+  import { markdown } from "@codemirror/lang-markdown";
+  import { indentWithTab } from "@codemirror/commands";
+  import { debounce } from "../../../shared/utils/debounce";
+
+  const app = getApp();
+
+  let view: EditorView | undefined;
+  const debouncedHandleEditorChange = debounce(
+    async (document, content, preserveSourceBody) => {
+      if (app.editionModule.handleEditorChange) {
+        const result = await app.editionModule.handleEditorChange.execute(
+          document,
+          content,
+          preserveSourceBody
+        );
+        if (!result.isSuccess) {
+          console.error(result.getError());
+          return;
+        }
+        app.editionModule.renderPreview.execute(result.getValue().documentId);
+      }
+    },
+    1000
+  );
+
+  document.addEventListener("astro:page-load", () => {
+    let container = document.querySelector<HTMLElement>(
+      "[data-editor-container]"
+    );
+    if (!container) {
+      return;
+    }
+    let initialContent = container.dataset.initialContent;
+    const frontmatterOnly = container.dataset.frontmatterOnly === "true";
+    const baseDocument = container.dataset.document;
+    if (!baseDocument) {
+      console.error("Missing base document");
+      return;
+    }
+    const updateListener = EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        debouncedHandleEditorChange(
+          JSON.parse(baseDocument),
+          update.state.doc.toString(),
+          frontmatterOnly
+        );
+      }
+    });
+    function initializeCodeMirror(container: HTMLElement) {
+      const originalBody = extractBody(initialContent ?? "");
+      const state = EditorState.create({
+        doc: initialContent,
+        extensions: [
+          basicSetup,
+          markdown(),
+          keymap.of([indentWithTab]),
+          ...(frontmatterOnly
+            ? [
+                EditorState.transactionFilter.of((transaction) =>
+                  !transaction.docChanged ||
+                  extractBody(transaction.newDoc.toString()) === originalBody
+                    ? transaction
+                    : []
+                ),
+              ]
+            : []),
+          updateListener,
+          EditorView.theme({
+            "&": {
+              fontSize: "14px",
+              minHeight: "60vh",
+            },
+            ".cm-content": {
+              fontFamily:
+                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              lineHeight: "1.6",
+            },
+            ".cm-gutters": {
+              backgroundColor: "transparent",
+              borderRight: "1px solid var(--grid-line)",
+            },
+            ".cm-activeLineGutter": {
+              backgroundColor: "var(--grid-line)",
+            },
+          }),
+          EditorView.lineWrapping,
+        ],
+      });
+
+      view = new EditorView({
+        state,
+        parent: container,
+      });
+    }
+    const stagedDocument = app.editionModule.initializeEditor
+      .execute(JSON.parse(baseDocument))
+      .getValue();
+    if (stagedDocument) {
+      initialContent =
+        hideProtectedFrontmatter(stagedDocument.rawFrontmatter) +
+        (frontmatterOnly ? "" : stagedDocument.content);
+    }
+    initializeCodeMirror(container);
+  });
+  document.addEventListener("astro:before-swap", () => {
+    view?.destroy();
+    // view = undefined;
+  });
+
+  function extractBody(content: string): string {
+    return content.replace(/^---[\s\S]*?---\n?/, "");
+  }
+</script>
+
+<EditorToolbarController />

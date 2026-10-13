@@ -1,4 +1,4 @@
-import { getApp } from "../../../../server/Application";
+import { getApp } from "../../../../application/server/Application";
 const app = await getApp();
 
 export const POST = app.githubWebhookController.handle;
