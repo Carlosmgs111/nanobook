@@ -25,21 +25,23 @@ obliga a mantener módulos que ya no representan el flujo canónico.
 
 ## Decisión
 
-`Application` conserva únicamente las capacidades transversales de la
-instancia: autenticación, perfiles y `NanobookModule`. El módulo de nanobooks
-es la frontera de composición del contenido:
+`Application` conserva las capacidades transversales de la instancia y
+coordina las operaciones que cruzan módulos. `NanobookModule` sigue siendo la
+frontera de composición del contenido por nanobook:
 
 ```text
 Application
   ├── AuthServerModule
   ├── ProfileModule
-  └── NanobookModule
-        ├── repositorio y casos de uso de nanobooks
-        ├── controladores de creación y listado
-        └── NanobookContext por colección
-              ├── DocumentModule (SQL acotado por nanobookId)
-              ├── NavigationModule (raíz index)
-              └── PublishingModule (caché aislada)
+  ├── NanobookModule
+  │     ├── repositorio y casos de uso de nanobooks
+  │     ├── capacidad de creación y controlador de listado
+  │     └── NanobookContext por colección
+  │           ├── DocumentModule (SQL acotado por nanobookId)
+  │           ├── NavigationModule (raíz index)
+  │           └── PublishingModule (caché aislada)
+  └── CreateNanobookController
+        (coordina la creación del nanobook y su documento raíz)
 ```
 
 `NanobookModule` también posee el caché de contextos. Reutiliza un contexto
@@ -56,21 +58,24 @@ un paquete `NanobookContextModules` con los constructores de documentos,
 navegación, publicación, proveedor documental y bus de eventos. El factory de
 `NanobookContext` recibe ese paquete y compone las instancias por colección;
 la composición contextual de `nanobooks` no importa esas implementaciones
-directamente.
+directamente. `DocumentModule` recibe el `nanobookId` y su propio compositor
+instancia directamente el `DrizzleContentRepository` y el resto de sus
+capacidades.
 
-La creación usa la capacidad explícita `NanobookCreationStore.createWithRoot`.
-El repositorio SQL implementa esa capacidad mediante una transacción que inserta
-el nanobook, su documento `index`, la revisión inicial, el evento outbox y la
-nueva versión de contenido. No existe un camino de creación que persista el
-nanobook sin su raíz.
+La creación se coordina desde `Application`. `CreateNanobook` persiste el
+nanobook mediante `NanobookRepository.create`; después, la aplicación crea un
+`DocumentModule` acotado al `nanobookId` y usa su capacidad
+`createDocument.execute` para crear el documento `index`. Son dos operaciones
+independientes: si la segunda falla, el nanobook permanece creado y el reintento
+o la reconciliación pertenecen a un flujo posterior explícito.
 
 ## Justificación
 
 1. **Aislamiento explícito**: las capacidades de contenido reciben siempre el
    `nanobookId` y no existe un repositorio global como fallback.
 2. **Composición centralizada**: `Application` es el único lugar que conoce
-   los constructores concretos y los entrega como capacidades al contexto.
-3. **Ciclo de vida coherente**: la misma frontera crea, cachea y cierra un
+   los constructores concretos y coordina las capacidades que cruzan módulos.
+3. **Ciclo de vida coherente**: la frontera del nanobook crea, cachea y cierra un
    contexto; no se dejan buses o handlers de publicación fuera de su colección.
 4. **Rutas adaptadoras**: las páginas y APIs resuelven el contexto mediante
    `app.nanobookModule` y pasan explícitamente sus servicios a los componentes
@@ -79,9 +84,9 @@ nanobook sin su raíz.
 ## Consecuencias
 
 - Las rutas sin un nanobook canónico no pueden usar capacidades de contenido.
-- El módulo de nanobooks es más grande que un módulo puramente CRUD porque
-  contiene la composición de su subdominio; esa concentración evita duplicar la
-  misma lógica en `Application` y en las rutas.
+- `Application` conoce el orden de la creación del nanobook y su documento
+  raíz, pero no detalles de persistencia; cada módulo conserva su propia
+  capacidad.
 - El cierre de la aplicación debe cerrar `NanobookModule` si el runtime necesita
   liberar handlers o cachés antes de terminar.
 - Crear un nuevo proveedor de documentos requiere cambiar la composición del

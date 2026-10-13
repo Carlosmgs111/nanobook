@@ -33,10 +33,11 @@ export class NanobookContext {
     });
     publishingModule.registerEventHandlers();
 
-    const documentModule = await modules.DocumentModule.create(eventBus, routeProtector, {
-      source: "sql",
-      nanobookId: nanobook.getId(),
-    });
+    const documentModule = await modules.DocumentModule.create(
+      eventBus,
+      routeProtector,
+      nanobook.getId(),
+    );
     const documentProvider = new modules.DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await modules.NavigationModule.create(
       documentProvider,

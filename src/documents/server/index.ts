@@ -5,8 +5,9 @@ import { UpdateDocument } from "./application/UpdateDocument";
 import { DeleteDocument } from "./application/DeleteDocument";
 import { GetAllDocuments } from "./application/GetAllDocuments";
 import { GetDocument } from "./application/GetDocument";
-import { createContentRepository, type RepositorySource } from "./infraestructure/repository";
-import type { ContentRepository } from "./domain/ports/ContentRepository";
+import { db } from "../../shared/infrastructure/database/drizzleDatabase";
+import { DrizzleContentRepository } from "./infraestructure/repository/DrizzleContentRepository";
+import { UnifiedDocumentParser } from "./infraestructure/parse/DocumentParser";
 import { CreateDocumentController } from "./infraestructure/rest/CreateDocumentController";
 import { UpdateDocumentController } from "./infraestructure/rest/UpdateDocumentController";
 import { DeleteDocumentController } from "./infraestructure/rest/DeleteDocumentController";
@@ -37,6 +38,7 @@ export { DrizzleContentOutboxDispatcher } from "./infraestructure/database/Drizz
 
 export class DocumentModule {
   constructor(
+    public readonly createDocument: CreateDocument,
     public readonly createDocumentController: CreateDocumentController,
     public readonly updateDocumentController: UpdateDocumentController,
     public readonly deleteDocumentController: DeleteDocumentController,
@@ -44,7 +46,7 @@ export class DocumentModule {
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus,
     public readonly mutationRoutes: DocumentMutationRoutes,
-    public readonly nanobookId?: string,
+    public readonly nanobookId: string,
   ) {}
 
   async refreshDocuments() {
@@ -54,16 +56,13 @@ export class DocumentModule {
   static async create(
     eventBus: EventBus,
     routeProtector: RouteProtector,
-    options: {
-      source?: RepositorySource;
-      nanobookId?: string;
-      contentRepository?: ContentRepository;
-    } = {},
+    nanobookId: string,
   ) {
-    const contentRepository = options.contentRepository ?? await createContentRepository({
-      source: options.source,
-      nanobookId: options.nanobookId,
-    });
+    const contentRepository = new DrizzleContentRepository(
+      db,
+      nanobookId,
+      new UnifiedDocumentParser(),
+    );
 
     const internalReferenceResolver = new InternalReferenceResolver(
       contentRepository
@@ -98,6 +97,7 @@ export class DocumentModule {
       DELETE: deleteDocumentController.handle,
     });
     return new DocumentModule(
+      createDocument,
       createDocumentController,
       updateDocumentController,
       deleteDocumentController,
@@ -105,7 +105,7 @@ export class DocumentModule {
       getDocument,
       eventBus,
       mutationRoutes,
-      options.nanobookId,
+      nanobookId,
     );
   }
 }

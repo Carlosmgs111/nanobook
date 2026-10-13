@@ -1,16 +1,20 @@
 import { AuthServerModule } from "../../auth/server";
-import { Document } from "../../documents/server/domain/Document";
 import { DocumentModule } from "../../documents/server";
 import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { NavigationModule } from "../../navigation/server";
 import { ProfileModule } from "../../profiles/server";
 import { PublishingModule } from "../../publishing/server";
+import { Result } from "../../shared/domain/Result";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import { NanobookModule } from "../../nanobooks/server";
+import {
+  CreateNanobookController,
+  NanobookModule,
+} from "../../nanobooks/server";
 import type {
-  NanobookCreationTransaction,
-  NanobookRootInitializer,
-} from "../../nanobooks/server/application/NanobookCreationTransaction";
+  CreateNanobook,
+  CreateNanobookError,
+} from "../../nanobooks/server/application/CreateNanobook";
+import type { Nanobook } from "../../nanobooks/server/domain/Nanobook";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 
 export interface NanobookContextModules {
@@ -27,6 +31,7 @@ export class Application {
     public readonly routeProtector: RouteProtector,
     public readonly profileModule: ProfileModule,
     public readonly nanobookModule: NanobookModule,
+    public readonly createNanobookController: CreateNanobookController,
   ) {}
 
   static async create(): Promise<Application> {
@@ -40,11 +45,14 @@ export class Application {
       NavigationModule,
       PublishingModule,
     };
-    const initializeNanobookRoot = createNanobookRootInitializer();
     const nanobookModule = await NanobookModule.create(
       routeProtector,
       nanobookContextModules,
-      initializeNanobookRoot,
+    );
+    const createNanobook = createNanobookWithRoot(
+      nanobookModule.createNanobook,
+      routeProtector,
+      nanobookContextModules,
     );
 
     return new Application(
@@ -52,6 +60,7 @@ export class Application {
       routeProtector,
       profileModule,
       nanobookModule,
+      new CreateNanobookController(createNanobook),
     );
   }
 }
@@ -65,34 +74,35 @@ export function getApp(): Promise<Application> {
   return appPromise;
 }
 
-function createNanobookRootInitializer(): NanobookRootInitializer {
-  return async (
-    nanobook,
-    transaction: NanobookCreationTransaction,
-  ): Promise<void> => {
-    const document = Document.create("index", {
-      id: crypto.randomUUID(),
-      title: nanobook.getName(),
-      description: nanobook.getName(),
-      ownerId: nanobook.getOwnerId(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      author: nanobook.getOwnerId(),
-    }, `# ${nanobook.getName()}\n`);
-    if (!document.isSuccess) throw document.getError();
+function createNanobookWithRoot(
+  createNanobook: CreateNanobook,
+  routeProtector: RouteProtector,
+  modules: NanobookContextModules,
+): Pick<CreateNanobook, "execute"> {
+  return {
+    execute: async (ownerId, input) => {
+      const nanobookResult = await createNanobook.execute(ownerId, input);
+      if (!nanobookResult.isSuccess) return nanobookResult;
 
-    const root = document.getValue();
-    await transaction.insertDocument(root);
-    await transaction.appendRevision({
-      documentId: root.getDocumentId().getValue(),
-      revision: root.getRevision(),
-      snapshot: root.parse(),
-      actorId: nanobook.getOwnerId(),
-      operation: "create",
-    });
-    await transaction.incrementContentVersion();
-    await transaction.enqueueEvent("document.created", {
-      documentId: root.getDocumentId().getValue(),
-    });
+      const nanobook = nanobookResult.getValue();
+      const documentModule = await modules.DocumentModule.create(
+        new modules.EventBus(),
+        routeProtector,
+        nanobook.getId(),
+      );
+      const rootResult = await documentModule.createDocument.execute({
+        id: crypto.randomUUID(),
+        path: "index",
+        title: nanobook.getName(),
+        description: nanobook.getName(),
+        content: `# ${nanobook.getName()}\n`,
+        ownerId: nanobook.getOwnerId(),
+        author: nanobook.getOwnerId(),
+      });
+      if (!rootResult.isSuccess) {
+        return Result.fail(rootResult.getError() as CreateNanobookError);
+      }
+      return Result.ok<Nanobook>(nanobook);
+    },
   };
 }

@@ -7,10 +7,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-- Desacoplado `NanobookContext` de los módulos de documentos, navegación y publicación: `Application` entrega los constructores externos y el inicializador de la raíz mediante un paquete de composición tipado.
+- Adelgazado `DrizzleContentRepository`: centralizado el alcance por `nanobookId`, unificado el listado, reutilizada la serialización de metadatos del dominio y eliminado un prechequeo redundante en actualizaciones con revisión.
+- Desacoplado `NanobookContext` de los módulos de documentos, navegación y publicación: `Application` entrega los constructores externos mediante un paquete de composición tipado.
+- Simplificado el alta de nanobooks: `NanobookModule` persiste únicamente el nanobook, `DocumentModule` expone `createDocument` y `Application` coordina después la creación del documento raíz. Se eliminaron la unidad de trabajo, el inicializador transaccional y el flujo `createWithRoot`; un fallo del documento deja el nanobook disponible para un reintento posterior.
+- Ajustado el cableado de módulos: `DocumentModule` instancia directamente `DrizzleContentRepository` y sus capacidades desde su propio compositor; `Application` y `NanobookContext` solo entregan el `nanobookId`.
 - Reubicado `RouteProtector` como capacidad server compartida; `Application` la obtiene de autenticación y la inyecta en perfiles, documentos y nanobooks sin exponer el origen de la implementación a esos módulos.
 - Reubicada la composición de `NanobookModule` en `src/nanobooks/server/index.ts`, alineándola con el patrón de módulos server que exponen su composición desde `index.ts`.
-- Simplificado el caso de creación de nanobooks: `CreateNanobook` exige explícitamente `createWithRoot` y eliminó la detección dinámica y el fallback no atómico; la creación del nanobook y su raíz permanece en una única transacción SQL.
 - La composición server se adelgazó: `Application` coordina únicamente autenticación, perfiles y `NanobookModule`; este último concentra repositorio, controladores, caché de contextos y la composición aislada de documentos, navegación y publicación por nanobook.
 - Eliminado el puente `nanobook_alias`: las rutas canónicas se resuelven por `nanobook.slug` y las rutas legacy responden `410`; la migración de esquema `0006` elimina la tabla.
 - Retirado todo el tooling de migración de contenido: producción comienza con una base SQL nueva y el contenido local queda fuera del runtime; se conservan únicamente las migraciones Drizzle de esquema.

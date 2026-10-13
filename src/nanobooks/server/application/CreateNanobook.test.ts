@@ -3,12 +3,10 @@ import { Result } from "../../../shared/domain/Result";
 import { CreateNanobook } from "./CreateNanobook";
 
 describe("CreateNanobook", () => {
-  it("creates a collection and its root through the creation store", async () => {
-    const createWithRoot = vi.fn().mockResolvedValue(Result.ok());
-    const initializeRoot = vi.fn().mockResolvedValue(undefined);
+  it("creates a nanobook through the repository", async () => {
+    const create = vi.fn().mockResolvedValue(Result.ok());
     const result = await new CreateNanobook(
-      { createWithRoot },
-      initializeRoot,
+      { create },
     ).execute("owner-1", {
       slug: "architecture",
       name: "Architecture",
@@ -16,22 +14,20 @@ describe("CreateNanobook", () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(createWithRoot).toHaveBeenCalledWith(
+    expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         ownerId: "owner-1",
         slug: "architecture",
       }),
-      initializeRoot,
     );
   });
 
-  it("propagates creation store failures", async () => {
+  it("propagates repository failures", async () => {
     const failure = new Error("creation failed");
-    const createWithRoot = vi.fn().mockResolvedValue(Result.fail(failure));
+    const create = vi.fn().mockResolvedValue(Result.fail(failure));
 
     const result = await new CreateNanobook(
-      { createWithRoot },
-      vi.fn(),
+      { create },
     ).execute("owner-1", {
       slug: "atomic",
       name: "Atomic",

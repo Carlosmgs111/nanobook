@@ -1,8 +1,8 @@
 import type { APIRoute } from "astro";
-import { CreateNanobook } from "../../application/CreateNanobook";
+import type { CreateNanobook } from "../../application/CreateNanobook";
 
 export class CreateNanobookController {
-  constructor(private readonly createNanobook: CreateNanobook) {}
+  constructor(private readonly createNanobook: Pick<CreateNanobook, "execute">) {}
 
   handle: APIRoute = async ({ request, locals }) => {
     if (!locals.currentUserId) {

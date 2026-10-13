@@ -1,19 +1,16 @@
 import { Result } from "../../../shared/domain/Result";
 import { Nanobook } from "../domain/Nanobook";
-import type { NanobookRepositoryFailure } from "../domain/ports/NanobookRepository";
-import type { CreateNanobookData } from "../domain/types";
 import type {
-  NanobookRootInitializer,
-  NanobookCreationStore,
-} from "./NanobookCreationTransaction";
+  NanobookRepository,
+  NanobookRepositoryFailure,
+} from "../domain/ports/NanobookRepository";
+import type { CreateNanobookData } from "../domain/types";
 
 export type CreateNanobookError = NanobookRepositoryFailure | Error;
+type CreateNanobookRepository = Pick<NanobookRepository, "create">;
 
 export class CreateNanobook {
-  constructor(
-    private readonly creationStore: NanobookCreationStore,
-    private readonly initializeRoot: NanobookRootInitializer,
-  ) {}
+  constructor(private readonly repository: CreateNanobookRepository) {}
 
   async execute(
     ownerId: string,
@@ -27,10 +24,7 @@ export class CreateNanobook {
     if (!result.isSuccess) return Result.fail(result.getError());
 
     const nanobook = result.getValue();
-    const created = await this.creationStore.createWithRoot(
-      nanobook,
-      this.initializeRoot,
-    );
+    const created = await this.repository.create(nanobook);
     if (!created.isSuccess) return Result.fail(created.getError());
     return Result.ok(nanobook);
   }

@@ -5,7 +5,6 @@ import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { NanobookContext } from "./application/NanobookContext";
 import { CreateNanobook } from "./application/CreateNanobook";
-import type { NanobookRootInitializer } from "./application/NanobookCreationTransaction";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { Nanobook } from "./domain/Nanobook";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
@@ -38,7 +37,7 @@ export class NanobookModule {
 
   private constructor(
     public readonly repository: DrizzleNanobookRepository,
-    public readonly createNanobookController: CreateNanobookController,
+    public readonly createNanobook: CreateNanobook,
     public readonly listNanobooksController: ListNanobooksController,
     private readonly routeProtector: RouteProtector,
     private readonly contextModules: NanobookContextModules,
@@ -47,19 +46,15 @@ export class NanobookModule {
   static async create(
     routeProtector: RouteProtector,
     contextModules: NanobookContextModules,
-    initializeNanobookRoot: NanobookRootInitializer,
     database: Database = db,
   ): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(database);
     const listNanobooks = new ListNanobooks(repository);
-    const createNanobook = new CreateNanobook(
-      repository,
-      initializeNanobookRoot,
-    );
+    const createNanobook = new CreateNanobook(repository);
 
     return new NanobookModule(
       repository,
-      new CreateNanobookController(createNanobook),
+      createNanobook,
       new ListNanobooksController(listNanobooks),
       routeProtector,
       contextModules,

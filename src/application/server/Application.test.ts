@@ -43,7 +43,8 @@ describe("Application", () => {
     expect(app.profileModule).toBeDefined();
     expect("userModule" in app).toBe(false);
     expect(app.nanobookModule).toBeDefined();
-    expect(app.nanobookModule.createNanobookController).toBeDefined();
+    expect(app.createNanobookController).toBeDefined();
+    expect(app.nanobookModule.createNanobook).toBeDefined();
     expect(app.nanobookModule.listNanobooksController).toBeDefined();
     expect("documentModule" in app).toBe(false);
     expect("navigationModule" in app).toBe(false);
