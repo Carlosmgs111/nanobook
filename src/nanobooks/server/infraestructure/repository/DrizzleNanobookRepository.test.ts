@@ -36,4 +36,20 @@ describe("DrizzleNanobookRepository", () => {
     expect((await repository.create(duplicate)).getError().name).toBe("NanobookSlugAlreadyTakenError");
     expect((await repository.create(missingOwner)).isSuccess).toBe(false);
   });
+
+  it("rolls back the nanobook when root initialization fails", async () => {
+    const book = Nanobook.create({
+      id: "book-rollback",
+      ownerId: "user-1",
+      slug: "rollback",
+      name: "Rollback",
+    }).getValue();
+
+    const result = await repository.createAtomically(book, async () => {
+      throw new Error("root initialization failed");
+    });
+
+    expect(result.isSuccess).toBe(false);
+    expect((await repository.findById(book.getId())).getValue()).toBeNull();
+  });
 });

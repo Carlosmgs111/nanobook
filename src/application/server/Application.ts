@@ -22,6 +22,7 @@ import { NanobookContext } from "./NanobookContext";
 import { DrizzleContentRepository } from "../../documents/server/infraestructure/repository/DrizzleContentRepository";
 import { UnifiedDocumentParser } from "../../documents/server/infraestructure/parse/DocumentParser";
 import { Document } from "../../documents/server/domain/Document";
+import type { NanobookCreationTransaction } from "../../nanobooks/server/application/NanobookCreationTransaction";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -120,12 +121,7 @@ export class Application {
       nanobookAliasRepository,
       new CreateNanobookController(new CreateNanobook(
         nanobookRepository,
-        async (nanobook) => {
-          const repository = new DrizzleContentRepository(
-            db,
-            nanobook.getId(),
-            new UnifiedDocumentParser(),
-          );
+        async (nanobook, transaction?: NanobookCreationTransaction) => {
           const document = Document.create("index", {
             id: crypto.randomUUID(),
             title: nanobook.getName(),
@@ -136,9 +132,32 @@ export class Application {
             author: nanobook.getOwnerId(),
           }, `# ${nanobook.getName()}\n`);
           if (!document.isSuccess) throw document.getError();
+          if (transaction) {
+            const root = document.getValue();
+            await transaction.insertDocument(root);
+            await transaction.appendRevision({
+              documentId: root.getDocumentId().getValue(),
+              revision: root.getRevision(),
+              snapshot: root.parse(),
+              actorId: nanobook.getOwnerId(),
+              operation: "create",
+            });
+            await transaction.incrementContentVersion();
+            await transaction.enqueueEvent("document.created", {
+              documentId: root.getDocumentId().getValue(),
+            });
+            return;
+          }
+
+          const repository = new DrizzleContentRepository(
+            db,
+            nanobook.getId(),
+            new UnifiedDocumentParser(),
+          );
           const created = await repository.create(document.getValue());
           if (!created.isSuccess) throw created.getError();
         },
+        nanobookRepository.createAtomically.bind(nanobookRepository),
       )),
       new ListNanobooksController(listNanobooks),
     );

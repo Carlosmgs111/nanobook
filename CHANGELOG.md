@@ -13,6 +13,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Mejorado el diagnóstico cuando la tabla `nanobook_alias` aún no tiene aplicada su migración; ahora se indica ejecutar `npm run database:migrate`.
 - Cerrada la frontera de mutaciones de documentos: los DTO, el editor y el mapper HTTP ya no aceptan ni reenvían `metadata.nanobook`, `ownerId` u otros campos desconocidos; la marca histórica solo se conserva al leer/importar contenido legado.
 - Cerrada temporalmente la configuración de nanobooks en un contrato vacío y validado: los manifiestos y la API rechazan proveedores, credenciales y campos arbitrarios hasta que exista una capacidad editorial explícita.
+- La creación de nanobooks usa una transacción compartida para insertar la colección, su raíz `index`, la revisión inicial, la versión de contenido y el evento outbox; un fallo al inicializar la raíz revierte toda la operación.
 
 - Implementado el primer corte de persistencia SQL para nanobooks y documentos: conexión/migraciones Drizzle compartidas, repositorios acotados por `nanobookId`, revisiones optimistas, outbox transaccional y unidad de trabajo para versionar cambios.
 - Añadido `NanobookContext` para aislar repositorio, navegación, eventos y caché por colección. Las rutas canónicas `/n/<slug>/...` validan visibilidad y propietario antes de resolver documentos; las respuestas de edición transportan la revisión esperada y los conflictos devuelven `409`.

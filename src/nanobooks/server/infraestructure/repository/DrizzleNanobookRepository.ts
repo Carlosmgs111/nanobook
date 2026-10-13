@@ -9,6 +9,11 @@ import {
 } from "../../domain/errors";
 import type { NanobookRepository } from "../../domain/ports/NanobookRepository";
 import { nanobook } from "../database/DrizzleNanobookSchema";
+import { DrizzleDocumentUnitOfWork } from "../../../../documents/server/infraestructure/database/DrizzleDocumentUnitOfWork";
+import type {
+  AtomicNanobookCreator,
+  NanobookRootInitializer,
+} from "../../application/NanobookCreationTransaction";
 
 type Database = LibSQLDatabase<any>;
 
@@ -64,6 +69,29 @@ export class DrizzleNanobookRepository implements NanobookRepository {
       }
       return Result.fail(
         new NanobookRepositoryError("No fue posible crear el nanobook", {
+          cause: error,
+        }),
+      );
+    }
+  }
+
+  async createAtomically(
+    book: Nanobook,
+    initializeRoot: NanobookRootInitializer,
+  ) {
+    const unitOfWork = new DrizzleDocumentUnitOfWork(this.database, book.getId());
+    try {
+      await unitOfWork.run(async (transaction) => {
+        await transaction.insertNanobook(book);
+        await initializeRoot(book, transaction);
+      });
+      return Result.ok();
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        return Result.fail(new NanobookSlugAlreadyTakenError(book.getSlug()));
+      }
+      return Result.fail(
+        new NanobookRepositoryError("No fue posible crear el nanobook y su raíz", {
           cause: error,
         }),
       );
