@@ -6,6 +6,7 @@ export default defineConfig({
   schema: [
     "./src/auth/server/infrastructure/better-auth/DrizzleAuthSchema.ts",
     "./src/profiles/server/infraestructure/database/DrizzleProfileSchema.ts",
+    "./src/nanobooks/server/infraestructure/database/DrizzleNanobookSchema.ts",
   ],
 
   out: "./drizzle",

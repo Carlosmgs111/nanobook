@@ -15,6 +15,13 @@
       "when": 1791499409732,
       "tag": "0001_married_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791866069552,
+      "tag": "0002_zippy_tattoo",
+      "breakpoints": true
     }
   ]
 }
