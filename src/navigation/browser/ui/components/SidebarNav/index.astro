@@ -2,10 +2,16 @@
 import SidebarHeader from "./SidebarHeader.astro";
 import SidebarList from "./SidebarList.astro";
 import { getApp } from "../../../../../application/server/Application";
+import type { NavigationService } from "../../../../server";
 
-const {
-  navigationModule: { navigationService },
-} = await getApp();
+interface Props {
+  navigationService?: NavigationService;
+}
+
+const { navigationService: providedNavigationService } = Astro.props;
+
+const navigationService = providedNavigationService
+  ?? (await getApp()).navigationModule.navigationService;
 
 const slug = Astro.params.slug || "index";
 

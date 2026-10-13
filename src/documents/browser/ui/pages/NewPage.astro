@@ -4,6 +4,20 @@ import { getApp } from "../../../../application/server/Application";
 
 const app = await getApp();
 
+interface Props {
+  nanobookSlug?: string;
+}
+
+const { nanobookSlug } = Astro.props;
+const nanobookContext = nanobookSlug
+  ? await app.forNanobookSlug(nanobookSlug)
+  : null;
+if (nanobookSlug && !nanobookContext) {
+  return new Response("Nanobook not found", { status: 404 });
+}
+const documentModule = nanobookContext?.documentModule ?? app.documentModule;
+const publishingModule = nanobookContext?.publishingModule ?? app.publishingModule;
+
 export const prerender = false;
 
 const slug = Astro.params.slug || "index";
@@ -12,19 +26,21 @@ if (!slug) {
   return new Response("Document not found", { status: 404 });
 }
 
-const document = await app.documentModule.getDocument.execute(slug);
+const document = await documentModule.getDocument.execute(slug);
 if (!document) throw new Error("Document not found");
-const renderedPage = await app.publishingModule.pagePublisher.publish(document);
+const renderedPage = await publishingModule.pagePublisher.publish(document);
 if (!renderedPage) throw new Error("Page not found");
 const { rendered } = renderedPage;
 const { entry } = rendered;
 const basePath = slug === "index" ? "" : `${slug}/`;
+const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
 ---
 
 <Layout
   title={`Nuevo documento en ${entry.title}`}
   description="Crear un nuevo documento"
   hideToc={true}
+  navigationService={nanobookContext?.navigationModule.navigationService}
 >
   <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
     <span class="tech-label mb-3 block">Nuevo documento</span>
@@ -138,7 +154,7 @@ const basePath = slug === "index" ? "" : `${slug}/`;
           Crear y editar
         </button>
         <a
-          href={slug === "index" ? "/" : `/${slug}/`}
+          href={slug === "index" ? `${baseHref || "/"}` : `${baseHref}/${slug}/`}
           class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-4 py-2 text-sm font-medium hover:bg-[var(--grid-line)]"
         >
           Cancelar

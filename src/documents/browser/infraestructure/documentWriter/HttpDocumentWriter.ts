@@ -21,6 +21,9 @@ function toUpdateDocumentRequest(
   document: SerializedEntry
 ): UpdateDocumentRequest {
   return {
+    ...(typeof document.revision === "number"
+      ? { expectedRevision: document.revision }
+      : {}),
     path: document.path,
     title: document.title,
     description: document.description,

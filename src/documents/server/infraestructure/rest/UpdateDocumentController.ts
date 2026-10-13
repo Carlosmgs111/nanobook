@@ -4,6 +4,7 @@ import { jsonResponse, handleServiceError } from "./utils";
 import type { UpdateDocumentRequest } from "./dto/UpdateDocumentRequest";
 import { toDocumentInput } from "./mappers/toDocumentInput";
 import type { DocumentInput } from "../../application/dto/DocumentInput";
+import { toDocumentResponse } from "./mappers/toDocumentResponse";
 
 export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
@@ -32,7 +33,7 @@ export class UpdateDocumentController {
         return handleServiceError(result.getError());
       }
 
-      return jsonResponse({ ok: true }, 200);
+      return jsonResponse(toDocumentResponse(result.getValue().parse()), 200);
     } catch (error) {
       console.error(error);
       return jsonResponse({ error: "Error interno del servidor" }, 500);

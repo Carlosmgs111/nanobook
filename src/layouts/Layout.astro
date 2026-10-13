@@ -2,6 +2,7 @@
 import "../shared/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import LayoutShell from "./components/LayoutShell.astro";
+import type { NavigationService } from "../navigation/server";
 
 interface Heading {
   depth: number;
@@ -19,6 +20,7 @@ interface Props {
   newHref?: string;
   loginHref?: string;
   canonicalHref?: string;
+  navigationService?: NavigationService;
 }
 
 const {
@@ -31,6 +33,7 @@ const {
   newHref,
   loginHref = "/login",
   canonicalHref,
+  navigationService,
 } = Astro.props;
 ---
 
@@ -54,6 +57,7 @@ const {
     viewHref={viewHref}
     newHref={newHref}
     loginHref={loginHref}
+    navigationService={navigationService}
   >
     <slot />
   </LayoutShell>

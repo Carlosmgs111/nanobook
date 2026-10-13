@@ -1,0 +1,13 @@
+---
+import NewPage from "../../../../documents/browser/ui/pages/NewPage.astro";
+import { getApp } from "../../../../application/server/Application";
+import { resolveNanobookRoute } from "../../../../application/server/resolveNanobookRoute";
+
+export const prerender = false;
+
+const app = await getApp();
+const access = await resolveNanobookRoute(app, Astro.request, Astro.params.nanobookSlug, "write");
+if (access instanceof Response) return access;
+---
+
+<NewPage nanobookSlug={Astro.params.nanobookSlug} />

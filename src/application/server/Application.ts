@@ -42,6 +42,19 @@ export class Application {
     const nanobook = result.getValue();
     if (!nanobook) throw new Error(`Nanobook "${nanobookId}" no existe`);
 
+    return this.contextForNanobook(nanobook);
+  }
+
+  async forNanobookSlug(slug: string): Promise<NanobookContext | null> {
+    const result = await this.nanobookRepository.findBySlug(slug);
+    if (!result.isSuccess) throw result.getError();
+    const nanobook = result.getValue();
+    if (!nanobook) return null;
+    return this.contextForNanobook(nanobook);
+  }
+
+  private async contextForNanobook(nanobook: import("../../nanobooks/server").Nanobook): Promise<NanobookContext> {
+    const nanobookId = nanobook.getId();
     const cached = this.nanobookContexts.get(nanobookId);
     if (cached && cached.contentVersion === nanobook.getContentVersion()) {
       return cached;

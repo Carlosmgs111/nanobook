@@ -31,6 +31,8 @@ export interface ContentEntry {
 export interface Entry {
   /** Stable entity identity. */
   documentId: string;
+  /** Monotonic SQL revision used for optimistic concurrency when available. */
+  revision?: number;
   /** Mutable public/content path. */
   path: string;
   /** Whether the internal path represents a directory index. */

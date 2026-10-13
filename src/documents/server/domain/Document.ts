@@ -30,6 +30,7 @@ export class Document {
   private parser: DocumentParser | null;
   /** Stable identity. */
   private documentId: DocumentId;
+  private revision: number;
   private path: DocumentPath;
   private slug: string;
   private parentPath: DocumentPath | null;
@@ -50,12 +51,14 @@ export class Document {
     body: string = "",
     parser: DocumentParser | null = null,
     documentId: DocumentId,
-    rawFrontmatter?: string
+    rawFrontmatter?: string,
+    revision = 1,
   ) {
     const now = new Date();
     this.parser = parser;
     this.path = path;
     this.documentId = documentId;
+    this.revision = revision;
     this.slug = path.getPublicValue();
     this.parentPath = path.getParentPath();
     this.position = overrides.position ?? 0;
@@ -107,7 +110,8 @@ export class Document {
     body: string = "",
     parser: DocumentParser | null = null,
     rawFrontmatter?: string,
-    documentIdValue?: string
+    documentIdValue?: string,
+    revision?: number,
   ): Result<
     InvalidDocumentError | InvalidDocumentIdError,
     Document
@@ -139,7 +143,8 @@ export class Document {
           body,
           parser,
           documentIdResult.getValue(),
-          rawFrontmatter
+          rawFrontmatter,
+          revision,
         )
       );
     } catch (error) {
@@ -160,6 +165,7 @@ export class Document {
     const version = await hashString(`${contentHash}\n${metadataHash}`);
     return {
       documentId: this.getDocumentId().getValue(),
+      revision: this.revision,
       path: this.getPath(),
       id: this.getDocumentId().getValue(),
       version,
@@ -173,6 +179,9 @@ export class Document {
   }
   getDocumentId(): DocumentId {
     return this.documentId;
+  }
+  getRevision(): number {
+    return this.revision;
   }
   getPath(): string {
     return this.path.getInternalValue();
@@ -196,7 +205,8 @@ export class Document {
       this.content,
       this.parser,
       undefined,
-      this.getDocumentId().getValue()
+      this.getDocumentId().getValue(),
+      this.revision,
     );
   }
   getTitle(): string {

@@ -24,14 +24,17 @@ export class SaveDocument {
     if (!writeResult.isSuccess) {
       return Result.fail(writeResult.getError());
     }
+    const saved = writeResult.getValue();
 
     const currentStageResult = this.storage.loadStagedDocument(documentId);
     if (!currentStageResult.isSuccess) return Result.fail(currentStageResult.getError());
     if (!sameDocument(currentStageResult.getValue(), staged)) return Result.ok(staged);
 
-    const confirmationResult = this.storage.saveConfirmedDocument(documentId, staged);
+    const stagedResult = this.storage.saveStagedDocument(documentId, saved);
+    if (!stagedResult.isSuccess) return Result.fail(stagedResult.getError());
+    const confirmationResult = this.storage.saveConfirmedDocument(documentId, saved);
     if (!confirmationResult.isSuccess) return Result.fail(confirmationResult.getError());
-    return Result.ok(staged);
+    return Result.ok(saved);
   }
 }
 

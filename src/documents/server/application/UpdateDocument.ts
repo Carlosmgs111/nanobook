@@ -30,7 +30,7 @@ export class UpdateDocument {
   async execute(
     documentDelta: DocumentInput,
     actorId: string,
-  ): Promise<Result<UpdateDocumentError, void>> {
+  ): Promise<Result<UpdateDocumentError, Document>> {
     const documentId = documentDelta.id;
     if (!documentId) {
       return Result.fail(new InvalidDocumentIdError(documentId ?? ""));
@@ -66,7 +66,8 @@ export class UpdateDocument {
       content,
       undefined,
       undefined,
-      documentId
+      documentId,
+      existingDocument.getRevision(),
     );
     if (!updatedDocumentResult.isSuccess) {
       return Result.fail(updatedDocumentResult.getError());
@@ -111,7 +112,7 @@ export class UpdateDocument {
       if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
     }
 
-    return Result.ok();
+    return Result.ok(documentsToUpdate.getValue()[0].document);
   }
 
   private async buildMoveSet(

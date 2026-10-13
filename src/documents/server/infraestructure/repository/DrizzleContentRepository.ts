@@ -190,7 +190,7 @@ export class DrizzleContentRepository implements ContentRepository {
     } catch (error) {
       return Result.fail(this.repositoryError("Los metadatos del documento no son válidos", error));
     }
-    return Document.create(row.path, metadata, row.body, this.parser, row.rawFrontmatter, row.id);
+    return Document.create(row.path, metadata, row.body, this.parser, row.rawFrontmatter, row.id, row.revision);
   }
 
   private async toRow(value: Document, revision = 1) {

@@ -2,15 +2,17 @@
 import Breadcrumb from "../../navigation/browser/ui/components/Breadcrumb.astro";
 import DocumentControls from "./DocumentControls.astro";
 import OpenSidebar from "../../navigation/browser/ui/components/SidebarNav/OpenSidebar.astro";
+import type { NavigationService } from "../../navigation/server";
 
 interface Props {
   editHref?: string;
   viewHref?: string;
   newHref?: string;
   loginHref?: string;
+  navigationService?: NavigationService;
 }
 
-const { editHref, viewHref, newHref, loginHref } = Astro.props;
+const { editHref, viewHref, newHref, loginHref, navigationService } = Astro.props;
 const isProfilePage = Astro.url.pathname === "/profile";
 ---
 
@@ -29,7 +31,7 @@ const isProfilePage = Astro.url.pathname === "/profile";
       buttonId="sidebar-open"
     />
     <div class="min-w-0 flex-1">
-      <Breadcrumb />
+      <Breadcrumb navigationService={navigationService} />
     </div>
     <div class="flex flex-shrink-0 items-center gap-2">
       <DocumentControls

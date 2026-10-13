@@ -24,4 +24,8 @@ export class AuthServerModule {
   protect(handler: APIRoute): APIRoute {
     return withAuthenticatedSession(this.sessionReader, handler);
   }
+
+  getSession(request: Request) {
+    return this.sessionReader.getSession(request.headers);
+  }
 }
