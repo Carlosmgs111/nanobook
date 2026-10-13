@@ -12,6 +12,8 @@ nanobook: true
 
 ## Decisiones recientes
 
+- Propuesta de documentos en SQL y múltiples nanobooks: almacenamiento administrado por la instancia, aislamiento y migración verificable; implementación pendiente. Véase el resumen al final de este documento.
+
 - [Separación de módulos por entorno](./separacion-entornos-browser-server): límites entre `browser`, `server`, `content`, `pages` y `shared` y sus reglas de dependencia.
 - [Composición de la aplicación de navegador](./composicion-application-browser): composición síncrona de `AuthModule` y `EditionModule` mediante `Application` y `getApp()`.
 - [Autenticación del servidor y decorador de capacidades](./autenticacion-servidor-decorador-capacidades): frontera de servidor del módulo `auth`, composición única y protección reutilizable de rutas HTTP.
@@ -35,3 +37,13 @@ omite sus ancestros externos. El sidebar del propio índice muestra sus hijos
 inmediatos y no permite subir a la colección contenedora. Un Nanobook anidado
 define un contexto nuevo y prevalece sobre su contenedor; sin una marca
 ancestro se conserva la navegación global existente.
+
+## Propuesta de persistencia SQL — 2026-10-12
+
+Se propone almacenar usuarios, perfiles, nanobooks y documentos en la misma base Drizzle/libSQL administrada por la instancia. Cada nanobook será una entidad independiente con identidad, configuración y árbol lógico propios; no contendrá otros nanobooks. Los documentos y directorios pertenecerán a un único libro. Los usuarios crearán contenido sin configurar GitHub ni credenciales de almacenamiento.
+
+La marca histórica `nanobook: true`, descrita en la sección anterior como comportamiento actual, dejará de establecer fronteras activas. Breadcrumbs y sidebar usarán la raíz explícita del libro; mover un directorio dentro del mismo no cambiará la configuración ni el ámbito de sus documentos. Bibliotecas que agrupen nanobooks y transferencias entre libros quedan para una evolución posterior; el renombrado normal no puede reasignar pertenencia.
+
+La migración exigirá clasificar cada frontera histórica como libro independiente o directorio normal. Preservará IDs y propiedad, declarará los cambios de rutas/configuración/referencias y conservará acceso por URLs antiguas mediante alias autorizados. Incluirá revisiones, transacciones de subárboles, control de concurrencia y aislamiento de API y cachés. No se propone escritura doble; después de aceptar escrituras SQL, una reversión requiere reconciliar los nuevos datos.
+
+Estado: diseño propuesto, sin implementación. La especificación completa se conserva en `docs/superpowers/specs/2026-10-12-sql-multinanobook-design.md` y el plan ejecutable en `docs/superpowers/plans/2026-10-12-sql-multinanobook.md` dentro del repositorio. Se ubican allí porque los archivos nuevos de `src/content` están ignorados por Git.

@@ -19,6 +19,7 @@
     "content:render": "tsx scripts/content.ts render",
     "content:migrate-ids": "tsx scripts/migrate-document-identities.ts",
     "content:assign-owner": "tsx scripts/migrate-document-ownership.ts",
+    "database:migrate": "tsx scripts/database-migrate.ts",
     "profile:change-username": "tsx scripts/change-profile-username.ts"
   },
   "dependencies": {

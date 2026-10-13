@@ -1,8 +1,4 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import { createDatabase } from "./createDatabase";
+import { getDatabaseOptions } from "./databaseConfig";
 
-const client = createClient({
-  url: "file:./data/nanobook.db",
-});
-
-export const db = drizzle(client);
+export const { client, db } = createDatabase(getDatabaseOptions());

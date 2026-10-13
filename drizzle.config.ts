@@ -11,6 +11,9 @@ export default defineConfig({
   out: "./drizzle",
 
   dbCredentials: {
-    url: "file:./data/nanobook.db",
+    url: process.env.DATABASE_URL ?? "file:./data/nanobook.db",
+    ...(process.env.DATABASE_AUTH_TOKEN
+      ? { authToken: process.env.DATABASE_AUTH_TOKEN }
+      : {}),
   },
 });

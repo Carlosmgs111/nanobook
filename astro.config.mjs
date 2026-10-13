@@ -38,6 +38,16 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
+      DATABASE_URL: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      DATABASE_AUTH_TOKEN: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
       GITHUB_BRANCH: envField.string({
         context: "server",
         access: "secret",
