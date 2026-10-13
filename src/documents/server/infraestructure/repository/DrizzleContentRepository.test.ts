@@ -31,6 +31,8 @@ describe("DrizzleContentRepository", () => {
     await connection.db.run(sql`CREATE TABLE document (id TEXT PRIMARY KEY, nanobook_id TEXT NOT NULL REFERENCES nanobook(id) ON DELETE RESTRICT, path TEXT NOT NULL, public_path TEXT NOT NULL, parent_path TEXT, title TEXT NOT NULL, description TEXT NOT NULL, body TEXT NOT NULL, metadata_json TEXT NOT NULL, raw_frontmatter TEXT NOT NULL, owner_id TEXT REFERENCES user(id) ON DELETE RESTRICT, revision INTEGER NOT NULL DEFAULT 1, content_hash TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted_at INTEGER)`);
     await connection.db.run(sql`CREATE UNIQUE INDEX document_live_path_unique ON document (nanobook_id, path)`);
     await connection.db.run(sql`CREATE UNIQUE INDEX document_live_public_path_unique ON document (nanobook_id, public_path)`);
+    await connection.db.run(sql`CREATE TABLE document_revision (document_id TEXT NOT NULL REFERENCES document(id) ON DELETE RESTRICT, revision INTEGER NOT NULL, snapshot_json TEXT NOT NULL, actor_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT, operation TEXT NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (document_id, revision))`);
+    await connection.db.run(sql`CREATE TABLE content_outbox (id TEXT PRIMARY KEY NOT NULL, nanobook_id TEXT NOT NULL REFERENCES nanobook(id) ON DELETE RESTRICT, content_version INTEGER NOT NULL, event_type TEXT NOT NULL, payload_json TEXT NOT NULL, created_at INTEGER NOT NULL, delivered_at INTEGER)`);
     await connection.db.run(sql`INSERT INTO user (id, name, email) VALUES ('owner-1', 'Owner', 'owner@example.com')`);
     await connection.db.run(sql`INSERT INTO user (id, name, email) VALUES ('owner-2', 'Owner 2', 'owner2@example.com')`);
     await connection.db.run(sql`INSERT INTO nanobook (id, owner_id, slug, name, created_at, updated_at) VALUES ('book-a', 'owner-1', 'a', 'A', 0, 0)`);
@@ -50,6 +52,7 @@ describe("DrizzleContentRepository", () => {
     expect((await first.getByPublicPath("guide")).getValue()?.getContent()).toBe("# A");
     expect((await second.getByPublicPath("guide")).getValue()?.getContent()).toBe("# B");
     expect((await first.getById("doc-b")).getValue()).toBeNull();
+    expect((await connection.client.execute("SELECT COUNT(*) AS count FROM document_revision")).rows[0]?.count).toBe(2);
   });
 
   it("lists direct children without loading another nanobook", async () => {
@@ -92,5 +95,9 @@ describe("DrizzleContentRepository", () => {
     expect(conflict?.isSuccess).toBe(false);
     expect(conflict?.getError()).toBeInstanceOf(DocumentRevisionConflictError);
     expect((await first.getById("revisioned")).getValue()?.getContent()).toBe("# B");
+    expect((await connection.client.execute("SELECT revision, operation FROM document_revision WHERE document_id = 'revisioned' ORDER BY revision")).rows).toEqual([
+      { revision: 1, operation: "create" },
+      { revision: 2, operation: "update" },
+    ]);
   });
 });

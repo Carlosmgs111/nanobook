@@ -243,6 +243,7 @@ export class Document {
   parse(): Entry {
     return {
       documentId: this.getDocumentId().getValue(),
+      revision: this.revision,
       path: this.getPath(),
       isIndex: this.isIndex(),
       version: "",

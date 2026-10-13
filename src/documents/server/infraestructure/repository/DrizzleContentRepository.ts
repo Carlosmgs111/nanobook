@@ -19,6 +19,7 @@ import type {
 import type { DocumentParser } from "../../domain/ports/DocumentParser";
 import type { DocumentMetadata } from "../../domain/types";
 import { document } from "../database/DrizzleDocumentSchema";
+import { contentOutbox, documentRevision } from "../database/DrizzleDocumentRevisionSchema";
 import { nanobook } from "../../../../nanobooks/server/infraestructure/database/DrizzleNanobookSchema";
 
 type Database = LibSQLDatabase<any>;
@@ -70,8 +71,10 @@ export class DrizzleContentRepository implements ContentRepository {
     const row = await this.toRow(value);
     if (!row.isSuccess) return Result.fail(row.getError());
     try {
-      await this.database.insert(document).values(row.getValue());
-      await this.touchNanobook();
+      await this.database.transaction(async (transaction) => {
+        await transaction.insert(document).values(row.getValue());
+        await this.recordMutation(transaction, value, value.getRevision(), "create", value.parse());
+      });
       return Result.ok();
     } catch (error) {
       if (isConstraintError(error)) return Result.fail(new DocumentAlreadyExistsError(value.getPath()));
@@ -104,16 +107,29 @@ export class DrizzleContentRepository implements ContentRepository {
     const row = await this.toRow(value, expectedRevision + 1);
     if (!row.isSuccess) return Result.fail(row.getError());
     try {
-      const result = await this.database
-        .update(document)
-        .set(row.getValue())
-        .where(and(
-          eq(document.id, value.getDocumentId().getValue()),
-          eq(document.nanobookId, this.nanobookId),
-          eq(document.revision, expectedRevision),
-          isNull(document.deletedAt),
-        ));
-      const rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+      let rowsAffected = 0;
+      const nextRevision = expectedRevision + 1;
+      await this.database.transaction(async (transaction) => {
+        const result = await transaction
+          .update(document)
+          .set(row.getValue())
+          .where(and(
+            eq(document.id, value.getDocumentId().getValue()),
+            eq(document.nanobookId, this.nanobookId),
+            eq(document.revision, expectedRevision),
+            isNull(document.deletedAt),
+          ));
+        rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+        if (rowsAffected > 0) {
+          await this.recordMutation(
+            transaction,
+            value,
+            nextRevision,
+            previousPath && previousPath !== value.getPath() ? "move" : "update",
+            { ...value.parse(), revision: nextRevision },
+          );
+        }
+      });
       if (rowsAffected === 0) {
         const actualRevision = await this.getRevision(value.getDocumentId().getValue());
         if (!actualRevision.isSuccess) return Result.fail(actualRevision.getError());
@@ -126,7 +142,6 @@ export class DrizzleContentRepository implements ContentRepository {
           actualRevision.getValue(),
         ));
       }
-      await this.touchNanobook();
       return Result.ok();
     } catch (error) {
       if (isConstraintError(error)) return Result.fail(new DocumentAlreadyExistsError(value.getPath()));
@@ -139,11 +154,36 @@ export class DrizzleContentRepository implements ContentRepository {
     if (!existing.isSuccess) return Result.fail(existing.getError());
     if (!existing.getValue()) return Result.fail(new DocumentNotFoundError(value.getPath()));
     try {
-      await this.database
-        .update(document)
-        .set({ deletedAt: new Date(), updatedAt: new Date() })
-        .where(and(eq(document.id, value.getDocumentId().getValue()), eq(document.nanobookId, this.nanobookId), isNull(document.deletedAt)));
-      await this.touchNanobook();
+      let rowsAffected = 0;
+      const nextRevision = value.getRevision() + 1;
+      await this.database.transaction(async (transaction) => {
+        const result = await transaction
+          .update(document)
+          .set({ deletedAt: new Date(), updatedAt: new Date(), revision: nextRevision })
+          .where(and(
+            eq(document.id, value.getDocumentId().getValue()),
+            eq(document.nanobookId, this.nanobookId),
+            eq(document.revision, value.getRevision()),
+            isNull(document.deletedAt),
+          ));
+        rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+        if (rowsAffected > 0) {
+          await this.recordMutation(
+            transaction,
+            value,
+            nextRevision,
+            "delete",
+            { ...value.parse(), revision: nextRevision },
+          );
+        }
+      });
+      if (rowsAffected === 0) {
+        return Result.fail(new DocumentRevisionConflictError(
+          value.getDocumentId().getValue(),
+          value.getRevision(),
+          await this.getRevision(value.getDocumentId().getValue()).then((result) => result.isSuccess ? result.getValue() ?? undefined : undefined),
+        ));
+      }
       return Result.ok();
     } catch (error) {
       return Result.fail(this.repositoryError(`No fue posible eliminar "${value.getPath()}"`, error));
@@ -233,11 +273,43 @@ export class DrizzleContentRepository implements ContentRepository {
     }
   }
 
-  private async touchNanobook(): Promise<void> {
-    await this.database
+  private async recordMutation(
+    transaction: any,
+    value: Document,
+    revision: number,
+    operation: "create" | "update" | "move" | "delete",
+    snapshot: unknown,
+  ): Promise<void> {
+    await transaction
       .update(nanobook)
       .set({ contentVersion: sql`${nanobook.contentVersion} + 1`, updatedAt: new Date() })
       .where(eq(nanobook.id, this.nanobookId));
+    const [nanobookRow] = await transaction
+      .select({ contentVersion: nanobook.contentVersion })
+      .from(nanobook)
+      .where(eq(nanobook.id, this.nanobookId))
+      .limit(1);
+    await transaction.insert(documentRevision).values({
+      documentId: value.getDocumentId().getValue(),
+      revision,
+      snapshotJson: JSON.stringify(snapshot),
+      actorId: value.getMetadata().ownerId ?? "system",
+      operation,
+      createdAt: new Date(),
+    });
+    await transaction.insert(contentOutbox).values({
+      id: crypto.randomUUID(),
+      nanobookId: this.nanobookId,
+      contentVersion: nanobookRow?.contentVersion ?? 0,
+      eventType: `document.${operation === "move" ? "updated" : `${operation}d`}`,
+      payloadJson: JSON.stringify({
+        documentId: value.getDocumentId().getValue(),
+        revision,
+        operation,
+      }),
+      createdAt: new Date(),
+      deliveredAt: null,
+    });
   }
 
   private repositoryError(message: string, cause: unknown) {
