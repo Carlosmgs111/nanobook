@@ -3,7 +3,6 @@ import EditPage from "../../documents/browser/ui/pages/EditPage.astro";
 import EditorController from "../../documents/browser/ui/EditorController.astro";
 import { getApp } from "../../application/server/Application";
 import { resolveLegacyRoute } from "../../application/server/resolveLegacyRoute";
-import { shouldUseNanobookSqlCutover } from "../../application/server/legacyRouteMode";
 
 const legacyRedirect = await resolveLegacyRoute(
   await getApp(),
@@ -12,9 +11,7 @@ const legacyRedirect = await resolveLegacyRoute(
   "write",
 );
 if (legacyRedirect) return legacyRedirect;
-if (shouldUseNanobookSqlCutover()) {
-  return new Response("Ruta legacy no migrada", { status: 410 });
-}
+return new Response("Ruta legacy no disponible: el contenido usa SQL", { status: 410 });
 ---
 
 <EditPage />

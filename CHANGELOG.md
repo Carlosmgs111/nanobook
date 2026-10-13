@@ -7,10 +7,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-- Retirados los scripts históricos de asignación de identidades y propietarios en frontmatter: el preflight confirmó que los 101 documentos ya tienen identidad estable y propietario persistido; se conservan las herramientas de importación, verificación y exportación SQL para el corte productivo.
+- Retirado todo el tooling de migración de contenido: producción comienza con una base SQL nueva y el contenido local queda fuera del runtime; se conservan únicamente las migraciones Drizzle de esquema.
 - La navegación dejó de interpretar `metadata.nanobook` como frontera implícita; breadcrumbs, sidebar y padre usan únicamente la raíz explícita del contexto del nanobook.
 - Vitest usa el pool de threads por defecto para evitar el fallo `EPERM` del pool de procesos al renombrar temporales SSR en Windows.
 - El plan y el runbook registran el estado real del preflight local y separan las tareas de código completadas de la ejecución productiva pendiente.
+- Producción queda configurada para iniciar directamente con SQL: se retiraron el flag de transición, el webhook de sincronización GitHub, el benchmark comparativo y las rutas mutantes legacy.
 - Actualizado el flujo de pruebas y composición del formulario de autenticación para que `auth/browser` tenga un controlador TypeScript ejecutable y testeable.
 - Añadidos el benchmark de lecturas SQL/GitHub y el runbook operativo para preparar, verificar, activar y revertir el corte SQL; retirados los comandos de contenido que apuntaban a un script inexistente.
 - Corregida la migración para conservar `date`, `createdAt` y `updatedAt` históricos, evitando hashes variables durante la verificación.

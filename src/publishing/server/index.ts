@@ -9,8 +9,6 @@ import { createRenderedPageCache } from "./infraestructure/cache";
 import { UnifiedMarkdownRenderer } from "./infraestructure/renderer/UnifiedMarkdownRenderer";
 import { InvalidatePagesController } from "./infraestructure/api/InvalidatePagesController";
 
-export { GitHubWebhookHandler } from "./infraestructure/GithubWebhookHandler";
-export { GitHubWebhookController } from "./infraestructure/api/GitHubWebhookController";
 export type { RenderedDocumentPage } from "./domain/render";
 
 export class PublishingModule {

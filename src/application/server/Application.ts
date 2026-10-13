@@ -1,10 +1,6 @@
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { DocumentModule } from "../../documents/server";
-import {
-  GitHubWebhookHandler,
-  GitHubWebhookController,
-  PublishingModule,
-} from "../../publishing/server";
+import { PublishingModule } from "../../publishing/server";
 import { NavigationModule } from "../../navigation/server";
 import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { AuthServerModule } from "../../auth/server";
@@ -23,10 +19,8 @@ import { DrizzleContentRepository } from "../../documents/server/infraestructure
 import { UnifiedDocumentParser } from "../../documents/server/infraestructure/parse/DocumentParser";
 import { Document } from "../../documents/server/domain/Document";
 import type { NanobookCreationTransaction } from "../../nanobooks/server/application/NanobookCreationTransaction";
-import { shouldUseNanobookSqlCutover } from "./legacyRouteMode";
 
 export class Application {
-  public readonly githubWebhookController: GitHubWebhookController;
   public readonly createNanobookController: CreateNanobookController;
   public readonly listNanobooksController: ListNanobooksController;
   private constructor(
@@ -43,14 +37,6 @@ export class Application {
   ) {
     this.createNanobookController = createNanobookController;
     this.listNanobooksController = listNanobooksController;
-    const githubWebhookHandler = new GitHubWebhookHandler(
-      this.publishingModule.renderedPageCache,
-      this.navigationModule.navigationService,
-      () => this.navigationModule.refresh()
-    );
-    this.githubWebhookController = new GitHubWebhookController(
-      githubWebhookHandler
-    );
   }
 
   private readonly nanobookContexts = new Map<string, NanobookContext>();
@@ -101,10 +87,10 @@ export class Application {
     publishingModule.registerEventHandlers();
     const authModule = await AuthServerModule.create();
     const profileModule = ProfileModule.create(authModule);
-    // Cuando SQL es la fuente activa, la composición global solo existe para
-    // satisfacer los consumidores legacy y no debe abrir filesystem/GitHub.
+    // La composición global solo satisface consumidores heredados. El
+    // contenido real siempre se resuelve mediante NanobookContext y SQL.
     const documentModule = await DocumentModule.create(eventBus, authModule, {
-      source: shouldUseNanobookSqlCutover() ? "memory" : undefined,
+      source: "memory",
     });
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await NavigationModule.create(

@@ -12,9 +12,9 @@
 
 ## Estado de implementación — 2026-10-13
 
-La implementación de persistencia, aislamiento por nanobook, rutas canónicas, aliases, mutaciones transaccionales, creación atómica, importación local verificable y navegación por contexto está integrada en la rama principal. El preflight local verificó 101 documentos sin diferencias (68 en `nanobook-root-local` y 33 en `nanobook-architecture-local`), la exportación generó 68 documentos y `npm test` pasa con 75 archivos y 220 pruebas. La build también pasa con `NANOBOOK_SQL_CUTOVER=true`.
+La implementación de persistencia, aislamiento por nanobook, rutas canónicas, aliases, mutaciones transaccionales, creación atómica y navegación por contexto está integrada en la rama principal. El contenido local fue verificado durante el desarrollo, pero no forma parte del despliegue productivo.
 
-La ejecución productiva sigue siendo una operación externa al repositorio: backup verificable, conexión libSQL/Turso de ensayo, congelamiento del origen, importación y verificación del manifiesto productivo, activación del flag, pruebas de humo y ventana de observación. Hasta aceptar esa operación se conservan los comandos SQL de importación, verificación y exportación. Después del corte se puede retirar `ContentMigration.ts`, el fallback filesystem/GitHub y el webhook de sincronización, manteniendo los aliases históricos si se desea compatibilidad de URLs.
+La decisión final es iniciar producción con una base SQL nueva y sin importar documentos locales. Por ello se retiraron los scripts y la lógica de migración de contenido, el interruptor de transición y el fallback de almacenamiento; solo permanecen las migraciones Drizzle de esquema. La operación productiva se limita a aplicar el esquema, crear usuarios/nanobooks y validar el entorno nuevo.
 
 ## Global Constraints
 
@@ -255,7 +255,7 @@ Los helpers HTTP crean una sesión y solicitudes contra handlers reales; no simu
 
 ## Task 7: Importación reproducible, inventario y verificación
 
-**Files:** crear `scripts/migrate-content-to-sql.ts`, `scripts/migrate-content-to-sql.test.ts`, `scripts/verify-content-migration.ts`, `scripts/export-content-from-sql.ts`; crear `src/documents/server/infraestructure/migration/ContentMigration.ts` y `.test.ts`; modificar `package.json` con `content:import-sql`, `content:verify-sql`, `content:export-sql`.
+**Estado:** completada durante el desarrollo local y retirada al decidir que producción comienza con una base vacía. Se conserva el historial de esta tarea en el plan, pero no hay tooling de importación en el runtime actual.
 
 **Interfaces CLI:** `--manifest <archivo> --dry-run` por defecto; `--apply` escribe; `--verify` coteja el destino. Manifiesto incluye `source.type`, snapshot local o repo+commit inmutable, `destinations[]` (ID, raíz de origen, propietario, slug, visibilidad y settings), `boundaries[]` (índice histórico, decisión `independent` o `directory`, destino) y transformaciones aceptadas de referencias/configuración. No contiene tokens.
 
@@ -292,7 +292,7 @@ expect(await liveDocumentCount(bookId)).toBe(sourceCount);
 expect((await verifySnapshot(manifest)).differences).toEqual([]);
 ```
 
-`importSnapshot` y `verifySnapshot` se exportan desde `ContentMigration.ts`; `liveDocumentCount` es COUNT de filas activas de la colección en la fixture SQL. Validar: `npx vitest run scripts/migrate-content-to-sql.test.ts src/documents/server/infraestructure/migration/ContentMigration.test.ts`. Commit: `feat(migration): importar y verificar contenido SQL`.
+La validación de `importSnapshot`/`verifySnapshot` se ejecutó durante el desarrollo local y sus implementaciones fueron retiradas al decidir que producción comienza vacía. No se conserva un comando de importación en la aplicación desplegable.
 
 ## Task 8: Crear y administrar nanobooks sin infraestructura visible
 
@@ -316,7 +316,7 @@ expect(await rootOwner(result.getValue().id)).toBe(actorId);
 
 ## Task 9: Corte, recuperación y comparación de latencia
 
-**Files:** crear `docs/operations/content-sql-cutover.md`, `scripts/benchmark-content-storage.ts`; modificar `src/documents/server/infraestructure/repository/index.ts`, `src/application/server/Application.ts`, `astro.config.mjs`, `package.json`, `CHANGELOG.md` y la especificación arquitectónica.
+**Files:** crear `docs/operations/content-sql-deployment.md`; modificar `src/documents/server/infraestructure/repository/index.ts`, `src/application/server/Application.ts`, `astro.config.mjs`, `package.json`, `CHANGELOG.md` y la especificación arquitectónica. El benchmark comparativo se retiró porque producción ya no usa GitHub como fuente de contenido.
 
 - [ ] En entorno de ensayo ejecutar una copia consistente de migraciones, simulación, importación, verificación y exportación. No copiar un SQLite activo ignorando su WAL: usar backup consistente o detener escrituras.
 - [ ] Verificar disco persistente si es local; si es remoto, probar conexión libSQL, TLS, migraciones, transacciones y recuperación con las credenciales de ensayo. No asumir que cambiar URL garantiza compatibilidad completa con otro motor.
@@ -328,9 +328,7 @@ expect(await rootOwner(result.getValue().id)).toBe(actorId);
 
 ```powershell
 npm run database:migrate
-npm run content:import-sql -- --manifest migration-manifest.json --dry-run
-npm run content:import-sql -- --manifest migration-manifest.json --apply
-npm run content:verify-sql -- --manifest migration-manifest.json
+npm run database:migrate
 npm run build
 ```
 
