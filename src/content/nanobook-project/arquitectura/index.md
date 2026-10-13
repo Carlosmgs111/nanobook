@@ -12,7 +12,7 @@ nanobook: true
 
 ## Decisiones recientes
 
-- Persistencia de documentos en SQL y múltiples nanobooks: almacenamiento administrado por la instancia, aislamiento, revisiones optimistas, outbox, alias legacy y migración verificable. El corte se activa con `NANOBOOK_SQL_CUTOVER=true` después de verificar el manifiesto.
+- Persistencia de documentos en SQL y múltiples nanobooks: almacenamiento administrado por la instancia, aislamiento, revisiones optimistas y outbox. Las rutas canónicas se resuelven por el `slug` del nanobook; no existe una capa de aliases legacy.
 
 - [Separación de módulos por entorno](./separacion-entornos-browser-server): límites entre `browser`, `server`, `content`, `pages` y `shared` y sus reglas de dependencia.
 - [Composición de la aplicación de navegador](./composicion-application-browser): composición síncrona de `AuthModule` y `EditionModule` mediante `Application` y `getApp()`.
@@ -44,6 +44,6 @@ Se propone almacenar usuarios, perfiles, nanobooks y documentos en la misma base
 
 La marca histórica `nanobook: true`, descrita en la sección anterior como comportamiento actual, dejará de establecer fronteras activas. Breadcrumbs y sidebar usarán la raíz explícita del libro; mover un directorio dentro del mismo no cambiará la configuración ni el ámbito de sus documentos. Bibliotecas que agrupen nanobooks y transferencias entre libros quedan para una evolución posterior; el renombrado normal no puede reasignar pertenencia.
 
-La migración exigirá clasificar cada frontera histórica como libro independiente o directorio normal. Preservará IDs y propiedad, declarará los cambios de rutas/configuración/referencias y conservará acceso por URLs antiguas mediante alias autorizados. Incluirá revisiones, transacciones de subárboles, control de concurrencia y aislamiento de API y cachés. No se propone escritura doble; después de aceptar escrituras SQL, una reversión requiere reconciliar los nuevos datos.
+La instalación productiva comienza con una base SQL nueva y no importa documentos locales. Los documentos se crean directamente dentro de un nanobook y las rutas se resuelven exclusivamente mediante su `slug` y su árbol interno. Las rutas antiguas no se redirigen porque no forman parte del modelo persistente; los endpoints legacy responden `410`. La persistencia incluye revisiones, transacciones de subárboles, control de concurrencia y aislamiento de API y cachés.
 
-Estado: implementación disponible. La especificación completa se conserva en `docs/superpowers/specs/2026-10-12-sql-multinanobook-design.md` y el plan ejecutable en `docs/superpowers/plans/2026-10-12-sql-multinanobook.md` dentro del repositorio. Se mantiene el fallback legacy mientras no se active el corte y se conservan pendientes las pruebas estáticas antiguas que aún apuntan a rutas de módulos previas.
+Estado: implementación disponible. La especificación completa se conserva en `docs/superpowers/specs/2026-10-12-sql-multinanobook-design.md` y el plan ejecutable en `docs/superpowers/plans/2026-10-12-sql-multinanobook.md` dentro del repositorio. El puente de aliases fue retirado porque no existe ninguna entidad actual que referencie rutas históricas.

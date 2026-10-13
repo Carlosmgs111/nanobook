@@ -43,6 +43,13 @@
       "when": 1791869455789,
       "tag": "0005_nanobook_aliases",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791913658934,
+      "tag": "0006_slow_pete_wisdom",
+      "breakpoints": true
     }
   ]
 }

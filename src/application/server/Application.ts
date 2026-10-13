@@ -8,7 +8,6 @@ import { ProfileModule } from "../../profiles/server";
 import {
   CreateNanobook,
   CreateNanobookController,
-  DrizzleNanobookAliasRepository,
   DrizzleNanobookRepository,
   ListNanobooks,
   ListNanobooksController,
@@ -31,7 +30,6 @@ export class Application {
     public readonly profileModule: ProfileModule,
     public readonly eventBus: InMemoryEventBus,
     private readonly nanobookRepository: DrizzleNanobookRepository,
-    private readonly nanobookAliasRepository: DrizzleNanobookAliasRepository,
     createNanobookController: CreateNanobookController,
     listNanobooksController: ListNanobooksController,
   ) {
@@ -56,12 +54,6 @@ export class Application {
     const nanobook = result.getValue();
     if (!nanobook) return null;
     return this.contextForNanobook(nanobook);
-  }
-
-  async resolveNanobookAlias(path: string) {
-    const result = await this.nanobookAliasRepository.findByLegacyPath(path);
-    if (!result.isSuccess) throw result.getError();
-    return result.getValue();
   }
 
   async listNanobooks(ownerId: string) {
@@ -99,7 +91,6 @@ export class Application {
     );
 
     const nanobookRepository = new DrizzleNanobookRepository(db);
-    const nanobookAliasRepository = new DrizzleNanobookAliasRepository(db);
     const listNanobooks = new ListNanobooks(nanobookRepository);
     return new Application(
       authModule,
@@ -109,7 +100,6 @@ export class Application {
       profileModule,
       eventBus,
       nanobookRepository,
-      nanobookAliasRepository,
       new CreateNanobookController(new CreateNanobook(
         nanobookRepository,
         async (nanobook, transaction?: NanobookCreationTransaction) => {

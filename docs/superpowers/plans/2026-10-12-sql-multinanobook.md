@@ -12,7 +12,7 @@
 
 ## Estado de implementación — 2026-10-13
 
-La implementación de persistencia, aislamiento por nanobook, rutas canónicas, aliases, mutaciones transaccionales, creación atómica y navegación por contexto está integrada en la rama principal. El contenido local fue verificado durante el desarrollo, pero no forma parte del despliegue productivo.
+La implementación de persistencia, aislamiento por nanobook, rutas canónicas, mutaciones transaccionales, creación atómica y navegación por contexto está integrada en la rama principal. El contenido local fue verificado durante el desarrollo, pero no forma parte del despliegue productivo. El puente de aliases previsto inicialmente fue retirado: no hay entidades ni enlaces históricos que deban conservarse en una instalación nueva.
 
 La decisión final es iniciar producción con una base SQL nueva y sin importar documentos locales. Por ello se retiraron los scripts y la lógica de migración de contenido, el interruptor de transición y el fallback de almacenamiento; solo permanecen las migraciones Drizzle de esquema. La operación productiva se limita a aplicar el esquema, crear usuarios/nanobooks y validar el entorno nuevo.
 
@@ -112,17 +112,13 @@ CREATE TABLE content_outbox (
   created_at INTEGER NOT NULL,
   delivered_at INTEGER
 );
-CREATE TABLE legacy_document_route (
-  source_path TEXT PRIMARY KEY,
-  document_id TEXT NOT NULL REFERENCES document(id) ON DELETE RESTRICT
-);
 ```
 
 Las columnas son autoritativas para identidad, título, descripción, propiedad y auditoría. `metadata_json` conserva tags, cover, draft, posición y ref; excluye `nanobook`, identidad y los campos autoritativos. El original completo se conserva en el snapshot externo de migración. `raw_frontmatter` preserva extensiones desconocidas salvo `nanobook`, cuya retirada se registra en el reporte; al exportar o editar se sobreponen los valores autoritativos usando el serializador existente. `public_path`/`parent_path` se derivan siempre con `DocumentPath`, dentro de la escritura transaccional. El índice de ruta pública impide colisiones `foo` frente a `foo/index`.
 
 `settings_json` es serialización de un contrato tipado `NanobookSettings`, no un contenedor arbitrario. En la tarea 2 se inventarían los parámetros configurables actuales, se definen sus tipos/defaults y se enumeran los campos permitidos. La visibilidad permanece en su columna, y no se aceptan configuración de proveedor, credenciales ni expresiones ejecutables. No implementar resolución ascendente por directorios.
 
-`legacy_document_route` permite que una URL histórica siga identificando el mismo documento aun cuando cambie de libro o ruta. Resolver su ID en servidor, comprobar visibilidad/autorización y existencia activa, y solo después redirigir a la URL canónica. No usar un alias para ampliar acceso ni reservar rutas que colisionen con endpoints de la aplicación.
+Las rutas históricas no forman parte del modelo persistente. Las rutas públicas antiguas responden `410` y no se redirigen a un nanobook, porque la instalación productiva comienza sin contenido importado ni referencias que conservar.
 
 No borrar usuarios en cascada junto con contenido: requerir transferencia o archivado explícito. No agregar automáticamente membresías ni elevar privilegios al importar propietarios históricos.
 
@@ -236,12 +232,12 @@ expect(await htmlFor(bookA.id, 'index')).not.toContain('Contenido privado B');
 
 **Files:** crear `src/pages/n/[nanobookSlug]/[...slug]/index.astro`, `edit.astro`, `new.astro`, `preview.astro`; crear `src/pages/api/nanobooks/[nanobookId]/documents/[id].ts`; crear `src/nanobooks/server/application/AuthorizeNanobook.ts` y su `.test.ts`; modificar rutas actuales en `src/pages/[...slug]/`, `src/pages/api/me/documents/[...slug].ts`, UI de documentos/navegación, `src/documents/browser/index.ts`, `HttpDocumentWriter.ts`, `SessionStorageDocumentStorage.ts` y sus pruebas.
 
-**Interfaces:** resolución HTTP toma colección del parámetro de ruta, sesión de Better Auth y documento del repositorio acotado. Nuevas rutas públicas `/n/<slug>/...`; API `/api/nanobooks/<id>/documents/<id>`. Las rutas públicas antiguas resuelven exclusivamente `legacy_document_route`; no infieren la colección a partir de un slug documental. La API antigua se retira al actualizar el editor; las solicitudes obsoletas de mutación reciben 410 y no se redirigen a otra colección.
+**Interfaces:** resolución HTTP toma colección del parámetro de ruta, sesión de Better Auth y documento del repositorio acotado. Nuevas rutas públicas `/n/<slug>/...`; API `/api/nanobooks/<id>/documents/<id>`. Las rutas públicas antiguas responden `410` y no infieren la colección a partir de un slug documental. La API antigua se retira al actualizar el editor; las solicitudes obsoletas de mutación reciben 410 y no se redirigen a otra colección.
 
 - [ ] Escribir pruebas HTTP: anónimo en privado → 404; anónimo en público → lectura; mutación sin sesión → 401; actor autenticado sin permiso → rechazo; ID de otra colección → 404.
 - [ ] Mantener `ownerId` como regla de edición en el MVP. El administrador de un nanobook importado no adquiere automáticamente permiso para editar documentos ajenos. Resolver lecturas históricas mixtas sin mostrar navegación privada de otros propietarios.
-- [ ] Actualizar generador de URLs, breadcrumbs, índices, enlaces de edición y respuestas de creación/renombramiento con base de colección. Preservar enlaces relativos y alias históricos; detectar colisiones con el prefijo reservado `/n` antes de migrar.
-- [ ] Crear `src/documents/server/infraestructure/rest/ResolveLegacyDocumentRoute.ts` y sus pruebas para alias, documento eliminado, destino privado, ciclos y colisiones. Para enlaces antiguos de edición/preview, resolver el documento y validar la sesión antes de construir la ruta nueva; ningún alias apunta a otro alias.
+- [ ] Actualizar generador de URLs, breadcrumbs, índices, enlaces de edición y respuestas de creación/renombramiento con base de colección. Detectar colisiones con el prefijo reservado `/n` antes de publicar rutas.
+- [ ] Mantener las rutas públicas antiguas como respuestas `410`; no crear resolutores ni redirecciones para rutas históricas.
 - [ ] Pasar `nanobookId`, base URL y revisión al editor, evitando un `EditionModule` global que cambie de contexto mientras hay operaciones en vuelo. Rechazar respuestas tardías de otro contexto.
 - [ ] Almacenar staged/preview/confirmed con prefijo versión + usuario + nanobook + documento; limpiar al salir de sesión. No recuperar automáticamente previews antiguos sin ámbito.
 - [ ] Mostrar conflicto 409 conservando texto local y ofreciendo recargar/comparar. No reintentar una sobreescritura automáticamente.
@@ -280,7 +276,7 @@ El esquema real exige también snapshot, propietarios, visibilidad y settings de
 - [ ] Probar ambas decisiones de cada frontera histórica; bloquear un índice marcado sin clasificación, asignaciones múltiples, documentos huérfanos, libro sin raíz y transformaciones con colisión. Emitir un reporte de rutas antiguas/nuevas, configuración efectiva antigua/nueva y cambios de breadcrumbs antes de escribir.
 - [ ] Inventariar IDs y rutas duplicadas, colisiones públicas, usuarios inexistentes, fechas, frontmatter, referencias `github:`/locales, imágenes y enlaces absolutos. Cualquier ambigüedad bloquea `--apply`; no regenerar identidades ni asignar todo al operador.
 - [ ] Leer documentos crudos del adaptador/parser, sin pasar por `ProxyParser`, para no reemplazar referencias por contenido renderizado. Copiar los adjuntos al destino administrado cuando dependan del origen; validar sus hashes o conservar temporalmente su disponibilidad.
-- [ ] Importar en transacción por nanobook y registrar snapshot de revisión 1 junto con alias de sus URLs antiguas. Durante toda la carga no publicar destinos parciales; activar el conjunto solo al verificar todos los destinos del manifiesto. Al repetir, un ID con contenido y asignación idénticos es no-op; diferencias o ID en otra colección abortan. Nunca sobrescribir ediciones nuevas con un reintento.
+- [ ] Importar en transacción por nanobook y registrar snapshot de revisión 1. Durante toda la carga no publicar destinos parciales; activar el conjunto solo al verificar todos los destinos del manifiesto. Al repetir, un ID con contenido y asignación idénticos es no-op; diferencias o ID en otra colección abortan. Nunca sobrescribir ediciones nuevas con un reintento.
 - [ ] Recalcular enlaces relativos y referencias tras separar raíces. Las referencias de contenido que pasarían a otro libro bloquean la migración salvo transformación explícita aceptada; no ampliar el resolutor a toda la base. Conservar cuerpos originales y registrar hash previo/posterior si se reescriben enlaces o se materializa contenido.
 - [ ] Comparar cantidad total, asignación única de IDs, cuerpos, metadatos, frontmatter adicional, padres, referencias y HTML/headings contra las transformaciones aceptadas. Sin transformaciones de cuerpo, exigir igualdad de SHA-256. Verificar navegación/configuración esperadas para promoción y conversión a directorio. Escribir reporte JSON sin secretos y distinguir cambios aprobados de pérdidas inesperadas.
 - [ ] Probar exportación de regreso a Markdown/frontmatter con identidad, rutas y metadatos preservados; documentar cómo representar borrados lógicos.
@@ -322,7 +318,7 @@ expect(await rootOwner(result.getValue().id)).toBe(actorId);
 - [ ] Verificar disco persistente si es local; si es remoto, probar conexión libSQL, TLS, migraciones, transacciones y recuperación con las credenciales de ensayo. No asumir que cambiar URL garantiza compatibilidad completa con otro motor.
 - [ ] Medir desde el mismo servidor 1.000 lecturas por ID y 1.000 listados de hijos, concurrencia 1 y 10, en corpus idéntico. Reportar p50/p95/p99, errores, bytes, llamadas de red y arranque; separar caché fría/caliente y tiempo de renderizado. Elegir mejora de p95 frente a GitHub sin caché como criterio, sin prometer cifras absolutas.
 - [ ] Antes del corte real: backup verificable, congelar mutaciones, detener webhook/importadores antiguos, fijar commit SHA o snapshot final y repetir importación/verificación. El operador autoriza el cambio de producción con reportes concretos.
-- [ ] Activar SQL y el conjunto verificado de destinos/alias; comprobar login, perfil, rutas históricas, crear/editar/renombrar/borrar, referencias, cachés y permisos antes de reabrir escrituras. Definir `/` como listado de nanobooks públicos accesibles, salvo que el manifiesto conserve un alias explícito al antiguo índice raíz. Fallar explícitamente si SQL no está disponible; nunca caer silenciosamente al filesystem.
+- [ ] Activar SQL y comprobar login, perfil, rutas canónicas, crear/editar/renombrar/borrar, referencias, cachés y permisos antes de reabrir escrituras. Definir `/` como listado de nanobooks públicos accesibles. Fallar explícitamente si SQL no está disponible; nunca caer silenciosamente al filesystem.
 - [ ] Antes de reabrir escrituras, rollback = volver al proveedor congelado. Después, rollback = bloquear escrituras, exportar cambios SQL y reconciliar altas/cambios/borrados en el origen o restaurar un backup SQL más replay. No restaurar toda la base antigua: también contiene cuentas y sesiones que pudieron cambiar.
 - [ ] Ensayar un restore de backup, una caída después de commit, 409 concurrente y recuperación de outbox. Conservar snapshot y exportaciones hasta aceptar formalmente el corte.
 

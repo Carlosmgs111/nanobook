@@ -10,7 +10,7 @@ Configura `DATABASE_URL` y, si se usa libSQL remoto, `DATABASE_AUTH_TOKEN` únic
 npm run database:migrate
 ```
 
-El comando aplica las migraciones Drizzle de usuarios, nanobooks, documentos, revisiones, outbox y aliases. Es idempotente.
+El comando aplica las migraciones Drizzle de usuarios, nanobooks, documentos, revisiones y outbox. Es idempotente.
 
 ## 2. Crear el primer nanobook
 

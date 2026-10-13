@@ -3,8 +3,6 @@ import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { nanobook } from "../../../../nanobooks/server/infraestructure/database/DrizzleNanobookSchema";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
-import type { NanobookAlias } from "../../../../nanobooks/server/domain/NanobookAlias";
-import { nanobookAlias } from "../../../../nanobooks/server/infraestructure/database/DrizzleNanobookAliasSchema";
 import type { Document } from "../../domain/Document";
 import { document as documentTable } from "../database/DrizzleDocumentSchema";
 import { contentOutbox, documentRevision } from "./DrizzleDocumentRevisionSchema";
@@ -22,7 +20,6 @@ export interface AppendRevisionInput {
 export interface DocumentUnitOfWorkContext {
   insertNanobook(book: Nanobook): Promise<void>;
   insertDocument(document: Document): Promise<void>;
-  insertAlias(alias: NanobookAlias): Promise<void>;
   appendRevision(input: AppendRevisionInput): Promise<void>;
   enqueueEvent(eventType: string, payload: unknown): Promise<void>;
   incrementContentVersion(): Promise<number>;
@@ -77,17 +74,6 @@ export class DrizzleDocumentUnitOfWork {
             updatedAt: metadata.updatedAt,
             deletedAt: null,
           });
-        },
-        insertAlias: async (alias) => {
-          await transaction
-            .insert(nanobookAlias)
-            .values({
-              legacyPath: alias.legacyPath,
-              nanobookId: alias.nanobookId,
-              targetPath: alias.targetPath,
-              createdAt: new Date(),
-            })
-            .onConflictDoNothing();
         },
         appendRevision: async (input) => {
           await transaction.insert(documentRevision).values({
