@@ -113,4 +113,22 @@ describe("DrizzleContentRepository", () => {
     expect((await first.list()).getValue()).toHaveLength(0);
     expect((await connection.client.execute("SELECT operation FROM document_revision WHERE operation = 'delete' ORDER BY document_id")).rows).toHaveLength(2);
   });
+
+  it("moves a SQL subtree in one transaction", async () => {
+    const root = Document.create("guide/index", metadata("move-root", "owner-1"), "# Guide").getValue();
+    const child = Document.create("guide/intro", metadata("move-child", "owner-1"), "# Intro").getValue();
+    await first.create(root);
+    await first.create(child);
+    const movedRoot = root.moveTo("reference/index").getValue();
+    const movedChild = child.moveTo("reference/intro").getValue();
+
+    const result = await first.updateMany?.([
+      { document: movedRoot, previousPath: "guide/index" },
+      { document: movedChild, previousPath: "guide/intro" },
+    ]);
+
+    expect(result?.isSuccess).toBe(true);
+    expect((await first.getByPath("reference/index")).getValue()?.getDocumentId().getValue()).toBe("move-root");
+    expect((await first.getByPath("reference/intro")).getValue()?.getDocumentId().getValue()).toBe("move-child");
+  });
 });

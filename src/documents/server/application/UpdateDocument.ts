@@ -92,17 +92,28 @@ export class UpdateDocument {
       );
     }
 
-    for (const [index, item] of documentsToUpdate.getValue().entries()) {
-      const previousPath = item.previousPath && item.previousPath !== item.document.getPath()
+    const updates = documentsToUpdate.getValue().map((item, index) => ({
+      document: item.document,
+      previousPath: item.previousPath && item.previousPath !== item.document.getPath()
         ? item.previousPath
-        : undefined;
-      const updateResult = expectedRevision !== undefined && index === 0 && this.contentRepository.updateWithRevision
-        ? await this.contentRepository.updateWithRevision(item.document, expectedRevision, previousPath)
-        : await this.contentRepository.update(
-            item.document,
-            ...(previousPath ? [previousPath] : []),
-          );
+        : undefined,
+      expectedRevision: expectedRevision !== undefined && index === 0
+        ? expectedRevision
+        : undefined,
+    }));
+    if (this.contentRepository.updateMany) {
+      const updateResult = await this.contentRepository.updateMany(updates);
       if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
+    } else {
+      for (const [index, item] of updates.entries()) {
+        const updateResult = item.expectedRevision !== undefined && index === 0 && this.contentRepository.updateWithRevision
+          ? await this.contentRepository.updateWithRevision(item.document, item.expectedRevision, item.previousPath)
+          : await this.contentRepository.update(
+              item.document,
+              ...(item.previousPath ? [item.previousPath] : []),
+            );
+        if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
+      }
     }
 
     for (const item of documentsToUpdate.getValue()) {

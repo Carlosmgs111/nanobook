@@ -46,6 +46,9 @@ export interface ContentRepository {
     expectedRevision: number,
     previousPath?: string,
   ): Promise<Result<ContentRepositoryError, void>>;
+  updateMany?(
+    updates: Array<{ document: Document; previousPath?: string; expectedRevision?: number }>,
+  ): Promise<Result<ContentRepositoryError, void>>;
   delete(document: Document): Promise<Result<ContentRepositoryError, void>>;
   deleteMany?(documents: Document[]): Promise<Result<ContentRepositoryError, void>>;
   clearCache?(): Promise<void> | void;

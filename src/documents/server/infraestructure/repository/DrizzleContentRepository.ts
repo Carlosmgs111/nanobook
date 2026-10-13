@@ -149,6 +149,46 @@ export class DrizzleContentRepository implements ContentRepository {
     }
   }
 
+  async updateMany(updates: Array<{ document: Document; previousPath?: string; expectedRevision?: number }>) {
+    try {
+      await this.database.transaction(async (transaction) => {
+        for (const item of updates) {
+          const expectedRevision = item.expectedRevision ?? item.document.getRevision();
+          const row = await this.toRow(item.document, expectedRevision + 1);
+          if (!row.isSuccess) throw row.getError();
+          const result = await transaction
+            .update(document)
+            .set(row.getValue())
+            .where(and(
+              eq(document.id, item.document.getDocumentId().getValue()),
+              eq(document.nanobookId, this.nanobookId),
+              eq(document.revision, expectedRevision),
+              isNull(document.deletedAt),
+            ));
+          const rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+          if (rowsAffected === 0) {
+            throw new DocumentRevisionConflictError(
+              item.document.getDocumentId().getValue(),
+              expectedRevision,
+            );
+          }
+          await this.recordMutation(
+            transaction,
+            item.document,
+            expectedRevision + 1,
+            item.previousPath && item.previousPath !== item.document.getPath() ? "move" : "update",
+            { ...item.document.parse(), revision: expectedRevision + 1 },
+          );
+        }
+      });
+      return Result.ok();
+    } catch (error) {
+      if (error instanceof DocumentRevisionConflictError) return Result.fail(error);
+      if (error instanceof DocumentAlreadyExistsError) return Result.fail(error);
+      return Result.fail(this.repositoryError("No fue posible actualizar el conjunto de documentos", error));
+    }
+  }
+
   async delete(value: Document) {
     return this.deleteMany([value]);
   }
