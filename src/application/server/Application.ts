@@ -12,6 +12,9 @@ import { ProfileModule } from "../../profiles/server";
 import { CreateNanobook, CreateNanobookController, DrizzleNanobookRepository } from "../../nanobooks/server";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { NanobookContext } from "./NanobookContext";
+import { DrizzleContentRepository } from "../../documents/server/infraestructure/repository/DrizzleContentRepository";
+import { UnifiedDocumentParser } from "../../documents/server/infraestructure/parse/DocumentParser";
+import { Document } from "../../documents/server/domain/Document";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -91,7 +94,28 @@ export class Application {
       profileModule,
       eventBus,
       nanobookRepository,
-      new CreateNanobookController(new CreateNanobook(nanobookRepository)),
+      new CreateNanobookController(new CreateNanobook(
+        nanobookRepository,
+        async (nanobook) => {
+          const repository = new DrizzleContentRepository(
+            db,
+            nanobook.getId(),
+            new UnifiedDocumentParser(),
+          );
+          const document = Document.create("index", {
+            id: crypto.randomUUID(),
+            title: nanobook.getName(),
+            description: nanobook.getName(),
+            ownerId: nanobook.getOwnerId(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            author: nanobook.getOwnerId(),
+          }, `# ${nanobook.getName()}\n`);
+          if (!document.isSuccess) throw document.getError();
+          const created = await repository.create(document.getValue());
+          if (!created.isSuccess) throw created.getError();
+        },
+      )),
     );
   }
 }

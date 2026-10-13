@@ -33,6 +33,7 @@ export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentDeleted } from "./domain/events/DocumentDeleted";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
+export { DrizzleContentOutboxDispatcher } from "./infraestructure/database/DrizzleContentOutboxDispatcher";
 
 export class DocumentModule {
   constructor(

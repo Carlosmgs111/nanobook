@@ -7,7 +7,10 @@ import type { CreateNanobookData } from "../domain/types";
 export type CreateNanobookError = NanobookRepositoryFailure | Error;
 
 export class CreateNanobook {
-  constructor(private readonly repository: NanobookRepository) {}
+  constructor(
+    private readonly repository: NanobookRepository,
+    private readonly initializeRoot?: (nanobook: Nanobook) => Promise<void>,
+  ) {}
 
   async execute(
     ownerId: string,
@@ -22,6 +25,7 @@ export class CreateNanobook {
 
     const created = await this.repository.create(result.getValue());
     if (!created.isSuccess) return Result.fail(created.getError());
+    if (this.initializeRoot) await this.initializeRoot(result.getValue());
     return Result.ok(result.getValue());
   }
 }

@@ -22,6 +22,7 @@
     "database:migrate": "tsx scripts/database-migrate.ts",
     "content:import-sql": "tsx scripts/migrate-content-to-sql.ts",
     "content:verify-sql": "tsx scripts/verify-content-migration.ts",
+    "content:export-sql": "tsx scripts/export-content-from-sql.ts",
     "profile:change-username": "tsx scripts/change-profile-username.ts"
   },
   "dependencies": {
