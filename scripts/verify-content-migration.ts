@@ -8,6 +8,7 @@ import {
   type MigrationManifest,
 } from "../src/documents/server/infraestructure/migration/ContentMigration";
 import { DrizzleContentRepository } from "../src/documents/server/infraestructure/repository/DrizzleContentRepository";
+import { DrizzleNanobookAliasRepository } from "../src/nanobooks/server";
 import { db } from "../src/shared/infrastructure/database/drizzleDatabase";
 
 const manifestIndex = process.argv.indexOf("--manifest");
@@ -27,6 +28,7 @@ const documents = sourceDocuments.map((document) => ({
 const report = buildMigrationReport(manifest, documents);
 const assignments = assignDocuments(manifest, documents);
 const mismatches: Array<{ id: string; nanobookId: string; reason: string }> = [];
+const aliasRepository = new DrizzleNanobookAliasRepository(db);
 for (const destination of manifest.destinations) {
   const repository = new DrizzleContentRepository(db, destination.nanobookId, new UnifiedDocumentParser());
   const destinationResult = await repository.list();
@@ -61,6 +63,17 @@ for (const destination of manifest.destinations) {
     ]);
     if (expectedHash.version !== actualHash.version || expectedHash.contentHash !== actualHash.contentHash) {
       mismatches.push({ id: assignment.id, nanobookId: destination.nanobookId, reason: "hash" });
+    }
+    const alias = await aliasRepository.findByLegacyPath(sourceDocument.getPublicPath());
+    if (!alias.isSuccess) throw alias.getError();
+    const aliasValue = alias.getValue();
+    if (!aliasValue) {
+      mismatches.push({ id: assignment.id, nanobookId: destination.nanobookId, reason: "alias-missing" });
+    } else if (
+      aliasValue.nanobookId !== destination.nanobookId
+      || aliasValue.targetPath !== migrated.getPublicPath()
+    ) {
+      mismatches.push({ id: assignment.id, nanobookId: destination.nanobookId, reason: "alias" });
     }
   }
   for (const migrated of destinationDocuments) {

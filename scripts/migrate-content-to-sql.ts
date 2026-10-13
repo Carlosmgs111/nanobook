@@ -5,6 +5,7 @@ import { FileSystemRepository } from "../src/documents/server/infraestructure/re
 import { UnifiedDocumentParser } from "../src/documents/server/infraestructure/parse/DocumentParser";
 import { DrizzleDocumentUnitOfWork } from "../src/documents/server/infraestructure/database/DrizzleDocumentUnitOfWork";
 import { DrizzleNanobookRepository, Nanobook } from "../src/nanobooks/server";
+import { DrizzleNanobookAliasRepository } from "../src/nanobooks/server";
 import { db } from "../src/shared/infrastructure/database/drizzleDatabase";
 import {
   assignDocuments,
@@ -45,6 +46,7 @@ if (!apply) {
 }
 
 const nanobookRepository = new DrizzleNanobookRepository(db);
+const aliasRepository = new DrizzleNanobookAliasRepository(db);
 for (const destination of manifest.destinations) {
   const existing = await nanobookRepository.findById(destination.nanobookId);
   if (!existing.isSuccess) throw existing.getError();
@@ -74,6 +76,15 @@ for (const destination of manifest.destinations) {
     const documentResult = buildMigratedDocument(sourceDocument, assignment, parser);
     if (!documentResult.isSuccess) throw documentResult.getError();
     const migrated = documentResult.getValue();
+    const existingAlias = await aliasRepository.findByLegacyPath(sourceDocument.getPublicPath());
+    if (!existingAlias.isSuccess) throw existingAlias.getError();
+    const alias = existingAlias.getValue();
+    if (alias && (
+      alias.nanobookId !== destination.nanobookId
+      || alias.targetPath !== migrated.getPublicPath()
+    )) {
+      throw new Error(`El alias legacy de ${sourceDocument.getPublicPath()} ya apunta a otro destino`);
+    }
     const existingDocument = existingById.get(assignment.id);
     if (existingDocument) {
       const [expectedHash, actualHash] = await Promise.all([
