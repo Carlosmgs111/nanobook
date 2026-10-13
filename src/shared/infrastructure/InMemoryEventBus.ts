@@ -51,4 +51,8 @@ export class InMemoryEventBus implements EventBus {
       )
     );
   }
+
+  clear(): void {
+    this.subscribers.clear();
+  }
 }

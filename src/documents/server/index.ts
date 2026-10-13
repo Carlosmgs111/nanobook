@@ -5,7 +5,8 @@ import { UpdateDocument } from "./application/UpdateDocument";
 import { DeleteDocument } from "./application/DeleteDocument";
 import { GetAllDocuments } from "./application/GetAllDocuments";
 import { GetDocument } from "./application/GetDocument";
-import { createContentRepository } from "./infraestructure/repository";
+import { createContentRepository, type RepositorySource } from "./infraestructure/repository";
+import type { ContentRepository } from "./domain/ports/ContentRepository";
 import { CreateDocumentController } from "./infraestructure/rest/CreateDocumentController";
 import { UpdateDocumentController } from "./infraestructure/rest/UpdateDocumentController";
 import { DeleteDocumentController } from "./infraestructure/rest/DeleteDocumentController";
@@ -41,15 +42,27 @@ export class DocumentModule {
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus,
-    public readonly mutationRoutes: DocumentMutationRoutes
+    public readonly mutationRoutes: DocumentMutationRoutes,
+    public readonly nanobookId?: string,
   ) {}
 
   async refreshDocuments() {
     return this.getAllDocuments.refresh();
   }
 
-  static async create(eventBus: EventBus, routeProtector: RouteProtector) {
-    const contentRepository = await createContentRepository();
+  static async create(
+    eventBus: EventBus,
+    routeProtector: RouteProtector,
+    options: {
+      source?: RepositorySource;
+      nanobookId?: string;
+      contentRepository?: ContentRepository;
+    } = {},
+  ) {
+    const contentRepository = options.contentRepository ?? await createContentRepository({
+      source: options.source,
+      nanobookId: options.nanobookId,
+    });
 
     const internalReferenceResolver = new InternalReferenceResolver(
       contentRepository
@@ -90,7 +103,8 @@ export class DocumentModule {
       getAllDocuments,
       getDocument,
       eventBus,
-      mutationRoutes
+      mutationRoutes,
+      options.nanobookId,
     );
   }
 }

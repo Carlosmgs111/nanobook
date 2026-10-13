@@ -8,6 +8,7 @@ export class PagePublisher {
   constructor(
     private pageRenderer: DocumentRenderer,
     private pageCache: RenderedPageCache,
+    private readonly options: { cacheNamespace?: string } = {},
   ) {}
 
   async publish(document: Document): Promise<RenderedDocumentPage | null> {
@@ -32,7 +33,7 @@ export class PagePublisher {
   async invalidate(
     documentIds: string[]
   ): Promise<Result<PageCacheError, void>> {
-    return this.pageCache.invalidate(documentIds);
+    return this.pageCache.invalidate(documentIds.map((id) => this.cacheKey(id)));
   }
 
   private async resolveRenderedBody(
@@ -40,8 +41,9 @@ export class PagePublisher {
     documentId: string,
     contentHash?: string
   ): Promise<string> {
+    const cacheKey = this.cacheKey(documentId);
     if (this.pageCache && contentHash) {
-      const cached = await this.pageCache.get(documentId, contentHash);
+      const cached = await this.pageCache.get(cacheKey, contentHash);
       if (cached) {
         return cached.html;
       }
@@ -50,9 +52,15 @@ export class PagePublisher {
     const rendered = await this.pageRenderer.render(document);
 
     if (this.pageCache && contentHash) {
-      await this.pageCache.set(documentId, contentHash, rendered.Content);
+      await this.pageCache.set(cacheKey, contentHash, rendered.Content);
     }
 
     return rendered.Content;
+  }
+
+  private cacheKey(documentId: string): string {
+    return this.options.cacheNamespace
+      ? `${this.options.cacheNamespace}:${documentId}`
+      : documentId;
   }
 }

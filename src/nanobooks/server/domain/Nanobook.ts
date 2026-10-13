@@ -75,6 +75,7 @@ export class Nanobook {
   getOwnerId(): string { return this.ownerId; }
   getSlug(): string { return this.slug; }
   getVisibility(): NanobookVisibility { return this.visibility; }
+  getContentVersion(): number { return this.contentVersion; }
   getSettings(): NanobookSettings { return { ...this.settings }; }
 
   toPersistence(): PersistedNanobook {

@@ -24,11 +24,14 @@ export class PublishingModule {
     public readonly eventBus: EventBus
   ) {}
 
-  static async create(eventBus: EventBus) {
+  static async create(
+    eventBus: EventBus,
+    options: { cacheNamespace?: string } = {},
+  ) {
     const pageRenderer = new UnifiedMarkdownRenderer();
     const renderedPageCache = await createRenderedPageCache();
 
-    const pagePublisher = new PagePublisher(pageRenderer, renderedPageCache);
+    const pagePublisher = new PagePublisher(pageRenderer, renderedPageCache, options);
 
     const invalidatePagesController = new InvalidatePagesController(pagePublisher);
     return new PublishingModule(

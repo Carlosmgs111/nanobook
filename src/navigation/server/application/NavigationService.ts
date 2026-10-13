@@ -39,7 +39,10 @@ function toHref(path: string): string {
 }
 
 export class NavigationService implements NavigationServicePort {
-  constructor(private documentsGraph: DocumentsGraph) {}
+  constructor(
+    private documentsGraph: DocumentsGraph,
+    private readonly options: { rootPath?: string } = {},
+  ) {}
 
   replaceGraph(documentsGraph: DocumentsGraph): void {
     this.documentsGraph = documentsGraph;
@@ -119,7 +122,10 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getBreadcrumbs(documentPath: string, homeTitle: string = "Inicio"): Crumb[] {
-    const currentPath = documentPath;
+    const currentPath = this.normalizePath(documentPath);
+    if (this.options.rootPath) {
+      return this.getContextBreadcrumbs(currentPath, homeTitle, this.options.rootPath);
+    }
     const nanobookRoot = this.getNanobookRoot(currentPath);
     if (nanobookRoot) {
       const crumbs: Crumb[] = [
@@ -179,8 +185,17 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getSidebarEntries(documentPath: string): NavigationNode[] {
-    const currentPath = documentPath;
+    const currentPath = this.normalizePath(documentPath);
     const node = this.documentsGraph.getNodeByPath(currentPath);
+    if (this.options.rootPath) {
+      const root = this.documentsGraph.getNodeByPath(this.options.rootPath);
+      if (node && root?.id === node.id) {
+        return root.children.map((child) => ({
+          ...child,
+          current: child.path === currentPath,
+        }));
+      }
+    }
     const nanobookRoot = this.getNanobookRoot(currentPath);
     if (node && nanobookRoot?.id === node.id) {
       return node.children.map((child) => ({
@@ -200,8 +215,9 @@ export class NavigationService implements NavigationServicePort {
   }
 
   getParentEntry(documentPath: string): ParentEntry | null {
-    const currentPath = documentPath;
+    const currentPath = this.normalizePath(documentPath);
     const node = this.documentsGraph.getNodeByPath(currentPath);
+    if (this.options.rootPath && node?.path === this.options.rootPath) return null;
     if (node && this.getNanobookRoot(currentPath)?.id === node.id) return null;
     const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
     if (!parent) return null;
@@ -217,7 +233,7 @@ export class NavigationService implements NavigationServicePort {
     documentPath: string,
     excludePath?: string
   ): NavigationNode[] {
-    const folderPath = getFolderPath(documentPath);
+    const folderPath = getFolderPath(this.normalizePath(documentPath));
     const folder =
       folderPath === ""
         ? this.documentsGraph.getNodeByPath("index")
@@ -235,5 +251,43 @@ export class NavigationService implements NavigationServicePort {
       current = this.documentsGraph.getParent(current.id);
     }
     return undefined;
+  }
+
+  private normalizePath(value: string | { getPublicValue(): string }): string {
+    return typeof value === "string" ? value : value.getPublicValue();
+  }
+
+  private getContextBreadcrumbs(
+    currentPath: string,
+    homeTitle: string,
+    rootPath: string,
+  ): Crumb[] {
+    const root = this.documentsGraph.getNodeByPath(rootPath);
+    const rootTitle = root?.title ?? homeTitle;
+    const crumbs: Crumb[] = [
+      {
+        id: rootPath,
+        title: rootTitle,
+        href: toHref(rootPath),
+        current: rootPath === currentPath,
+      },
+    ];
+    if (rootPath === currentPath || !currentPath.startsWith(`${rootPath}/`)) {
+      return crumbs;
+    }
+
+    const relativePath = currentPath.slice(rootPath.length + 1);
+    let path = rootPath;
+    for (const segment of relativePath.split("/")) {
+      path = `${path}/${segment}`;
+      const node = this.documentsGraph.getNodeByPath(path);
+      crumbs.push({
+        id: path,
+        title: node?.title ?? segment,
+        href: toHref(path),
+        current: path === currentPath,
+      });
+    }
+    return crumbs;
   }
 }

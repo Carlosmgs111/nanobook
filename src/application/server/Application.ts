@@ -9,6 +9,9 @@ import { NavigationModule } from "../../navigation/server";
 import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { AuthServerModule } from "../../auth/server";
 import { ProfileModule } from "../../profiles/server";
+import { DrizzleNanobookRepository } from "../../nanobooks/server";
+import { db } from "../../shared/infrastructure/database/drizzleDatabase";
+import { NanobookContext } from "./NanobookContext";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -18,7 +21,8 @@ export class Application {
     public readonly navigationModule: NavigationModule,
     public readonly publishingModule: PublishingModule,
     public readonly profileModule: ProfileModule,
-    public readonly eventBus: InMemoryEventBus
+    public readonly eventBus: InMemoryEventBus,
+    private readonly nanobookRepository: DrizzleNanobookRepository,
   ) {
     const githubWebhookHandler = new GitHubWebhookHandler(
       this.publishingModule.renderedPageCache,
@@ -28,6 +32,25 @@ export class Application {
     this.githubWebhookController = new GitHubWebhookController(
       githubWebhookHandler
     );
+  }
+
+  private readonly nanobookContexts = new Map<string, NanobookContext>();
+
+  async forNanobook(nanobookId: string): Promise<NanobookContext> {
+    const result = await this.nanobookRepository.findById(nanobookId);
+    if (!result.isSuccess) throw result.getError();
+    const nanobook = result.getValue();
+    if (!nanobook) throw new Error(`Nanobook "${nanobookId}" no existe`);
+
+    const cached = this.nanobookContexts.get(nanobookId);
+    if (cached && cached.contentVersion === nanobook.getContentVersion()) {
+      return cached;
+    }
+    cached?.close();
+
+    const context = await NanobookContext.create(nanobook, this.authServerModule);
+    this.nanobookContexts.set(nanobookId, context);
+    return context;
   }
 
   static async create(): Promise<Application> {
@@ -49,7 +72,8 @@ export class Application {
       navigationModule,
       publishingModule,
       profileModule,
-      eventBus
+      eventBus,
+      new DrizzleNanobookRepository(db),
     );
   }
 }

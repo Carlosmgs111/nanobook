@@ -22,10 +22,14 @@ export class NavigationModule {
     private readonly documentProvider: DocumentProvider
   ) {}
 
-  static async create(documentProvider: DocumentProvider, eventBus?: EventBus) {
+  static async create(
+    documentProvider: DocumentProvider,
+    eventBus?: EventBus,
+    options: { rootPath?: string } = {},
+  ) {
     const documents = await documentProvider.getAll();
     const documentGraph = new DocumentsGraph(documents);
-    const navigationService = new NavigationService(documentGraph);
+    const navigationService = new NavigationService(documentGraph, options);
     const module = new NavigationModule(navigationService, documentProvider);
 
     if (eventBus) {
