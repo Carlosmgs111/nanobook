@@ -14,7 +14,12 @@ function documentApiUrl(identifier: string): string {
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `/api/me/documents/${path}`;
+  const nanobookId = typeof document !== "undefined"
+    ? document.querySelector<HTMLElement>("[data-nanobook-id]")?.dataset.nanobookId
+    : undefined;
+  return nanobookId
+    ? `/api/nanobooks/${encodeURIComponent(nanobookId)}/documents/${path}`
+    : `/api/me/documents/${path}`;
 }
 
 function toUpdateDocumentRequest(

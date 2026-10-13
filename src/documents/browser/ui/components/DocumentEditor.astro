@@ -11,9 +11,10 @@ interface Props {
   viewHref?: string;
   parentHref?: string;
   frontmatterOnly?: boolean;
+  nanobookId?: string;
 }
 
-const { entry, previewHref, viewHref, parentHref, frontmatterOnly = false } = Astro.props;
+const { entry, previewHref, viewHref, parentHref, frontmatterOnly = false, nanobookId } = Astro.props;
 const serializedEntry = serializeEntry(entry);
 const editableRawFrontmatter = hideProtectedFrontmatter(entry.rawFrontmatter);
 const initialContent = editableRawFrontmatter + entry.content;
@@ -35,6 +36,7 @@ const initialContent = editableRawFrontmatter + entry.content;
     data-document={JSON.stringify(serializedEntry)}
     data-initial-content={frontmatterOnly ? editableRawFrontmatter : initialContent}
     data-frontmatter-only={frontmatterOnly ? "true" : "false"}
+    data-nanobook-id={nanobookId}
     class="editor-container"
     data-editor-container
   >

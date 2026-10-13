@@ -51,7 +51,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
     </h1>
   </div>
 
-  <div class="new-document-form" data-base-path={basePath}>
+  <div class="new-document-form" data-base-path={basePath} data-nanobook-id={nanobookContext?.nanobook.getId()}>
     <form class="space-y-6" data-new-document-form>
       <div class="space-y-2">
         <label class="block text-sm font-medium" for="new-doc-type">Tipo</label>
