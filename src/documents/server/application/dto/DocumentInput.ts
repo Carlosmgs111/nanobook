@@ -14,7 +14,6 @@ export interface DocumentInput {
   cover?: string;
   tags?: string[];
   draft?: boolean;
-  nanobook?: boolean;
   position?: number;
   ref?: Ref | string;
 }

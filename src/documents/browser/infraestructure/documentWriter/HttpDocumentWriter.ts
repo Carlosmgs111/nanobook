@@ -36,7 +36,6 @@ function toUpdateDocumentRequest(
     cover: document.metadata.cover,
     tags: document.metadata.tags,
     draft: document.metadata.draft,
-    nanobook: document.metadata.nanobook,
     position: document.metadata.position,
     ref: document.metadata.ref,
   };

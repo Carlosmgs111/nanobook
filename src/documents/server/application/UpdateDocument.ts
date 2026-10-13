@@ -49,13 +49,19 @@ export class UpdateDocument {
       return Result.fail(new DocumentAccessDeniedError(documentId));
     }
 
-    const { id, expectedRevision, path, content, ...rest } = documentDelta;
+    const { id, expectedRevision, path, content } = documentDelta;
     const existingMetadata = existingDocument.getMetadata();
 
     const updatedDocumentResult = Document.create(
       path,
       {
-        ...rest,
+        title: documentDelta.title,
+        description: documentDelta.description,
+        cover: documentDelta.cover,
+        tags: documentDelta.tags,
+        draft: documentDelta.draft,
+        position: documentDelta.position,
+        ref: documentDelta.ref,
         // Identity and audit metadata are owned by the existing entity.
         id: existingDocument.getDocumentId().getValue(),
         author: existingMetadata.author,

@@ -49,6 +49,8 @@ La verificación debe terminar sin diferencias. Comprueba especialmente cantidad
 
 La importación es idempotente para documentos y aliases idénticos. Si encuentra el mismo ID con otra asignación, ruta o hash, se detiene sin sobrescribirlo.
 
+Durante la transición, `metadata.nanobook` se interpreta únicamente al clasificar el snapshot histórico. Las rutas canónicas SQL reciben la raíz `index` desde `NanobookContext`; sus endpoints de creación y edición descartan esa marca y cualquier campo desconocido, por lo que no se puede volver a crear una frontera implícita desde el editor. El lector de esa marca que permanece en la navegación solo sirve para el fallback legacy mientras `NANOBOOK_SQL_CUTOVER` siga desactivado.
+
 ## 4. Validar antes del corte
 
 Exporta una colección de prueba para revisar la representación Markdown:

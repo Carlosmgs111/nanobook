@@ -10,7 +10,6 @@ export interface CreateDocumentRequest {
   cover?: string;
   tags?: string[];
   draft?: boolean;
-  nanobook?: boolean;
   position?: number;
   ref?: Ref | string;
 }

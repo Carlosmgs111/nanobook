@@ -76,7 +76,6 @@ export class CreateDocument {
         draft: input.draft,
         tags: input.tags,
         cover: input.cover,
-        nanobook: input.nanobook,
         ref: input.ref,
       },
       input.content,

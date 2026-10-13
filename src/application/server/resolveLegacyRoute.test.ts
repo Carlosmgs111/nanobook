@@ -5,6 +5,24 @@ import { resolveLegacyRoute } from "./resolveLegacyRoute";
 import type { Application } from "./Application";
 
 describe("resolveLegacyRoute", () => {
+  it("leaves unknown legacy paths for the caller to render as a miss", async () => {
+    const app = {
+      resolveNanobookAlias: vi.fn().mockResolvedValue(null),
+      forNanobook: vi.fn(),
+      authServerModule: { getSession: vi.fn() },
+    } as unknown as Application;
+
+    const response = await resolveLegacyRoute(
+      app,
+      new Request("https://nanobook.test/missing"),
+      "missing",
+      "read",
+    );
+
+    expect(response).toBeNull();
+    expect(app.forNanobook).not.toHaveBeenCalled();
+  });
+
   it("redirects an authorized legacy URL to the canonical nanobook URL", async () => {
     const nanobook = Nanobook.create({
       id: "book-1",
