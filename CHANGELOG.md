@@ -15,6 +15,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Los cambios del repositorio SQL incrementan `contentVersion` del nanobook, permitiendo invalidar contextos cacheados entre procesos.
 - El editor SSR pasa `nanobookId` al writer y selecciona el endpoint `/api/nanobooks/:id/documents/:documentId`, evitando que las mutaciones de una colección terminen en el API heredado.
 - Los errores `409` del editor conservan la revisión esperada y actual y muestran un mensaje de conflicto sin descartar el contenido staged local.
+- La importación SQL agrupa por destino la creación del nanobook, documentos, revisiones, versión de contenido y outbox en una sola transacción; la verificación compara hashes y detecta documentos inesperados.
 
 - Documentada la propuesta y el plan de migración a persistencia SQL compartida para usuarios y documentos: nanobooks independientes con árbol y configuración propios, sin anidamiento; clasificación explícita de fronteras históricas, alias de URLs, aislamiento, revisiones e importación verificable.
 

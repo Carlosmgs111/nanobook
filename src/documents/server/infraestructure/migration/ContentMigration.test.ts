@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   assignDocuments,
+  buildMigratedDocument,
   buildMigrationReport,
   ContentMigrationValidationError,
   type MigrationManifest,
 } from "./ContentMigration";
+import { Document } from "../../domain/Document";
 
 const manifest: MigrationManifest = {
   source: { type: "filesystem", root: "src/content" },
@@ -62,5 +64,38 @@ describe("ContentMigration", () => {
       boundaries: [manifest.boundaries[2]],
     }, [{ id: "orphan", path: "outside" }]))
       .toThrow("Documento huérfano");
+  });
+
+  it("normalizes an independent source root before hashing the SQL document", async () => {
+    const parser = { parseDocument: () => ({ headings: [] }) };
+    const sourceResult = Document.create(
+      "engineering/architecture/index",
+      {
+        id: "architecture",
+        title: "Architecture",
+        description: "Architecture",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+        author: "Nanobook",
+        nanobook: true,
+      },
+      "# Architecture",
+      parser,
+      "---\nnanobook: true\n---\n",
+      "architecture",
+    );
+    expect(sourceResult.isSuccess).toBe(true);
+
+    const assignment = assignDocuments(manifest, [
+      { id: "architecture", path: "engineering/architecture/index", nanobook: true },
+    ])[0];
+    const migratedResult = buildMigratedDocument(sourceResult.getValue(), assignment, parser);
+
+    expect(migratedResult.isSuccess).toBe(true);
+    const migrated = migratedResult.getValue();
+    expect(migrated.getPath()).toBe("index");
+    expect(migrated.getMetadata().nanobook).toBe(false);
+    expect(migrated.getRawFrontmatter()).not.toContain("nanobook: true");
+    expect((await migrated.hashDocument()).contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
 });

@@ -1,3 +1,6 @@
+import { Document } from "../../domain/Document";
+import type { DocumentParser } from "../../domain/ports/DocumentParser";
+
 export type BoundaryDecision = "independent" | "directory";
 
 export interface MigrationDestination {
@@ -34,6 +37,32 @@ export interface MigrationDocument {
 export interface MigratedDocument extends MigrationDocument {
   destination: string;
   targetPath: string;
+}
+
+/** Builds the canonical SQL document represented by a source assignment. */
+export function buildMigratedDocument(
+  sourceDocument: Document,
+  assignment: MigratedDocument,
+  parser: DocumentParser,
+) {
+  const metadata = {
+    ...sourceDocument.getMetadata(),
+    nanobook: false,
+    id: assignment.id,
+  };
+  const targetPath = sourceDocument.isIndex() && assignment.targetPath === "index"
+    ? "index"
+    : assignment.targetPath;
+
+  return Document.create(
+    targetPath,
+    metadata,
+    sourceDocument.getContent(),
+    parser,
+    sourceDocument.getRawFrontmatter().replace(/^nanobook:\s*true\s*\r?\n?/m, ""),
+    assignment.id,
+    1,
+  );
 }
 
 export class ContentMigrationValidationError extends Error {

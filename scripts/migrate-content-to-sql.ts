@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { Document } from "../src/documents/server/domain/Document";
+import type { Document } from "../src/documents/server/domain/Document";
 import { DrizzleContentRepository } from "../src/documents/server/infraestructure/repository/DrizzleContentRepository";
 import { FileSystemRepository } from "../src/documents/server/infraestructure/repository/FileSystemRepository";
 import { UnifiedDocumentParser } from "../src/documents/server/infraestructure/parse/DocumentParser";
@@ -8,6 +8,7 @@ import { DrizzleNanobookRepository, Nanobook } from "../src/nanobooks/server";
 import { db } from "../src/shared/infrastructure/database/drizzleDatabase";
 import {
   assignDocuments,
+  buildMigratedDocument,
   buildMigrationReport,
   type MigrationManifest,
 } from "../src/documents/server/infraestructure/migration/ContentMigration";
@@ -47,8 +48,9 @@ const nanobookRepository = new DrizzleNanobookRepository(db);
 for (const destination of manifest.destinations) {
   const existing = await nanobookRepository.findById(destination.nanobookId);
   if (!existing.isSuccess) throw existing.getError();
-  if (!existing.getValue()) {
-    const nanobookResult = Nanobook.create({
+  const nanobookResult = existing.getValue()
+    ? null
+    : Nanobook.create({
       id: destination.nanobookId,
       ownerId: destination.ownerId,
       slug: destination.slug,
@@ -56,49 +58,51 @@ for (const destination of manifest.destinations) {
       visibility: destination.visibility,
       settings: destination.settings,
     });
-    if (!nanobookResult.isSuccess) throw nanobookResult.getError();
-    const created = await nanobookRepository.create(nanobookResult.getValue());
-    if (!created.isSuccess) throw created.getError();
-  }
+  if (nanobookResult && !nanobookResult.isSuccess) throw nanobookResult.getError();
 
   const repository = new DrizzleContentRepository(db, destination.nanobookId, parser);
   const unitOfWork = new DrizzleDocumentUnitOfWork(db, destination.nanobookId);
   const destinationAssignments = assignments.filter((item) => item.destination === destination.nanobookId);
+  const existingDocuments = await repository.list();
+  if (!existingDocuments.isSuccess) throw existingDocuments.getError();
+  const existingById = new Map(existingDocuments.getValue().map((item) => [item.getDocumentId().getValue(), item]));
+  const pending: Array<{ assignment: (typeof destinationAssignments)[number]; document: Document }> = [];
+
   for (const assignment of destinationAssignments) {
     const sourceDocument = sourceDocuments.find((document) => document.getDocumentId().getValue() === assignment.id);
     if (!sourceDocument) throw new Error(`Documento no encontrado en el snapshot: ${assignment.id}`);
-    const metadata = { ...sourceDocument.getMetadata(), nanobook: false, id: assignment.id };
-    const targetPath = sourceDocument.isIndex() && assignment.targetPath === "index"
-      ? "index"
-      : assignment.targetPath;
-    const documentResult = Document.create(
-      targetPath,
-      metadata,
-      sourceDocument.getContent(),
-      parser,
-      sourceDocument.getRawFrontmatter().replace(/^nanobook:\s*true\s*\r?\n?/m, ""),
-      assignment.id,
-      1,
-    );
+    const documentResult = buildMigratedDocument(sourceDocument, assignment, parser);
     if (!documentResult.isSuccess) throw documentResult.getError();
+    const migrated = documentResult.getValue();
+    const existingDocument = existingById.get(assignment.id);
+    if (existingDocument) {
+      const [expectedHash, actualHash] = await Promise.all([
+        migrated.hashDocument(),
+        existingDocument.hashDocument(),
+      ]);
+      if (existingDocument.getPath() !== migrated.getPath() || expectedHash.version !== actualHash.version) {
+        throw new Error(`El documento ${assignment.id} ya existe y no coincide con la migración esperada`);
+      }
+      continue;
+    }
+    pending.push({ assignment, document: migrated });
+  }
 
-    const existingDocument = await repository.getById(assignment.id);
-    if (!existingDocument.isSuccess) throw existingDocument.getError();
-    if (existingDocument.getValue()) continue;
-    const created = await repository.create(documentResult.getValue());
-    if (!created.isSuccess) throw created.getError();
-    await unitOfWork.run(async ({ appendRevision, enqueueEvent }) => {
+  await unitOfWork.run(async ({ insertNanobook, insertDocument, appendRevision, enqueueEvent, incrementContentVersion }) => {
+    if (nanobookResult) await insertNanobook(nanobookResult.getValue());
+    for (const { assignment, document: migrated } of pending) {
+      await insertDocument(migrated);
       await appendRevision({
         documentId: assignment.id,
         revision: 1,
-        snapshot: documentResult.getValue().parse(),
+        snapshot: migrated.parse(),
         actorId: destination.ownerId,
         operation: "import",
       });
       await incrementContentVersion();
       await enqueueEvent("document.imported", { documentId: assignment.id });
-    });
-  }
+    }
+  });
 }
 
 console.log(JSON.stringify({ ...report, applied: true }, null, 2));
