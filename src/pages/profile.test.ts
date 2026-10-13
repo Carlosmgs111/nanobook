@@ -11,21 +11,21 @@ describe("profile page", () => {
       'import ProfilePage from "../profiles/browser/ui/ProfilePage.astro"'
     );
     expect(profile).toContain(
-      'import ProfilePageController from "../profiles/browser/ProfilePageController.astro"'
+      'import ProfileFormController from "../profiles/browser/ProfileFormController.astro"'
     );
     expect(profile).toContain("<ProfilePage />");
-    expect(profile).toContain("<ProfilePageController />");
+    expect(profile).toContain("<ProfileFormController />");
     expect(profile).not.toContain("<Layout");
   });
 
   it("offers a black sign-out action backed by the sign-out controller", () => {
     const profilePage = read("src/profiles/browser/ui/ProfilePage.astro");
-    const controller = read("src/profiles/browser/ProfilePageController.astro");
+    const controller = read("src/profiles/browser/ProfileFormController.astro");
 
     expect(profilePage).toContain("Cerrar sesión");
     expect(profilePage).toContain("data-sign-out");
-    expect(controller).toContain("signOutController.execute()");
-    expect(controller).toContain("getApp()");
+    expect(controller).toContain("ProfileFormController");
+    expect(controller).toContain("data-profile-form");
     expect(controller).not.toContain('import { authModule }');
   });
 

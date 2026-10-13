@@ -1,5 +1,6 @@
 import { Document } from "../../domain/Document";
 import type { DocumentParser } from "../../domain/ports/DocumentParser";
+import { FrontmatterParser } from "../parse/FrontmatterParser";
 
 export type BoundaryDecision = "independent" | "directory";
 
@@ -45,8 +46,22 @@ export function buildMigratedDocument(
   assignment: MigratedDocument,
   parser: DocumentParser,
 ) {
+  const sourceMetadata = sourceDocument.getMetadata();
+  const rawMetadata = FrontmatterParser.parseFrontmatter(
+    sourceDocument.getRawFrontmatter(),
+  ).data as Record<string, unknown>;
+  const createdAt = readSourceDate(
+    rawMetadata.createdAt ?? rawMetadata.date,
+    sourceMetadata.createdAt,
+  );
+  const updatedAt = readSourceDate(
+    rawMetadata.updatedAt ?? rawMetadata.createdAt ?? rawMetadata.date,
+    createdAt,
+  );
   const metadata = {
-    ...sourceDocument.getMetadata(),
+    ...sourceMetadata,
+    createdAt,
+    updatedAt,
     nanobook: false,
     id: assignment.id,
   };
@@ -63,6 +78,15 @@ export function buildMigratedDocument(
     assignment.id,
     1,
   );
+}
+
+function readSourceDate(value: unknown, fallback: Date): Date {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return fallback;
 }
 
 export class ContentMigrationValidationError extends Error {

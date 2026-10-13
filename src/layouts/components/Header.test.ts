@@ -28,7 +28,8 @@ describe("global login link contract", () => {
     const authForm = read("src/auth/browser/AuthFormController.astro");
 
     expect(header).toContain("getApp()");
-    expect(authForm).toContain("getApp()");
+    expect(authForm).toContain("SessionCachingAuthApi");
+    expect(authForm).toContain("new HttpAuthApi()");
     expect(header).not.toMatch(/import\s+\{\s*authModule\s*\}\s+from\s+["']\.\.\/auth["']/);
     expect(authForm).not.toMatch(/import\s+\{\s*authModule\s*\}\s+from\s+["']\.\/["']/);
   });

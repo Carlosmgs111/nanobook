@@ -98,4 +98,31 @@ describe("ContentMigration", () => {
     expect(migrated.getRawFrontmatter()).not.toContain("nanobook: true");
     expect((await migrated.hashDocument()).contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
+
+  it("preserves legacy date metadata when the source uses the date field", async () => {
+    const parser = { parseDocument: () => ({ headings: [] }) };
+    const sourceResult = Document.create(
+      "index",
+      {
+        id: "dated-document",
+        title: "Dated document",
+        description: "Dated document",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        author: "Nanobook",
+      },
+      "# Dated document",
+      parser,
+      "---\nid: dated-document\ndate: 2024-06-15\n---\n",
+      "dated-document",
+    );
+
+    const assignment = assignDocuments(manifest, [
+      { id: "dated-document", path: "index" },
+    ])[0];
+    const migrated = buildMigratedDocument(sourceResult.getValue(), assignment, parser).getValue();
+
+    expect(migrated.getMetadata().createdAt).toEqual(new Date("2024-06-15T00:00:00.000Z"));
+    expect(migrated.getMetadata().updatedAt).toEqual(new Date("2024-06-15T00:00:00.000Z"));
+  });
 });

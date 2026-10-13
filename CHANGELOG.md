@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Actualizado el flujo de pruebas y composición del formulario de autenticación para que `auth/browser` tenga un controlador TypeScript ejecutable y testeable.
+- Añadidos el benchmark de lecturas SQL/GitHub y el runbook operativo para preparar, verificar, activar y revertir el corte SQL; retirados los comandos de contenido que apuntaban a un script inexistente.
+- Corregida la migración para conservar `date`, `createdAt` y `updatedAt` históricos, evitando hashes variables durante la verificación.
 - Mejorado el diagnóstico cuando la tabla `nanobook_alias` aún no tiene aplicada su migración; ahora se indica ejecutar `npm run database:migrate`.
 
 - Implementado el primer corte de persistencia SQL para nanobooks y documentos: conexión/migraciones Drizzle compartidas, repositorios acotados por `nanobookId`, revisiones optimistas, outbox transaccional y unidad de trabajo para versionar cambios.
