@@ -29,11 +29,14 @@ export class CreateNanobook {
     if (!result.isSuccess) return Result.fail(result.getError());
 
     const nanobook = result.getValue();
+    const repositoryAtomicCreator = "createAtomically" in this.repository
+      ? (this.repository as NanobookRepository & {
+          createAtomically: AtomicNanobookCreator;
+        }).createAtomically
+      : undefined;
     const atomicCreator = this.createAtomically
-      ?? ("createAtomically" in this.repository
-        ? (this.repository as NanobookRepository & {
-            createAtomically: AtomicNanobookCreator;
-          }).createAtomically
+      ?? (repositoryAtomicCreator
+        ? repositoryAtomicCreator.bind(this.repository)
         : undefined);
 
     if (this.initializeRoot && atomicCreator) {
