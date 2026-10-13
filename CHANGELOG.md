@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Reubicada la composición de `NanobookModule` en `src/nanobooks/server/index.ts`, alineándola con el patrón de módulos server que exponen su composición desde `index.ts`.
 - Simplificado el caso de creación de nanobooks: `CreateNanobook` exige explícitamente `createWithRoot` y eliminó la detección dinámica y el fallback no atómico; la creación del nanobook y su raíz permanece en una única transacción SQL.
 - La composición server se adelgazó: `Application` coordina únicamente autenticación, perfiles y `NanobookModule`; este último concentra repositorio, controladores, caché de contextos y la composición aislada de documentos, navegación y publicación por nanobook.
 - Eliminado el puente `nanobook_alias`: las rutas canónicas se resuelven por `nanobook.slug` y las rutas legacy responden `410`; la migración de esquema `0006` elimina la tabla.
