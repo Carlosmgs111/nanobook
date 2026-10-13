@@ -169,7 +169,7 @@ Validar: `npx vitest run src/nanobooks/server/infraestructure/repository/Drizzle
 - [ ] Probar dos libros con `index` y `guide/index`, consulta por ID ajeno, rutas públicas y listado directo de hijos.
 - [ ] Implementar consultas específicas por índice; `getById`, `getByPath` y `listChildren` no llaman a `list()`. Mantener `list()` para el grafo inicial, restringido a una colección.
 - [ ] Mapear errores SQL al `Result` existente y conflictos de unicidad a errores de dominio. Propagar fallos de `GetAllDocuments` hasta HTTP 503; no convertirlos en éxito vacío.
-- [ ] Añadir `sql` al selector temporal `CONTENT_SOURCE`; aún no cambiar el proveedor de producción.
+- [ ] Añadir `sql` al selector temporal `CONTENT_SOURCE`; exigir `nanobookId` al crear el repositorio y aún no cambiar el proveedor de producción.
 - [ ] Retirar `nanobook` de `DocumentMetadata`/DTOs activos, validadores, formulario de creación y serialización; conservar su lectura únicamente en el importador histórico. Probar que marcar un índice vía payload no crea un nanobook ni cambia el alcance de navegación.
 
 ```ts

@@ -1,6 +1,8 @@
 import { FileSystemRepository } from "./FileSystemRepository";
 import { GitHubRepository } from "./GitHubRepository";
 import { InMemoryRepository } from "./InMemoryRepository";
+import { DrizzleContentRepository } from "./DrizzleContentRepository";
+import { db } from "../../../../shared/infrastructure/database/drizzleDatabase";
 import type { ContentRepository } from "../../domain/ports/ContentRepository";
 import type { Document } from "../../domain/Document";
 import { UnifiedDocumentParser } from "../parse/DocumentParser";
@@ -13,11 +15,12 @@ import {
   CONTENT_SOURCE,
 } from "astro:env/server";
 
-export type RepositorySource = "filesystem" | "github" | "memory";
+export type RepositorySource = "filesystem" | "github" | "memory" | "sql";
 
 export interface CreateContentRepositoryOptions {
   source?: RepositorySource;
   initialDocuments?: Document[];
+  nanobookId?: string;
 }
 
 /**
@@ -52,6 +55,15 @@ export async function createContentRepository(
       return createGitHubRepository();
     case "memory":
       return new InMemoryRepository(options.initialDocuments);
+    case "sql":
+      if (!options.nanobookId) {
+        throw new Error("SQL content repositories require nanobookId.");
+      }
+      return new DrizzleContentRepository(
+        db,
+        options.nanobookId,
+        new UnifiedDocumentParser(),
+      );
     default:
       throw new Error(`Unsupported content source: ${options.source}`);
   }
