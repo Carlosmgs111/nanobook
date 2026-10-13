@@ -22,7 +22,7 @@ describe("DrizzleNanobookRepository", () => {
 
   it("persists and lists a nanobook by owner", async () => {
     const book = Nanobook.create({ id: "book-1", ownerId: "user-1", slug: "manual", name: "Manual" }).getValue();
-    expect((await repository.create(book)).isSuccess).toBe(true);
+    expect((await repository.createWithRoot(book, async () => {})).isSuccess).toBe(true);
     expect((await repository.findBySlug("MANUAL")).getValue()?.getId()).toBe("book-1");
     expect((await repository.listByOwner("user-1")).getValue()).toHaveLength(1);
   });
@@ -32,9 +32,9 @@ describe("DrizzleNanobookRepository", () => {
     const duplicate = Nanobook.create({ id: "book-2", ownerId: "user-1", slug: "manual", name: "Otro" }).getValue();
     const missingOwner = Nanobook.create({ id: "book-3", ownerId: "missing", slug: "otro", name: "Otro" }).getValue();
 
-    expect((await repository.create(first)).isSuccess).toBe(true);
-    expect((await repository.create(duplicate)).getError().name).toBe("NanobookSlugAlreadyTakenError");
-    expect((await repository.create(missingOwner)).isSuccess).toBe(false);
+    expect((await repository.createWithRoot(first, async () => {})).isSuccess).toBe(true);
+    expect((await repository.createWithRoot(duplicate, async () => {})).getError().name).toBe("NanobookSlugAlreadyTakenError");
+    expect((await repository.createWithRoot(missingOwner, async () => {})).isSuccess).toBe(false);
   });
 
   it("rolls back the nanobook when root initialization fails", async () => {
@@ -45,7 +45,7 @@ describe("DrizzleNanobookRepository", () => {
       name: "Rollback",
     }).getValue();
 
-    const result = await repository.createAtomically(book, async () => {
+    const result = await repository.createWithRoot(book, async () => {
       throw new Error("root initialization failed");
     });
 

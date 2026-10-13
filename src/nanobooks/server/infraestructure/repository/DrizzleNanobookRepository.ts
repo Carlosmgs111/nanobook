@@ -11,13 +11,13 @@ import type { NanobookRepository } from "../../domain/ports/NanobookRepository";
 import { nanobook } from "../database/DrizzleNanobookSchema";
 import { DrizzleDocumentUnitOfWork } from "../../../../documents/server/infraestructure/database/DrizzleDocumentUnitOfWork";
 import type {
-  AtomicNanobookCreator,
+  NanobookCreationStore,
   NanobookRootInitializer,
 } from "../../application/NanobookCreationTransaction";
 
 type Database = LibSQLDatabase<any>;
 
-export class DrizzleNanobookRepository implements NanobookRepository {
+export class DrizzleNanobookRepository implements NanobookRepository, NanobookCreationStore {
   constructor(private readonly database: Database) {}
 
   async findById(id: string) {
@@ -48,34 +48,7 @@ export class DrizzleNanobookRepository implements NanobookRepository {
     }
   }
 
-  async create(book: Nanobook) {
-    const data = book.toPersistence();
-    try {
-      await this.database.insert(nanobook).values({
-        id: data.id,
-        ownerId: data.ownerId,
-        slug: data.slug,
-        name: data.name,
-        visibility: data.visibility,
-        settingsJson: JSON.stringify(data.settings),
-        contentVersion: data.contentVersion,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-      });
-      return Result.ok();
-    } catch (error) {
-      if (isUniqueViolation(error)) {
-        return Result.fail(new NanobookSlugAlreadyTakenError(data.slug));
-      }
-      return Result.fail(
-        new NanobookRepositoryError("No fue posible crear el nanobook", {
-          cause: error,
-        }),
-      );
-    }
-  }
-
-  async createAtomically(
+  async createWithRoot(
     book: Nanobook,
     initializeRoot: NanobookRootInitializer,
   ) {

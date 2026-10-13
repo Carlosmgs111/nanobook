@@ -47,6 +47,12 @@ mientras su `contentVersion` no cambie, lo cierra cuando debe reconstruirlo y
 expone las resoluciones por identidad o por `slug`. `NanobookContext` se limita
 a componer las capacidades de una colección y a cerrar sus recursos.
 
+La creación usa la capacidad explícita `NanobookCreationStore.createWithRoot`.
+El repositorio SQL implementa esa capacidad mediante una transacción que inserta
+el nanobook, su documento `index`, la revisión inicial, el evento outbox y la
+nueva versión de contenido. No existe un camino de creación que persista el
+nanobook sin su raíz.
+
 ## Justificación
 
 1. **Aislamiento explícito**: las capacidades de contenido reciben siempre el

@@ -1,5 +1,7 @@
 import type { Document } from "../../../documents/server/domain/Document";
+import type { Result } from "../../../shared/domain/Result";
 import type { Nanobook } from "../domain/Nanobook";
+import type { NanobookRepositoryFailure } from "../domain/ports/NanobookRepository";
 
 export interface NanobookCreationTransaction {
   insertDocument(document: Document): Promise<void>;
@@ -16,10 +18,16 @@ export interface NanobookCreationTransaction {
 
 export type NanobookRootInitializer = (
   nanobook: Nanobook,
-  transaction?: NanobookCreationTransaction,
+  transaction: NanobookCreationTransaction,
 ) => Promise<void>;
 
-export type AtomicNanobookCreator = (
-  nanobook: Nanobook,
-  initializeRoot: NanobookRootInitializer,
-) => Promise<import("../../../shared/domain/Result").Result<unknown, void>>;
+/**
+ * Capacidad explícita para crear el nanobook y su documento raíz como una
+ * única operación persistente.
+ */
+export interface NanobookCreationStore {
+  createWithRoot(
+    nanobook: Nanobook,
+    initializeRoot: NanobookRootInitializer,
+  ): Promise<Result<NanobookRepositoryFailure, void>>;
+}

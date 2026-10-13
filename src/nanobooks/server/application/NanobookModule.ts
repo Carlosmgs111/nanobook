@@ -1,8 +1,6 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { Document } from "../../../documents/server/domain/Document";
-import { DrizzleContentRepository } from "../../../documents/server/infraestructure/repository/DrizzleContentRepository";
-import { UnifiedDocumentParser } from "../../../documents/server/infraestructure/parse/DocumentParser";
 import {
   type RouteProtector,
 } from "../../../documents/server/infraestructure/rest/protectDocumentMutationRoutes";
@@ -45,11 +43,10 @@ export class NanobookModule {
   ): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(database);
     const listNanobooks = new ListNanobooks(repository);
-    const initializeRoot = createRootInitializer(database);
+    const initializeRoot = createRootInitializer();
     const createNanobook = new CreateNanobook(
       repository,
       initializeRoot,
-      repository.createAtomically.bind(repository),
     );
 
     return new NanobookModule(
@@ -101,10 +98,10 @@ export class NanobookModule {
   }
 }
 
-function createRootInitializer(database: Database) {
+function createRootInitializer() {
   return async (
     nanobook: Nanobook,
-    transaction?: NanobookCreationTransaction,
+    transaction: NanobookCreationTransaction,
   ): Promise<void> => {
     const document = Document.create("index", {
       id: crypto.randomUUID(),
@@ -117,29 +114,18 @@ function createRootInitializer(database: Database) {
     }, `# ${nanobook.getName()}\n`);
     if (!document.isSuccess) throw document.getError();
 
-    if (transaction) {
-      const root = document.getValue();
-      await transaction.insertDocument(root);
-      await transaction.appendRevision({
-        documentId: root.getDocumentId().getValue(),
-        revision: root.getRevision(),
-        snapshot: root.parse(),
-        actorId: nanobook.getOwnerId(),
-        operation: "create",
-      });
-      await transaction.incrementContentVersion();
-      await transaction.enqueueEvent("document.created", {
-        documentId: root.getDocumentId().getValue(),
-      });
-      return;
-    }
-
-    const repository = new DrizzleContentRepository(
-      database,
-      nanobook.getId(),
-      new UnifiedDocumentParser(),
-    );
-    const created = await repository.create(document.getValue());
-    if (!created.isSuccess) throw created.getError();
+    const root = document.getValue();
+    await transaction.insertDocument(root);
+    await transaction.appendRevision({
+      documentId: root.getDocumentId().getValue(),
+      revision: root.getRevision(),
+      snapshot: root.parse(),
+      actorId: nanobook.getOwnerId(),
+      operation: "create",
+    });
+    await transaction.incrementContentVersion();
+    await transaction.enqueueEvent("document.created", {
+      documentId: root.getDocumentId().getValue(),
+    });
   };
 }
