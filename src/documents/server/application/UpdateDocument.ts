@@ -49,7 +49,7 @@ export class UpdateDocument {
       return Result.fail(new DocumentAccessDeniedError(documentId));
     }
 
-    const { id, path, content, ...rest } = documentDelta;
+    const { id, expectedRevision, path, content, ...rest } = documentDelta;
     const existingMetadata = existingDocument.getMetadata();
 
     const updatedDocumentResult = Document.create(
@@ -91,13 +91,16 @@ export class UpdateDocument {
       );
     }
 
-    for (const item of documentsToUpdate.getValue()) {
-      const updateResult = await this.contentRepository.update(
-        item.document,
-        ...(item.previousPath && item.previousPath !== item.document.getPath()
-          ? [item.previousPath]
-          : [])
-      );
+    for (const [index, item] of documentsToUpdate.getValue().entries()) {
+      const previousPath = item.previousPath && item.previousPath !== item.document.getPath()
+        ? item.previousPath
+        : undefined;
+      const updateResult = expectedRevision !== undefined && index === 0 && this.contentRepository.updateWithRevision
+        ? await this.contentRepository.updateWithRevision(item.document, expectedRevision, previousPath)
+        : await this.contentRepository.update(
+            item.document,
+            ...(previousPath ? [previousPath] : []),
+          );
       if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
     }
 

@@ -7,6 +7,7 @@ import type {
   InvalidDocumentIdError,
   DocumentRepositoryError,
   DocumentParseError,
+  DocumentRevisionConflictError,
 } from "../errors";
 
 export type ContentRepositoryListError =
@@ -18,7 +19,8 @@ export type ContentRepositoryListError =
 export type ContentRepositoryError =
   | DocumentRepositoryError
   | DocumentAlreadyExistsError
-  | DocumentNotFoundError;
+  | DocumentNotFoundError
+  | DocumentRevisionConflictError;
 
 export interface ContentRepository {
   list(): Promise<Result<ContentRepositoryListError, Document[]>>;
@@ -38,6 +40,11 @@ export interface ContentRepository {
   update(
     document: Document,
     previousPath?: string
+  ): Promise<Result<ContentRepositoryError, void>>;
+  updateWithRevision?(
+    document: Document,
+    expectedRevision: number,
+    previousPath?: string,
   ): Promise<Result<ContentRepositoryError, void>>;
   delete(document: Document): Promise<Result<ContentRepositoryError, void>>;
   clearCache?(): Promise<void> | void;

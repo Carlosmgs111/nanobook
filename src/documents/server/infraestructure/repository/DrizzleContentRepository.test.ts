@@ -5,6 +5,7 @@ import { createDatabase } from "../../../../shared/infrastructure/database/creat
 import { Document } from "../../domain/Document";
 import type { DocumentMetadata } from "../../domain/types";
 import { DrizzleContentRepository } from "./DrizzleContentRepository";
+import { DocumentRevisionConflictError } from "../../domain/errors";
 
 const metadata = (id: string, ownerId: string): DocumentMetadata => ({
   id,
@@ -62,5 +63,34 @@ describe("DrizzleContentRepository", () => {
 
     const children = await first.listChildren("index");
     expect(children.getValue().map((value) => value.getDocumentId().getValue())).toEqual(["child"]);
+  });
+
+  it("updates only when the expected revision is current", async () => {
+    const original = Document.create("guide/revisioned", metadata("revisioned", "owner-1"), "# A").getValue();
+    await first.create(original);
+
+    const changed = Document.create(
+      "guide/revisioned",
+      { ...metadata("revisioned", "owner-1"), updatedAt: new Date("2026-01-02T00:00:00.000Z") },
+      "# B",
+      undefined,
+      undefined,
+      "revisioned",
+    ).getValue();
+    const update = await first.updateWithRevision?.(changed, 1);
+    expect(update?.isSuccess).toBe(true);
+
+    const stale = Document.create(
+      "guide/revisioned",
+      { ...metadata("revisioned", "owner-1"), updatedAt: new Date("2026-01-03T00:00:00.000Z") },
+      "# C",
+      undefined,
+      undefined,
+      "revisioned",
+    ).getValue();
+    const conflict = await first.updateWithRevision?.(stale, 1);
+    expect(conflict?.isSuccess).toBe(false);
+    expect(conflict?.getError()).toBeInstanceOf(DocumentRevisionConflictError);
+    expect((await first.getById("revisioned")).getValue()?.getContent()).toBe("# B");
   });
 });

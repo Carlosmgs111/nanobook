@@ -1,6 +1,7 @@
 import type { Ref } from "../../domain/DocumentReference";
 
 export interface UpdateDocumentRequest {
+  expectedRevision?: number;
   path: string;
   title: string;
   description: string;

@@ -31,6 +31,19 @@ export class DocumentNotFoundError extends Error {
   }
 }
 
+export class DocumentRevisionConflictError extends Error {
+  constructor(
+    public readonly documentId: string,
+    public readonly expectedRevision: number,
+    public readonly actualRevision?: number,
+  ) {
+    super(
+      `El documento "${documentId}" cambió desde la revisión ${expectedRevision}`,
+    );
+    this.name = "DocumentRevisionConflictError";
+  }
+}
+
 export class DocumentAccessDeniedError extends Error {
   constructor(public readonly documentId: string) {
     super(`No tienes permiso para modificar el documento "${documentId}"`);
@@ -77,6 +90,7 @@ export type DocumentServiceError =
   | DocumentAlreadyExistsError
   | DocumentAccessDeniedError
   | DocumentNotFoundError
+  | DocumentRevisionConflictError
   | DocumentDeletionPartialError
   | InvalidDocumentIdError
   | ParentNotFoundError

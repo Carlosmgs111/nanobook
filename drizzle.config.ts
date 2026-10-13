@@ -8,6 +8,7 @@ export default defineConfig({
     "./src/profiles/server/infraestructure/database/DrizzleProfileSchema.ts",
     "./src/nanobooks/server/infraestructure/database/DrizzleNanobookSchema.ts",
     "./src/documents/server/infraestructure/database/DrizzleDocumentSchema.ts",
+    "./src/documents/server/infraestructure/database/DrizzleDocumentRevisionSchema.ts",
   ],
 
   out: "./drizzle",

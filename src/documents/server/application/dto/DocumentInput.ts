@@ -2,6 +2,7 @@ import type { Ref } from "../../domain/DocumentReference";
 
 export interface DocumentInput {
   id?: string;
+  expectedRevision?: number;
   path: string;
   title: string;
   description: string;

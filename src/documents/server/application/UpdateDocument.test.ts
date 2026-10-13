@@ -222,6 +222,27 @@ describe("UpdateDocument", () => {
     );
   });
 
+  it("uses the expected revision when the repository supports optimistic concurrency", async () => {
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+      updateWithRevision: vi.fn().mockResolvedValue(Result.ok()),
+    });
+    const useCase = new UpdateDocument(repository, createEventBus());
+
+    const result = await useCase.execute({
+      ...buildUpdateInput(),
+      expectedRevision: 7,
+    }, "owner-1");
+
+    expect(result.isSuccess).toBe(true);
+    expect(repository.updateWithRevision).toHaveBeenCalledWith(
+      expect.anything(),
+      7,
+      undefined,
+    );
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
   it("preserves identity, owner, author, and creation time during updates", async () => {
     const createdAt = new Date("2024-01-01T00:00:00.000Z");
     const original = createDocument("guide/immutable", {
