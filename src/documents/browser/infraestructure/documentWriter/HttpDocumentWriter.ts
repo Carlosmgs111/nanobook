@@ -42,6 +42,29 @@ function toUpdateDocumentRequest(
   };
 }
 
+async function toWriterError(
+  response: Response,
+  fallbackMessage: string
+): Promise<EditionWriterError> {
+  const payload = await response.json().catch(() => ({}));
+  const message =
+    payload && typeof payload.error === "string"
+      ? payload.error
+      : fallbackMessage;
+
+  return new EditionWriterError(message, {
+    status: response.status,
+    expectedRevision:
+      typeof payload?.expectedRevision === "number"
+        ? payload.expectedRevision
+        : undefined,
+    actualRevision:
+      typeof payload?.actualRevision === "number"
+        ? payload.actualRevision
+        : undefined,
+  });
+}
+
 export class HttpDocumentWriter implements DocumentWriter {
   async createDocument(
     document: CreateDocumentRequest
@@ -54,9 +77,8 @@ export class HttpDocumentWriter implements DocumentWriter {
       });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
         return Result.fail(
-          new EditionWriterError(payload.error || "Error al crear el documento")
+          await toWriterError(response, "Error al crear el documento")
         );
       }
 
@@ -79,10 +101,7 @@ export class HttpDocumentWriter implements DocumentWriter {
       });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        return Result.fail(
-          new EditionWriterError(payload.error || "Error al actualizar")
-        );
+        return Result.fail(await toWriterError(response, "Error al actualizar"));
       }
 
       return Result.ok(await response.json());
@@ -100,8 +119,9 @@ export class HttpDocumentWriter implements DocumentWriter {
         method: "DELETE",
       });
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        return Result.fail(new EditionWriterError(payload.error || "Error al eliminar"));
+        return Result.fail(
+          await toWriterError(response, "Error al eliminar")
+        );
       }
       return Result.ok();
     } catch (error) {

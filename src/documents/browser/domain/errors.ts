@@ -15,9 +15,24 @@ export class EditionRenderError extends InfrastructureError {
 }
 
 export class EditionWriterError extends InfrastructureError {
-  constructor(message: string, options?: { cause?: unknown }) {
+  public readonly status?: number;
+  public readonly expectedRevision?: number;
+  public readonly actualRevision?: number;
+
+  constructor(
+    message: string,
+    options?: {
+      cause?: unknown;
+      status?: number;
+      expectedRevision?: number;
+      actualRevision?: number;
+    }
+  ) {
     super(message, options);
     this.name = "EditionWriterError";
+    this.status = options?.status;
+    this.expectedRevision = options?.expectedRevision;
+    this.actualRevision = options?.actualRevision;
   }
 }
 

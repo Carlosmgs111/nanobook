@@ -34,6 +34,7 @@ describe("SaveDocument", () => {
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EditionWriterError);
+    expect(storage.saveStagedDocument).not.toHaveBeenCalled();
     expect(storage.saveConfirmedDocument).not.toHaveBeenCalled();
   });
 

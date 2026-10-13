@@ -1,5 +1,6 @@
 <script>
   import { getApp } from "../../../application/browser/Application";
+  import { EditionWriterError } from "../domain/errors";
   import { prefetch } from "astro:prefetch";
 
   const app = getApp();
@@ -14,6 +15,22 @@
       statusElement.className = "status";
     }, 4000);
   }
+
+  function showSaveError(error: unknown) {
+    if (error instanceof EditionWriterError && error.status === 409) {
+      showStatus(
+        "El documento cambió en otra sesión. Tus cambios locales se conservaron; recarga para comparar antes de volver a guardar.",
+        true
+      );
+      return;
+    }
+
+    showStatus(
+      error instanceof Error ? error.message : "Error al guardar",
+      true
+    );
+  }
+
   document.addEventListener("astro:page-load", () => {
     statusElement = document.querySelector<HTMLElement>(
       "[data-edition-result]"
@@ -29,19 +46,22 @@
     saveButton.replaceWith(cleanButton);
     cleanButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      const result = await app.editionModule.saveDocument.execute(
-        saveButton.dataset.documentId as string
-      );
-      if (result.isSuccess) {
-        prefetch(viewHref as string);
-        showStatus("Guardado correctamente");
-      } else {
-        const error = result.getError();
-        console.error(error);
-        showStatus(
-          error instanceof Error ? error.message : "Error al guardar",
-          true
+      if (cleanButton.disabled) return;
+      cleanButton.disabled = true;
+      try {
+        const result = await app.editionModule.saveDocument.execute(
+          cleanButton.dataset.documentId as string
         );
+        if (result.isSuccess) {
+          if (viewHref) prefetch(viewHref);
+          showStatus("Guardado correctamente");
+        } else {
+          const error = result.getError();
+          console.error(error);
+          showSaveError(error);
+        }
+      } finally {
+        cleanButton.disabled = false;
       }
     });
 

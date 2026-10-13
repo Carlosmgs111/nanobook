@@ -86,4 +86,47 @@ describe("HttpDocumentWriter", () => {
       expect.objectContaining({ method: "DELETE" })
     );
   });
+
+  it("preserves revision details when the API rejects a stale update", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "El documento cambió desde la revisión 3",
+          expectedRevision: 3,
+          actualRevision: 4,
+        }),
+        { status: 409 }
+      )
+    );
+
+    const entry = {
+      ...documentRequest,
+      documentId: "doc-stale",
+      id: "doc-stale",
+      isIndex: false,
+      version: "version",
+      slug: "stale",
+      position: 0,
+      rawFrontmatter: "",
+      headings: [],
+      metadata: {
+        title: "Stale",
+        description: "Stale",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-02T00:00:00.000Z",
+      },
+      revision: 3,
+    } as SerializedEntry;
+
+    const result = await new HttpDocumentWriter().updateDocument(
+      "doc-stale",
+      entry
+    );
+
+    expect(result.isSuccess).toBe(false);
+    const error = result.getError();
+    expect(error.status).toBe(409);
+    expect(error.expectedRevision).toBe(3);
+    expect(error.actualRevision).toBe(4);
+  });
 });
