@@ -209,6 +209,18 @@ export class Document {
       this.revision,
     );
   }
+
+  withRevision(revision: number): Result<InvalidDocumentError | InvalidDocumentIdError, Document> {
+    return Document.create(
+      this.getPath(),
+      this.metadata,
+      this.content,
+      this.parser,
+      this.rawFrontmatter,
+      this.getDocumentId().getValue(),
+      revision,
+    );
+  }
   getTitle(): string {
     return this.title;
   }

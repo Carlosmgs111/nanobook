@@ -94,6 +94,7 @@ describe("UpdateDocument", () => {
     }, "owner-1");
 
     expect(result.isSuccess).toBe(true);
+    expect(result.getValue().getRevision()).toBe(2);
     expect(repository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         path: expect.objectContaining({

@@ -112,7 +112,11 @@ export class UpdateDocument {
       if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
     }
 
-    return Result.ok(documentsToUpdate.getValue()[0].document);
+    const persistedResult = documentsToUpdate.getValue()[0].document.withRevision(
+      documentsToUpdate.getValue()[0].document.getRevision() + 1,
+    );
+    if (!persistedResult.isSuccess) return Result.fail(persistedResult.getError());
+    return Result.ok(persistedResult.getValue());
   }
 
   private async buildMoveSet(
