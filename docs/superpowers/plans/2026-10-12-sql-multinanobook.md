@@ -336,7 +336,7 @@ No ejecutar estos comandos hasta que existan las tareas anteriores y se hayan se
 
 ## Task 10: Retirada del proveedor global y cierre
 
-**Files:** revisar `src/documents/server/infraestructure/repository/GitHubRepository.ts`, `FileSystemRepository.ts`, `src/publishing/server/infraestructure/GithubWebhookHandler.ts`, `src/pages/api/documents/webhook/github.ts`, `src/shared/github/`, resolutores de referencias y variables `GITHUB_*`; actualizar documentación operativa y scripts de contenido existentes.
+**Estado:** el webhook de contenido, el fallback de composición, los comandos de migración y el benchmark GitHub fueron retirados. `GitHubRepository`, `FileSystemRepository` y los resolutores `github:` se conservan solo como adaptadores explícitos para pruebas o referencias externas; no participan en la persistencia de nanobooks de producción.
 
 - [ ] Quitar GitHub de la composición normal y retirar el webhook de sincronización del proveedor antiguo después de aceptar el corte. Conservar importadores/exportadores explícitos; no eliminar archivos fuente ni historial por defecto.
 - [ ] No borrar GitHub OAuth de autenticación al retirar almacenamiento. Separar sus variables de los tokens de contenido. Revisar referencias externas `github:` antes de eliminar su resolutor o credencial.
