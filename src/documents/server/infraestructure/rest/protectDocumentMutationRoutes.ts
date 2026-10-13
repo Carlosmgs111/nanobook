@@ -1,8 +1,5 @@
 import type { APIRoute } from "astro";
-
-export interface RouteProtector {
-  protect(handler: APIRoute): APIRoute;
-}
+import type { RouteProtector } from "../../../../shared/server/capabilities/RouteProtector";
 
 export interface DocumentMutationRoutes {
   POST: APIRoute;

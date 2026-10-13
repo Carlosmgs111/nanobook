@@ -47,6 +47,10 @@ mientras su `contentVersion` no cambie, lo cierra cuando debe reconstruirlo y
 expone las resoluciones por identidad o por `slug`. `NanobookContext` se limita
 a componer las capacidades de una colección y a cerrar sus recursos.
 
+Las capacidades transversales, como `RouteProtector`, se reciben desde
+`Application` mediante inyección. El módulo conoce el contrato de la capacidad,
+pero no si la implementación proviene de Better Auth u otro proveedor.
+
 La creación usa la capacidad explícita `NanobookCreationStore.createWithRoot`.
 El repositorio SQL implementa esa capacidad mediante una transacción que inserta
 el nanobook, su documento `index`, la revisión inicial, el evento outbox y la

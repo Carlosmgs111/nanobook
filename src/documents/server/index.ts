@@ -17,8 +17,8 @@ import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubRefer
 import {
   protectDocumentMutationRoutes,
   type DocumentMutationRoutes,
-  type RouteProtector,
 } from "./infraestructure/rest/protectDocumentMutationRoutes";
+import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 
 export type { Document } from "./domain/Document";

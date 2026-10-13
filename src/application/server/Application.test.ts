@@ -39,6 +39,7 @@ describe("Application", () => {
   it("composes profiles without retaining the legacy user module", async () => {
     const app = await Application.create();
 
+    expect(app.routeProtector).toBe(app.authServerModule);
     expect(app.profileModule).toBeDefined();
     expect("userModule" in app).toBe(false);
     expect(app.nanobookModule).toBeDefined();

@@ -1,11 +1,12 @@
 import type { APIRoute } from "astro";
+import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 
 import { createBetterAuth } from "./infrastructure/better-auth/BetterAuth";
 import { BetterAuthSessionReader } from "./infrastructure/better-auth/BetterAuthSessionReader";
 import { createAuthController } from "./infrastructure/http/AuthController";
 import { withAuthenticatedSession } from "./infrastructure/http/withAuthenticatedSession";
 
-export class AuthServerModule {
+export class AuthServerModule implements RouteProtector {
   private constructor(
     private readonly sessionReader: BetterAuthSessionReader,
     public readonly authController: APIRoute

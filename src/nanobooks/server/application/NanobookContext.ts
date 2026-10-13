@@ -1,7 +1,7 @@
-import type { RouteProtector } from "../../../documents/server/infraestructure/rest/protectDocumentMutationRoutes";
 import { DocumentModule } from "../../../documents/server";
 import { DocumentModuleDocumentProvider } from "../../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
+import type { RouteProtector } from "../../../shared/server/capabilities/RouteProtector";
 import { NavigationModule } from "../../../navigation/server";
 import { PublishingModule } from "../../../publishing/server";
 import type { Nanobook } from "../domain/Nanobook";

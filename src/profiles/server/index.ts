@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
+import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { CreateCurrentProfile } from "./application/CreateCurrentProfile";
 import { GetCurrentProfile } from "./application/GetCurrentProfile";
 import { GetPublicProfileByUsername } from "./application/GetPublicProfileByUsername";
@@ -9,10 +10,6 @@ import { GetCurrentProfileController } from "./infraestructure/rest/GetCurrentPr
 import { GetPublicProfileController } from "./infraestructure/rest/GetPublicProfileController";
 import { UpdateCurrentProfileController } from "./infraestructure/rest/UpdateCurrentProfileController";
 import { DrizzleProfileRepository } from "./infraestructure/repository/DrizzleProfileRepository";
-
-export interface RouteProtector {
-  protect(route: APIRoute): APIRoute;
-}
 
 export class ProfileModule {
   private constructor(

@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Reubicado `RouteProtector` como capacidad server compartida; `Application` la obtiene de autenticación y la inyecta en perfiles, documentos y nanobooks sin exponer el origen de la implementación a esos módulos.
 - Reubicada la composición de `NanobookModule` en `src/nanobooks/server/index.ts`, alineándola con el patrón de módulos server que exponen su composición desde `index.ts`.
 - Simplificado el caso de creación de nanobooks: `CreateNanobook` exige explícitamente `createWithRoot` y eliminó la detección dinámica y el fallback no atómico; la creación del nanobook y su raíz permanece en una única transacción SQL.
 - La composición server se adelgazó: `Application` coordina únicamente autenticación, perfiles y `NanobookModule`; este último concentra repositorio, controladores, caché de contextos y la composición aislada de documentos, navegación y publicación por nanobook.

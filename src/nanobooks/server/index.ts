@@ -1,8 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { Document } from "../../documents/server/domain/Document";
-import type { RouteProtector } from "../../documents/server/infraestructure/rest/protectDocumentMutationRoutes";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
+import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { NanobookContext } from "./application/NanobookContext";
 import { CreateNanobook } from "./application/CreateNanobook";
 import type { NanobookCreationTransaction } from "./application/NanobookCreationTransaction";
