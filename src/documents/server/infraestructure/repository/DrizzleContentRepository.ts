@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { Result } from "../../../../shared/domain/Result";
@@ -19,6 +19,7 @@ import type {
 import type { DocumentParser } from "../../domain/ports/DocumentParser";
 import type { DocumentMetadata } from "../../domain/types";
 import { document } from "../database/DrizzleDocumentSchema";
+import { nanobook } from "../../../../nanobooks/server/infraestructure/database/DrizzleNanobookSchema";
 
 type Database = LibSQLDatabase<any>;
 type Failure = ContentRepositoryListError | DocumentRepositoryError | DocumentAlreadyExistsError | DocumentNotFoundError;
@@ -70,6 +71,7 @@ export class DrizzleContentRepository implements ContentRepository {
     if (!row.isSuccess) return Result.fail(row.getError());
     try {
       await this.database.insert(document).values(row.getValue());
+      await this.touchNanobook();
       return Result.ok();
     } catch (error) {
       if (isConstraintError(error)) return Result.fail(new DocumentAlreadyExistsError(value.getPath()));
@@ -124,6 +126,7 @@ export class DrizzleContentRepository implements ContentRepository {
           actualRevision.getValue(),
         ));
       }
+      await this.touchNanobook();
       return Result.ok();
     } catch (error) {
       if (isConstraintError(error)) return Result.fail(new DocumentAlreadyExistsError(value.getPath()));
@@ -140,6 +143,7 @@ export class DrizzleContentRepository implements ContentRepository {
         .update(document)
         .set({ deletedAt: new Date(), updatedAt: new Date() })
         .where(and(eq(document.id, value.getDocumentId().getValue()), eq(document.nanobookId, this.nanobookId), isNull(document.deletedAt)));
+      await this.touchNanobook();
       return Result.ok();
     } catch (error) {
       return Result.fail(this.repositoryError(`No fue posible eliminar "${value.getPath()}"`, error));
@@ -227,6 +231,13 @@ export class DrizzleContentRepository implements ContentRepository {
     } catch (error) {
       return Result.fail(this.repositoryError("No fue posible consultar la revisión del documento", error));
     }
+  }
+
+  private async touchNanobook(): Promise<void> {
+    await this.database
+      .update(nanobook)
+      .set({ contentVersion: sql`${nanobook.contentVersion} + 1`, updatedAt: new Date() })
+      .where(eq(nanobook.id, this.nanobookId));
   }
 
   private repositoryError(message: string, cause: unknown) {
