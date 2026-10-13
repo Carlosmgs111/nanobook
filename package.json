@@ -16,8 +16,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "content:benchmark": "tsx scripts/benchmark-content-storage.ts",
-    "content:migrate-ids": "tsx scripts/migrate-document-identities.ts",
-    "content:assign-owner": "tsx scripts/migrate-document-ownership.ts",
     "database:migrate": "tsx scripts/database-migrate.ts",
     "content:import-sql": "tsx scripts/migrate-content-to-sql.ts",
     "content:verify-sql": "tsx scripts/verify-content-migration.ts",

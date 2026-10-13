@@ -47,6 +47,8 @@ npm run content:verify-sql -- --manifest migration-manifest.json
 
 La verificación debe terminar sin diferencias. Comprueba especialmente cantidad de documentos, IDs, propietarios, cuerpos, rutas, padres, metadatos, referencias y aliases. Si falta un alias, la URL histórica no puede considerarse migrada.
 
+Los scripts históricos que añadían identidades o propietarios al frontmatter ya fueron retirados después de comprobar que el snapshot local no tenía documentos pendientes. La identidad, el propietario y la ruta son autoritativos en SQL; no deben reintroducirse mediante edición de Markdown.
+
 La importación es idempotente para documentos y aliases idénticos. Si encuentra el mismo ID con otra asignación, ruta o hash, se detiene sin sobrescribirlo.
 
 Durante la transición, `metadata.nanobook` se interpreta únicamente al clasificar el snapshot histórico. Las rutas canónicas SQL reciben la raíz `index` desde `NanobookContext`; sus endpoints de creación y edición descartan esa marca y cualquier campo desconocido, por lo que no se puede volver a crear una frontera implícita desde el editor. El lector de esa marca que permanece en la navegación solo sirve para el fallback legacy mientras `NANOBOOK_SQL_CUTOVER` siga desactivado.

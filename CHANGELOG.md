@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Retirados los scripts históricos de asignación de identidades y propietarios en frontmatter: el preflight confirmó que los 101 documentos ya tienen identidad estable y propietario persistido; se conservan las herramientas de importación, verificación y exportación SQL para el corte productivo.
 - Actualizado el flujo de pruebas y composición del formulario de autenticación para que `auth/browser` tenga un controlador TypeScript ejecutable y testeable.
 - Añadidos el benchmark de lecturas SQL/GitHub y el runbook operativo para preparar, verificar, activar y revertir el corte SQL; retirados los comandos de contenido que apuntaban a un script inexistente.
 - Corregida la migración para conservar `date`, `createdAt` y `updatedAt` históricos, evitando hashes variables durante la verificación.
