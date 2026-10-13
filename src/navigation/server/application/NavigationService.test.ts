@@ -55,7 +55,7 @@ describe("NavigationService", () => {
     });
   });
 
-  it("starts breadcrumbs from the closest nanobook index", () => {
+  it("starts breadcrumbs from the explicit nanobook context root", () => {
     const root = document("index", "root", "Home");
     const books = document("books/index", "books", "Books");
     const programming = document("books/programming/index", "programming", "Programming");
@@ -72,6 +72,7 @@ describe("NavigationService", () => {
     );
     const service = new NavigationService(
       new DocumentsGraph([root, books, programming, nanobook, chapter]),
+      { rootPath: "books/programming/typescript-ddd" },
     );
 
     expect(
@@ -81,7 +82,7 @@ describe("NavigationService", () => {
     ).toEqual([
       {
         id: "books/programming/typescript-ddd",
-        title: "Inicio",
+        title: "TypeScript DDD",
         href: "/books/programming/typescript-ddd/",
         current: true,
       },
@@ -93,7 +94,7 @@ describe("NavigationService", () => {
     ).toEqual([
       {
         id: "books/programming/typescript-ddd",
-        title: "Inicio",
+        title: "TypeScript DDD",
         href: "/books/programming/typescript-ddd/",
         current: false,
       },
@@ -106,7 +107,7 @@ describe("NavigationService", () => {
     ]);
   });
 
-  it("does not expose navigation above a nanobook index", () => {
+  it("does not expose navigation above the explicit nanobook context root", () => {
     const root = document("index", "root", "Home");
     const books = document("books/index", "books", "Books");
     const nanobook = document("books/typescript-ddd/index", "typescript-ddd", "TypeScript DDD", {
@@ -116,6 +117,7 @@ describe("NavigationService", () => {
     const appendix = document("books/typescript-ddd/appendix", "appendix", "Appendix");
     const service = new NavigationService(
       new DocumentsGraph([root, books, nanobook, chapter, appendix]),
+      { rootPath: "books/typescript-ddd" },
     );
 
     expect(
@@ -135,7 +137,7 @@ describe("NavigationService", () => {
     ).toBeNull();
   });
 
-  it("uses the closest nanobook when they are nested", () => {
+  it("ignores legacy nanobook markers without an explicit context root", () => {
     const outer = document("books/outer/index", "outer", "Outer", { nanobook: true });
     const inner = document("books/outer/inner/index", "inner", "Inner", { nanobook: true });
     const chapter = document("books/outer/inner/chapter", "chapter", "Chapter");
@@ -145,6 +147,6 @@ describe("NavigationService", () => {
       service.getBreadcrumbs(
         DocumentPath.create("books/outer/inner/chapter").getValue(),
       )[0],
-    ).toMatchObject({ id: "books/outer/inner", title: "Inicio" });
+    ).toMatchObject({ id: "index", title: "Inicio" });
   });
 });

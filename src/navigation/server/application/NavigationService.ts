@@ -126,32 +126,6 @@ export class NavigationService implements NavigationServicePort {
     if (this.options.rootPath) {
       return this.getContextBreadcrumbs(currentPath, homeTitle, this.options.rootPath);
     }
-    const nanobookRoot = this.getNanobookRoot(currentPath);
-    if (nanobookRoot) {
-      const crumbs: Crumb[] = [
-        {
-          id: nanobookRoot.path,
-          title: homeTitle,
-          href: toHref(nanobookRoot.path),
-          current: nanobookRoot.path === currentPath,
-        },
-      ];
-      if (nanobookRoot.path === currentPath) return crumbs;
-
-      const relativePath = currentPath.slice(nanobookRoot.path.length + 1);
-      let path = nanobookRoot.path;
-      for (const segment of relativePath.split("/")) {
-        path = `${path}/${segment}`;
-        const node = this.documentsGraph.getNodeByPath(path);
-        crumbs.push({
-          id: path,
-          title: node?.title ?? segment,
-          href: toHref(path),
-          current: path === currentPath,
-        });
-      }
-      return crumbs;
-    }
 
     const crumbs: Crumb[] = [
       { id: "index", title: homeTitle, href: "/", current: false },
@@ -196,13 +170,6 @@ export class NavigationService implements NavigationServicePort {
         }));
       }
     }
-    const nanobookRoot = this.getNanobookRoot(currentPath);
-    if (node && nanobookRoot?.id === node.id) {
-      return node.children.map((child) => ({
-        ...child,
-        current: child.path === currentPath,
-      }));
-    }
     if (!node || node.parentId === null) return [];
 
     const parent = this.documentsGraph.getNode(node.parentId as string);
@@ -218,7 +185,6 @@ export class NavigationService implements NavigationServicePort {
     const currentPath = this.normalizePath(documentPath);
     const node = this.documentsGraph.getNodeByPath(currentPath);
     if (this.options.rootPath && node?.path === this.options.rootPath) return null;
-    if (node && this.getNanobookRoot(currentPath)?.id === node.id) return null;
     const parent = node ? this.documentsGraph.getParent(node.id) : undefined;
     if (!parent) return null;
 
@@ -242,15 +208,6 @@ export class NavigationService implements NavigationServicePort {
     if (!folder) return [];
 
     return folder.children.filter((child) => child.path !== excludePath);
-  }
-
-  private getNanobookRoot(path: string): NavigationNode | undefined {
-    let current = this.documentsGraph.getNodeByPath(path);
-    while (current) {
-      if (current.isIndex && current.metadata.nanobook === true) return current;
-      current = this.documentsGraph.getParent(current.id);
-    }
-    return undefined;
   }
 
   private normalizePath(value: string | { getPublicValue(): string }): string {
