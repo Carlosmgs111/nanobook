@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Trasladada la presentación de `auth`, `documents`, `navigation` y `profiles` desde `server/ui` a `browser/ui`, conservando el frontmatter SSR de Astro y actualizando sus consumidores. Los módulos de servidor quedan organizados por dominio, aplicación e infraestructura con `index.ts`; la prueba de composición de navegación reside en su capa de aplicación.
+
 - Reorganizado `src/` por módulo y después por entorno (`<módulo>/browser` y `<módulo>/server`). La composición global reside en `application`, los tipos de Astro en `src/env.d.ts`, y se actualizaron imports, mocks, consumidores y esquemas de Drizzle.
 
 - Las mutaciones de documentos ahora viven bajo `/api/me/documents/:id`; la sesión determina al propietario. Los webhooks administrativos de documentos conservan sus rutas fuera de `/me`.

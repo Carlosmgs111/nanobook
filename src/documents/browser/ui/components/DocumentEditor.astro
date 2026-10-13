@@ -1,7 +1,7 @@
 ---
-import type { Entry } from "../../domain/types";
-import { serializeEntry } from "../../application/dto/SerializedEntry";
-import { hideProtectedFrontmatter } from "../../../browser/application/protectedFrontmatter";
+import type { Entry } from "../../../server/domain/types";
+import { serializeEntry } from "../../../server/application/dto/SerializedEntry";
+import { hideProtectedFrontmatter } from "../../application/protectedFrontmatter";
 import EditorToolbar from "./EditorToolbar.astro";
 import EditorStatus from "./EditorStatus.astro";
 

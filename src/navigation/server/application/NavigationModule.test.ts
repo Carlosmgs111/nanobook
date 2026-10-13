@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { Document } from "../../documents/server/domain/Document";
-import { DocumentCreated } from "../../documents/server/domain/events/DocumentCreated";
-import { DocumentUpdated } from "../../documents/server/domain/events/DocumentUpdated";
-import { DocumentDeleted } from "../../documents/server/domain/events/DocumentDeleted";
-import { DocumentPath } from "../../documents/server/domain/DocumentPath";
-import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import type { DocumentProvider } from "./domain/ports/DocumentProvider";
-import { NavigationModule } from "./index";
+import { Document } from "../../../documents/server/domain/Document";
+import { DocumentCreated } from "../../../documents/server/domain/events/DocumentCreated";
+import { DocumentUpdated } from "../../../documents/server/domain/events/DocumentUpdated";
+import { DocumentDeleted } from "../../../documents/server/domain/events/DocumentDeleted";
+import { DocumentPath } from "../../../documents/server/domain/DocumentPath";
+import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
+import type { DocumentProvider } from "../domain/ports/DocumentProvider";
+import { NavigationModule } from "../index";
 
 function document(path: string, id: string, title = path) {
   return Document.create(

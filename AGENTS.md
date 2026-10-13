@@ -46,7 +46,9 @@ src/
   profiles/
     browser/
     server/
-  navigation/server/
+  navigation/
+    browser/
+    server/
   publishing/server/
   theme/browser/
   toast/browser/
@@ -59,11 +61,12 @@ src/
 
 Reglas:
 - Crear `browser/` o `server/` dentro del módulo solo cuando tenga código para ese entorno; no crear carpetas vacías.
-- Conservar dentro de cada entorno las carpetas semánticas del módulo (dominio, aplicación, infraestructura, UI).
+- Los módulos de negocio en `server/` se organizan en tres capas: `domain/`, `application/` e infraestructura (`infrastructure/` o `infraestructure/`, según el módulo), más el compositor `index.ts`. No crear capas vacías. Las pruebas se ubican dentro de la capa que verifican.
 - Los tipos y contratos puros no dependen de Astro ni de I/O; los adaptadores concretos contienen los side effects.
-- `browser/` contiene código cliente; no debe importar valores de servidor que arrastren secretos, I/O o APIs de Node.js.
+- `browser/` reúne presentación y código cliente. Los scripts que se envían al navegador no deben importar valores de servidor que arrastren secretos, I/O o APIs de Node.js.
 - `server/` contiene lógica y adaptadores de servidor; no depende de APIs del navegador.
-- `ui/` contiene componentes Astro; las rutas en `pages/` delegan en los módulos.
+- Los componentes Astro de presentación residen en `browser/ui/`, incluso cuando su frontmatter consulta servicios de servidor: Astro ejecuta ese bloque exclusivamente en SSR. Mantener esas dependencias fuera de los bloques `<script>` cliente. Las rutas en `pages/` delegan en los módulos.
+- `application/` en la raíz de `src/` conserva los puntos de composición global por entorno; no es un módulo de negocio sujeto a las tres capas.
 - Evitar `core` como cajón de sastre; usar nombres que describan la responsabilidad.
 
 ## Documentación de decisiones

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(
-  "src/navigation/server/ui/components/IndexList/DocumentIndex.astro",
+  "src/navigation/browser/ui/components/IndexList/DocumentIndex.astro",
   "utf8"
 );
 

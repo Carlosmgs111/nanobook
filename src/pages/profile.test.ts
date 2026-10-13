@@ -8,7 +8,7 @@ describe("profile page", () => {
     const profile = read("src/pages/profile.astro");
 
     expect(profile).toContain(
-      'import ProfilePage from "../profiles/server/ui/ProfilePage.astro"'
+      'import ProfilePage from "../profiles/browser/ui/ProfilePage.astro"'
     );
     expect(profile).toContain(
       'import ProfilePageController from "../profiles/browser/ProfilePageController.astro"'
@@ -19,7 +19,7 @@ describe("profile page", () => {
   });
 
   it("offers a black sign-out action backed by the sign-out controller", () => {
-    const profilePage = read("src/profiles/server/ui/ProfilePage.astro");
+    const profilePage = read("src/profiles/browser/ui/ProfilePage.astro");
     const controller = read("src/profiles/browser/ProfilePageController.astro");
 
     expect(profilePage).toContain("Cerrar sesión");
@@ -30,7 +30,7 @@ describe("profile page", () => {
   });
 
   it("offers a black button back to the home page", () => {
-    const profile = read("src/profiles/server/ui/ProfilePage.astro");
+    const profile = read("src/profiles/browser/ui/ProfilePage.astro");
 
     expect(profile).toContain('href="/"');
     expect(profile).toContain("Volver al inicio");
