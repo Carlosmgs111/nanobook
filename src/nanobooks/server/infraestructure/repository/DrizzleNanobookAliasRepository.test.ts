@@ -29,4 +29,18 @@ describe("DrizzleNanobookAliasRepository", () => {
       targetPath: "intro",
     });
   });
+
+  it("reports when the aliases migration has not been applied", async () => {
+    const connectionWithoutAliases = createDatabase({ url: ":memory:" });
+    await connectionWithoutAliases.db.run(sql`CREATE TABLE nanobook (id TEXT PRIMARY KEY)`);
+    const repositoryWithoutAliases = new DrizzleNanobookAliasRepository(connectionWithoutAliases.db);
+
+    const result = await repositoryWithoutAliases.findByLegacyPath("guide/intro");
+
+    expect(result.isSuccess).toBe(false);
+    if (!result.isSuccess) {
+      expect(result.getError().message).toContain("npm run database:migrate");
+    }
+    connectionWithoutAliases.client.close();
+  });
 });

@@ -27,7 +27,18 @@ export class DrizzleNanobookAliasRepository {
         targetPath: row.targetPath,
       } : null);
     } catch (error) {
-      return Result.fail(new NanobookRepositoryError("No fue posible resolver el alias del nanobook", { cause: error }));
+      return Result.fail(new NanobookRepositoryError(
+        isMissingAliasTable(error)
+          ? "La migración de aliases del nanobook no está aplicada. Ejecuta npm run database:migrate"
+          : "No fue posible resolver el alias del nanobook",
+        { cause: error },
+      ));
     }
   }
+}
+
+function isMissingAliasTable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /no such table[^\n]*nanobook_alias|table[^\n]*nanobook_alias[^\n]*(?:does not exist|not found)/i.test(message)
+    || isMissingAliasTable(error instanceof Error ? error.cause : undefined);
 }
