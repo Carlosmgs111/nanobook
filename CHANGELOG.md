@@ -16,6 +16,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - La creación de nanobooks usa una transacción compartida para insertar la colección, su raíz `index`, la revisión inicial, la versión de contenido y el evento outbox; un fallo al inicializar la raíz revierte toda la operación.
 - La API de creación ya no acepta IDs de nanobook enviados por el cliente; la identidad se genera en el servidor.
 - Con `NANOBOOK_SQL_CUTOVER=true`, la composición global usa un repositorio de memoria inerte y el webhook de contenido de GitHub responde `410`, evitando acceso accidental al proveedor legacy.
+- La API pública de creación tampoco transporta configuraciones del cliente; los settings quedan reservados a manifiestos internos validados por el dominio.
 
 - Implementado el primer corte de persistencia SQL para nanobooks y documentos: conexión/migraciones Drizzle compartidas, repositorios acotados por `nanobookId`, revisiones optimistas, outbox transaccional y unidad de trabajo para versionar cambios.
 - Añadido `NanobookContext` para aislar repositorio, navegación, eventos y caché por colección. Las rutas canónicas `/n/<slug>/...` validan visibilidad y propietario antes de resolver documentos; las respuestas de edición transportan la revisión esperada y los conflictos devuelven `409`.

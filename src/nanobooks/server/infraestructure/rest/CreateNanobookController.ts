@@ -14,7 +14,6 @@ export class CreateNanobookController {
         slug: body.slug,
         name: body.name,
         visibility: body.visibility,
-        settings: body.settings,
       });
       if (!result.isSuccess) {
         const status = result.getError().name.includes("Slug") ? 409 : 400;

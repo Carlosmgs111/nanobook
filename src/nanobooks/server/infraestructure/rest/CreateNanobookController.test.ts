@@ -33,8 +33,8 @@ describe("CreateNanobookController", () => {
       slug: "manual",
       name: "Manual",
       visibility: "private",
-      settings: { provider: "github" },
     });
     expect(execute.mock.calls[0]?.[1]).not.toHaveProperty("id");
+    expect(execute.mock.calls[0]?.[1]).not.toHaveProperty("settings");
   });
 });
