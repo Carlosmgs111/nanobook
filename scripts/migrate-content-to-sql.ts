@@ -88,8 +88,20 @@ for (const destination of manifest.destinations) {
     pending.push({ assignment, document: migrated });
   }
 
-  await unitOfWork.run(async ({ insertNanobook, insertDocument, appendRevision, enqueueEvent, incrementContentVersion }) => {
+  await unitOfWork.run(async ({ insertNanobook, insertDocument, insertAlias, appendRevision, enqueueEvent, incrementContentVersion }) => {
     if (nanobookResult) await insertNanobook(nanobookResult.getValue());
+    for (const assignment of destinationAssignments) {
+      const sourceDocument = sourceDocuments.find((document) => document.getDocumentId().getValue() === assignment.id);
+      if (!sourceDocument) throw new Error(`Documento no encontrado en el snapshot: ${assignment.id}`);
+      const migrated = pending.find((item) => item.assignment.id === assignment.id)?.document
+        ?? existingById.get(assignment.id);
+      if (!migrated) throw new Error(`Documento no preparado para la migración: ${assignment.id}`);
+      await insertAlias({
+        legacyPath: sourceDocument.getPublicPath(),
+        nanobookId: destination.nanobookId,
+        targetPath: migrated.getPublicPath(),
+      });
+    }
     for (const { assignment, document: migrated } of pending) {
       await insertDocument(migrated);
       await appendRevision({

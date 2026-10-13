@@ -9,7 +9,12 @@ import { NavigationModule } from "../../navigation/server";
 import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { AuthServerModule } from "../../auth/server";
 import { ProfileModule } from "../../profiles/server";
-import { CreateNanobook, CreateNanobookController, DrizzleNanobookRepository } from "../../nanobooks/server";
+import {
+  CreateNanobook,
+  CreateNanobookController,
+  DrizzleNanobookAliasRepository,
+  DrizzleNanobookRepository,
+} from "../../nanobooks/server";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { NanobookContext } from "./NanobookContext";
 import { DrizzleContentRepository } from "../../documents/server/infraestructure/repository/DrizzleContentRepository";
@@ -27,6 +32,7 @@ export class Application {
     public readonly profileModule: ProfileModule,
     public readonly eventBus: InMemoryEventBus,
     private readonly nanobookRepository: DrizzleNanobookRepository,
+    private readonly nanobookAliasRepository: DrizzleNanobookAliasRepository,
     createNanobookController: CreateNanobookController,
   ) {
     this.createNanobookController = createNanobookController;
@@ -59,6 +65,12 @@ export class Application {
     return this.contextForNanobook(nanobook);
   }
 
+  async resolveNanobookAlias(path: string) {
+    const result = await this.nanobookAliasRepository.findByLegacyPath(path);
+    if (!result.isSuccess) throw result.getError();
+    return result.getValue();
+  }
+
   private async contextForNanobook(nanobook: import("../../nanobooks/server").Nanobook): Promise<NanobookContext> {
     const nanobookId = nanobook.getId();
     const cached = this.nanobookContexts.get(nanobookId);
@@ -86,6 +98,7 @@ export class Application {
     );
 
     const nanobookRepository = new DrizzleNanobookRepository(db);
+    const nanobookAliasRepository = new DrizzleNanobookAliasRepository(db);
     return new Application(
       authModule,
       documentModule,
@@ -94,6 +107,7 @@ export class Application {
       profileModule,
       eventBus,
       nanobookRepository,
+      nanobookAliasRepository,
       new CreateNanobookController(new CreateNanobook(
         nanobookRepository,
         async (nanobook) => {

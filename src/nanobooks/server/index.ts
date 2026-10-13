@@ -1,6 +1,8 @@
 export { Nanobook } from "./domain/Nanobook";
+export type { NanobookAlias } from "./domain/NanobookAlias";
 export type { NanobookSettings, NanobookVisibility } from "./domain/types";
 export { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
+export { DrizzleNanobookAliasRepository } from "./infraestructure/repository/DrizzleNanobookAliasRepository";
 export type { NanobookRepository } from "./domain/ports/NanobookRepository";
 export { AuthorizeNanobook, NanobookAccessDeniedError } from "./application/AuthorizeNanobook";
 export type { NanobookPermission } from "./application/AuthorizeNanobook";

@@ -1,6 +1,16 @@
 ---
 import PreviewPage from "../../documents/browser/ui/pages/PreviewPage.astro";
 import PreviewPageController from "../../documents/browser/ui/PreviewPageController.astro";
+import { getApp } from "../../application/server/Application";
+import { resolveLegacyRoute } from "../../application/server/resolveLegacyRoute";
+
+const legacyRedirect = await resolveLegacyRoute(
+  await getApp(),
+  Astro.request,
+  Astro.params.slug,
+  "read",
+);
+if (legacyRedirect) return legacyRedirect;
 ---
 
 <PreviewPage />

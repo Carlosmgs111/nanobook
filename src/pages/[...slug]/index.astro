@@ -1,6 +1,16 @@
 ---
 import DocumentPage from "../../documents/browser/ui/pages/DocumentPage.astro";
 import DocumentPageController from "../../documents/browser/ui/DocumentPageController.astro";
+import { getApp } from "../../application/server/Application";
+import { resolveLegacyRoute } from "../../application/server/resolveLegacyRoute";
+
+const legacyRedirect = await resolveLegacyRoute(
+  await getApp(),
+  Astro.request,
+  Astro.params.slug,
+  "read",
+);
+if (legacyRedirect) return legacyRedirect;
 ---
 
 <DocumentPage />
