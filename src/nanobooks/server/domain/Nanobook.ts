@@ -54,6 +54,15 @@ export class Nanobook {
       return Result.fail(new InvalidNanobookError("contentVersion es inválida"));
     }
 
+    const settings = data.settings ?? {};
+    if (!isNanobookSettings(settings)) {
+      return Result.fail(
+        new InvalidNanobookError(
+          `settings contiene campos no permitidos: ${Object.keys(settings as object).join(", ")}`,
+        ),
+      );
+    }
+
     const createdAt = data.createdAt ?? new Date();
     const updatedAt = data.updatedAt ?? createdAt;
     return Result.ok(
@@ -63,7 +72,7 @@ export class Nanobook {
         slug,
         name,
         data.visibility ?? "private",
-        { ...(data.settings ?? {}) },
+        { ...settings },
         data.contentVersion ?? 0,
         createdAt,
         updatedAt,
@@ -92,4 +101,9 @@ export class Nanobook {
       updatedAt: this.updatedAt,
     };
   }
+}
+
+function isNanobookSettings(value: unknown): value is NanobookSettings {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.keys(value).length === 0;
 }

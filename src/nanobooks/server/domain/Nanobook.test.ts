@@ -41,4 +41,17 @@ describe("Nanobook", () => {
       }).isSuccess
     ).toBe(false);
   });
+
+  it("rejects provider settings until they are part of the typed contract", () => {
+    const result = Nanobook.create({
+      id: "book-1",
+      ownerId: "user-1",
+      slug: "manual-equipo",
+      name: "Manual del equipo",
+      settings: { provider: "github" } as never,
+    });
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError().message).toContain("settings contiene campos no permitidos");
+  });
 });

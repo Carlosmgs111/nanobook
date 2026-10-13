@@ -1,6 +1,7 @@
 import { Document } from "../../domain/Document";
 import type { DocumentParser } from "../../domain/ports/DocumentParser";
 import { FrontmatterParser } from "../parse/FrontmatterParser";
+import type { NanobookSettings } from "../../../../nanobooks/server";
 
 export type BoundaryDecision = "independent" | "directory";
 
@@ -10,7 +11,7 @@ export interface MigrationDestination {
   slug: string;
   ownerId: string;
   visibility: "public" | "private";
-  settings?: Record<string, unknown>;
+  settings?: NanobookSettings;
 }
 
 export interface MigrationBoundary {
