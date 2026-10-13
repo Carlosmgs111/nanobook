@@ -280,6 +280,7 @@ export class DrizzleContentRepository implements ContentRepository {
 
   private async toRow(value: Document, revision = 1) {
     const metadata = value.getMetadata();
+    const { nanobook: _legacyNanobookMarker, ...persistedMetadata } = metadata;
     const contentHash = await value.computeContentHash();
     return Result.ok({
       id: value.getDocumentId().getValue(),
@@ -290,7 +291,7 @@ export class DrizzleContentRepository implements ContentRepository {
       title: value.getTitle(),
       description: value.getDescription(),
       body: value.getContent(),
-      metadataJson: JSON.stringify(metadata, (_key, current) => current instanceof Date ? current.toISOString() : current),
+      metadataJson: JSON.stringify(persistedMetadata, (_key, current) => current instanceof Date ? current.toISOString() : current),
       rawFrontmatter: value.getRawFrontmatter(),
       ownerId: metadata.ownerId ?? null,
       revision,

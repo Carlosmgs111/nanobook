@@ -55,6 +55,20 @@ describe("DrizzleContentRepository", () => {
     expect((await connection.client.execute("SELECT COUNT(*) AS count FROM document_revision")).rows[0]?.count).toBe(2);
   });
 
+  it("does not persist the historical nanobook marker in SQL metadata", async () => {
+    const marked = Document.create(
+      "index",
+      { ...metadata("legacy-marker", "owner-1"), nanobook: true },
+      "# Root",
+    ).getValue();
+
+    expect((await first.create(marked)).isSuccess).toBe(true);
+    const row = (await connection.client.execute(
+      "SELECT metadata_json FROM document WHERE id = 'legacy-marker'",
+    )).rows[0];
+    expect(JSON.parse(String(row?.metadata_json))).not.toHaveProperty("nanobook");
+  });
+
   it("lists direct children without loading another nanobook", async () => {
     const root = Document.create("index", metadata("root", "owner-1"), "root").getValue();
     const child = Document.create("guide", metadata("child", "owner-1"), "child").getValue();
