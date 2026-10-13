@@ -100,4 +100,17 @@ describe("DrizzleContentRepository", () => {
       { revision: 2, operation: "update" },
     ]);
   });
+
+  it("deletes a SQL subtree in one transaction", async () => {
+    const root = Document.create("guide/index", metadata("delete-root", "owner-1"), "# Guide").getValue();
+    const child = Document.create("guide/intro", metadata("delete-child", "owner-1"), "# Intro").getValue();
+    await first.create(root);
+    await first.create(child);
+
+    const result = await first.deleteMany?.([root, child]);
+
+    expect(result?.isSuccess).toBe(true);
+    expect((await first.list()).getValue()).toHaveLength(0);
+    expect((await connection.client.execute("SELECT operation FROM document_revision WHERE operation = 'delete' ORDER BY document_id")).rows).toHaveLength(2);
+  });
 });

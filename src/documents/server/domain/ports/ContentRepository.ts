@@ -47,5 +47,6 @@ export interface ContentRepository {
     previousPath?: string,
   ): Promise<Result<ContentRepositoryError, void>>;
   delete(document: Document): Promise<Result<ContentRepositoryError, void>>;
+  deleteMany?(documents: Document[]): Promise<Result<ContentRepositoryError, void>>;
   clearCache?(): Promise<void> | void;
 }

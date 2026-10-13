@@ -58,7 +58,6 @@ export class DeleteDocument {
       const candidatePath = candidate.getDocumentPath().getPublicValue();
       return candidatePath.startsWith(`${publicPath}/`);
     });
-    const deletedDocuments = [] as typeof documentsToDelete;
     const unauthorizedDocument = documentsToDelete.find(
       (documentToDelete) => documentToDelete.getMetadata().ownerId !== actorId
     );
@@ -70,26 +69,33 @@ export class DeleteDocument {
       );
     }
 
-    for (const documentToDelete of documentsToDelete) {
-      const deleteResult = await this.repository.delete(documentToDelete);
-      if (!deleteResult.isSuccess) {
-        if (deletedDocuments.length === 0)
-          return Result.fail(deleteResult.getError());
+    const deletedDocuments = documentsToDelete;
+    if (this.repository.deleteMany) {
+      const deleteResult = await this.repository.deleteMany(documentsToDelete);
+      if (!deleteResult.isSuccess) return Result.fail(deleteResult.getError());
+    } else {
+      const deletedOneByOne = [] as typeof documentsToDelete;
+      for (const documentToDelete of documentsToDelete) {
+        const deleteResult = await this.repository.delete(documentToDelete);
+        if (!deleteResult.isSuccess) {
+          if (deletedOneByOne.length === 0)
+            return Result.fail(deleteResult.getError());
 
-        const eventResult = await this.publishDeletedEvents(deletedDocuments);
-        if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
+          const eventResult = await this.publishDeletedEvents(deletedOneByOne);
+          if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
 
-        return Result.fail(
-          new DocumentDeletionPartialError(
-            deletedDocuments.map((deleted) =>
-              deleted.getDocumentId().getValue()
-            ),
-            documentToDelete.getDocumentId().getValue(),
-            { cause: deleteResult.getError() }
-          )
-        );
+          return Result.fail(
+            new DocumentDeletionPartialError(
+              deletedOneByOne.map((deleted) =>
+                deleted.getDocumentId().getValue()
+              ),
+              documentToDelete.getDocumentId().getValue(),
+              { cause: deleteResult.getError() }
+            )
+          );
+        }
+        deletedOneByOne.push(documentToDelete);
       }
-      deletedDocuments.push(documentToDelete);
     }
 
     const eventResult = await this.publishDeletedEvents(deletedDocuments);

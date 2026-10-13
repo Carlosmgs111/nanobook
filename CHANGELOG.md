@@ -20,6 +20,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Añadido listado autenticado `GET /api/nanobooks` y la pantalla `/nanobooks` para crear y abrir las colecciones gestionadas por la instancia.
 - Las mutaciones SQL de documentos registran revisiones y eventos outbox junto con la escritura y actualizan la revisión expuesta al editor.
 - Añadido el interruptor reversible `NANOBOOK_SQL_CUTOVER=true`: las rutas legacy sin alias responden `410` y su API mutante queda bloqueado durante el corte.
+- El borrado de subárboles SQL se ejecuta en una única transacción, con revisiones y eventos outbox para todos sus documentos.
 
 - Documentada la propuesta y el plan de migración a persistencia SQL compartida para usuarios y documentos: nanobooks independientes con árbol y configuración propios, sin anidamiento; clasificación explícita de fronteras históricas, alias de URLs, aislamiento, revisiones e importación verificable.
 

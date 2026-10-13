@@ -150,24 +150,31 @@ export class DrizzleContentRepository implements ContentRepository {
   }
 
   async delete(value: Document) {
-    const existing = await this.getById(value.getDocumentId().getValue());
-    if (!existing.isSuccess) return Result.fail(existing.getError());
-    if (!existing.getValue()) return Result.fail(new DocumentNotFoundError(value.getPath()));
+    return this.deleteMany([value]);
+  }
+
+  async deleteMany(values: Document[]) {
+    if (values.length === 0) return Result.ok();
     try {
-      let rowsAffected = 0;
-      const nextRevision = value.getRevision() + 1;
       await this.database.transaction(async (transaction) => {
-        const result = await transaction
-          .update(document)
-          .set({ deletedAt: new Date(), updatedAt: new Date(), revision: nextRevision })
-          .where(and(
-            eq(document.id, value.getDocumentId().getValue()),
-            eq(document.nanobookId, this.nanobookId),
-            eq(document.revision, value.getRevision()),
-            isNull(document.deletedAt),
-          ));
-        rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
-        if (rowsAffected > 0) {
+        for (const value of values) {
+          const nextRevision = value.getRevision() + 1;
+          const result = await transaction
+            .update(document)
+            .set({ deletedAt: new Date(), updatedAt: new Date(), revision: nextRevision })
+            .where(and(
+              eq(document.id, value.getDocumentId().getValue()),
+              eq(document.nanobookId, this.nanobookId),
+              eq(document.revision, value.getRevision()),
+              isNull(document.deletedAt),
+            ));
+          const rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+          if (rowsAffected === 0) {
+            throw new DocumentRevisionConflictError(
+              value.getDocumentId().getValue(),
+              value.getRevision(),
+            );
+          }
           await this.recordMutation(
             transaction,
             value,
@@ -177,15 +184,9 @@ export class DrizzleContentRepository implements ContentRepository {
           );
         }
       });
-      if (rowsAffected === 0) {
-        return Result.fail(new DocumentRevisionConflictError(
-          value.getDocumentId().getValue(),
-          value.getRevision(),
-          await this.getRevision(value.getDocumentId().getValue()).then((result) => result.isSuccess ? result.getValue() ?? undefined : undefined),
-        ));
-      }
       return Result.ok();
     } catch (error) {
+      if (error instanceof DocumentRevisionConflictError) return Result.fail(error);
       return Result.fail(this.repositoryError(`No fue posible eliminar "${value.getPath()}"`, error));
     }
   }
