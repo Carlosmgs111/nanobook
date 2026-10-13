@@ -10,6 +10,12 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-12-sql-multinanobook-design.md`. El resumen de la propuesta también se registra en `src/content/nanobook-project/arquitectura/index.md`; los archivos nuevos de `src/content` están ignorados por Git y por eso la especificación completa reside en `docs/`.
 
+## Estado de implementación — 2026-10-13
+
+La implementación de persistencia, aislamiento por nanobook, rutas canónicas, aliases, mutaciones transaccionales, creación atómica, importación local verificable y navegación por contexto está integrada en la rama principal. El preflight local verificó 101 documentos sin diferencias (68 en `nanobook-root-local` y 33 en `nanobook-architecture-local`), la exportación generó 68 documentos y `npm test` pasa con 75 archivos y 220 pruebas. La build también pasa con `NANOBOOK_SQL_CUTOVER=true`.
+
+La ejecución productiva sigue siendo una operación externa al repositorio: backup verificable, conexión libSQL/Turso de ensayo, congelamiento del origen, importación y verificación del manifiesto productivo, activación del flag, pruebas de humo y ventana de observación. Hasta aceptar esa operación se conservan los comandos SQL de importación, verificación y exportación. Después del corte se puede retirar `ContentMigration.ts`, el fallback filesystem/GitHub y el webhook de sincronización, manteniendo los aliases históricos si se desea compatibilidad de URLs.
+
 ## Global Constraints
 
 - Node.js `>=22.12.0`; Semantic Versioning `0.x.x`; commits `tipo(alcance): descripción`.

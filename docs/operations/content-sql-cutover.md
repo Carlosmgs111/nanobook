@@ -2,6 +2,8 @@
 
 Este procedimiento migra el contenido histórico de Nanobook a la base administrada por la instancia. Debe ejecutarse sobre una copia consistente del origen y con las escrituras congeladas durante la importación.
 
+El preflight local ya fue ejecutado sobre 101 documentos: la verificación terminó sin diferencias y la exportación produjo 68 documentos del nanobook raíz. Estos resultados no sustituyen la ejecución contra la base y el snapshot productivos.
+
 ## 1. Preparar la base
 
 Configura `DATABASE_URL` y, si se usa libSQL remoto, `DATABASE_AUTH_TOKEN` solo en el entorno del servidor. No guardes esos valores en el manifiesto ni en el contenido.
