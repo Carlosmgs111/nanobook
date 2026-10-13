@@ -14,6 +14,8 @@ import {
   CreateNanobookController,
   DrizzleNanobookAliasRepository,
   DrizzleNanobookRepository,
+  ListNanobooks,
+  ListNanobooksController,
 } from "../../nanobooks/server";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { NanobookContext } from "./NanobookContext";
@@ -24,6 +26,7 @@ import { Document } from "../../documents/server/domain/Document";
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
   public readonly createNanobookController: CreateNanobookController;
+  public readonly listNanobooksController: ListNanobooksController;
   private constructor(
     public readonly authServerModule: AuthServerModule,
     public readonly documentModule: DocumentModule,
@@ -34,8 +37,10 @@ export class Application {
     private readonly nanobookRepository: DrizzleNanobookRepository,
     private readonly nanobookAliasRepository: DrizzleNanobookAliasRepository,
     createNanobookController: CreateNanobookController,
+    listNanobooksController: ListNanobooksController,
   ) {
     this.createNanobookController = createNanobookController;
+    this.listNanobooksController = listNanobooksController;
     const githubWebhookHandler = new GitHubWebhookHandler(
       this.publishingModule.renderedPageCache,
       this.navigationModule.navigationService,
@@ -71,6 +76,10 @@ export class Application {
     return result.getValue();
   }
 
+  async listNanobooks(ownerId: string) {
+    return this.nanobookRepository.listByOwner(ownerId);
+  }
+
   private async contextForNanobook(nanobook: import("../../nanobooks/server").Nanobook): Promise<NanobookContext> {
     const nanobookId = nanobook.getId();
     const cached = this.nanobookContexts.get(nanobookId);
@@ -99,6 +108,7 @@ export class Application {
 
     const nanobookRepository = new DrizzleNanobookRepository(db);
     const nanobookAliasRepository = new DrizzleNanobookAliasRepository(db);
+    const listNanobooks = new ListNanobooks(nanobookRepository);
     return new Application(
       authModule,
       documentModule,
@@ -130,6 +140,7 @@ export class Application {
           if (!created.isSuccess) throw created.getError();
         },
       )),
+      new ListNanobooksController(listNanobooks),
     );
   }
 }

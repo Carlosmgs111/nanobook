@@ -6,3 +6,6 @@ export const prerender = false;
 export const POST: APIRoute = app.authServerModule.protect(
   app.createNanobookController.handle,
 );
+export const GET: APIRoute = app.authServerModule.protect(
+  app.listNanobooksController.handle,
+);
