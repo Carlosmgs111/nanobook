@@ -12,7 +12,7 @@ nanobook: true
 
 ## Decisiones recientes
 
-- Propuesta de documentos en SQL y múltiples nanobooks: almacenamiento administrado por la instancia, aislamiento y migración verificable; implementación pendiente. Véase el resumen al final de este documento.
+- Persistencia de documentos en SQL y múltiples nanobooks: almacenamiento administrado por la instancia, aislamiento, revisiones optimistas, outbox, alias legacy y migración verificable. El corte se activa con `NANOBOOK_SQL_CUTOVER=true` después de verificar el manifiesto.
 
 - [Separación de módulos por entorno](./separacion-entornos-browser-server): límites entre `browser`, `server`, `content`, `pages` y `shared` y sus reglas de dependencia.
 - [Composición de la aplicación de navegador](./composicion-application-browser): composición síncrona de `AuthModule` y `EditionModule` mediante `Application` y `getApp()`.
@@ -46,4 +46,4 @@ La marca histórica `nanobook: true`, descrita en la sección anterior como comp
 
 La migración exigirá clasificar cada frontera histórica como libro independiente o directorio normal. Preservará IDs y propiedad, declarará los cambios de rutas/configuración/referencias y conservará acceso por URLs antiguas mediante alias autorizados. Incluirá revisiones, transacciones de subárboles, control de concurrencia y aislamiento de API y cachés. No se propone escritura doble; después de aceptar escrituras SQL, una reversión requiere reconciliar los nuevos datos.
 
-Estado: diseño propuesto, sin implementación. La especificación completa se conserva en `docs/superpowers/specs/2026-10-12-sql-multinanobook-design.md` y el plan ejecutable en `docs/superpowers/plans/2026-10-12-sql-multinanobook.md` dentro del repositorio. Se ubican allí porque los archivos nuevos de `src/content` están ignorados por Git.
+Estado: implementación disponible. La especificación completa se conserva en `docs/superpowers/specs/2026-10-12-sql-multinanobook-design.md` y el plan ejecutable en `docs/superpowers/plans/2026-10-12-sql-multinanobook.md` dentro del repositorio. Se mantiene el fallback legacy mientras no se active el corte y se conservan pendientes las pruebas estáticas antiguas que aún apuntan a rutas de módulos previas.
