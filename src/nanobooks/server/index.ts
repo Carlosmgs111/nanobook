@@ -1,11 +1,11 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
-import { Document } from "../../documents/server/domain/Document";
+import type { NanobookContextModules } from "../../application/server/Application";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { NanobookContext } from "./application/NanobookContext";
 import { CreateNanobook } from "./application/CreateNanobook";
-import type { NanobookCreationTransaction } from "./application/NanobookCreationTransaction";
+import type { NanobookRootInitializer } from "./application/NanobookCreationTransaction";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { Nanobook } from "./domain/Nanobook";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
@@ -41,18 +41,20 @@ export class NanobookModule {
     public readonly createNanobookController: CreateNanobookController,
     public readonly listNanobooksController: ListNanobooksController,
     private readonly routeProtector: RouteProtector,
+    private readonly contextModules: NanobookContextModules,
   ) {}
 
   static async create(
     routeProtector: RouteProtector,
+    contextModules: NanobookContextModules,
+    initializeNanobookRoot: NanobookRootInitializer,
     database: Database = db,
   ): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(database);
     const listNanobooks = new ListNanobooks(repository);
-    const initializeRoot = createRootInitializer();
     const createNanobook = new CreateNanobook(
       repository,
-      initializeRoot,
+      initializeNanobookRoot,
     );
 
     return new NanobookModule(
@@ -60,6 +62,7 @@ export class NanobookModule {
       new CreateNanobookController(createNanobook),
       new ListNanobooksController(listNanobooks),
       routeProtector,
+      contextModules,
     );
   }
 
@@ -98,40 +101,12 @@ export class NanobookModule {
     }
     cached?.close();
 
-    const context = await NanobookContext.create(nanobook, this.routeProtector);
+    const context = await NanobookContext.create(
+      nanobook,
+      this.routeProtector,
+      this.contextModules,
+    );
     this.contexts.set(nanobookId, context);
     return context;
   }
-}
-
-function createRootInitializer() {
-  return async (
-    nanobook: Nanobook,
-    transaction: NanobookCreationTransaction,
-  ): Promise<void> => {
-    const document = Document.create("index", {
-      id: crypto.randomUUID(),
-      title: nanobook.getName(),
-      description: nanobook.getName(),
-      ownerId: nanobook.getOwnerId(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      author: nanobook.getOwnerId(),
-    }, `# ${nanobook.getName()}\n`);
-    if (!document.isSuccess) throw document.getError();
-
-    const root = document.getValue();
-    await transaction.insertDocument(root);
-    await transaction.appendRevision({
-      documentId: root.getDocumentId().getValue(),
-      revision: root.getRevision(),
-      snapshot: root.parse(),
-      actorId: nanobook.getOwnerId(),
-      operation: "create",
-    });
-    await transaction.incrementContentVersion();
-    await transaction.enqueueEvent("document.created", {
-      documentId: root.getDocumentId().getValue(),
-    });
-  };
 }

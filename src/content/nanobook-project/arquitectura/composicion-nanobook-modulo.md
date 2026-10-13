@@ -51,6 +51,13 @@ Las capacidades transversales, como `RouteProtector`, se reciben desde
 `Application` mediante inyección. El módulo conoce el contrato de la capacidad,
 pero no si la implementación proviene de Better Auth u otro proveedor.
 
+La misma frontera se aplica a los módulos contextuales. `Application` entrega
+un paquete `NanobookContextModules` con los constructores de documentos,
+navegación, publicación, proveedor documental y bus de eventos. El factory de
+`NanobookContext` recibe ese paquete y compone las instancias por colección;
+la composición contextual de `nanobooks` no importa esas implementaciones
+directamente.
+
 La creación usa la capacidad explícita `NanobookCreationStore.createWithRoot`.
 El repositorio SQL implementa esa capacidad mediante una transacción que inserta
 el nanobook, su documento `index`, la revisión inicial, el evento outbox y la
@@ -61,8 +68,8 @@ nanobook sin su raíz.
 
 1. **Aislamiento explícito**: las capacidades de contenido reciben siempre el
    `nanobookId` y no existe un repositorio global como fallback.
-2. **Aplicación raíz delgada**: `Application` no conoce detalles de creación de
-   documentos raíz, navegación, publicación ni invalidación.
+2. **Composición centralizada**: `Application` es el único lugar que conoce
+   los constructores concretos y los entrega como capacidades al contexto.
 3. **Ciclo de vida coherente**: la misma frontera crea, cachea y cierra un
    contexto; no se dejan buses o handlers de publicación fuera de su colección.
 4. **Rutas adaptadoras**: las páginas y APIs resuelven el contexto mediante

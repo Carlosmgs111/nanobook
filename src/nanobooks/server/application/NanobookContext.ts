@@ -1,10 +1,11 @@
-import { DocumentModule } from "../../../documents/server";
-import { DocumentModuleDocumentProvider } from "../../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
-import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
+import type { NanobookContextModules } from "../../../application/server/Application";
 import type { RouteProtector } from "../../../shared/server/capabilities/RouteProtector";
-import { NavigationModule } from "../../../navigation/server";
-import { PublishingModule } from "../../../publishing/server";
 import type { Nanobook } from "../domain/Nanobook";
+
+type ContextDocumentModule = Awaited<ReturnType<NanobookContextModules["DocumentModule"]["create"]>>;
+type ContextNavigationModule = Awaited<ReturnType<NanobookContextModules["NavigationModule"]["create"]>>;
+type ContextPublishingModule = Awaited<ReturnType<NanobookContextModules["PublishingModule"]["create"]>>;
+type ContextEventBus = InstanceType<NanobookContextModules["EventBus"]>;
 
 /**
  * Capacidades server-side aisladas para una colección concreta.
@@ -15,28 +16,29 @@ import type { Nanobook } from "../domain/Nanobook";
 export class NanobookContext {
   constructor(
     public readonly nanobook: Nanobook,
-    public readonly documentModule: DocumentModule,
-    public readonly navigationModule: NavigationModule,
-    public readonly publishingModule: PublishingModule,
-    private readonly eventBus: InMemoryEventBus,
+    public readonly documentModule: ContextDocumentModule,
+    public readonly navigationModule: ContextNavigationModule,
+    public readonly publishingModule: ContextPublishingModule,
+    private readonly eventBus: ContextEventBus,
   ) {}
 
   static async create(
     nanobook: Nanobook,
     routeProtector: RouteProtector,
+    modules: NanobookContextModules,
   ): Promise<NanobookContext> {
-    const eventBus = new InMemoryEventBus();
-    const publishingModule = await PublishingModule.create(eventBus, {
+    const eventBus = new modules.EventBus();
+    const publishingModule = await modules.PublishingModule.create(eventBus, {
       cacheNamespace: nanobook.getId(),
     });
     publishingModule.registerEventHandlers();
 
-    const documentModule = await DocumentModule.create(eventBus, routeProtector, {
+    const documentModule = await modules.DocumentModule.create(eventBus, routeProtector, {
       source: "sql",
       nanobookId: nanobook.getId(),
     });
-    const documentProvider = new DocumentModuleDocumentProvider(documentModule);
-    const navigationModule = await NavigationModule.create(
+    const documentProvider = new modules.DocumentModuleDocumentProvider(documentModule);
+    const navigationModule = await modules.NavigationModule.create(
       documentProvider,
       eventBus,
       { rootPath: "index" },
