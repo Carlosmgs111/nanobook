@@ -23,6 +23,7 @@ import { DrizzleContentRepository } from "../../documents/server/infraestructure
 import { UnifiedDocumentParser } from "../../documents/server/infraestructure/parse/DocumentParser";
 import { Document } from "../../documents/server/domain/Document";
 import type { NanobookCreationTransaction } from "../../nanobooks/server/application/NanobookCreationTransaction";
+import { shouldUseNanobookSqlCutover } from "./legacyRouteMode";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
@@ -100,7 +101,11 @@ export class Application {
     publishingModule.registerEventHandlers();
     const authModule = await AuthServerModule.create();
     const profileModule = ProfileModule.create(authModule);
-    const documentModule = await DocumentModule.create(eventBus, authModule);
+    // Cuando SQL es la fuente activa, la composición global solo existe para
+    // satisfacer los consumidores legacy y no debe abrir filesystem/GitHub.
+    const documentModule = await DocumentModule.create(eventBus, authModule, {
+      source: shouldUseNanobookSqlCutover() ? "memory" : undefined,
+    });
     const documentProvider = new DocumentModuleDocumentProvider(documentModule);
     const navigationModule = await NavigationModule.create(
       documentProvider,
