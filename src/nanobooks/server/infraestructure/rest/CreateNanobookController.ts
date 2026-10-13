@@ -11,7 +11,6 @@ export class CreateNanobookController {
     try {
       const body = await request.json();
       const result = await this.createNanobook.execute(locals.currentUserId, {
-        id: body.id,
         slug: body.slug,
         name: body.name,
         visibility: body.visibility,
