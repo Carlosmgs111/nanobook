@@ -9,12 +9,13 @@ import { NavigationModule } from "../../navigation/server";
 import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { AuthServerModule } from "../../auth/server";
 import { ProfileModule } from "../../profiles/server";
-import { DrizzleNanobookRepository } from "../../nanobooks/server";
+import { CreateNanobook, CreateNanobookController, DrizzleNanobookRepository } from "../../nanobooks/server";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { NanobookContext } from "./NanobookContext";
 
 export class Application {
   public readonly githubWebhookController: GitHubWebhookController;
+  public readonly createNanobookController: CreateNanobookController;
   private constructor(
     public readonly authServerModule: AuthServerModule,
     public readonly documentModule: DocumentModule,
@@ -23,7 +24,9 @@ export class Application {
     public readonly profileModule: ProfileModule,
     public readonly eventBus: InMemoryEventBus,
     private readonly nanobookRepository: DrizzleNanobookRepository,
+    createNanobookController: CreateNanobookController,
   ) {
+    this.createNanobookController = createNanobookController;
     const githubWebhookHandler = new GitHubWebhookHandler(
       this.publishingModule.renderedPageCache,
       this.navigationModule.navigationService,
@@ -79,6 +82,7 @@ export class Application {
       eventBus
     );
 
+    const nanobookRepository = new DrizzleNanobookRepository(db);
     return new Application(
       authModule,
       documentModule,
@@ -86,7 +90,8 @@ export class Application {
       publishingModule,
       profileModule,
       eventBus,
-      new DrizzleNanobookRepository(db),
+      nanobookRepository,
+      new CreateNanobookController(new CreateNanobook(nanobookRepository)),
     );
   }
 }

@@ -10,6 +10,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Implementado el primer corte de persistencia SQL para nanobooks y documentos: conexión/migraciones Drizzle compartidas, repositorios acotados por `nanobookId`, revisiones optimistas, outbox transaccional y unidad de trabajo para versionar cambios.
 - Añadido `NanobookContext` para aislar repositorio, navegación, eventos y caché por colección. Las rutas canónicas `/n/<slug>/...` validan visibilidad y propietario antes de resolver documentos; las respuestas de edición transportan la revisión esperada y los conflictos devuelven `409`.
 - Añadidos el validador de manifiestos y los comandos `content:import-sql`/`content:verify-sql`. La importación parte de un snapshot filesystem, exige clasificar las fronteras históricas y ofrece un informe JSON antes de aplicar cambios.
+- Añadida la creación autenticada de nanobooks en `POST /api/nanobooks`, con slug único, visibilidad y configuración inicial persistidas junto al propietario Better Auth.
 
 - Documentada la propuesta y el plan de migración a persistencia SQL compartida para usuarios y documentos: nanobooks independientes con árbol y configuración propios, sin anidamiento; clasificación explícita de fronteras históricas, alias de URLs, aislamiento, revisiones e importación verificable.
 

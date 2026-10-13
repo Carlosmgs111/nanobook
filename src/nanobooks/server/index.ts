@@ -4,3 +4,5 @@ export { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleN
 export type { NanobookRepository } from "./domain/ports/NanobookRepository";
 export { AuthorizeNanobook, NanobookAccessDeniedError } from "./application/AuthorizeNanobook";
 export type { NanobookPermission } from "./application/AuthorizeNanobook";
+export { CreateNanobook } from "./application/CreateNanobook";
+export { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
