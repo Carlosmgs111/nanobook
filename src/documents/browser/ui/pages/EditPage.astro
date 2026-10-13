@@ -10,14 +10,15 @@ interface Props {
 }
 
 const { nanobookSlug } = Astro.props;
-const nanobookContext = nanobookSlug
-  ? await app.forNanobookSlug(nanobookSlug)
-  : null;
-if (nanobookSlug && !nanobookContext) {
+if (!nanobookSlug) {
   return new Response("Nanobook not found", { status: 404 });
 }
-const documentModule = nanobookContext?.documentModule ?? app.documentModule;
-const publishingModule = nanobookContext?.publishingModule ?? app.publishingModule;
+const nanobookContext = await app.nanobookModule.forNanobookSlug(nanobookSlug);
+if (!nanobookContext) {
+  return new Response("Nanobook not found", { status: 404 });
+}
+const documentModule = nanobookContext.documentModule;
+const publishingModule = nanobookContext.publishingModule;
 
 export const prerender = false;
 
@@ -52,7 +53,7 @@ const parentHref = editableEntry.parentPath
   hideToc={true}
   viewHref={viewHref}
   newHref={newHref}
-  navigationService={nanobookContext?.navigationModule.navigationService}
+  navigationService={nanobookContext.navigationModule.navigationService}
 >
   <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
     <span class="tech-label mb-3 block">Editing document</span>
@@ -90,6 +91,6 @@ const parentHref = editableEntry.parentPath
     viewHref={viewHref}
     parentHref={parentHref}
     frontmatterOnly={Boolean(entry.ref)}
-    nanobookId={nanobookContext?.nanobook.getId()}
+    nanobookId={nanobookContext.nanobook.getId()}
   />
 </Layout>

@@ -1,5 +1,4 @@
 ---
-import { getApp } from "../../../../application/server/Application";
 import type { NavigationService } from "../../../server";
 
 interface Props {
@@ -10,16 +9,13 @@ const { navigationService: providedNavigationService } = Astro.props;
 
 const slug = Astro.params.slug || "index";
 
-const navigationService = providedNavigationService
-  ?? (await getApp()).navigationModule.navigationService;
-
 export interface Crumb {
   id: string;
   title: string;
   href: string;
   current: boolean;
 }
-const crumbs = navigationService.getBreadcrumbs(slug);
+const crumbs = providedNavigationService?.getBreadcrumbs(slug) ?? [];
 const display = Boolean(crumbs.length);
 ---
 

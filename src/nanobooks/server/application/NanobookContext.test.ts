@@ -13,11 +13,11 @@ vi.mock("astro:env/server", () => ({
   GITHUB_REPO: undefined,
 }), { virtual: true });
 
-import { Document } from "../../documents/server/domain/Document";
-import { DocumentCreated } from "../../documents/server/domain/events/DocumentCreated";
-import { NavigationModule } from "../../navigation/server";
-import { Nanobook } from "../../nanobooks/server";
-import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
+import { Document } from "../../../documents/server/domain/Document";
+import { DocumentCreated } from "../../../documents/server/domain/events/DocumentCreated";
+import { NavigationModule } from "../../../navigation/server";
+import { Nanobook } from "../domain/Nanobook";
+import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
 import { NanobookContext } from "./NanobookContext";
 
 function book(id: string, slug: string) {

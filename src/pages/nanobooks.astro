@@ -8,7 +8,7 @@ const app = await getApp();
 const session = await app.authServerModule.getSession(Astro.request);
 if (!session) return Astro.redirect(`/login?callbackURL=${encodeURIComponent("/nanobooks")}`);
 
-const result = await app.listNanobooks(session.id);
+const result = await app.nanobookModule.listNanobooks(session.id);
 if (!result.isSuccess) {
   return new Response("No fue posible cargar los nanobooks", { status: 500 });
 }

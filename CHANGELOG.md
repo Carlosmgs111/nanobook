@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- La composición server se adelgazó: `Application` coordina únicamente autenticación, perfiles y `NanobookModule`; este último concentra repositorio, controladores, caché de contextos y la composición aislada de documentos, navegación y publicación por nanobook.
 - Eliminado el puente `nanobook_alias`: las rutas canónicas se resuelven por `nanobook.slug` y las rutas legacy responden `410`; la migración de esquema `0006` elimina la tabla.
 - Retirado todo el tooling de migración de contenido: producción comienza con una base SQL nueva y el contenido local queda fuera del runtime; se conservan únicamente las migraciones Drizzle de esquema.
 - La navegación dejó de interpretar `metadata.nanobook` como frontera implícita; breadcrumbs, sidebar y padre usan únicamente la raíz explícita del contexto del nanobook.

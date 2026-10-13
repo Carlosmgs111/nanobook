@@ -12,14 +12,15 @@ interface Props {
 }
 
 const { nanobookSlug } = Astro.props;
-const nanobookContext = nanobookSlug
-  ? await app.forNanobookSlug(nanobookSlug)
-  : null;
-if (nanobookSlug && !nanobookContext) {
+if (!nanobookSlug) {
   return new Response("Nanobook not found", { status: 404 });
 }
-const documentModule = nanobookContext?.documentModule ?? app.documentModule;
-const publishingModule = nanobookContext?.publishingModule ?? app.publishingModule;
+const nanobookContext = await app.nanobookModule.forNanobookSlug(nanobookSlug);
+if (!nanobookContext) {
+  return new Response("Nanobook not found", { status: 404 });
+}
+const documentModule = nanobookContext.documentModule;
+const publishingModule = nanobookContext.publishingModule;
 if (!slug) return new Response("Document not found", { status: 404 });
 
 const document = await documentModule.getDocument.execute(slug);
@@ -35,7 +36,7 @@ const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
 <Layout
   editHref={editHref}
-  navigationService={nanobookContext?.navigationModule.navigationService}
+  navigationService={nanobookContext.navigationModule.navigationService}
 >
   <h1><mark>Preview de {slug || "index"}</mark></h1>
   <div id="preview-container" data-document-id={documentId}></div>

@@ -10,14 +10,15 @@ interface Props {
 }
 
 const { nanobookSlug } = Astro.props;
-const nanobookContext = nanobookSlug
-  ? await app.forNanobookSlug(nanobookSlug)
-  : null;
-if (nanobookSlug && !nanobookContext) {
+if (!nanobookSlug) {
   return new Response("Nanobook not found", { status: 404 });
 }
-const documentModule = nanobookContext?.documentModule ?? app.documentModule;
-const publishingModule = nanobookContext?.publishingModule ?? app.publishingModule;
+const nanobookContext = await app.nanobookModule.forNanobookSlug(nanobookSlug);
+if (!nanobookContext) {
+  return new Response("Nanobook not found", { status: 404 });
+}
+const documentModule = nanobookContext.documentModule;
+const publishingModule = nanobookContext.publishingModule;
 
 export const prerender = false;
 
@@ -58,7 +59,7 @@ Astro.response.headers.set("Cache-Control", "no-store");
   editHref={editHref}
   newHref={newHref}
   canonicalHref={canonicalHref}
-  navigationService={nanobookContext?.navigationModule.navigationService}
+  navigationService={nanobookContext.navigationModule.navigationService}
 >
 {
   entry.isIndex ? (
@@ -66,6 +67,7 @@ Astro.response.headers.set("Cache-Control", "no-store");
       title={entry.title}
       description={entry.description}
       label="Index"
+      navigationService={nanobookContext.navigationModule.navigationService}
     />
   ) : (
     <Fragment>

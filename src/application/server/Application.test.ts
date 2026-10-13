@@ -41,27 +41,18 @@ describe("Application", () => {
 
     expect(app.profileModule).toBeDefined();
     expect("userModule" in app).toBe(false);
-    expect(app.documentModule).toBeDefined();
-    expect(app.navigationModule).toBeDefined();
-    expect(app.publishingModule).toBeDefined();
+    expect(app.nanobookModule).toBeDefined();
+    expect(app.nanobookModule.createNanobookController).toBeDefined();
+    expect(app.nanobookModule.listNanobooksController).toBeDefined();
+    expect("documentModule" in app).toBe(false);
+    expect("navigationModule" in app).toBe(false);
+    expect("publishingModule" in app).toBe(false);
   });
 
-  it("exposes document mutation routes already protected by auth", async () => {
+  it("keeps collection composition inside the nanobook module", async () => {
     const app = await Application.create();
 
-    expect(app.documentModule.mutationRoutes).toEqual({
-      POST: app.documentModule.createDocumentController.handle,
-      PATCH: app.documentModule.updateDocumentController.handle,
-      DELETE: app.documentModule.deleteDocumentController.handle,
-    });
-    expect(protect).toHaveBeenCalledWith(
-      app.documentModule.createDocumentController.handle,
-    );
-    expect(protect).toHaveBeenCalledWith(
-      app.documentModule.updateDocumentController.handle,
-    );
-    expect(protect).toHaveBeenCalledWith(
-      app.documentModule.deleteDocumentController.handle,
-    );
+    expect(app.nanobookModule).toBeDefined();
+    expect(app.nanobookModule.repository).toBeDefined();
   });
 });

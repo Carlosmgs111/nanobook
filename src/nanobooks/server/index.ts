@@ -8,3 +8,5 @@ export { CreateNanobook } from "./application/CreateNanobook";
 export { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 export { ListNanobooks } from "./application/ListNanobooks";
 export { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
+export { NanobookContext } from "./application/NanobookContext";
+export { NanobookModule } from "./application/NanobookModule";

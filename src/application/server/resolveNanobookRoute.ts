@@ -1,6 +1,6 @@
 import { AuthorizeNanobook } from "../../nanobooks/server";
 import type { Application } from "./Application";
-import type { NanobookContext } from "./NanobookContext";
+import type { NanobookContext } from "../../nanobooks/server";
 
 export async function resolveNanobookRoute(
   app: Application,
@@ -10,7 +10,7 @@ export async function resolveNanobookRoute(
 ): Promise<NanobookContext | Response> {
   if (!slug) return new Response("Nanobook not found", { status: 404 });
 
-  const context = await app.forNanobookSlug(slug);
+  const context = await app.nanobookModule.forNanobookSlug(slug);
   if (!context) return new Response("Nanobook not found", { status: 404 });
 
   const user = await app.authServerModule.getSession(request);

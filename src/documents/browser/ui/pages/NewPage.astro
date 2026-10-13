@@ -9,14 +9,15 @@ interface Props {
 }
 
 const { nanobookSlug } = Astro.props;
-const nanobookContext = nanobookSlug
-  ? await app.forNanobookSlug(nanobookSlug)
-  : null;
-if (nanobookSlug && !nanobookContext) {
+if (!nanobookSlug) {
   return new Response("Nanobook not found", { status: 404 });
 }
-const documentModule = nanobookContext?.documentModule ?? app.documentModule;
-const publishingModule = nanobookContext?.publishingModule ?? app.publishingModule;
+const nanobookContext = await app.nanobookModule.forNanobookSlug(nanobookSlug);
+if (!nanobookContext) {
+  return new Response("Nanobook not found", { status: 404 });
+}
+const documentModule = nanobookContext.documentModule;
+const publishingModule = nanobookContext.publishingModule;
 
 export const prerender = false;
 
@@ -40,7 +41,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
   title={`Nuevo documento en ${entry.title}`}
   description="Crear un nuevo documento"
   hideToc={true}
-  navigationService={nanobookContext?.navigationModule.navigationService}
+  navigationService={nanobookContext.navigationModule.navigationService}
 >
   <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
     <span class="tech-label mb-3 block">Nuevo documento</span>
@@ -51,7 +52,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
     </h1>
   </div>
 
-  <div class="new-document-form" data-base-path={basePath} data-nanobook-id={nanobookContext?.nanobook.getId()}>
+  <div class="new-document-form" data-base-path={basePath} data-nanobook-id={nanobookContext.nanobook.getId()}>
     <form class="space-y-6" data-new-document-form>
       <div class="space-y-2">
         <label class="block text-sm font-medium" for="new-doc-type">Tipo</label>

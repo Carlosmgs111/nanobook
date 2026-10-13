@@ -1,10 +1,10 @@
-import type { RouteProtector } from "../../documents/server/infraestructure/rest/protectDocumentMutationRoutes";
-import { DocumentModule } from "../../documents/server";
-import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
-import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import { NavigationModule } from "../../navigation/server";
-import { PublishingModule } from "../../publishing/server";
-import type { Nanobook } from "../../nanobooks/server";
+import type { RouteProtector } from "../../../documents/server/infraestructure/rest/protectDocumentMutationRoutes";
+import { DocumentModule } from "../../../documents/server";
+import { DocumentModuleDocumentProvider } from "../../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
+import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
+import { NavigationModule } from "../../../navigation/server";
+import { PublishingModule } from "../../../publishing/server";
+import type { Nanobook } from "../domain/Nanobook";
 
 /**
  * Capacidades server-side aisladas para una colección concreta.

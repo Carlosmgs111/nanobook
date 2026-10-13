@@ -1,21 +1,17 @@
 ---
-import { getApp } from "../../../../../application/server/Application";
 import DocumentIndex from "./DocumentIndex.astro"
+import type { NavigationService } from "../../../../server";
 
 interface Props {
   title: string;
   description?: string;
   label?: string;
   art?: string;
+  navigationService: NavigationService;
 }
 const slug = Astro.params.slug || "index";
 
-const {
-  navigationModule: { navigationService },
-} = await getApp();
-
-
-const { title, description, label = "Index" } = Astro.props;
+const { title, description, label = "Index", navigationService } = Astro.props;
 
 const sortedEntries = navigationService.getImmediateChildren(slug)
   .filter((page) => !page.metadata.draft)

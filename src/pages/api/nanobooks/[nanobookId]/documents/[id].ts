@@ -20,7 +20,7 @@ async function dispatch(
   if (!nanobookId) return new Response(JSON.stringify({ error: "Nanobook no encontrado" }), { status: 404 });
   let context;
   try {
-    context = await app.forNanobook(nanobookId);
+    context = await app.nanobookModule.forNanobook(nanobookId);
   } catch {
     return new Response(JSON.stringify({ error: "Nanobook no encontrado" }), { status: 404 });
   }
