@@ -8,6 +8,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 - Adelgazado `DrizzleContentRepository`: centralizado el alcance por `nanobookId`, unificado el listado, reutilizada la serialización de metadatos del dominio y eliminado un prechequeo redundante en actualizaciones con revisión.
+- Retirados `GitHubRepository` y `FileSystemRepository`, junto con sus adaptadores de escritura/lectura y configuración de fuente; la persistencia activa de documentos queda en SQL por nanobook y `InMemoryRepository` se conserva solo para pruebas.
 - Desacoplado `NanobookContext` de los módulos de documentos, navegación y publicación: `Application` entrega los constructores externos mediante un paquete de composición tipado.
 - Simplificado el alta de nanobooks: `NanobookModule` persiste únicamente el nanobook, `DocumentModule` expone `createDocument` y `Application` coordina después la creación del documento raíz. Se eliminaron la unidad de trabajo, el inicializador transaccional y el flujo `createWithRoot`; un fallo del documento deja el nanobook disponible para un reintento posterior.
 - Ajustado el cableado de módulos: `DocumentModule` instancia directamente `DrizzleContentRepository` y sus capacidades desde su propio compositor; `Application` y `NanobookContext` solo entregan el `nanobookId`.

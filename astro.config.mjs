@@ -33,11 +33,6 @@ export default defineConfig({
   }),
   env: {
     schema: {
-      CONTENT_SOURCE: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
       DATABASE_URL: envField.string({
         context: "server",
         access: "secret",
@@ -48,32 +43,7 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
-      GITHUB_BRANCH: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
-      GITHUB_OWNER: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
-      GITHUB_PATH: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
-      GITHUB_REPO: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
       GITHUB_TOKEN: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
-      GITHUB_WEBHOOK_SECRET: envField.string({
         context: "server",
         access: "secret",
         optional: true,

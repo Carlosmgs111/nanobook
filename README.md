@@ -41,7 +41,7 @@ Nanobook es un sitio de documentación técnica construido con Astro. Organiza e
 ### Arquitectura y despliegue
 
 - **SSR puro con Astro**: todas las rutas se renderizan bajo demanda (`output: "server"`) y se cachean con `Cache-Control`.
-- **Fuentes de contenido intercambiables**: `FileSystemRepository` (local), `GitHubRepository` (remoto) y `MemoryRepository` (tests). Se eligen mediante `CONTENT_SOURCE`.
+- **Persistencia SQL aislada por nanobook**: cada contexto crea su repositorio de documentos con el `nanobookId`, evitando mezclar contenido entre colecciones. `InMemoryRepository` queda disponible únicamente para pruebas.
 - **Capa de dominio desacoplada** en `src/document/`, `src/navigation/`, `src/rendering/`, `src/edition/` y `src/theme/`.
 - **Adapters de rendering** pluggables: `MarkdownItRenderer` (activo), `AstroMarkdownRenderer` y `UnifiedMarkdownRenderer`.
 
@@ -115,18 +115,12 @@ dominio.
 - `npm run preview` — Previsualiza el sitio generado.
 - `npm run start` — Inicia el servidor Node.js (requiere build previo).
 
-### Fuentes de contenido
+### Persistencia de contenido
 
-Por defecto se lee desde `src/content/`. Para usar GitHub como fuente:
-
-```bash
-CONTENT_SOURCE=github \
-  GITHUB_OWNER=owner \
-  GITHUB_REPO=repo \
-  GITHUB_BRANCH=main \
-  GITHUB_TOKEN=token \
-  npm run dev
-```
+El contenido publicado y editado se almacena en la base de datos SQL de la
+instancia. Cada nanobook delimita el alcance de sus documentos mediante su
+`nanobookId`; no se configura un repositorio de archivos ni una fuente remota
+por nanobook.
 
 ## Estructura de contenido
 
@@ -205,7 +199,7 @@ Campos:
 - `src/pages/[...slug]/index.astro` — Ruta dinámica universal para documentos e índices.
 - `src/pages/[...slug]/edit.astro` — Vista de edición integrada.
 - `src/pages/[...slug]/preview.astro` — Vista de preview del borrador.
-- `src/document/` — Dominio de documentos: tipos, repositorios y adapters (`FileSystemRepository`, `GitHubRepository`, `MemoryRepository`).
+- `src/documents/` — Dominio de documentos, repositorio SQL y adaptadores de persistencia.
 - `src/document/components/IndexList/` — Listado de índices jerárquicos.
 - `src/document/components/TableOfContents/` — Componentes y lógica de la tabla de contenidos.
 - `src/navigation/` — Construcción del árbol de navegación, breadcrumbs, sidebar e índices.
@@ -218,12 +212,10 @@ Campos:
 
 ## Extensibilidad
 
-El sistema usa `ContentRepository` como contrato. La fuente de contenido se elige mediante `CONTENT_SOURCE`:
-
-- **FileSystemRepository**: lee archivos Markdown locales desde `src/content/`.
-- **GitHubRepository**: obtiene contenido remoto desde un repositorio de GitHub.
-
-En el futuro se pueden añadir repositorios para CMS headless, S3, Notion u otras fuentes implementando `ContentRepository` sin modificar el dominio de Nanobook.
+El sistema usa `ContentRepository` como contrato. En producción, el compositor
+de `DocumentModule` crea el repositorio SQL acotado al nanobook actual. Las
+implementaciones alternativas se mantienen fuera del runtime y
+`InMemoryRepository` se reserva para pruebas aisladas.
 
 ## Versionado
 

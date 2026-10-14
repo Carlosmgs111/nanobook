@@ -1,205 +1,63 @@
-import type { GitHubRepositoryConfig, GitHubTreeItem } from "./types";
-
 const GITHUB_API_BASE = "https://api.github.com";
 const API_VERSION = "2022-11-28";
 
+interface GitHubFileContentOptions {
+  owner: string;
+  repo: string;
+  branch: string;
+  path: string;
+  token?: string;
+}
+
+export async function fetchFileContent(
+  options: GitHubFileContentOptions,
+): Promise<string> {
+  return options.token
+    ? fetchFileContentFromApi(options)
+    : fetchFileContentFromRaw(options);
+}
+
+async function fetchFileContentFromRaw({
+  owner,
+  repo,
+  branch,
+  path,
+}: GitHubFileContentOptions): Promise<string> {
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeURIComponent(path)}`;
+  const response = await fetch(url, { headers: { "User-Agent": "nanobook" } });
+  if (!response.ok) {
+    throw new Error(
+      `GitHub raw error ${response.status} ${response.statusText} fetching "${path}": ${await response.text().catch(() => "Unknown error")}`,
+    );
+  }
+  return response.text();
+}
+
+async function fetchFileContentFromApi({
+  owner,
+  repo,
+  branch,
+  path,
+  token,
+}: GitHubFileContentOptions): Promise<string> {
+  const response = await fetch(
+    `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`,
+    { headers: getHeaders(token) },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `GitHub API error ${response.status} ${response.statusText} fetching "${path}": ${await response.text().catch(() => "Unknown error")}`,
+    );
+  }
+  const data = (await response.json()) as { content: string };
+  return Buffer.from(data.content, "base64").toString("utf-8");
+}
+
 function getHeaders(token?: string): Record<string, string> {
-  const headers: Record<string, string> = {
+  const headers = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": API_VERSION,
     "User-Agent": "nanobook",
   };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-  return headers;
-}
-
-async function fetchJson<T>(url: string, token?: string): Promise<T> {
-  const response = await fetch(url, { headers: getHeaders(token) });
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Unknown error");
-    throw new Error(
-      `GitHub API error ${response.status} ${response.statusText}: ${text}`
-    );
-  }
-  return response.json() as Promise<T>;
-}
-
-export async function fetchGitHubTree(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
-    Pick<GitHubRepositoryConfig, "token">
-): Promise<GitHubTreeItem[]> {
-  const { owner, repo, branch, token } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
-  const data = await fetchJson<{ tree: GitHubTreeItem[] }>(url, token);
-  return data.tree;
-}
-
-interface GitHubFileContentResponse {
-  content: string;
-  encoding: "base64";
-  sha: string;
-}
-
-interface GitHubBlobResponse {
-  content: string;
-  encoding: "base64";
-}
-
-export async function fetchGitHubBlob(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo">> &
-    Pick<GitHubRepositoryConfig, "token"> & { sha: string }
-): Promise<string> {
-  const { owner, repo, sha, token } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/blobs/${sha}`;
-  const data = await fetchJson<GitHubBlobResponse>(url, token);
-  return Buffer.from(data.content, "base64").toString("utf-8");
-}
-
-export async function fetchFileContent(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
-    Pick<GitHubRepositoryConfig, "token"> & { path: string }
-): Promise<string> {
-  const { owner, repo, branch, path, token } = options;
-
-  if (token) {
-    return fetchFileContentFromApi({ owner, repo, branch, path, token });
-  }
-
-  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeURIComponent(
-    path
-  )}`;
-  const response = await fetch(url, {
-    headers: { "User-Agent": "nanobook" },
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Unknown error");
-    throw new Error(
-      `GitHub raw error ${response.status} ${response.statusText} fetching "${path}": ${text}`
-    );
-  }
-
-  return response.text();
-}
-
-async function fetchFileContentFromApi(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
-    Pick<GitHubRepositoryConfig, "token"> & { path: string }
-): Promise<string> {
-  const { owner, repo, branch, path, token } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(
-    path
-  )}?ref=${branch}`;
-
-  const response = await fetch(url, { headers: getHeaders(token) });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Unknown error");
-    throw new Error(
-      `GitHub API error ${response.status} ${response.statusText} fetching "${path}": ${text}`
-    );
-  }
-
-  const data = (await response.json()) as GitHubFileContentResponse;
-  return Buffer.from(data.content, "base64").toString("utf-8");
-}
-
-interface GitHubFileShaResponse {
-  sha: string;
-}
-
-export async function fetchFileSha(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
-    Pick<GitHubRepositoryConfig, "token"> & { path: string }
-): Promise<string | null> {
-  const { owner, repo, branch, path, token } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(
-    path
-  )}?ref=${branch}`;
-
-  const response = await fetch(url, { headers: getHeaders(token) });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Unknown error");
-    throw new Error(
-      `GitHub API error ${response.status} ${response.statusText}: ${text}`
-    );
-  }
-
-  const data = (await response.json()) as GitHubFileShaResponse;
-  return data.sha;
-}
-
-export async function updateFileContent(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
-    Pick<GitHubRepositoryConfig, "token"> & {
-      path: string;
-      content: string;
-      sha?: string;
-      message?: string;
-    }
-): Promise<void> {
-  const {
-    owner,
-    repo,
-    branch,
-    path,
-    content,
-    sha,
-    token,
-    message = `Update ${path}`,
-  } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(
-    path
-  )}`;
-
-  const body: Record<string, string> = {
-    message,
-    content: Buffer.from(content, "utf-8").toString("base64"),
-    branch,
-  };
-
-  if (sha) {
-    body.sha = sha;
-  }
-
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: getHeaders(token),
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Unknown error");
-    throw new Error(
-      `GitHub API error ${response.status} ${response.statusText}: ${text}`
-    );
-  }
-}
-
-export async function deleteFileContent(
-  options: Required<Pick<GitHubRepositoryConfig, "owner" | "repo" | "branch">> &
-    Pick<GitHubRepositoryConfig, "token"> & {
-      path: string;
-      sha: string;
-      message?: string;
-    }
-): Promise<void> {
-  const { owner, repo, branch, path, sha, token, message = `Delete ${path}` } = options;
-  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers: getHeaders(token),
-    body: JSON.stringify({ message, sha, branch }),
-  });
-  if (!response.ok) {
-    const text = await response.text().catch(() => "Unknown error");
-    throw new Error(`GitHub API error ${response.status} ${response.statusText}: ${text}`);
-  }
+  return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
 }
