@@ -34,7 +34,13 @@ const sortedEntries = navigationService.getImmediateChildren(slug)
 </div>
 
 <div class="index-panel relative space-y-4">
-  {sortedEntries.map((page, index) => <DocumentIndex page={page} index={index} />)}
+  {sortedEntries.map((page, index) => (
+    <DocumentIndex
+      page={page}
+      index={index}
+      navigationService={navigationService}
+    />
+  ))}
 </div>
 
 {

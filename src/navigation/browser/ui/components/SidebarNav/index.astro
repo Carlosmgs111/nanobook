@@ -38,7 +38,12 @@ const display = Boolean(entries.length);
   data-display={display}
 >
   <SidebarHeader toggleId={toggleId} parentEntry={parentEntry} />
-  <SidebarList entries={sortedEntries} />
+  {providedNavigationService && (
+    <SidebarList
+      entries={sortedEntries}
+      navigationService={providedNavigationService}
+    />
+  )}
 </aside>
 
 <style>

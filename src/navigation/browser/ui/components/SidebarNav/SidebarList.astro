@@ -3,12 +3,14 @@ import FileSVG from "../../../../../shared/icons/file.svg";
 import FolderSVG from "../../../../../shared/icons/folder.svg";
 import ToolTip from "./ToolTip.astro";
 import type { NavigationNode } from "../../../../server/domain/types";
+import type { NavigationService } from "../../../../server";
 
 interface Props {
   entries: NavigationNode[];
+  navigationService: NavigationService;
 }
 
-const { entries } = Astro.props;
+const { entries, navigationService } = Astro.props;
 ---
 
 <ul class="sidebar-list">
@@ -16,7 +18,7 @@ const { entries } = Astro.props;
     entries.map((page) => (
       <li>
         <a
-          href={`/${page.path}/`}
+          href={navigationService.getHref(page.path)}
           class="sidebar-link"
           aria-current={page.current ? "page" : undefined}
           data-tooltip={page.title}

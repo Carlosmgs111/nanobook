@@ -25,7 +25,7 @@ export class NavigationModule {
   static async create(
     documentProvider: DocumentProvider,
     eventBus?: EventBus,
-    options: { rootPath?: string } = {},
+    options: { rootPath?: string; basePath?: string } = {},
   ) {
     const documents = await documentProvider.getAll();
     const documentGraph = new DocumentsGraph(documents);

@@ -2,13 +2,15 @@
 import "../../../../../shared/styles/components/index-card.css";
 import FolderSvg from "../../../../../shared/icons/folder.svg";
 import FileSvg from "../../../../../shared/icons/file.svg";
+import type { NavigationService } from "../../../../server";
 const { page, index } = Astro.props;
+const navigationService = Astro.props.navigationService as NavigationService;
 const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefined;
 ---
 
 <div class="index-card-wrapper" data-folder={String(page.isIndex)}>
   <a
-    href={`/${page.path}`}
+    href={navigationService.getHref(page.path)}
     class={`index-card ${page.isIndex ? "index-card-folder corner-L-sm" : "corner-plus-sm"}`}
     data-title={page.metadata.title}
     data-description={page.metadata.description}

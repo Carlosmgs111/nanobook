@@ -51,8 +51,27 @@ describe("NavigationService", () => {
     ).toEqual({
       id: "stable-folder",
       path: "new-dir",
+      href: "/new-dir/",
       data: { title: "New directory" },
     });
+  });
+
+  it("builds canonical links inside the nanobook route", () => {
+    const root = document("index", "stable-root", "Home");
+    const guides = document("guides/index", "stable-guides", "Guides");
+    const child = document("guides/cache", "stable-child", "Cache");
+    const service = new NavigationService(
+      new DocumentsGraph([root, guides, child]),
+      { rootPath: "index", basePath: "/n/manual" },
+    );
+
+    expect(service.getHref("index")).toBe("/n/manual");
+    expect(service.getHref("guides/cache")).toBe("/n/manual/guides/cache/");
+    expect(service.getBreadcrumbs("guides/cache")).toEqual([
+      { id: "index", title: "Home", href: "/n/manual", current: false },
+      { id: "guides", title: "Guides", href: "/n/manual/guides/", current: false },
+      { id: "guides/cache", title: "Cache", href: "/n/manual/guides/cache/", current: true },
+    ]);
   });
 
   it("starts breadcrumbs from the explicit nanobook context root", () => {

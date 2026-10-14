@@ -42,7 +42,10 @@ export class NanobookContext {
     const navigationModule = await modules.NavigationModule.create(
       documentProvider,
       eventBus,
-      { rootPath: "index" },
+      {
+        rootPath: "index",
+        basePath: `/n/${nanobook.getSlug()}`,
+      },
     );
 
     return new NanobookContext(

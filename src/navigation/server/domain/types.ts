@@ -70,12 +70,16 @@ export interface ParentEntry {
   id: string;
   /** Public document path used to build URLs. */
   path: string;
+  /** Canonical URL for this document inside the current navigation context. */
+  href: string;
   data: {
     title: string;
   };
 }
 
 export interface NavigationService {
+  /** Builds the canonical URL for a document path in this context. */
+  getHref(documentPath: string): string;
   /** Resuelve una ruta pública a la identidad estable del documento. */
   getDocumentIdByPath(path: string): string | undefined;
   /** Breadcrumbs desde la raíz hasta el documento indicado. */

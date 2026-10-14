@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregidas las rutas generadas por `NavigationModule`: breadcrumbs, sidebar e índices usan la ruta canónica `/n/{nanobookSlug}/...` y dejan de enlazar con las páginas legacy.
 - Adelgazado `DrizzleContentRepository`: centralizado el alcance por `nanobookId`, unificado el listado, reutilizada la serialización de metadatos del dominio y eliminado un prechequeo redundante en actualizaciones con revisión.
 - Retirados `GitHubRepository` y `FileSystemRepository`, junto con sus adaptadores de escritura/lectura y configuración de fuente; la persistencia activa de documentos queda en SQL por nanobook y `InMemoryRepository` se conserva solo para pruebas.
 - Desacoplado `NanobookContext` de los módulos de documentos, navegación y publicación: `Application` entrega los constructores externos mediante un paquete de composición tipado.

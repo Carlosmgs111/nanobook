@@ -8,6 +8,7 @@ import ToolTip from "./ToolTip.astro";
 interface ParentEntry {
   id: string;
   path: string;
+  href: string;
   data: {
     title: string;
   };
@@ -20,9 +21,6 @@ interface Props {
 
 const { parentEntry, toggleId } = Astro.props;
 
-function parentHref(parent: ParentEntry): string {
-  return parent.path === "index" ? "/" : `/${parent.path}/`;
-}
 ---
 
 <div
@@ -32,7 +30,7 @@ function parentHref(parent: ParentEntry): string {
   {
     parentEntry && (
       <a
-        href={parentHref(parentEntry)}
+        href={parentEntry.href}
         class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--accent)] ellipsis"
         data-tooltip={parentEntry.data.title}
       >

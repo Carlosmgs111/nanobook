@@ -34,15 +34,18 @@ function matchesKind(
   return allowed === "all" || allowed.includes(kind);
 }
 
-function toHref(path: string): string {
-  return path === "index" ? "/" : `/${path}/`;
-}
-
 export class NavigationService implements NavigationServicePort {
   constructor(
     private documentsGraph: DocumentsGraph,
-    private readonly options: { rootPath?: string } = {},
+    private readonly options: { rootPath?: string; basePath?: string } = {},
   ) {}
+
+  getHref(documentPath: string): string {
+    const path = this.normalizePath(documentPath);
+    const basePath = this.options.basePath?.replace(/\/+$/, "") ?? "";
+    if (path === "index") return basePath || "/";
+    return `${basePath}/${path}/`;
+  }
 
   replaceGraph(documentsGraph: DocumentsGraph): void {
     this.documentsGraph = documentsGraph;
@@ -128,7 +131,7 @@ export class NavigationService implements NavigationServicePort {
     }
 
     const crumbs: Crumb[] = [
-      { id: "index", title: homeTitle, href: "/", current: false },
+      { id: "index", title: homeTitle, href: this.getHref("index"), current: false },
     ];
 
     if (currentPath === "index") {
@@ -150,7 +153,7 @@ export class NavigationService implements NavigationServicePort {
       crumbs.push({
         id: path,
         title,
-        href: `/${path}/`,
+        href: this.getHref(path),
         current: isCurrent,
       });
     }
@@ -191,6 +194,7 @@ export class NavigationService implements NavigationServicePort {
     return {
       id: parent.id,
       path: parent.path,
+      href: this.getHref(parent.path),
       data: { title: parent.title },
     };
   }
@@ -225,23 +229,30 @@ export class NavigationService implements NavigationServicePort {
       {
         id: rootPath,
         title: rootTitle,
-        href: toHref(rootPath),
+        href: this.getHref(rootPath),
         current: rootPath === currentPath,
       },
     ];
-    if (rootPath === currentPath || !currentPath.startsWith(`${rootPath}/`)) {
+    const isGlobalRoot = rootPath === "index";
+    if (
+      rootPath === currentPath ||
+      (!isGlobalRoot && !currentPath.startsWith(`${rootPath}/`))
+    ) {
       return crumbs;
     }
 
-    const relativePath = currentPath.slice(rootPath.length + 1);
-    let path = rootPath;
+    const relativePath = isGlobalRoot
+      ? currentPath
+      : currentPath.slice(rootPath.length + 1);
+    let path = isGlobalRoot ? "" : rootPath;
     for (const segment of relativePath.split("/")) {
-      path = `${path}/${segment}`;
+      if (!segment) continue;
+      path = path ? `${path}/${segment}` : segment;
       const node = this.documentsGraph.getNodeByPath(path);
       crumbs.push({
         id: path,
         title: node?.title ?? segment,
-        href: toHref(path),
+        href: this.getHref(path),
         current: path === currentPath,
       });
     }
