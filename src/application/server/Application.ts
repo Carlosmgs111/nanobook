@@ -7,6 +7,8 @@ import { NavigationModule } from "../../navigation/server";
 import { PublishingModule } from "../../publishing/server";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { ThemeModule } from "../../theme/server";
+import { AssignNanobookTheme } from "./AssignNanobookTheme";
+import { AssignNanobookThemeController } from "./AssignNanobookThemeController";
 
 export type NanobookCapabilities = {
   navigationModule: Awaited<ReturnType<typeof NavigationModule.create>>;
@@ -20,6 +22,7 @@ export class Application {
     public readonly profileModule: ProfileModule,
     public readonly nanobookModule: NanobookModule,
     public readonly themeModule: ThemeModule,
+    public readonly assignNanobookThemeController: AssignNanobookThemeController,
   ) {}
 
   static async create(): Promise<Application> {
@@ -28,12 +31,16 @@ export class Application {
     const profileModule = ProfileModule.create(routeProtector);
     const nanobookModule = await NanobookModule.create(routeProtector);
     const themeModule = ThemeModule.create(routeProtector);
+    const assignNanobookThemeController = new AssignNanobookThemeController(
+      new AssignNanobookTheme(themeModule.getAssignableTheme, nanobookModule.setNanobookTheme),
+    );
     return new Application(
       authServerModule,
       routeProtector,
       profileModule,
       nanobookModule,
       themeModule,
+      assignNanobookThemeController,
     );
   }
 

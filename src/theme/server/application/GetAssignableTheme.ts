@@ -1,7 +1,7 @@
 import { Result } from "../../../shared/domain/Result";
 import { InvalidThemeError } from "../domain/errors";
 import type { ThemeRepository } from "../domain/ports/ThemeRepository";
-import type { ThemeReference } from "./ResolveTheme";
+import type { ThemeReference } from "../../../shared/theme/ThemeReference";
 import { findOwned } from "./ownership";
 
 export class GetAssignableTheme {

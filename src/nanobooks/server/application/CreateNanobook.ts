@@ -33,6 +33,7 @@ export class CreateNanobook {
         ...input,
         id: input.id ?? crypto.randomUUID(),
         ownerId,
+        settings: input.settings ?? { theme: { kind: "official", id: "nanobook" } },
         setupStatus: "pending",
       });
       if (!result.isSuccess) return Result.fail(result.getError());

@@ -2,9 +2,10 @@
 import Layout from "../../../layouts/Layout.astro";
 import type { Nanobook } from "../../server/domain/Nanobook";
 import NanobookCard from "./NanobookCard.astro";
+import type { ThemeSummaryDto } from "../../../theme/browser/HttpThemeApi";
 
-interface Props { nanobooks: Nanobook[] }
-const { nanobooks } = Astro.props;
+interface Props { nanobooks: Nanobook[]; themes: ThemeSummaryDto[] }
+const { nanobooks, themes } = Astro.props;
 ---
 
 <Layout title="Nanobooks" description="Gestiona tus nanobooks">
@@ -17,7 +18,7 @@ const { nanobooks } = Astro.props;
 
     <div class="grid gap-4 md:grid-cols-2">
       {nanobooks.map((nanobook) => (
-        <NanobookCard nanobook={nanobook} />
+        <NanobookCard nanobook={nanobook} themes={themes} />
       ))}
     </div>
 

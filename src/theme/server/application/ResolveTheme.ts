@@ -4,10 +4,8 @@ import {
 } from "../infraestructure/OfficialThemeCatalog";
 import type { ThemeTokens } from "../domain/ThemeTokens";
 import type { ThemeRepository } from "../domain/ports/ThemeRepository";
-
-export type ThemeReference =
-  | { kind: "official"; id: string }
-  | { kind: "custom"; id: string };
+import type { ThemeReference } from "../../../shared/theme/ThemeReference";
+export type { ThemeReference } from "../../../shared/theme/ThemeReference";
 
 export interface AppliedTheme {
   key: string;
