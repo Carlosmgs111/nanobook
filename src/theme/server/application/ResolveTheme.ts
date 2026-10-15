@@ -20,7 +20,7 @@ export class ResolveTheme {
     private readonly repository: ThemeRepository,
   ) {}
 
-  async execute(reference: ThemeReference): Promise<AppliedTheme> {
+  async execute(reference: ThemeReference, _request?: Request): Promise<AppliedTheme> {
     if (reference.kind === "custom") {
       const found = await this.repository.findById(reference.id);
       if (found.isSuccess && found.getValue()) {

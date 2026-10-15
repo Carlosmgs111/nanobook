@@ -12,6 +12,7 @@ import { ThemeCollectionController } from "./infraestructure/rest/ThemeCollectio
 import { ThemeItemController } from "./infraestructure/rest/ThemeItemController";
 
 export type { AppliedTheme, ThemeReference } from "./application/ResolveTheme";
+export { normalizeColorModePreference } from "./application/ColorModePreference";
 
 export class ThemeModule {
   private constructor(

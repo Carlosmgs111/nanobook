@@ -4,7 +4,7 @@ import { ClientRouter } from "astro:transitions";
 import LayoutShell from "./components/LayoutShell.astro";
 import type { NavigationService } from "../navigation/server";
 import { getApp } from "../application/server/Application";
-import type { AppliedTheme } from "../theme/server";
+import { normalizeColorModePreference, type AppliedTheme } from "../theme/server";
 
 interface Heading {
   depth: number;
@@ -42,8 +42,9 @@ const {
 const app = await getApp();
 const theme = suppliedTheme ?? await app.themeModule.resolveTheme.execute({ kind: "official", id: "classic" });
 const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;
-const colorModePreference = storedMode === "light" || storedMode === "dark" || storedMode === "system" ? storedMode : "system";
-const themeStyle = [...Object.entries(theme.lightVariables), ...Object.entries(theme.darkVariables)]
+const colorModePreference = normalizeColorModePreference(storedMode);
+const themeVariables = Object.fromEntries([...Object.entries(theme.lightVariables), ...Object.entries(theme.darkVariables)]);
+const themeStyle = Object.entries(themeVariables)
   .map(([key, value]) => `${key}:${value}`)
   .join(";");
 ---
@@ -59,6 +60,7 @@ const themeStyle = [...Object.entries(theme.lightVariables), ...Object.entries(t
     {canonicalHref && <link rel="canonical" href={canonicalHref} />}
     <title>{title}</title>
     <ClientRouter transition:animate="none" />
+    <meta data-theme-state data-theme={theme.baseId} data-theme-key={theme.key} data-color-mode={colorModePreference} data-theme-variables={JSON.stringify(themeVariables)} />
   </head>
   <LayoutShell
     description={description}

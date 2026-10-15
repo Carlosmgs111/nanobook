@@ -20,8 +20,8 @@ if (!nanobook) {
   return new Response("Nanobook not found", { status: 404 });
 }
 const documentModule = app.nanobookModule.documentModule;
-const { publishingModule, navigationModule } =
-  await app.createNanobookCapabilities(nanobook);
+const { publishingModule, navigationModule, theme } =
+  await app.createNanobookCapabilities(nanobook, Astro.request);
 const nanobookId = nanobook.getId();
 
 export const prerender = false;
@@ -64,6 +64,7 @@ Astro.response.headers.set("Cache-Control", "no-store");
   newHref={newHref}
   canonicalHref={canonicalHref}
   navigationService={navigationModule.navigationService}
+  theme={theme}
 >
 {
   entry.isIndex ? (

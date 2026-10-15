@@ -19,6 +19,16 @@
   })();
 </script>
 
+<script>
+  import { ThemeNavigationController } from "../../theme/browser/ThemeNavigationController";
+  const state = window as typeof window & { __nanobookThemeNavigation?: ThemeNavigationController };
+  if (!state.__nanobookThemeNavigation) {
+    state.__nanobookThemeNavigation = new ThemeNavigationController();
+    document.addEventListener("astro:after-swap", () => state.__nanobookThemeNavigation?.syncFromDocument());
+  }
+  state.__nanobookThemeNavigation.syncFromDocument();
+</script>
+
 <script is:inline>
   (function () {
     if (window.__nanobookContentWidthRestored) return;

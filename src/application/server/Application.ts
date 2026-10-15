@@ -9,10 +9,13 @@ import type { RouteProtector } from "../../shared/server/capabilities/RouteProte
 import { ThemeModule } from "../../theme/server";
 import { AssignNanobookTheme } from "./AssignNanobookTheme";
 import { AssignNanobookThemeController } from "./AssignNanobookThemeController";
+import { resolveEffectiveNanobookTheme } from "./resolveEffectiveNanobookTheme";
+import type { AppliedTheme } from "../../theme/server";
 
 export type NanobookCapabilities = {
   navigationModule: Awaited<ReturnType<typeof NavigationModule.create>>;
   publishingModule: Awaited<ReturnType<typeof PublishingModule.create>>;
+  theme: AppliedTheme;
 };
 
 export class Application {
@@ -53,6 +56,7 @@ export class Application {
    */
   async createNanobookCapabilities(
     nanobook: Nanobook,
+    request: Request,
   ): Promise<NanobookCapabilities> {
     const nanobookId = nanobook.getId();
     const documentProvider = new DocumentModuleDocumentProvider(
@@ -70,8 +74,9 @@ export class Application {
     const publishingModule = await PublishingModule.create(undefined, {
       cacheNamespace: nanobookId,
     });
+    const theme = await resolveEffectiveNanobookTheme(nanobook, this.themeModule.resolveTheme, request);
 
-    return { navigationModule, publishingModule };
+    return { navigationModule, publishingModule, theme };
   }
 }
 

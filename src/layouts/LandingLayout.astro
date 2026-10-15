@@ -3,12 +3,14 @@ import "../shared/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import StateRestoreScripts from "./components/StateRestoreScripts.astro";
 import { getApp } from "../application/server/Application";
+import { normalizeColorModePreference } from "../theme/server";
 
 const app = await getApp();
 const theme = await app.themeModule.resolveTheme.execute({ kind: "official", id: "nanobook" });
 const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;
-const colorModePreference = storedMode === "light" || storedMode === "dark" || storedMode === "system" ? storedMode : "system";
-const themeStyle = [...Object.entries(theme.lightVariables), ...Object.entries(theme.darkVariables)]
+const colorModePreference = normalizeColorModePreference(storedMode);
+const themeVariables = Object.fromEntries([...Object.entries(theme.lightVariables), ...Object.entries(theme.darkVariables)]);
+const themeStyle = Object.entries(themeVariables)
   .map(([key, value]) => `${key}:${value}`)
   .join(";");
 ---
@@ -21,6 +23,7 @@ const themeStyle = [...Object.entries(theme.lightVariables), ...Object.entries(t
     <title>Nanobook — Tus ideas, organizadas para compartir</title>
     <link rel="icon" href="/favicon.ico" />
     <ClientRouter transition:animate="none" />
+    <meta data-theme-state data-theme={theme.baseId} data-theme-key={theme.key} data-color-mode={colorModePreference} data-theme-variables={JSON.stringify(themeVariables)} />
   </head>
   <body>
     <StateRestoreScripts />
