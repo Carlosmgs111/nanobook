@@ -66,10 +66,10 @@ function overlayTokens(
   }
 
   const font = {
-    system: "system-ui, sans-serif",
+    "system-sans": "system-ui, sans-serif",
     "editorial-serif": 'Georgia, "Times New Roman", serif',
-    humanist: "Arial, Helvetica, sans-serif",
-  }[tokens.typography?.family ?? "system"];
+    mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  }[tokens.typography?.family ?? "system-sans"];
   if (tokens.typography) for (const target of [light, dark]) {
     target["font-body"] = font;
     target["font-heading"] = font;
@@ -94,9 +94,9 @@ function overlayTokens(
 
 function patternValues(pattern: NonNullable<ThemeTokens["decoration"]>["pattern"]) {
   if (pattern === "none") return { light: "none", dark: "none" };
-  if (pattern === "dots") return {
-    light: "radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px)",
-    dark: "radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px)",
+  if (pattern === "hatch") return {
+    light: "repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 10px)",
+    dark: "repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 10px)",
   };
   return {
     light: "linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)",

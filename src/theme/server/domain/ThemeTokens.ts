@@ -8,10 +8,10 @@ export type ThemeColorTokens = Partial<Record<ColorKey, string>>;
 export type ThemeTokens = {
   light?: ThemeColorTokens;
   dark?: ThemeColorTokens;
-  typography?: { family: "system" | "editorial-serif" | "humanist" };
+  typography?: { family: "system-sans" | "editorial-serif" | "mono" };
   shape?: { radius: "square" | "soft" | "rounded" };
   layout?: { density: "compact" | "comfortable" | "relaxed" };
-  decoration?: { pattern: "grid" | "dots" | "none" };
+  decoration?: { pattern: "none" | "grid" | "hatch" };
 };
 
 export function validateThemeTokens(value: unknown): ThemeTokens | InvalidThemeError {
@@ -32,10 +32,10 @@ export function validateThemeTokens(value: unknown): ThemeTokens | InvalidThemeE
   }
 
   const presetChecks = [
-    ["typography", "family", ["system", "editorial-serif", "humanist"]],
+    ["typography", "family", ["system-sans", "editorial-serif", "mono"]],
     ["shape", "radius", ["square", "soft", "rounded"]],
     ["layout", "density", ["compact", "comfortable", "relaxed"]],
-    ["decoration", "pattern", ["grid", "dots", "none"]],
+    ["decoration", "pattern", ["none", "grid", "hatch"]],
   ] as const;
   for (const [group, key, allowed] of presetChecks) {
     const entry = value[group];

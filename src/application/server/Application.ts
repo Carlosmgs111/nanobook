@@ -27,7 +27,7 @@ export class Application {
     const routeProtector: RouteProtector = authServerModule;
     const profileModule = ProfileModule.create(routeProtector);
     const nanobookModule = await NanobookModule.create(routeProtector);
-    const themeModule = ThemeModule.create();
+    const themeModule = ThemeModule.create(routeProtector);
     return new Application(
       authServerModule,
       routeProtector,
