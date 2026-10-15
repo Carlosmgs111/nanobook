@@ -2,9 +2,18 @@
 import "../shared/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import StateRestoreScripts from "./components/StateRestoreScripts.astro";
+import { getApp } from "../application/server/Application";
+
+const app = await getApp();
+const theme = await app.themeModule.resolveTheme.execute({ kind: "official", id: "nanobook" });
+const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;
+const colorModePreference = storedMode === "light" || storedMode === "dark" || storedMode === "system" ? storedMode : "system";
+const themeStyle = [...Object.entries(theme.lightVariables), ...Object.entries(theme.darkVariables)]
+  .map(([key, value]) => `${key}:${value}`)
+  .join(";");
 ---
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme={theme.baseId} data-theme-key={theme.key} data-color-mode={colorModePreference} style={themeStyle}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

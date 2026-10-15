@@ -1,0 +1,100 @@
+:root {
+  --theme-page-bg: var(--theme-light-page-bg);
+  --theme-surface-bg: var(--theme-light-surface-bg);
+  --theme-text: var(--theme-light-text);
+  --theme-text-muted: var(--theme-light-text-muted);
+  --theme-accent: var(--theme-light-accent);
+  --theme-border: var(--theme-light-border);
+  --theme-border-subtle: var(--theme-light-border-subtle);
+  --theme-danger: #ef4444;
+  --theme-font-body: var(--theme-light-font-body);
+  --theme-font-heading: var(--theme-light-font-heading);
+  --theme-font-code: var(--theme-light-font-code);
+  --theme-control-radius: var(--theme-light-control-radius);
+  --theme-panel-radius: var(--theme-light-panel-radius);
+  --theme-content-gap: var(--theme-light-content-gap);
+  --theme-page-pattern: var(--theme-light-page-pattern);
+
+  --bg: var(--theme-page-bg);
+  --text: var(--theme-text);
+  --muted: var(--theme-text-muted);
+  --accent: var(--theme-accent);
+  --grid-line: var(--theme-border-subtle);
+  --grid-line-strong: var(--theme-border);
+  --grid-line-subtle: color-mix(in srgb, var(--theme-border-subtle) 60%, transparent);
+  --surface-rgb: 0, 0, 0;
+  --shadow-rgb: 0, 0, 0;
+  --glow-color: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+  --grid-step: 32px;
+  --line-thickness: 1px;
+  --hatch-gap: 8px;
+  --inline-code-bg: #232328;
+  --inline-code-fg: #ffffff;
+  --inline-code-grid: rgba(255, 255, 255, 0.08);
+  --inline-code-border: rgba(0, 0, 0, 0.25);
+  --inline-code-glow: rgba(0, 0, 0, 0.12);
+  --pre-bg: rgba(0, 0, 0, 0.06);
+  --pre-grid: rgba(0, 0, 0, 0.07);
+  --layer-1: color-mix(in srgb, var(--theme-text) 3%, transparent);
+  --layer-2: color-mix(in srgb, var(--theme-text) 6%, transparent);
+  --layer-3: color-mix(in srgb, var(--theme-text) 9%, transparent);
+  --layer-4: color-mix(in srgb, var(--theme-text) 12%, transparent);
+  --border-soft: color-mix(in srgb, var(--theme-text) 15%, transparent);
+  --border-medium: color-mix(in srgb, var(--theme-text) 25%, transparent);
+  --border-strong: color-mix(in srgb, var(--theme-text) 45%, transparent);
+}
+
+:root[data-color-mode="dark"] {
+  --theme-page-bg: var(--theme-dark-page-bg);
+  --theme-surface-bg: var(--theme-dark-surface-bg);
+  --theme-text: var(--theme-dark-text);
+  --theme-text-muted: var(--theme-dark-text-muted);
+  --theme-accent: var(--theme-dark-accent);
+  --theme-border: var(--theme-dark-border);
+  --theme-border-subtle: var(--theme-dark-border-subtle);
+  --theme-font-body: var(--theme-dark-font-body);
+  --theme-font-heading: var(--theme-dark-font-heading);
+  --theme-font-code: var(--theme-dark-font-code);
+  --theme-control-radius: var(--theme-dark-control-radius);
+  --theme-panel-radius: var(--theme-dark-panel-radius);
+  --theme-content-gap: var(--theme-dark-content-gap);
+  --theme-page-pattern: var(--theme-dark-page-pattern);
+  --surface-rgb: 255, 255, 255;
+  --inline-code-bg: rgba(255, 255, 255, 0.92);
+  --inline-code-fg: #000000;
+  --inline-code-grid: rgba(0, 0, 0, 0.04);
+  --inline-code-border: rgba(255, 255, 255, 0.6);
+  --inline-code-glow: rgba(255, 255, 255, 0.25);
+  --pre-bg: rgba(0, 0, 0, 0.3);
+  --pre-grid: rgba(255, 255, 255, 0.03);
+}
+
+.light {
+  --theme-page-bg: var(--theme-light-page-bg);
+  --theme-surface-bg: var(--theme-light-surface-bg);
+  --theme-text: var(--theme-light-text);
+  --theme-text-muted: var(--theme-light-text-muted);
+  --theme-accent: var(--theme-light-accent);
+  --theme-border: var(--theme-light-border);
+  --theme-border-subtle: var(--theme-light-border-subtle);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-color-mode="system"]:not(.light) {
+    --theme-page-bg: var(--theme-dark-page-bg);
+    --theme-surface-bg: var(--theme-dark-surface-bg);
+    --theme-text: var(--theme-dark-text);
+    --theme-text-muted: var(--theme-dark-text-muted);
+    --theme-accent: var(--theme-dark-accent);
+    --theme-border: var(--theme-dark-border);
+    --theme-border-subtle: var(--theme-dark-border-subtle);
+    --theme-font-body: var(--theme-dark-font-body);
+    --theme-font-heading: var(--theme-dark-font-heading);
+    --theme-font-code: var(--theme-dark-font-code);
+    --theme-control-radius: var(--theme-dark-control-radius);
+    --theme-panel-radius: var(--theme-dark-panel-radius);
+    --theme-content-gap: var(--theme-dark-content-gap);
+    --theme-page-pattern: var(--theme-dark-page-pattern);
+    --surface-rgb: 255, 255, 255;
+  }
+}

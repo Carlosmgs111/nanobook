@@ -6,6 +6,7 @@ import { DocumentModuleDocumentProvider } from "../../documents/server/infraestr
 import { NavigationModule } from "../../navigation/server";
 import { PublishingModule } from "../../publishing/server";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
+import { ThemeModule } from "../../theme/server";
 
 export type NanobookCapabilities = {
   navigationModule: Awaited<ReturnType<typeof NavigationModule.create>>;
@@ -17,7 +18,8 @@ export class Application {
     public readonly authServerModule: AuthServerModule,
     public readonly routeProtector: RouteProtector,
     public readonly profileModule: ProfileModule,
-    public readonly nanobookModule: NanobookModule
+    public readonly nanobookModule: NanobookModule,
+    public readonly themeModule: ThemeModule,
   ) {}
 
   static async create(): Promise<Application> {
@@ -25,11 +27,13 @@ export class Application {
     const routeProtector: RouteProtector = authServerModule;
     const profileModule = ProfileModule.create(routeProtector);
     const nanobookModule = await NanobookModule.create(routeProtector);
+    const themeModule = ThemeModule.create();
     return new Application(
       authServerModule,
       routeProtector,
       profileModule,
-      nanobookModule
+      nanobookModule,
+      themeModule,
     );
   }
 
