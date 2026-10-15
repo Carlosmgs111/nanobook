@@ -2,8 +2,12 @@ import {
   OfficialThemeCatalog,
   type OfficialThemeId,
 } from "../infraestructure/OfficialThemeCatalog";
+import type { ThemeTokens } from "../domain/ThemeTokens";
+import type { ThemeRepository } from "../domain/ports/ThemeRepository";
 
-export type ThemeReference = { kind: "official"; id: string };
+export type ThemeReference =
+  | { kind: "official"; id: string }
+  | { kind: "custom"; id: string };
 
 export interface AppliedTheme {
   key: string;
@@ -13,9 +17,26 @@ export interface AppliedTheme {
 }
 
 export class ResolveTheme {
-  constructor(private readonly catalog: OfficialThemeCatalog) {}
+  constructor(
+    private readonly catalog: OfficialThemeCatalog,
+    private readonly repository: ThemeRepository,
+  ) {}
 
   async execute(reference: ThemeReference): Promise<AppliedTheme> {
+    if (reference.kind === "custom") {
+      const found = await this.repository.findById(reference.id);
+      if (found.isSuccess && found.getValue()) {
+        const custom = found.getValue()!;
+        const definition = this.catalog.get(custom.getBaseThemeId());
+        const values = overlayTokens(definition.light, definition.dark, custom.getTokens());
+        return {
+          key: `custom:${custom.getId()}`,
+          baseId: definition.id,
+          lightVariables: prefix(values.light, "light"),
+          darkVariables: prefix(values.dark, "dark"),
+        };
+      }
+    }
     const definition = this.catalog.get(reference.id);
     return {
       key: `official:${definition.id}`,
@@ -24,6 +45,63 @@ export class ResolveTheme {
       darkVariables: prefix(definition.dark, "dark"),
     };
   }
+}
+
+const COLOR_NAMES = {
+  pageBg: "page-bg", surfaceBg: "surface-bg", text: "text", textMuted: "text-muted",
+  accent: "accent", border: "border", borderSubtle: "border-subtle",
+} as const;
+
+function overlayTokens(
+  baseLight: Readonly<Record<string, string>>,
+  baseDark: Readonly<Record<string, string>>,
+  tokens: ThemeTokens,
+) {
+  const light = { ...baseLight };
+  const dark = { ...baseDark };
+  for (const [mode, target] of [["light", light], ["dark", dark]] as const) {
+    for (const [name, value] of Object.entries(tokens[mode] ?? {})) {
+      target[COLOR_NAMES[name as keyof typeof COLOR_NAMES]] = value;
+    }
+  }
+
+  const font = {
+    system: "system-ui, sans-serif",
+    "editorial-serif": 'Georgia, "Times New Roman", serif',
+    humanist: "Arial, Helvetica, sans-serif",
+  }[tokens.typography?.family ?? "system"];
+  if (tokens.typography) for (const target of [light, dark]) {
+    target["font-body"] = font;
+    target["font-heading"] = font;
+  }
+
+  const radius = { square: "0px", soft: "5px", rounded: "14px" }[tokens.shape?.radius ?? "square"];
+  if (tokens.shape) for (const target of [light, dark]) {
+    target["control-radius"] = radius;
+    target["panel-radius"] = radius;
+  }
+
+  const gap = { compact: "1rem", comfortable: "1.5rem", relaxed: "2rem" }[tokens.layout?.density ?? "comfortable"];
+  if (tokens.layout) for (const target of [light, dark]) target["content-gap"] = gap;
+
+  if (tokens.decoration) {
+    const patterns = patternValues(tokens.decoration.pattern);
+    light["page-pattern"] = patterns.light;
+    dark["page-pattern"] = patterns.dark;
+  }
+  return { light, dark };
+}
+
+function patternValues(pattern: NonNullable<ThemeTokens["decoration"]>["pattern"]) {
+  if (pattern === "none") return { light: "none", dark: "none" };
+  if (pattern === "dots") return {
+    light: "radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px)",
+    dark: "radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px)",
+  };
+  return {
+    light: "linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)",
+    dark: "linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)",
+  };
 }
 
 function prefix(
