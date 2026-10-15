@@ -12,7 +12,7 @@
   --theme-light-control-radius: 0px;
   --theme-light-panel-radius: 0px;
   --theme-light-content-gap: 1.5rem;
-  --theme-light-page-pattern: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  --theme-light-page-pattern: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
   --theme-dark-page-bg: #050505;
   --theme-dark-surface-bg: rgba(255, 255, 255, 0.03);
   --theme-dark-text: #e5e5e5;
@@ -26,5 +26,5 @@
   --theme-dark-control-radius: 0px;
   --theme-dark-panel-radius: 0px;
   --theme-dark-content-gap: 1.5rem;
-  --theme-dark-page-pattern: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  --theme-dark-page-pattern: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }

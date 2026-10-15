@@ -12,20 +12,20 @@
 
 /* Type icons */
 .index-card-icon {
-  color: var(--muted);
+  color: var(--theme-text-muted);
   transition: color 0.2s ease;
 }
 
 .index-card-icon.folder {
-  color: var(--accent);
+  color: var(--theme-accent);
 }
 
 .index-card:hover .index-card-icon.folder {
-  color: var(--accent);
+  color: var(--theme-accent);
 }
 
 .index-card:hover .index-card-icon.file {
-  color: var(--text);
+  color: var(--theme-text);
 }
 
 /* Render card content from data-* attributes */
@@ -62,8 +62,8 @@
     repeating-linear-gradient(135deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--bg) 25%, transparent) 0%,
-      color-mix(in srgb, var(--bg) 80%, transparent) 100%
+      color-mix(in srgb, var(--theme-page-bg) 25%, transparent) 0%,
+      color-mix(in srgb, var(--theme-page-bg) 80%, transparent) 100%
     ),
     var(--card-cover);
   background-size: 100% 100%, 100% 100%, 100% 100%, cover;

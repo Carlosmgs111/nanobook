@@ -5,8 +5,8 @@
   position: relative;
   margin: 2rem 0;
   padding: 1.5rem 0;
-  border-top: 1px solid var(--grid-line-strong);
-  border-bottom: 1px solid var(--grid-line-strong);
+  border-top: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
   background-image: repeating-linear-gradient(
     45deg,
     rgba(var(--surface-rgb), 0.10) 0,
@@ -28,12 +28,12 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem;
-  border: 1px solid var(--grid-line-strong);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  border: 1px solid var(--theme-border);
+  font-family: var(--theme-font-code);
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--theme-text-muted);
   background-image: repeating-linear-gradient(
     45deg,
     rgba(var(--surface-rgb), 0.10) 0,

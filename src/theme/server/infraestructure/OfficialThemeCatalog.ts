@@ -24,7 +24,7 @@ const classic: OfficialThemeDefinition = {
     "control-radius": "0px",
     "panel-radius": "0px",
     "content-gap": "1.5rem",
-    "page-pattern": "linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px)",
+    "page-pattern": "linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px)",
   },
   dark: {
     "page-bg": "#050505",
@@ -40,7 +40,7 @@ const classic: OfficialThemeDefinition = {
     "control-radius": "0px",
     "panel-radius": "0px",
     "content-gap": "1.5rem",
-    "page-pattern": "linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px)",
+    "page-pattern": "linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)",
   },
 };
 

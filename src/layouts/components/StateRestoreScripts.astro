@@ -1,22 +1,21 @@
 <script is:inline>
   (function () {
-    if (window.__nanobookThemeRestored) return;
-    window.__nanobookThemeRestored = true;
+    if (window.__nanobookColorModeMigrated) return;
+    window.__nanobookColorModeMigrated = true;
 
-    function restoreTheme() {
+    function migrateColorMode() {
       const stored =
         typeof localStorage !== "undefined"
           ? localStorage.getItem("theme")
           : null;
-      const prefersLight =
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-color-scheme: light)").matches;
-      const isLight = stored ? stored === "light" : prefersLight;
-      document.documentElement.classList.toggle("light", isLight);
+      if (stored === "light" || stored === "dark") {
+        document.documentElement.dataset.colorMode = stored;
+        document.cookie = `nanobook-color-mode=${stored}; Path=/; SameSite=Lax`;
+      }
+      if (typeof localStorage !== "undefined") localStorage.removeItem("theme");
     }
 
-    restoreTheme();
-    document.addEventListener("astro:after-swap", restoreTheme);
+    migrateColorMode();
   })();
 </script>
 

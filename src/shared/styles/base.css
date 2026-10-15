@@ -2,8 +2,9 @@
    Base
    ───────────────────────────────────────────── */
 html {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--theme-page-bg);
+  color: var(--theme-text);
+  font-family: var(--theme-font-body);
 }
 
 .grid-overlay {
@@ -11,9 +12,7 @@ html {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image:
-    linear-gradient(var(--grid-line) var(--line-thickness), transparent var(--line-thickness)),
-    linear-gradient(90deg, var(--grid-line) var(--line-thickness), transparent var(--line-thickness));
+  background-image: var(--theme-page-pattern);
   background-size: var(--grid-step) var(--grid-step);
 }
 
@@ -30,12 +29,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--grid-line-strong);
-  border-radius: 3px;
+  background: var(--theme-border);
+  border-radius: var(--theme-control-radius);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: var(--theme-text-muted);
 }
 
 ::-webkit-scrollbar-corner {

@@ -6,11 +6,11 @@
   z-index: 1;
   --content-pad: 2rem;
   padding: var(--content-pad);
-  color: var(--text);
+  color: var(--theme-text);
 }
 
 .prose :is(p, li, td, dd, figcaption, summary) {
-  color: var(--text);
+  color: var(--theme-text);
 }
 
 @media (min-width: 768px) {
@@ -23,32 +23,38 @@
    Headings
    ───────────────────────────────────────────── */
 .prose h1 {
-  color: var(--accent);
+  font-family: var(--theme-font-heading);
+  color: var(--theme-accent);
   text-shadow: 0 0 32px var(--glow-color), 0 0 64px var(--glow-color);
 }
 
 .prose h2 {
-  color: var(--accent);
+  font-family: var(--theme-font-heading);
+  color: var(--theme-accent);
   text-shadow: 0 0 24px var(--glow-color), 0 0 48px var(--glow-color);
 }
 
 .prose h3 {
-  color: var(--accent);
+  font-family: var(--theme-font-heading);
+  color: var(--theme-accent);
   text-shadow: 0 0 18px var(--glow-color), 0 0 36px var(--glow-color);
 }
 
 .prose h4 {
-  color: var(--text);
+  font-family: var(--theme-font-heading);
+  color: var(--theme-text);
   text-shadow: 0 0 14px var(--glow-color), 0 0 28px var(--glow-color);
 }
 
 .prose h5 {
-  color: var(--text);
+  font-family: var(--theme-font-heading);
+  color: var(--theme-text);
   text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
 }
 
 .prose h6 {
-  color: var(--muted);
+  font-family: var(--theme-font-heading);
+  color: var(--theme-text-muted);
   text-shadow: 0 0 6px var(--glow-color), 0 0 12px var(--glow-color);
 }
 
@@ -56,7 +62,7 @@
    Links
    ───────────────────────────────────────────── */
 .prose a {
-  color: var(--accent);
+  color: var(--theme-accent);
   text-decoration: underline;
   text-decoration-color: var(--border-soft);
   text-underline-offset: 0.2em;
@@ -64,7 +70,7 @@
 }
 
 .prose a:hover {
-  text-decoration-color: var(--accent);
+  text-decoration-color: var(--theme-accent);
 }
 
 /* ─────────────────────────────────────────────
@@ -72,7 +78,7 @@
    ───────────────────────────────────────────── */
 .prose strong,
 .prose b {
-  color: var(--accent);
+  color: var(--theme-accent);
   text-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
   font-weight: 600;
 }
@@ -82,13 +88,13 @@
    ───────────────────────────────────────────── */
 .prose code {
   padding: 0.15rem 0.35rem;
-  border-radius: 0.25rem;
+  border-radius: var(--theme-panel-radius);
   border: 1px solid var(--inline-code-border);
   color: var(--inline-code-fg);
   background: var(--inline-code-bg);
   box-shadow: 0 0 16px var(--inline-code-glow), 0 0 32px var(--inline-code-glow);
   text-shadow: 0 0 8px var(--inline-code-glow);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--theme-font-code);
   font-size: 0.9em;
 }
 
@@ -99,8 +105,8 @@
 
 .prose pre {
   padding: 1.25rem;
-  border: 1px solid var(--grid-line-strong);
-  border-radius: 0.25rem;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
   background: linear-gradient(var(--pre-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--pre-grid) 1px, transparent 1px), var(--pre-bg);
   background-size: 8px 8px, 8px 8px, 100% 100%;
@@ -126,8 +132,8 @@
   margin: 2.5rem calc(var(--content-pad) * -1);
   height: var(--grid-step);
   border: none;
-  border-top: 1px solid var(--grid-line-strong);
-  border-bottom: 1px solid var(--grid-line-strong);
+  border-top: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border);
   background: linear-gradient(
       180deg,
       rgba(var(--surface-rgb), 0.03) 0%,
@@ -144,8 +150,8 @@
     linear-gradient(
       180deg,
       transparent calc(50% - 0.5px),
-      var(--grid-line-strong) calc(50% - 0.5px),
-      var(--grid-line-strong) calc(50% + 0.5px),
+      var(--theme-border) calc(50% - 0.5px),
+      var(--theme-border) calc(50% + 0.5px),
       transparent calc(50% + 0.5px)
     );
   overflow: visible;
@@ -232,11 +238,11 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--theme-font-code);
   font-size: 0.65rem;
   letter-spacing: 0.2em;
-  color: var(--grid-line-strong);
-  background: var(--bg);
+  color: var(--theme-border);
+  background: var(--theme-page-bg);
   padding: 0 1rem;
   z-index: 3;
 }
@@ -337,20 +343,20 @@
 }
 
 .prose ul li::marker {
-  color: var(--accent);
+  color: var(--theme-accent);
   font-size: 1.1em;
   text-shadow: 0 0 8px var(--glow-color);
 }
 
 .prose ol li::marker {
-  color: var(--accent);
+  color: var(--theme-accent);
   font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--theme-font-code);
   text-shadow: 0 0 8px var(--glow-color);
 }
 
 .prose :is(ul, ol) :is(ul, ol) li::marker {
-  color: var(--accent);
+  color: var(--theme-accent);
   opacity: 0.8;
   text-shadow: 0 0 6px var(--glow-color);
 }
@@ -370,8 +376,8 @@
   appearance: none;
   width: 1em;
   height: 1em;
-  border: 1.5px solid var(--accent);
-  border-radius: 0.15rem;
+  border: 1.5px solid var(--theme-accent);
+  border-radius: var(--theme-control-radius);
   background: transparent;
   box-shadow: 0 0 8px var(--glow-color);
   vertical-align: middle;
@@ -382,8 +388,8 @@
 }
 
 .prose input[type="checkbox"]:checked {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--theme-accent);
+  border-color: var(--theme-accent);
   box-shadow: 0 0 10px var(--glow-color);
 }
 
@@ -394,7 +400,7 @@
   top: 50%;
   width: 0.25em;
   height: 0.45em;
-  border: solid var(--bg);
+  border: solid var(--theme-page-bg);
   border-width: 0 0.15em 0.15em 0;
   transform: translate(-50%, -55%) rotate(45deg);
 }
@@ -438,7 +444,7 @@
 }
 
 .prose th {
-  color: var(--accent);
+  color: var(--theme-accent);
   text-shadow: 0 0 12px var(--glow-color);
   background: repeating-linear-gradient(
       45deg,
@@ -456,20 +462,20 @@
 .prose details {
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-soft);
-  border-radius: 0.25rem;
+  border-radius: var(--theme-panel-radius);
   background-color: var(--layer-1);
 }
 
 .prose details summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--theme-accent);
   font-weight: 500;
 }
 
 .prose details > *:not(summary) {
   padding: 0.75rem 1rem;
   margin-top: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: var(--theme-panel-radius);
   background-color: var(--layer-2);
 }
 
@@ -479,13 +485,13 @@
 .md-details {
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-soft);
-  border-radius: 0.25rem;
+  border-radius: var(--theme-panel-radius);
   background-color: var(--layer-1);
 }
 
 .md-details-summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--theme-accent);
   font-weight: 500;
   list-style: none;
 }
@@ -498,8 +504,8 @@
   content: "▲";
   display: inline-block;
   width: 1.2em;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: var(--accent);
+  font-family: var(--theme-font-code);
+  color: var(--theme-accent);
 }
 
 .md-details[open] > .md-details-summary::before {
@@ -509,7 +515,7 @@
 .md-details-content {
   padding: 0.75rem 1rem;
   margin-top: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: var(--theme-panel-radius);
   background-color: var(--layer-2);
 }
 
@@ -525,12 +531,12 @@
 }
 
 .callout-title {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--theme-font-code);
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 600;
-  color: var(--callout-accent, var(--accent));
+  color: var(--callout-accent, var(--theme-accent));
   margin-bottom: 0.5rem;
 }
 
@@ -543,7 +549,7 @@
 }
 
 .callout-note {
-  --callout-accent: var(--accent);
+  --callout-accent: var(--theme-accent);
   --callout-border: var(--border-strong);
   --callout-bg: var(--layer-1);
 }
@@ -569,29 +575,26 @@
   --corner-color: rgba(59, 130, 246, 0.22);
 }
 
-.light .callout-warning,
-:root:has(.light) .callout-warning {
+:root[data-color-mode="light"] .callout-warning {
   --callout-bg: rgba(245, 158, 11, 0.1);
 }
 
-.light .callout-tip,
-:root:has(.light) .callout-tip {
+:root[data-color-mode="light"] .callout-tip {
   --callout-bg: rgba(16, 185, 129, 0.1);
 }
 
-.light .callout-info,
-:root:has(.light) .callout-info {
+:root[data-color-mode="light"] .callout-info {
   --callout-bg: rgba(59, 130, 246, 0.1);
 }
 
 @media (prefers-color-scheme: light) {
-  :root:not(.dark) .callout-warning {
+  :root[data-color-mode="system"] .callout-warning {
     --callout-bg: rgba(245, 158, 11, 0.1);
   }
-  :root:not(.dark) .callout-tip {
+  :root[data-color-mode="system"] .callout-tip {
     --callout-bg: rgba(16, 185, 129, 0.1);
   }
-  :root:not(.dark) .callout-info {
+  :root[data-color-mode="system"] .callout-info {
     --callout-bg: rgba(59, 130, 246, 0.1);
   }
 }

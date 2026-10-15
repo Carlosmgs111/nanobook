@@ -39,4 +39,41 @@ describe("official theme styles", () => {
       expect(source).toContain("theme.darkVariables");
     }
   });
+
+  it("uses the semantic contract in shared visual primitives", () => {
+    const files = [
+      "src/shared/styles/base.css",
+      "src/shared/styles/prose.css",
+      "src/shared/styles/utilities.css",
+      "src/shared/styles/components/hatch.css",
+      "src/shared/styles/components/index-card.css",
+      "src/layouts/components/LayoutShell.astro",
+      "src/layouts/components/Header.astro",
+      "src/layouts/components/Footer.astro",
+      "src/layouts/components/DocumentControls.astro",
+      "src/layouts/components/ContentWidthToggle.astro",
+      "src/layouts/components/StateRestoreScripts.astro",
+      "src/theme/browser/components/ColorModeToggle.astro",
+      "src/theme/browser/styles/contract.css",
+    ];
+
+    for (const file of files) {
+      const source = read(file);
+      expect(source, file).not.toMatch(
+        /var\(--(?:bg|text|muted|accent|grid-line(?:-strong|-subtle)?)\)/,
+      );
+      expect(source, file).not.toMatch(/\.light\b|classList\.toggle\(["']light["']/);
+    }
+  });
+
+  it("stores the color mode in a cookie and only migrates legacy storage", () => {
+    const toggle = read("src/theme/browser/components/ColorModeToggle.astro");
+    const restore = read("src/layouts/components/StateRestoreScripts.astro");
+    expect(toggle).toContain("nanobook-color-mode=${next}");
+    expect(toggle).toContain("root.dataset.colorMode = next");
+    expect(toggle).not.toContain("localStorage");
+    expect(restore).toContain('localStorage.getItem("theme")');
+    expect(restore).toContain('localStorage.removeItem("theme")');
+    expect(restore).not.toContain("classList");
+  });
 });

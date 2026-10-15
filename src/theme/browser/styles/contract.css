@@ -69,18 +69,8 @@
   --pre-grid: rgba(255, 255, 255, 0.03);
 }
 
-.light {
-  --theme-page-bg: var(--theme-light-page-bg);
-  --theme-surface-bg: var(--theme-light-surface-bg);
-  --theme-text: var(--theme-light-text);
-  --theme-text-muted: var(--theme-light-text-muted);
-  --theme-accent: var(--theme-light-accent);
-  --theme-border: var(--theme-light-border);
-  --theme-border-subtle: var(--theme-light-border-subtle);
-}
-
 @media (prefers-color-scheme: dark) {
-  :root[data-color-mode="system"]:not(.light) {
+  :root[data-color-mode="system"] {
     --theme-page-bg: var(--theme-dark-page-bg);
     --theme-surface-bg: var(--theme-dark-surface-bg);
     --theme-text: var(--theme-dark-text);

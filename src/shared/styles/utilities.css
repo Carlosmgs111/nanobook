@@ -5,7 +5,7 @@
   position: relative;
   padding: 0;
   background: linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%);
-  border: 1px solid var(--grid-line-strong);
+  border: 1px solid var(--theme-border);
   box-shadow:
     0 0 0 1px rgba(var(--surface-rgb), 0.04) inset,
     0 24px 80px -24px rgba(var(--shadow-rgb), 0.2);
@@ -20,8 +20,8 @@
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(var(--grid-line-subtle) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line-subtle) 1px, transparent 1px);
+    linear-gradient(var(--theme-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--theme-border-subtle) 1px, transparent 1px);
   background-size: 16px 16px;
   opacity: 0.6;
 }
@@ -35,11 +35,11 @@
 }
 
 .tech-label {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--theme-font-code);
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--theme-text-muted);
 }
 
 .rule {
@@ -47,8 +47,8 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--grid-line-strong) 20%,
-    var(--grid-line-strong) 80%,
+    var(--theme-border) 20%,
+    var(--theme-border) 80%,
     transparent 100%
   );
 }
