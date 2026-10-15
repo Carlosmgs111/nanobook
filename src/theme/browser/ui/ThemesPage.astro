@@ -1,0 +1,14 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import type { ThemeDetailsDto, ThemeSummaryDto } from "../HttpThemeApi";
+import ThemeEditor from "./ThemeEditor.astro";
+interface Props { themes: ThemeSummaryDto[]; selected?: ThemeDetailsDto }
+const { themes, selected } = Astro.props;
+---
+<Layout title="Temas" description="Personaliza y reutiliza la apariencia de tus nanobooks">
+  <div class="mx-auto max-w-6xl space-y-8">
+    <header class="border-b border-[var(--theme-border)] pb-6"><span class="tech-label">Personalización</span><h1 class="text-4xl font-semibold text-[var(--theme-accent)]">Temas</h1><p class="mt-2 text-[var(--theme-text-muted)]">Crea una apariencia reutilizable y previsualízala antes de guardarla.</p></header>
+    <nav class="flex flex-wrap gap-2" aria-label="Biblioteca de temas"><a href="/themes" class="border border-[var(--theme-border)] px-3 py-2">Nuevo tema</a>{themes.map((item) => <a href={item.editable ? `/themes?theme=${encodeURIComponent(item.reference.id)}` : "#editor"} class="border border-[var(--theme-border)] px-3 py-2">{item.name}{!item.editable && " · oficial"}</a>)}</nav>
+    <div id="editor"><ThemeEditor theme={selected} /></div>
+  </div>
+</Layout>

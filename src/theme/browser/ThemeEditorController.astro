@@ -1,0 +1,12 @@
+<script>
+  import { HttpThemeApi } from "./HttpThemeApi";
+  import { ThemeEditorController } from "./ThemeEditorController";
+
+  const mountThemeEditors = () => {
+    document.querySelectorAll<HTMLElement>("[data-theme-editor]").forEach((root) => {
+      new ThemeEditorController({ api: new HttpThemeApi(), root }).mount();
+    });
+  };
+  document.addEventListener("astro:page-load", mountThemeEditors);
+  mountThemeEditors();
+</script>

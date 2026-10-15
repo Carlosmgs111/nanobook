@@ -51,6 +51,12 @@ const isProfilePage = Astro.url.pathname === "/profile";
         hidden
         class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--theme-border-subtle)]"
       >Nanobooks</a>
+      <a
+        href="/themes"
+        data-auth-themes
+        hidden
+        class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--theme-border-subtle)]"
+      >Temas</a>
       {
         loginHref && !isProfilePage && (
           <a
