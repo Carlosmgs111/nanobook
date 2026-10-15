@@ -12,9 +12,6 @@ import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleN
 
 export { Nanobook } from "./domain/Nanobook";
 export type { NanobookSettings, NanobookSetupStatus, NanobookVisibility } from "./domain/types";
-export { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
-export { InMemoryNanobookRepository } from "./infraestructure/repository/InMemoryNanobookRepository";
-export type { NanobookRepository } from "./domain/ports/NanobookRepository";
 export { AuthorizeNanobook, NanobookAccessDeniedError } from "./application/AuthorizeNanobook";
 export type { NanobookPermission } from "./application/AuthorizeNanobook";
 export { NanobookNotFoundError } from "./application/errors";

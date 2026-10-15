@@ -9,6 +9,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - Corregido el formulario de creación de nanobooks con `ClientRouter`: el controlador se vuelve a enlazar en cada `astro:page-load`, usa JavaScript válido en el script inline, evita la recarga nativa y muestra errores de red o de API.
 - Reubicada la exposición de controladores y capacidades concretas en `NanobookModule`; las rutas ya no importan controladores desde `Application` ni el barrel exporta sus implementaciones.
+- Retiradas del barrel de `NanobookModule` las exportaciones públicas de repositorios y del puerto `NanobookRepository`; permanecen privadas dentro de la composición y sus pruebas.
 - Corregida la pantalla de listado de nanobooks para invocar `ListNanobooks.execute` después de encapsular el repositorio en capacidades de aplicación.
 - Encapsulada la resolución de nanobooks en las capacidades de aplicación `GetNanobookById` y `GetNanobookBySlug`; `NanobookModule` ya no expone el repositorio ni métodos de consulta directos.
 - Convertido `DocumentModule` en una capacidad compartida y sin estado de nanobook: sus casos de uso, resolutores y repositorios reciben explícitamente el `nanobookId`; `NanobookModule` compone una sola instancia documental y no conserva asociaciones por colección.
