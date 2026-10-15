@@ -3,6 +3,36 @@ import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
+const businessPresentationFiles = [
+  "src/auth/browser/ui/AuthForm.astro",
+  "src/profiles/browser/ui/ProfileForm.astro",
+  "src/profiles/browser/ui/ProfilePage.astro",
+  "src/nanobooks/browser/ui/NanobookCard.astro",
+  "src/nanobooks/browser/ui/NanobooksPage.astro",
+  "src/documents/browser/ui/EditorController.astro",
+  "src/documents/browser/ui/components/DocumentEditor.astro",
+  "src/documents/browser/ui/components/EditorStatus.astro",
+  "src/documents/browser/ui/components/EditorToolbar.astro",
+  "src/documents/browser/ui/components/TableOfContents/TocIndicator.astro",
+  "src/documents/browser/ui/components/TableOfContents/TocNav.astro",
+  "src/documents/browser/ui/components/TableOfContents/TocToggle.astro",
+  "src/documents/browser/ui/pages/DocumentPage.astro",
+  "src/documents/browser/ui/pages/EditPage.astro",
+  "src/documents/browser/ui/pages/NewPage.astro",
+  "src/navigation/browser/ui/components/Breadcrumb.astro",
+  "src/navigation/browser/ui/components/IndexList/DocumentIndex.astro",
+  "src/navigation/browser/ui/components/IndexList/index.astro",
+  "src/navigation/browser/ui/components/SidebarNav/CloseSidebar.astro",
+  "src/navigation/browser/ui/components/SidebarNav/index.astro",
+  "src/navigation/browser/ui/components/SidebarNav/OpenSidebar.astro",
+  "src/navigation/browser/ui/components/SidebarNav/SidebarHeader.astro",
+  "src/navigation/browser/ui/components/SidebarNav/SidebarList.astro",
+  "src/navigation/browser/ui/components/SidebarNav/SidebarModeToggle.astro",
+  "src/navigation/browser/ui/components/SidebarNav/ToolTip.astro",
+  "src/toast/browser/ToastHost.astro",
+  "src/pages/verify-email.astro",
+];
+
 describe("official theme styles", () => {
   it.each(["classic", "nanobook"])("implements both palettes for %s", (theme) => {
     const css = read(`src/theme/browser/styles/${theme}.css`);
@@ -75,5 +105,16 @@ describe("official theme styles", () => {
     expect(restore).toContain('localStorage.getItem("theme")');
     expect(restore).toContain('localStorage.removeItem("theme")');
     expect(restore).not.toContain("classList");
+  });
+
+  it("keeps business presentation on semantic theme tokens", () => {
+    for (const file of businessPresentationFiles) {
+      const source = read(file);
+      expect(source, file).not.toMatch(
+        /var\(--(?:bg|text|muted|accent|grid-line(?:-strong|-subtle)?)\)/,
+      );
+      expect(source, file).not.toMatch(/\b(?:bg-black|text-white|text-black|border-black)\b/);
+      expect(source, file).not.toMatch(/#(?:050505|f5f5f7|1a1a1a|e5e5e5|777777|737373)\b/i);
+    }
   });
 });

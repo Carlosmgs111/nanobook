@@ -75,22 +75,22 @@ Astro.response.headers.set("Cache-Control", "no-store");
     />
   ) : (
     <Fragment>
-      <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+      <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
         <span class="tech-label mb-3 block">Document</span>
-        <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--accent)] md:text-5xl">
+        <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-5xl">
           {entry.title}
         </h1>
       </div>
 
-      <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] px-4 py-3 font-mono text-xs text-[var(--muted)]">
+      <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] px-4 py-3 font-[family-name:var(--theme-font-code)] text-xs text-[var(--theme-text-muted)]">
         <span>ID: {entry.documentId}</span>
-        <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+        <span class="hidden text-[var(--theme-border)] sm:inline">|</span>
         <span>PATH: {entry.path}</span>
-        <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+        <span class="hidden text-[var(--theme-border)] sm:inline">|</span>
         <span class="text-sm">
           DATE: {entry.metadata.createdAt?.toISOString().slice(0, 10)}
         </span>
-        <span class="hidden text-[var(--grid-line-strong)] sm:inline">|</span>
+        <span class="hidden text-[var(--theme-border)] sm:inline">|</span>
         <span>AUTHOR: {entry.metadata.author}</span>
       </div>
       <div

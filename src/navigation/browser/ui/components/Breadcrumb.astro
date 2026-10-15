@@ -21,17 +21,17 @@ const display = Boolean(crumbs.length);
 
 <nav class="breadcrumb" aria-label="Breadcrumb" data-display={display}>
   <ol
-    class="flex flex-nowrap items-center gap-2 overflow-x-auto font-mono text-xs text-[var(--muted)]"
+    class="flex flex-nowrap items-center gap-2 overflow-x-auto font-[family-name:var(--theme-font-code)] text-xs text-[var(--theme-text-muted)]"
   >
     {
       crumbs.map((crumb, index) => (
         <li class="flex min-w-0 max-w-[12rem] flex-shrink items-center gap-2">
           {index > 0 && (
-            <span class="flex-shrink-0 text-[var(--grid-line-strong)]">/</span>
+            <span class="flex-shrink-0 text-[var(--theme-border)]">/</span>
           )}
           {crumb.current ? (
             <span
-              class="block truncate text-[var(--text)]"
+              class="block truncate text-[var(--theme-text)]"
               aria-current="page"
               title={crumb.title}
             >
@@ -40,7 +40,7 @@ const display = Boolean(crumbs.length);
           ) : (
             <a
               href={crumb.href}
-              class="block truncate transition-colors hover:text-[var(--accent)]"
+              class="block truncate transition-colors hover:text-[var(--theme-accent)]"
               title={crumb.title}
             >
               {crumb.title}

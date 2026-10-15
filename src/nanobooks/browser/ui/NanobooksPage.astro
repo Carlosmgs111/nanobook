@@ -9,10 +9,10 @@ const { nanobooks } = Astro.props;
 
 <Layout title="Nanobooks" description="Gestiona tus nanobooks">
   <div class="mx-auto max-w-4xl space-y-8">
-    <div class="border-b border-[var(--grid-line-strong)] pb-6">
+    <div class="border-b border-[var(--theme-border)] pb-6">
       <span class="tech-label mb-2 block">Workspace</span>
-      <h1 class="glow-text text-4xl font-semibold text-[var(--accent)]">Nanobooks</h1>
-      <p class="mt-2 text-sm text-[var(--muted)]">Cada nanobook contiene su propio árbol, configuración y permisos.</p>
+      <h1 class="glow-text text-4xl font-semibold text-[var(--theme-accent)]">Nanobooks</h1>
+      <p class="mt-2 text-sm text-[var(--theme-text-muted)]">Cada nanobook contiene su propio árbol, configuración y permisos.</p>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
@@ -21,23 +21,23 @@ const { nanobooks } = Astro.props;
       ))}
     </div>
 
-    <form id="create-nanobook" class="space-y-4 border border-[var(--grid-line-strong)] p-5">
+    <form id="create-nanobook" class="space-y-4 border border-[var(--theme-border)] p-5">
       <h2 class="text-lg font-semibold">Crear nanobook</h2>
       <div class="grid gap-4 md:grid-cols-2">
         <label class="space-y-1 text-sm">
           <span class="block">Nombre</span>
-          <input name="name" required class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2" />
+          <input name="name" required class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2" />
         </label>
         <label class="space-y-1 text-sm">
           <span class="block">Slug</span>
-          <input name="slug" required pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2" />
+          <input name="slug" required pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2" />
         </label>
       </div>
       <label class="flex items-center gap-2 text-sm">
         <input name="visibility" type="checkbox" /> Público
       </label>
       <div data-create-error class="text-sm text-red-500" role="alert"></div>
-      <button type="submit" class="border border-[var(--grid-line-strong)] bg-[var(--text)] px-4 py-2 text-sm font-medium text-[var(--bg)]">Crear</button>
+      <button type="submit" class="border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-sm font-medium text-[var(--theme-page-bg)]">Crear</button>
     </form>
   </div>
 </Layout>

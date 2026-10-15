@@ -15,13 +15,6 @@
   --theme-content-gap: var(--theme-light-content-gap);
   --theme-page-pattern: var(--theme-light-page-pattern);
 
-  --bg: var(--theme-page-bg);
-  --text: var(--theme-text);
-  --muted: var(--theme-text-muted);
-  --accent: var(--theme-accent);
-  --grid-line: var(--theme-border-subtle);
-  --grid-line-strong: var(--theme-border);
-  --grid-line-subtle: color-mix(in srgb, var(--theme-border-subtle) 60%, transparent);
   --surface-rgb: 0, 0, 0;
   --shadow-rgb: 0, 0, 0;
   --glow-color: color-mix(in srgb, var(--theme-accent) 12%, transparent);
