@@ -27,6 +27,7 @@ export class InternalReferenceResolver implements ReferenceResolverPlugin {
     const targetPath = context.sourcePath.resolveReference(refStr);
     if (!targetPath) return null;
     const targetDocumentResult = await this.contentRepository.getByPublicPath(
+      context.nanobookId,
       targetPath.getPublicValue()
     );
 

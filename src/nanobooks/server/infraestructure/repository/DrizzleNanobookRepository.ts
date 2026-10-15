@@ -8,6 +8,7 @@ import {
   NanobookSlugAlreadyTakenError,
 } from "../../domain/errors";
 import type { NanobookRepository } from "../../domain/ports/NanobookRepository";
+import type { NanobookSetupStatus } from "../../domain/types";
 import { nanobook } from "../database/DrizzleNanobookSchema";
 
 type Database = LibSQLDatabase<any>;
@@ -26,6 +27,7 @@ export class DrizzleNanobookRepository implements NanobookRepository {
         visibility: data.visibility,
         settingsJson: JSON.stringify(data.settings),
         contentVersion: data.contentVersion,
+        setupStatus: data.setupStatus ?? "ready",
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       });
@@ -70,6 +72,28 @@ export class DrizzleNanobookRepository implements NanobookRepository {
     }
   }
 
+  async updateSetupStatus(id: string, status: NanobookSetupStatus) {
+    try {
+      const result = await this.database
+        .update(nanobook)
+        .set({ setupStatus: status, updatedAt: new Date() })
+        .where(eq(nanobook.id, id));
+      const rowsAffected = Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+      if (rowsAffected === 0) {
+        return Result.fail(
+          new NanobookRepositoryError(`El nanobook "${id}" no existe`),
+        );
+      }
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        new NanobookRepositoryError("No fue posible actualizar el estado del nanobook", {
+          cause: error,
+        }),
+      );
+    }
+  }
+
   private async findOne(condition: any) {
     try {
       const [row] = await this.database
@@ -107,6 +131,7 @@ export class DrizzleNanobookRepository implements NanobookRepository {
       visibility: row.visibility,
       settings,
       contentVersion: row.contentVersion,
+      setupStatus: row.setupStatus,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

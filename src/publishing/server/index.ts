@@ -1,4 +1,5 @@
 import type { EventBus } from "../../shared/domain/bus/EventBus";
+import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import type { RenderedPageCache } from "./domain/cache";
 import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../../documents/server";
 import { PagePublisher } from "./application/PagePublisher";
@@ -23,7 +24,7 @@ export class PublishingModule {
   ) {}
 
   static async create(
-    eventBus: EventBus,
+    eventBus: EventBus = new InMemoryEventBus(),
     options: { cacheNamespace?: string } = {},
   ) {
     const pageRenderer = new UnifiedMarkdownRenderer();

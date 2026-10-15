@@ -9,9 +9,12 @@ export class CreateDocumentController {
   constructor(private createDocument: CreateDocument) {}
   handle: APIRoute = async ({ params, request, locals }) => {
     try {
-      const { slug: id } = params;
+      const { slug: id, nanobookId } = params;
       if (!id) {
         return jsonResponse({ error: "Falta el parámetro id" }, 400);
+      }
+      if (!nanobookId) {
+        return jsonResponse({ error: "Falta el parámetro nanobookId" }, 400);
       }
 
       const payload: CreateDocumentRequest = await request.json();
@@ -30,7 +33,7 @@ export class CreateDocumentController {
         return jsonResponse({ error: "Autenticación requerida" }, 401);
       }
 
-      const result = await this.createDocument.execute({
+      const result = await this.createDocument.execute(nanobookId, {
         ...toDocumentInput(payload),
         ownerId: locals.currentUserId,
       });

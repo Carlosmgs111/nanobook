@@ -26,11 +26,12 @@ describe("GetDocument", () => {
     } as unknown as ProxyParser;
 
     const result = await new GetDocument(repository, proxyParser).execute(
+      "book-a",
       "guides/index.md"
     );
 
     expect(result).toBe(document);
-    expect(getByPublicPath).toHaveBeenCalledWith("guides");
+    expect(getByPublicPath).toHaveBeenCalledWith("book-a", "guides");
   });
 
   it("can load the source document without resolving its proxy", async () => {
@@ -51,11 +52,12 @@ describe("GetDocument", () => {
     const proxyParser = { parseProxies } as unknown as ProxyParser;
 
     const result = await new GetDocument(repository, proxyParser).executeRaw(
+      "book-a",
       "new-dir/newfile3"
     );
 
     expect(result).toBe(document);
-    expect(getByPublicPath).toHaveBeenCalledWith("new-dir/newfile3");
+    expect(getByPublicPath).toHaveBeenCalledWith("book-a", "new-dir/newfile3");
     expect(parseProxies).not.toHaveBeenCalled();
   });
 });

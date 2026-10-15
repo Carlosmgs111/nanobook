@@ -13,6 +13,7 @@ describe("ListNanobooks", () => {
         Nanobook.create({ id: "book-1", ownerId: "owner-1", slug: "manual", name: "Manual" }).getValue(),
       ])),
       create: vi.fn(),
+      updateSetupStatus: vi.fn(),
     };
 
     const result = await new ListNanobooks(repository).execute("owner-1");

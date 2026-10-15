@@ -4,6 +4,7 @@ import { serializeEntry } from "../../../server/application/dto/SerializedEntry"
 import { hideProtectedFrontmatter } from "../../application/protectedFrontmatter";
 import EditorToolbar from "./EditorToolbar.astro";
 import EditorStatus from "./EditorStatus.astro";
+import EditorController from "../EditorController.astro";
 
 interface Props {
   entry: Entry;
@@ -43,6 +44,7 @@ const initialContent = editableRawFrontmatter + entry.content;
   </div>
 </div>
 
+<EditorController />
 
 <style>
   .editor-wrapper {

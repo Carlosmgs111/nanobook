@@ -1,4 +1,5 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { isNull } from "drizzle-orm";
 
 import { nanobook } from "../../../../nanobooks/server/infraestructure/database/DrizzleNanobookSchema";
 import { user } from "../../../../auth/server/infrastructure/better-auth/DrizzleAuthSchema";
@@ -26,8 +27,8 @@ export const document = sqliteTable(
     deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
   },
   (table) => [
-    uniqueIndex("document_live_path_unique").on(table.nanobookId, table.path),
-    uniqueIndex("document_live_public_path_unique").on(table.nanobookId, table.publicPath),
+    uniqueIndex("document_live_path_unique").on(table.nanobookId, table.path).where(isNull(table.deletedAt)),
+    uniqueIndex("document_live_public_path_unique").on(table.nanobookId, table.publicPath).where(isNull(table.deletedAt)),
     index("document_children_idx").on(table.nanobookId, table.parentPath, table.deletedAt),
     index("document_owner_idx").on(table.ownerId, table.nanobookId),
   ],

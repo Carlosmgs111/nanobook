@@ -50,6 +50,20 @@
       "when": 1791913658934,
       "tag": "0006_slow_pete_wisdom",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1791997919175,
+      "tag": "0007_live_document_paths",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792004298891,
+      "tag": "0008_grey_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

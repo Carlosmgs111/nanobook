@@ -10,9 +10,12 @@ export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
   handle: APIRoute = async ({ params, request, locals }) => {
     try {
-      const { slug: id } = params;
+      const { slug: id, nanobookId } = params;
       if (!id) {
         return jsonResponse({ error: "Falta el parámetro id" }, 400);
+      }
+      if (!nanobookId) {
+        return jsonResponse({ error: "Falta el parámetro nanobookId" }, 400);
       }
 
       const payload: UpdateDocumentRequest = JSON.parse(await request.text());
@@ -24,7 +27,7 @@ export class UpdateDocumentController {
         return jsonResponse({ error: "Autenticación requerida" }, 401);
       }
 
-      const result = await this.updateDocument.execute({
+      const result = await this.updateDocument.execute(nanobookId, {
         ...toDocumentInput(payload),
         // The route is the sole external source of identity for updates.
         id,

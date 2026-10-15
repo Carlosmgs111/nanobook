@@ -26,10 +26,11 @@ export class DeleteDocument {
   ) {}
 
   async execute(
+    nanobookId: string,
     documentId: string,
     actorId: string
   ): Promise<Result<DeleteDocumentError, void>> {
-    const documentResult = await this.repository.getById(documentId);
+    const documentResult = await this.repository.getById(nanobookId, documentId);
     if (!documentResult.isSuccess)
       return Result.fail(documentResult.getError());
     const document = documentResult.getValue();
@@ -38,7 +39,7 @@ export class DeleteDocument {
       return Result.fail(new DocumentAccessDeniedError(documentId));
     }
 
-    const documentsResult = await this.repository.list();
+    const documentsResult = await this.repository.list(nanobookId);
     if (!documentsResult.isSuccess)
       return Result.fail(documentsResult.getError());
 
@@ -71,17 +72,26 @@ export class DeleteDocument {
 
     const deletedDocuments = documentsToDelete;
     if (this.repository.deleteMany) {
-      const deleteResult = await this.repository.deleteMany(documentsToDelete);
+      const deleteResult = await this.repository.deleteMany(
+        nanobookId,
+        documentsToDelete,
+      );
       if (!deleteResult.isSuccess) return Result.fail(deleteResult.getError());
     } else {
       const deletedOneByOne = [] as typeof documentsToDelete;
       for (const documentToDelete of documentsToDelete) {
-        const deleteResult = await this.repository.delete(documentToDelete);
+        const deleteResult = await this.repository.delete(
+          nanobookId,
+          documentToDelete,
+        );
         if (!deleteResult.isSuccess) {
           if (deletedOneByOne.length === 0)
             return Result.fail(deleteResult.getError());
 
-          const eventResult = await this.publishDeletedEvents(deletedOneByOne);
+          const eventResult = await this.publishDeletedEvents(
+            nanobookId,
+            deletedOneByOne,
+          );
           if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
 
           return Result.fail(
@@ -98,16 +108,16 @@ export class DeleteDocument {
       }
     }
 
-    const eventResult = await this.publishDeletedEvents(deletedDocuments);
+    const eventResult = await this.publishDeletedEvents(nanobookId, deletedDocuments);
     if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
 
     return Result.ok();
   }
 
-  private async publishDeletedEvents(documents: Document[]) {
+  private async publishDeletedEvents(nanobookId: string, documents: Document[]) {
     for (const document of documents) {
       const eventResult = await this.eventBus.publish(
-        new DocumentDeleted(document.getDocumentId().getValue())
+        new DocumentDeleted(document.getDocumentId().getValue(), nanobookId)
       );
       if (!eventResult.isSuccess) return eventResult;
     }

@@ -7,12 +7,17 @@ export class DeleteDocumentController {
 
   handle: APIRoute = async ({ params, locals }) => {
     try {
-      const { slug: documentId } = params;
+      const { slug: documentId, nanobookId } = params;
       if (!documentId) return jsonResponse({ error: "Falta el parámetro id" }, 400);
+      if (!nanobookId) return jsonResponse({ error: "Falta el parámetro nanobookId" }, 400);
       if (!locals.currentUserId) {
         return jsonResponse({ error: "Autenticación requerida" }, 401);
       }
-      const result = await this.deleteDocument.execute(documentId, locals.currentUserId);
+      const result = await this.deleteDocument.execute(
+        nanobookId,
+        documentId,
+        locals.currentUserId,
+      );
       if (!result.isSuccess) return handleServiceError(result.getError());
       return jsonResponse({ ok: true }, 200);
     } catch (error) {

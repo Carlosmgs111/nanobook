@@ -28,6 +28,7 @@ export class UpdateDocument {
   ) {}
 
   async execute(
+    nanobookId: string,
     documentDelta: DocumentInput,
     actorId: string,
   ): Promise<Result<UpdateDocumentError, Document>> {
@@ -36,7 +37,10 @@ export class UpdateDocument {
       return Result.fail(new InvalidDocumentIdError(documentId ?? ""));
     }
 
-    const documentResult = await this.contentRepository.getById(documentId);
+    const documentResult = await this.contentRepository.getById(
+      nanobookId,
+      documentId,
+    );
     if (!documentResult.isSuccess) {
       return Result.fail(documentResult.getError());
     }
@@ -81,6 +85,7 @@ export class UpdateDocument {
     const updatedDocument = updatedDocumentResult.getValue();
 
     const documentsToUpdate = await this.buildMoveSet(
+      nanobookId,
       existingDocument,
       updatedDocument
     );
@@ -108,13 +113,22 @@ export class UpdateDocument {
         : undefined,
     }));
     if (this.contentRepository.updateMany) {
-      const updateResult = await this.contentRepository.updateMany(updates);
+      const updateResult = await this.contentRepository.updateMany(
+        nanobookId,
+        updates,
+      );
       if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
     } else {
       for (const [index, item] of updates.entries()) {
         const updateResult = item.expectedRevision !== undefined && index === 0 && this.contentRepository.updateWithRevision
-          ? await this.contentRepository.updateWithRevision(item.document, item.expectedRevision, item.previousPath)
+          ? await this.contentRepository.updateWithRevision(
+              nanobookId,
+              item.document,
+              item.expectedRevision,
+              item.previousPath,
+            )
           : await this.contentRepository.update(
+              nanobookId,
               item.document,
               ...(item.previousPath ? [item.previousPath] : []),
             );
@@ -124,7 +138,7 @@ export class UpdateDocument {
 
     for (const item of documentsToUpdate.getValue()) {
       const eventResult = await this.eventBus.publish(
-        new DocumentUpdated(item.document.getDocumentId().getValue())
+        new DocumentUpdated(item.document.getDocumentId().getValue(), nanobookId)
       );
       if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
     }
@@ -137,6 +151,7 @@ export class UpdateDocument {
   }
 
   private async buildMoveSet(
+    nanobookId: string,
     existingDocument: Document,
     updatedDocument: Document
   ): Promise<Result<UpdateDocumentError, Array<{ document: Document; previousPath?: string }>>> {
@@ -147,7 +162,7 @@ export class UpdateDocument {
       ]);
     }
 
-    const documentsResult = await this.contentRepository.list();
+      const documentsResult = await this.contentRepository.list(nanobookId);
     if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
 
     const oldPublicPath = existingDocument.getPublicPath();

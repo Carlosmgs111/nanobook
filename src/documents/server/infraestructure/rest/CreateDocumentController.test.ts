@@ -13,7 +13,7 @@ describe("CreateDocumentController", () => {
     const controller = new CreateDocumentController({ execute } as unknown as CreateDocument);
 
     await controller.handle({
-      params: { slug: "new-doc" },
+      params: { slug: "new-doc", nanobookId: "book-a" },
       request: new Request("https://nanobook.test/api/me/documents/new-doc", {
         method: "POST",
         body: JSON.stringify({
@@ -29,6 +29,7 @@ describe("CreateDocumentController", () => {
     } as never);
 
     expect(execute).toHaveBeenCalledWith(
+      "book-a",
       expect.objectContaining({
         ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
       }),

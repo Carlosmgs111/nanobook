@@ -1,4 +1,5 @@
 export type NanobookVisibility = "public" | "private";
+export type NanobookSetupStatus = "pending" | "ready" | "failed";
 
 /**
  * Settings owned by a nanobook.
@@ -18,6 +19,7 @@ export interface CreateNanobookData {
   visibility?: NanobookVisibility;
   settings?: NanobookSettings;
   contentVersion?: number;
+  setupStatus?: NanobookSetupStatus;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -30,6 +32,7 @@ export interface PersistedNanobook {
   visibility: NanobookVisibility;
   settings: NanobookSettings;
   contentVersion: number;
+  setupStatus?: NanobookSetupStatus;
   createdAt: Date;
   updatedAt: Date;
 }

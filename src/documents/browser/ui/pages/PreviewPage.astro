@@ -15,15 +15,19 @@ const { nanobookSlug } = Astro.props;
 if (!nanobookSlug) {
   return new Response("Nanobook not found", { status: 404 });
 }
-const nanobookContext = await app.nanobookModule.forNanobookSlug(nanobookSlug);
-if (!nanobookContext) {
+const nanobookResult = await app.nanobookModule.getNanobookBySlug.execute(nanobookSlug);
+if (!nanobookResult.isSuccess) throw nanobookResult.getError();
+const nanobook = nanobookResult.getValue();
+if (!nanobook) {
   return new Response("Nanobook not found", { status: 404 });
 }
-const documentModule = nanobookContext.documentModule;
-const publishingModule = nanobookContext.publishingModule;
+const documentModule = app.nanobookModule.documentModule;
+const { publishingModule, navigationModule } =
+  await app.createNanobookCapabilities(nanobook);
+const nanobookId = nanobook.getId();
 if (!slug) return new Response("Document not found", { status: 404 });
 
-const document = await documentModule.getDocument.execute(slug);
+const document = await documentModule.getDocument.execute(nanobookId, slug);
 if (!document) throw new Error("Document not found");
 const renderedPage = await publishingModule.pagePublisher.publish(document);
 if (!renderedPage) throw new Error("Page not found");
@@ -36,7 +40,7 @@ const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
 <Layout
   editHref={editHref}
-  navigationService={nanobookContext.navigationModule.navigationService}
+  navigationService={navigationModule.navigationService}
 >
   <h1><mark>Preview de {slug || "index"}</mark></h1>
   <div id="preview-container" data-document-id={documentId}></div>

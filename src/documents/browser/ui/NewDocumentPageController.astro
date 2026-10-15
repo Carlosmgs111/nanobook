@@ -20,6 +20,7 @@
     const helpText = form.querySelector<HTMLElement>("[data-type-help]");
     const errorContainer = form.querySelector<HTMLElement>("[data-error]");
     const basePath = wrapper?.dataset.basePath ?? "";
+    const baseHref = wrapper?.dataset.baseHref ?? "";
 
     typeSelect?.addEventListener("change", () => {
       if (helpText && typeSelect) {
@@ -64,8 +65,7 @@
           basePath
         );
 
-        window.location.href =
-          redirectId === "index" ? "/edit" : `/${redirectId}/edit`;
+        window.location.href = `${baseHref}/${redirectId}/edit`;
       } catch (error) {
         errorContainer.textContent =
           error instanceof Error

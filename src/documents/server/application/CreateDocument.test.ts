@@ -28,7 +28,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "index" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "index" }));
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().getDocumentId().getValue()).toMatch(
@@ -46,7 +46,7 @@ describe("CreateDocument", () => {
   it("persists the owner assigned by the authenticated flow", async () => {
     const useCase = new CreateDocument(createRepository(), createEventBus());
 
-    const result = await useCase.execute(
+    const result = await useCase.execute("book-a",
       buildDocumentInput({
         path: "index",
         ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
@@ -71,7 +71,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput());
+    const result = await useCase.execute("book-a", buildDocumentInput());
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentAlreadyExistsError);
@@ -84,7 +84,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
@@ -96,7 +96,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       ...buildDocumentInput({ path: "index" }),
     });
 
@@ -111,7 +111,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "intro" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "intro" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(ParentNotFoundError);
@@ -125,15 +125,15 @@ describe("CreateDocument", () => {
       createdAt: new Date(),
     });
     const repository = createRepository({
-      getByPath: vi.fn(async (id: string) => {
-        if (id === "intro") return Result.ok(nonIndexParent);
+      getByPath: vi.fn(async (_nanobookId: string, path: string) => {
+        if (path === "intro") return Result.ok(nonIndexParent);
         return Result.ok(null);
       }),
     });
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(
+    const result = await useCase.execute("book-a",
       buildDocumentInput({ path: "intro/child" })
     );
 
@@ -151,7 +151,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput());
+    const result = await useCase.execute("book-a", buildDocumentInput());
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -168,7 +168,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "index" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "index" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -183,7 +183,7 @@ describe("CreateDocument", () => {
       .mockResolvedValue(Result.fail(new EventBusError("boom")));
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "index" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "index" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EventBusError);
@@ -194,7 +194,7 @@ describe("CreateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       ...buildDocumentInput({ path: "index" }),
       // @ts-expect-error testing runtime validation
       title: undefined,
@@ -206,15 +206,15 @@ describe("CreateDocument", () => {
 
   it("publishes DocumentCreated for document and parent when creating a child", async () => {
     const repository = createRepository({
-      getByPath: vi.fn(async (id: string) => {
-        if (id === "index") return Result.ok(rootIndex);
+      getByPath: vi.fn(async (_nanobookId: string, path: string) => {
+        if (path === "index") return Result.ok(rootIndex);
         return Result.ok(null);
       }),
     });
     const eventBus = createEventBus();
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "intro" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "intro" }));
 
     expect(result.isSuccess).toBe(true);
     expect(eventBus.publish).toHaveBeenCalledTimes(2);
@@ -239,23 +239,23 @@ describe("CreateDocument", () => {
       createdAt: new Date(),
     });
     const repository = createRepository({
-      getByPath: vi.fn(async (path: string) => {
+      getByPath: vi.fn(async (_nanobookId: string, path: string) => {
         if (path === "new-dir/index") return Result.ok(parent);
         return Result.ok(null);
       }),
     });
     const useCase = new CreateDocument(repository, createEventBus());
 
-    const result = await useCase.execute(buildDocumentInput({ path: "new-dir/file" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "new-dir/file" }));
 
     expect(result.isSuccess).toBe(true);
-    expect(repository.getByPath).toHaveBeenCalledWith("new-dir/index");
+    expect(repository.getByPath).toHaveBeenCalledWith("book-a", "new-dir/index");
   });
 
   it("stops and propagates when parent event publication fails", async () => {
     const repository = createRepository({
-      getByPath: vi.fn(async (id: string) => {
-        if (id === "index") return Result.ok(rootIndex);
+      getByPath: vi.fn(async (_nanobookId: string, path: string) => {
+        if (path === "index") return Result.ok(rootIndex);
         return Result.ok(null);
       }),
     });
@@ -266,7 +266,7 @@ describe("CreateDocument", () => {
       .mockResolvedValueOnce(Result.fail(new EventBusError("boom")));
     const useCase = new CreateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildDocumentInput({ path: "intro" }));
+    const result = await useCase.execute("book-a", buildDocumentInput({ path: "intro" }));
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EventBusError);

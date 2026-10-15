@@ -8,7 +8,7 @@ const app = await getApp();
 const session = await app.authServerModule.getSession(Astro.request);
 if (!session) return Astro.redirect(`/login?callbackURL=${encodeURIComponent("/nanobooks")}`);
 
-const result = await app.nanobookModule.listNanobooks(session.id);
+const result = await app.nanobookModule.listNanobooks.execute(session.id);
 if (!result.isSuccess) {
   return new Response("No fue posible cargar los nanobooks", { status: 500 });
 }
@@ -59,28 +59,47 @@ const nanobooks = result.getValue();
   </div>
 </Layout>
 
-<script>
-  const form = document.querySelector<HTMLFormElement>("#create-nanobook");
-  const error = document.querySelector<HTMLElement>("[data-create-error]");
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!form) return;
-    const data = new FormData(form);
-    const response = await fetch("/api/nanobooks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: data.get("name"),
-        slug: data.get("slug"),
-        visibility: data.get("visibility") === "on" ? "public" : "private",
-      }),
+<script data-astro-rerun>
+  const initCreateNanobookForm = () => {
+    const form = document.querySelector("#create-nanobook");
+    const error = document.querySelector("[data-create-error]");
+    if (!form || form.dataset.bound === "true") return;
+
+    form.dataset.bound = "true";
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      if (error) error.textContent = "";
+
+      try {
+        const response = await fetch("/api/nanobooks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.get("name"),
+            slug: data.get("slug"),
+            visibility: data.get("visibility") === "on" ? "public" : "private",
+          }),
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          if (error) {
+            error.textContent = payload.error || "No fue posible crear el nanobook";
+          }
+          return;
+        }
+        const payload = await response.json();
+        window.location.href = `/n/${payload.slug}`;
+      } catch (requestError) {
+        if (error) {
+          error.textContent = requestError instanceof Error
+            ? requestError.message
+            : "No fue posible crear el nanobook";
+        }
+      }
     });
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}));
-      if (error) error.textContent = payload.error || "No fue posible crear el nanobook";
-      return;
-    }
-    const payload = await response.json();
-    window.location.href = `/n/${payload.slug}`;
-  });
+  };
+
+  document.addEventListener("astro:page-load", initCreateNanobookForm);
+  initCreateNanobookForm();
 </script>

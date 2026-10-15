@@ -7,6 +7,7 @@ export class ProxyParser {
   constructor(private resolver: ReferenceResolver) {}
 
   parseProxy = async (
+    nanobookId: string,
     sourceDocument: Document,
   ): Promise<Document | null> => {
     const data = sourceDocument.getMetadata();
@@ -15,7 +16,7 @@ export class ProxyParser {
     const ref = new DocumentReference(data.ref);
 
     try {
-      const targetEntry = await this.resolver.resolve(ref, sourceDocument);
+      const targetEntry = await this.resolver.resolve(ref, sourceDocument, nanobookId);
 
       if (!targetEntry) {
         console.warn(
@@ -69,11 +70,11 @@ export class ProxyParser {
     }
   };
 
-  parseProxies = async (documents: Document[]): Promise<Document[]> => {
+  parseProxies = async (nanobookId: string, documents: Document[]): Promise<Document[]> => {
     return Promise.all(
       documents.map(async (document) => {
         if (!document.getMetadata().ref) return document;
-        return (await this.parseProxy(document)) ?? document;
+        return (await this.parseProxy(nanobookId, document)) ?? document;
       })
     );
   };

@@ -8,18 +8,18 @@ export class GetAllDocuments {
     private proxyResolver: ProxyParser
   ) {}
 
-  async execute(): Promise<Document[]> {
-    const documentsResult = await this.repository.list();
+  async execute(nanobookId: string): Promise<Document[]> {
+    const documentsResult = await this.repository.list(nanobookId);
     if (!documentsResult.isSuccess) {
       return [];
     }
     const documents = documentsResult.getValue();
-    const allDocuments = await this.proxyResolver.parseProxies(documents);
+    const allDocuments = await this.proxyResolver.parseProxies(nanobookId, documents);
     return allDocuments;
   }
 
-  async refresh(): Promise<Document[]> {
-    await this.repository.clearCache?.();
-    return this.execute();
+  async refresh(nanobookId: string): Promise<Document[]> {
+    await this.repository.clearCache?.(nanobookId);
+    return this.execute(nanobookId);
   }
 }

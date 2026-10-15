@@ -46,21 +46,18 @@ export class DocumentModule {
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus,
     public readonly mutationRoutes: DocumentMutationRoutes,
-    public readonly nanobookId: string,
   ) {}
 
-  async refreshDocuments() {
-    return this.getAllDocuments.refresh();
+  async refreshDocuments(nanobookId: string) {
+    return this.getAllDocuments.refresh(nanobookId);
   }
 
   static async create(
     eventBus: EventBus,
     routeProtector: RouteProtector,
-    nanobookId: string,
   ) {
     const contentRepository = new DrizzleContentRepository(
       db,
-      nanobookId,
       new UnifiedDocumentParser(),
     );
 
@@ -105,7 +102,6 @@ export class DocumentModule {
       getDocument,
       eventBus,
       mutationRoutes,
-      nanobookId,
     );
   }
 }

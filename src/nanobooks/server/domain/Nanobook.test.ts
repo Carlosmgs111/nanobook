@@ -19,7 +19,24 @@ describe("Nanobook", () => {
       visibility: "private",
       settings: {},
       contentVersion: 0,
+      setupStatus: "ready",
     });
+  });
+
+  it("supports a pending setup status and immutable status changes", () => {
+    const result = Nanobook.create({
+      id: "book-1",
+      ownerId: "user-1",
+      slug: "manual-equipo",
+      name: "Manual del equipo",
+      setupStatus: "pending",
+    });
+
+    expect(result.isSuccess).toBe(true);
+    const pending = result.getValue();
+    expect(pending.getSetupStatus()).toBe("pending");
+    expect(pending.withSetupStatus("ready").getSetupStatus()).toBe("ready");
+    expect(pending.getSetupStatus()).toBe("pending");
   });
 
   it("rejects an invalid slug and an empty name", () => {

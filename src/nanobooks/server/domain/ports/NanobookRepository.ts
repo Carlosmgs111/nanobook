@@ -4,6 +4,7 @@ import type {
   NanobookRepositoryError,
   NanobookSlugAlreadyTakenError,
 } from "../errors";
+import type { NanobookSetupStatus } from "../types";
 
 export type NanobookRepositoryFailure =
   | NanobookRepositoryError
@@ -14,4 +15,8 @@ export interface NanobookRepository {
   findById(id: string): Promise<Result<NanobookRepositoryFailure, Nanobook | null>>;
   findBySlug(slug: string): Promise<Result<NanobookRepositoryFailure, Nanobook | null>>;
   listByOwner(ownerId: string): Promise<Result<NanobookRepositoryFailure, Nanobook[]>>;
+  updateSetupStatus(
+    id: string,
+    status: NanobookSetupStatus,
+  ): Promise<Result<NanobookRepositoryFailure, void>>;
 }

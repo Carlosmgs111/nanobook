@@ -52,7 +52,7 @@ describe("UpdateDocument", () => {
     });
     const useCase = new UpdateDocument(repository, createEventBus());
 
-    const result = await useCase.execute(
+    const result = await useCase.execute("book-a",
       {
         id: document.getDocumentId().getValue(),
         path: "private",
@@ -84,7 +84,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       id: indexDocument.getDocumentId().getValue(),
       path: "new-dir/index",
       title: "new-dir",
@@ -96,6 +96,7 @@ describe("UpdateDocument", () => {
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().getRevision()).toBe(2);
     expect(repository.update).toHaveBeenCalledWith(
+      "book-a",
       expect.objectContaining({
         path: expect.objectContaining({
           getInternalValue: expect.any(Function),
@@ -105,7 +106,7 @@ describe("UpdateDocument", () => {
         }),
       })
     );
-    const updatedDocument = vi.mocked(repository.update).mock.calls[0][0];
+    const updatedDocument = vi.mocked(repository.update).mock.calls[0][1];
     expect(updatedDocument.getDocumentPath().getInternalValue()).toBe(
       "new-dir/index"
     );
@@ -127,7 +128,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       id: directory.getDocumentId().getValue(),
       path: "reference/index",
       title: "Reference",
@@ -139,6 +140,7 @@ describe("UpdateDocument", () => {
     expect(result.isSuccess).toBe(true);
     expect(repository.update).toHaveBeenCalledTimes(2);
     expect(repository.update).toHaveBeenCalledWith(
+      "book-a",
       expect.objectContaining({ path: expect.objectContaining({ value: "reference/intro" }) }),
       "guides/intro"
     );
@@ -161,7 +163,7 @@ describe("UpdateDocument", () => {
       list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
     });
 
-    const result = await new UpdateDocument(repository, createEventBus()).execute(
+    const result = await new UpdateDocument(repository, createEventBus()).execute("book-a",
       {
         id: directory.getDocumentId().getValue(),
         path: "reference/index",
@@ -188,14 +190,16 @@ describe("UpdateDocument", () => {
       path: "guide/renamed",
     });
 
-    const result = await useCase.execute(input, "owner-1");
+    const result = await useCase.execute("book-a", input, "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.getById).toHaveBeenCalledWith(
+      "book-a",
       existingDocument.getDocumentId().getValue()
     );
     expect(repository.getByPath).not.toHaveBeenCalled();
     expect(repository.update).toHaveBeenCalledWith(
+      "book-a",
       expect.objectContaining({
         documentId: expect.objectContaining({ value: existingDocument.getDocumentId().getValue() }),
         path: expect.objectContaining({ value: "guide/renamed" }),
@@ -211,7 +215,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+    const result = await useCase.execute("book-a", buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.update).toHaveBeenCalledTimes(1);
@@ -230,13 +234,14 @@ describe("UpdateDocument", () => {
     });
     const useCase = new UpdateDocument(repository, createEventBus());
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       ...buildUpdateInput(),
       expectedRevision: 7,
     }, "owner-1");
 
     expect(result.isSuccess).toBe(true);
     expect(repository.updateWithRevision).toHaveBeenCalledWith(
+      "book-a",
       expect.anything(),
       7,
       undefined,
@@ -258,7 +263,7 @@ describe("UpdateDocument", () => {
     });
     const useCase = new UpdateDocument(repository, createEventBus());
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       id: original.getDocumentId().getValue(),
       path: "guide/immutable",
       title: "Changed",
@@ -271,7 +276,7 @@ describe("UpdateDocument", () => {
     }, "original-owner");
 
     expect(result.isSuccess).toBe(true);
-    const updated = vi.mocked(repository.update).mock.calls[0][0];
+    const updated = vi.mocked(repository.update).mock.calls[0][1];
     expect(updated.getDocumentId().getValue()).toBe(original.getDocumentId().getValue());
     expect(updated.getMetadata().ownerId).toBe("original-owner");
     expect(updated.getMetadata().author).toBe("Original author");
@@ -286,7 +291,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput({ id: "missing" }), "owner-1");
+    const result = await useCase.execute("book-a", buildUpdateInput({ id: "missing" }), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentNotFoundError);
@@ -299,7 +304,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput({ id: "" }), "owner-1");
+    const result = await useCase.execute("book-a", buildUpdateInput({ id: "" }), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(InvalidDocumentIdError);
@@ -315,7 +320,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+    const result = await useCase.execute("book-a", buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -332,7 +337,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+    const result = await useCase.execute("book-a", buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
@@ -349,7 +354,7 @@ describe("UpdateDocument", () => {
       .mockResolvedValue(Result.fail(new EventBusError("boom")));
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute(buildUpdateInput(), "owner-1");
+    const result = await useCase.execute("book-a", buildUpdateInput(), "owner-1");
 
     expect(result.isSuccess).toBe(false);
     expect(result.getError()).toBeInstanceOf(EventBusError);
@@ -362,7 +367,7 @@ describe("UpdateDocument", () => {
     const eventBus = createEventBus();
     const useCase = new UpdateDocument(repository, eventBus);
 
-    const result = await useCase.execute({
+    const result = await useCase.execute("book-a", {
       ...buildUpdateInput(),
       // @ts-expect-error testing runtime validation
       title: undefined,

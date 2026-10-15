@@ -22,7 +22,7 @@ describe("DeleteDocument", () => {
     });
     const useCase = new DeleteDocument(repository, createEventBus());
 
-    const result = await useCase.execute(
+    const result = await useCase.execute("book-a",
       document.getDocumentId().getValue(),
       "another-user",
     );
@@ -48,7 +48,7 @@ describe("DeleteDocument", () => {
       list: vi.fn().mockResolvedValue(Result.ok([directory, child])),
     });
 
-    const result = await new DeleteDocument(repository, createEventBus()).execute(
+    const result = await new DeleteDocument(repository, createEventBus()).execute("book-a",
       directory.getDocumentId().getValue(),
       "owner-1",
     );
@@ -77,15 +77,15 @@ describe("DeleteDocument", () => {
     });
     const eventBus = createEventBus();
 
-    const result = await new DeleteDocument(repository, eventBus).execute(
+    const result = await new DeleteDocument(repository, eventBus).execute("book-a",
       directory.getDocumentId().getValue(),
       "owner-1",
     );
 
     expect(result.isSuccess).toBe(true);
     expect(repository.delete).toHaveBeenCalledTimes(2);
-    expect(repository.delete).toHaveBeenNthCalledWith(1, directory);
-    expect(repository.delete).toHaveBeenNthCalledWith(2, child);
+    expect(repository.delete).toHaveBeenNthCalledWith(1, "book-a", directory);
+    expect(repository.delete).toHaveBeenNthCalledWith(2, "book-a", child);
     expect(eventBus.publish).toHaveBeenCalledTimes(2);
     expect(eventBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -114,21 +114,21 @@ describe("DeleteDocument", () => {
     });
     const eventBus = createEventBus();
 
-    const result = await new DeleteDocument(repository, eventBus).execute(
+    const result = await new DeleteDocument(repository, eventBus).execute("book-a",
       file.getDocumentId().getValue(),
       "owner-1",
     );
 
     expect(result.isSuccess).toBe(true);
     expect(repository.delete).toHaveBeenCalledTimes(1);
-    expect(repository.delete).toHaveBeenCalledWith(file);
+    expect(repository.delete).toHaveBeenCalledWith("book-a", file);
   });
 
   it("returns not found without deleting when the path does not exist", async () => {
     const repository = createRepository();
     const eventBus = createEventBus();
 
-    const result = await new DeleteDocument(repository, eventBus).execute(
+    const result = await new DeleteDocument(repository, eventBus).execute("book-a",
       "missing",
       "owner-1",
     );
@@ -151,7 +151,7 @@ describe("DeleteDocument", () => {
     });
     const eventBus = createEventBus();
 
-    const result = await new DeleteDocument(repository, eventBus).execute(
+    const result = await new DeleteDocument(repository, eventBus).execute("book-a",
       document.getDocumentId().getValue(),
       "owner-1",
     );
@@ -180,7 +180,7 @@ describe("DeleteDocument", () => {
     });
     const eventBus = createEventBus();
 
-    const result = await new DeleteDocument(repository, eventBus).execute(
+    const result = await new DeleteDocument(repository, eventBus).execute("book-a",
       directory.getDocumentId().getValue(),
       "owner-1",
     );

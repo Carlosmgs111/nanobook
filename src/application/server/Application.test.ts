@@ -37,18 +37,25 @@ describe("Application", () => {
     expect(app.profileModule).toBeDefined();
     expect("userModule" in app).toBe(false);
     expect(app.nanobookModule).toBeDefined();
-    expect(app.createNanobookController).toBeDefined();
     expect(app.nanobookModule.createNanobook).toBeDefined();
+    expect(app.nanobookModule.createNanobookController).toBeDefined();
     expect(app.nanobookModule.listNanobooksController).toBeDefined();
     expect("documentModule" in app).toBe(false);
     expect("navigationModule" in app).toBe(false);
     expect("publishingModule" in app).toBe(false);
+    expect("createNanobookController" in app).toBe(false);
+    expect("navigationFor" in app.nanobookModule).toBe(false);
+    expect("publishingFor" in app.nanobookModule).toBe(false);
+    expect(app.createNanobookCapabilities).toBeTypeOf("function");
   });
 
-  it("keeps collection composition inside the nanobook module", async () => {
+  it("keeps nanobook persistence composition inside the nanobook module", async () => {
     const app = await Application.create();
 
     expect(app.nanobookModule).toBeDefined();
-    expect(app.nanobookModule.repository).toBeDefined();
+    expect("repository" in app.nanobookModule).toBe(false);
+    expect(app.nanobookModule.getNanobookById).toBeDefined();
+    expect(app.nanobookModule.getNanobookBySlug).toBeDefined();
+    expect(app.nanobookModule.listNanobooks).toBeDefined();
   });
 });

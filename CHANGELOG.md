@@ -7,15 +7,24 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregido el formulario de creación de nanobooks con `ClientRouter`: el controlador se vuelve a enlazar en cada `astro:page-load`, usa JavaScript válido en el script inline, evita la recarga nativa y muestra errores de red o de API.
+- Reubicada la exposición de controladores y capacidades concretas en `NanobookModule`; las rutas ya no importan controladores desde `Application` ni el barrel exporta sus implementaciones.
+- Corregida la pantalla de listado de nanobooks para invocar `ListNanobooks.execute` después de encapsular el repositorio en capacidades de aplicación.
+- Encapsulada la resolución de nanobooks en las capacidades de aplicación `GetNanobookById` y `GetNanobookBySlug`; `NanobookModule` ya no expone el repositorio ni métodos de consulta directos.
+- Convertido `DocumentModule` en una capacidad compartida y sin estado de nanobook: sus casos de uso, resolutores y repositorios reciben explícitamente el `nanobookId`; `NanobookModule` compone una sola instancia documental y no conserva asociaciones por colección.
+- Integrado en `CreateNanobook` el alta del nanobook con su documento raíz, estado de preparación y reanudación idempotente; se probó con `InMemoryNanobookRepository` y Drizzle persiste el estado mediante la migración `0008_grey_kitty_pryde`.
+- Corregida la reutilización de rutas de documentos y carpetas eliminados: la migración `0007_live_document_paths` limita los índices únicos a registros activos (`deleted_at IS NULL`) y conserva el historial del borrado lógico.
+- Restaurado el controlador del formulario de nuevos documentos: intercepta el envío para crear mediante la API y redirige al editor dentro del nanobook actual, sin reenviar los campos como parámetros de la URL.
+- Restaurada la inclusión de `EditorController` en `DocumentEditor`: el editor vuelve a cargar CodeMirror, inicializar el contenido del documento y conectar los controles de edición.
 - Corregidas las rutas generadas por `NavigationModule`: breadcrumbs, sidebar e índices usan la ruta canónica `/n/{nanobookSlug}/...` y dejan de enlazar con las páginas legacy.
 - Adelgazado `DrizzleContentRepository`: centralizado el alcance por `nanobookId`, unificado el listado, reutilizada la serialización de metadatos del dominio y eliminado un prechequeo redundante en actualizaciones con revisión.
 - Retirados `GitHubRepository` y `FileSystemRepository`, junto con sus adaptadores de escritura/lectura y configuración de fuente; la persistencia activa de documentos queda en SQL por nanobook y `InMemoryRepository` se conserva solo para pruebas.
-- Desacoplado `NanobookContext` de los módulos de documentos, navegación y publicación: `Application` entrega los constructores externos mediante un paquete de composición tipado.
-- Simplificado el alta de nanobooks: `NanobookModule` persiste únicamente el nanobook, `DocumentModule` expone `createDocument` y `Application` coordina después la creación del documento raíz. Se eliminaron la unidad de trabajo, el inicializador transaccional y el flujo `createWithRoot`; un fallo del documento deja el nanobook disponible para un reintento posterior.
-- Ajustado el cableado de módulos: `DocumentModule` instancia directamente `DrizzleContentRepository` y sus capacidades desde su propio compositor; `Application` y `NanobookContext` solo entregan el `nanobookId`.
+- Movida la composición de navegación y publicación a `Application.createNanobookCapabilities()`: cada solicitud construye sus capacidades con `nanobookId` explícito y se eliminaron el mapa por tenant, el bus acotado y el ciclo de cierre de `NanobookModule`.
+- Simplificado el alta de nanobooks: `CreateNanobook` crea el nanobook, asegura el documento raíz y actualiza `setupStatus`; `Application` ya no coordina pasos entre módulos y un fallo del documento deja el nanobook disponible para un reintento posterior.
+- Ajustado el cableado de módulos: `DocumentModule` instancia directamente `DrizzleContentRepository` y sus capacidades desde su propio compositor; cada operación recibe el `nanobookId` explícito y ningún compositor fija ese valor en la instancia.
 - Reubicado `RouteProtector` como capacidad server compartida; `Application` la obtiene de autenticación y la inyecta en perfiles, documentos y nanobooks sin exponer el origen de la implementación a esos módulos.
 - Reubicada la composición de `NanobookModule` en `src/nanobooks/server/index.ts`, alineándola con el patrón de módulos server que exponen su composición desde `index.ts`.
-- La composición server se adelgazó: `Application` coordina únicamente autenticación, perfiles y `NanobookModule`; este último concentra repositorio, controladores, caché de contextos y la composición aislada de documentos, navegación y publicación por nanobook.
+- La composición server se adelgazó: `Application` coordina autenticación, perfiles y `NanobookModule`, y además crea bajo demanda las capacidades de presentación; `NanobookModule` concentra repositorio, controladores y documentos sin conservar estado por nanobook.
 - Eliminado el puente `nanobook_alias`: las rutas canónicas se resuelven por `nanobook.slug` y las rutas legacy responden `410`; la migración de esquema `0006` elimina la tabla.
 - Retirado todo el tooling de migración de contenido: producción comienza con una base SQL nueva y el contenido local queda fuera del runtime; se conservan únicamente las migraciones Drizzle de esquema.
 - La navegación dejó de interpretar `metadata.nanobook` como frontera implícita; breadcrumbs, sidebar y padre usan únicamente la raíz explícita del contexto del nanobook.

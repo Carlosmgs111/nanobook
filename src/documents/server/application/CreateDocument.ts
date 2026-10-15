@@ -29,6 +29,7 @@ export class CreateDocument {
   ) {}
 
   async execute(
+    nanobookId: string,
     input: DocumentInput
   ): Promise<Result<CreateDocumentError, Document>> {
     const pathResult = DocumentPath.create(input.path);
@@ -37,7 +38,10 @@ export class CreateDocument {
     }
     const path = pathResult.getValue();
 
-    const existingResult = await this.repository.getByPath(path.getInternalValue());
+    const existingResult = await this.repository.getByPath(
+      nanobookId,
+      path.getInternalValue(),
+    );
     if (!existingResult.isSuccess) {
       return Result.fail(existingResult.getError());
     }
@@ -48,7 +52,10 @@ export class CreateDocument {
     const parentPath = path.getInternalParentPath();
     let parentDocument: Document | null = null;
     if (parentPath !== null) {
-      const parentResult = await this.repository.getByPath(parentPath.getInternalValue());
+      const parentResult = await this.repository.getByPath(
+        nanobookId,
+        parentPath.getInternalValue(),
+      );
       if (!parentResult.isSuccess) {
         return Result.fail(parentResult.getError());
       }
@@ -88,7 +95,7 @@ export class CreateDocument {
     }
     const document = documentResult.getValue();
 
-    const createResult = await this.repository.create(document);
+    const createResult = await this.repository.create(nanobookId, document);
     if (!createResult.isSuccess) {
       return Result.fail(createResult.getError());
     }
@@ -96,7 +103,7 @@ export class CreateDocument {
     const documentId = document.getDocumentId().getValue();
 
     const documentEventResult = await this.eventBus.publish(
-      new DocumentCreated(documentId)
+      new DocumentCreated(documentId, nanobookId)
     );
     if (!documentEventResult.isSuccess) {
       return Result.fail(documentEventResult.getError());
@@ -104,7 +111,7 @@ export class CreateDocument {
 
     if (parentDocument !== null) {
       const parentEventResult = await this.eventBus.publish(
-        new DocumentCreated(parentDocument.getDocumentId().getValue())
+        new DocumentCreated(parentDocument.getDocumentId().getValue(), nanobookId)
       );
       if (!parentEventResult.isSuccess) {
         return Result.fail(parentEventResult.getError());

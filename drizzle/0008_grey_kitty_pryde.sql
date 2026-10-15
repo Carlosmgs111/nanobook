@@ -1,0 +1,1 @@
+ALTER TABLE `nanobook` ADD `setup_status` text DEFAULT 'ready' NOT NULL;

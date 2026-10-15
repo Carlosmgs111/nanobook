@@ -12,6 +12,8 @@ import type { DocumentReference } from "../DocumentReference";
  * Contexto que recibe cada resolutor de referencias.
  */
 export interface ReferenceResolutionContext {
+  /** Nanobook al que pertenece el documento origen. */
+  nanobookId: string;
   /** ID del documento origen que contiene el `ref`. */
   sourceId: DocumentId;
   sourcePath: DocumentPath;
@@ -37,6 +39,7 @@ export interface ReferenceResolverPlugin {
 export interface ReferenceResolver {
   resolve(
     ref: DocumentReference,
-    sourceDocument: Document
+    sourceDocument: Document,
+    nanobookId: string,
   ): Promise<ContentEntry | null>;
 }

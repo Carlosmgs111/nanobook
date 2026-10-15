@@ -18,13 +18,11 @@ async function dispatch(
 ) {
   const nanobookId = requestContext.params.nanobookId;
   if (!nanobookId) return new Response(JSON.stringify({ error: "Nanobook no encontrado" }), { status: 404 });
-  let context;
-  try {
-    context = await app.nanobookModule.forNanobook(nanobookId);
-  } catch {
+  const result = await app.nanobookModule.getNanobookById.execute(nanobookId);
+  if (!result.isSuccess) {
     return new Response(JSON.stringify({ error: "Nanobook no encontrado" }), { status: 404 });
   }
-  return withDocumentId(context.documentModule.mutationRoutes[method])(requestContext);
+  return withDocumentId(app.nanobookModule.documentModule.mutationRoutes[method])(requestContext);
 }
 
 export const POST: APIRoute = (context) => dispatch("POST", context);

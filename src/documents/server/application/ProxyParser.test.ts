@@ -36,7 +36,7 @@ describe("ProxyParser", () => {
       },
     };
 
-    const resolved = await new ProxyParser(resolver).parseProxy(source);
+    const resolved = await new ProxyParser(resolver).parseProxy("book-a", source);
 
     expect(resolved?.getMetadata().ref).toBe("/README.md");
     expect(resolved?.getMetadata().ownerId).toBe("proxy-owner");

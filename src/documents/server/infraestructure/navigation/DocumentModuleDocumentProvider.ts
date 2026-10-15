@@ -2,13 +2,16 @@ import type { DocumentProvider } from "../../../../navigation/server/domain/port
 import type { DocumentModule } from "../../index";
 
 export class DocumentModuleDocumentProvider implements DocumentProvider {
-  constructor(private documentModule: DocumentModule) {}
+  constructor(
+    private readonly documentModule: DocumentModule,
+    private readonly nanobookId: string,
+  ) {}
 
   async getAll() {
-    return this.documentModule.getAllDocuments.execute();
+    return this.documentModule.getAllDocuments.execute(this.nanobookId);
   }
 
   async refresh() {
-    return this.documentModule.refreshDocuments();
+    return this.documentModule.refreshDocuments(this.nanobookId);
   }
 }

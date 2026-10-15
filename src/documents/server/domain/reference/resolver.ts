@@ -20,9 +20,11 @@ export class CompositeReferenceResolver implements ReferenceResolver {
 
   async resolve(
     ref: DocumentReference,
-    sourceDocument: Document
+    sourceDocument: Document,
+    nanobookId: string,
   ): Promise<ContentEntry | null> {
     const context: ReferenceResolutionContext = {
+      nanobookId,
       sourceId: sourceDocument.getDocumentId(),
       sourcePath: sourceDocument.getDocumentPath(),
       sourceData: sourceDocument.getMetadata(),
