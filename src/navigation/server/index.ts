@@ -17,50 +17,37 @@ import { DocumentsGraph } from "./infraestructure/DocumentsGraph";
 import type { DocumentProvider } from "./domain/ports/DocumentProvider";
 
 export class NavigationModule {
-  private constructor(
-    public readonly navigationService: NavigationService,
-    private readonly documentProvider: DocumentProvider
-  ) {}
+  private constructor(private readonly documentProvider: DocumentProvider) {}
 
-  static async create(
-    documentProvider: DocumentProvider,
-    eventBus?: EventBus,
-    options: { rootPath?: string; basePath?: string } = {},
-  ) {
-    const documents = await documentProvider.getAll();
-    const documentGraph = new DocumentsGraph(documents);
-    const navigationService = new NavigationService(documentGraph, options);
-    const module = new NavigationModule(navigationService, documentProvider);
-
-    if (eventBus) {
-      const handler:
-        & EventHandler<DocumentCreated>
-        & EventHandler<DocumentUpdated>
-        & EventHandler<DocumentDeleted> = {
-        handle: async () => {
-          try {
-            await module.refresh();
-            return Result.ok();
-          } catch (error) {
-            return Result.fail(
-              new EventBusError("Failed to refresh navigation graph", {
-                cause: error,
-              })
-            );
-          }
-        },
-      };
-
-      eventBus.subscribe(DocumentCreated, handler);
-      eventBus.subscribe(DocumentUpdated, handler);
-      eventBus.subscribe(DocumentDeleted, handler);
-    }
-
+  static async create(documentProvider: DocumentProvider, eventBus: EventBus) {
+    const module = new NavigationModule(documentProvider);
+    const handler:
+      & EventHandler<DocumentCreated>
+      & EventHandler<DocumentUpdated>
+      & EventHandler<DocumentDeleted> = {
+      handle: async (event) => {
+        if (!event.nanobookId) return Result.ok();
+        try {
+          await documentProvider.refresh(event.nanobookId);
+          return Result.ok();
+        } catch (error) {
+          return Result.fail(new EventBusError("Failed to refresh navigation documents", {
+            cause: error,
+          }));
+        }
+      },
+    };
+    eventBus.subscribe(DocumentCreated, handler);
+    eventBus.subscribe(DocumentUpdated, handler);
+    eventBus.subscribe(DocumentDeleted, handler);
     return module;
   }
 
-  async refresh(): Promise<void> {
-    const documents = await (this.documentProvider.refresh?.() ?? this.documentProvider.getAll());
-    this.navigationService.replaceGraph(new DocumentsGraph(documents));
+  async getNavigation(
+    nanobookId: string,
+    options: { rootPath?: string; basePath?: string } = {},
+  ): Promise<NavigationService> {
+    const documents = await this.documentProvider.getAll(nanobookId);
+    return new NavigationService(new DocumentsGraph(documents), options);
   }
 }

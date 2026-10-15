@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../../documents/server";
 import { Application } from "./Application";
 
 const { protect, create } = vi.hoisted(() => {
@@ -41,12 +42,12 @@ describe("Application", () => {
     expect(app.nanobookModule.createNanobookController).toBeDefined();
     expect(app.nanobookModule.listNanobooksController).toBeDefined();
     expect("documentModule" in app).toBe(false);
-    expect("navigationModule" in app).toBe(false);
-    expect("publishingModule" in app).toBe(false);
+    expect(app.navigationModule).toBeDefined();
+    expect(app.publishingModule.eventBus).toBe(app.nanobookModule.documentModule.eventBus);
     expect("createNanobookController" in app).toBe(false);
     expect("navigationFor" in app.nanobookModule).toBe(false);
     expect("publishingFor" in app.nanobookModule).toBe(false);
-    expect(app.createNanobookCapabilities).toBeTypeOf("function");
+    expect("createNanobookCapabilities" in app).toBe(false);
   });
 
   it("keeps nanobook persistence composition inside the nanobook module", async () => {
@@ -58,4 +59,23 @@ describe("Application", () => {
     expect(app.nanobookModule.getNanobookBySlug).toBeDefined();
     expect(app.nanobookModule.listNanobooks).toBeDefined();
   });
+  it.each([DocumentCreated, DocumentUpdated, DocumentDeleted])(
+    "invalidates published pages through the shared bus on %s",
+    async (Event) => {
+      const app = await Application.create();
+      const cache = app.publishingModule.renderedPageCache;
+      const refresh = vi.spyOn(app.nanobookModule.documentModule, "refreshDocuments").mockResolvedValue([]);
+      await cache.set("doc-a", "hash", "old content");
+      await cache.set("doc-b", "hash", "other book");
+      app.publishingModule.registerEventHandlers();
+      const invalidate = vi.spyOn(cache, "invalidate");
+      const result = await app.nanobookModule.documentModule.eventBus.publish(new Event("doc-a", "book-a"));
+      expect(result.isSuccess).toBe(true);
+      expect(await cache.get("doc-a", "hash")).toBeNull();
+      expect(await cache.get("doc-b", "hash")).not.toBeNull();
+      expect(invalidate).toHaveBeenCalledTimes(1);
+      expect(refresh).toHaveBeenCalledExactlyOnceWith("book-a");
+    },
+  );
+
 });

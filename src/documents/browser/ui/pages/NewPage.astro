@@ -20,9 +20,12 @@ if (!nanobook) {
   return new Response("Nanobook not found", { status: 404 });
 }
 const documentModule = app.nanobookModule.documentModule;
-const { publishingModule, navigationModule } =
-  await app.createNanobookCapabilities(nanobook);
+const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const navigationService = await navigationModule.getNavigation(nanobookId, {
+  rootPath: "index",
+  basePath: `/n/${nanobook.getSlug()}`,
+});
 
 export const prerender = false;
 
@@ -46,7 +49,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
   title={`Nuevo documento en ${entry.title}`}
   description="Crear un nuevo documento"
   hideToc={true}
-  navigationService={navigationModule.navigationService}
+  navigationService={navigationService}
 >
   <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
     <span class="tech-label mb-3 block">Nuevo documento</span>
