@@ -11,6 +11,9 @@ export type NanobookRepositoryFailure =
   | NanobookSlugAlreadyTakenError;
 
 export interface NanobookRepository {
+  listPublic(): Promise<Result<NanobookRepositoryFailure, Nanobook[]>>;
+  update(nanobook: Nanobook): Promise<Result<NanobookRepositoryFailure, void>>;
+  delete(nanobook: Nanobook): Promise<Result<NanobookRepositoryFailure, void>>;
   create(nanobook: Nanobook): Promise<Result<NanobookRepositoryFailure, void>>;
   findById(id: string): Promise<Result<NanobookRepositoryFailure, Nanobook | null>>;
   findBySlug(slug: string): Promise<Result<NanobookRepositoryFailure, Nanobook | null>>;

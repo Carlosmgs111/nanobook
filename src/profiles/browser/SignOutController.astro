@@ -1,0 +1,12 @@
+<script>
+  import { getApp } from "../../application/browser/Application";
+  import { BrowserToastNotifier } from "../../toast/browser/BrowserToastNotifier";
+  import { SignOutController } from "./SignOutController";
+
+  const controller = new SignOutController(
+    getApp().authModule.signOut,
+    new BrowserToastNotifier("sign-out"),
+  );
+  document.addEventListener("astro:page-load", () => controller.mount());
+  controller.mount();
+</script>

@@ -7,11 +7,14 @@ import { GetNanobookById } from "./GetNanobookById";
 
 function createRepository(): NanobookRepository {
   return {
+    listPublic: vi.fn(),
     findById: vi.fn(),
     findBySlug: vi.fn(),
     listByOwner: vi.fn(),
     create: vi.fn(),
     updateSetupStatus: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   };
 }
 

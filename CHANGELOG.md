@@ -7,6 +7,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- El cierre de sesión carga la portada pública mediante una navegación completa y una URL nueva, evitando redirecciones antiguas cacheadas para `/` y descartando el estado cliente de la sesión anterior.
+
+- Reubicado el controlador de cierre de sesión y sus pruebas en `profiles/browser`; la operación de autenticación permanece en `auth/browser`.
+
+- Restaurado el enlace del botón «Cerrar sesión» con la operación de autenticación, incluyendo navegación con ClientRouter, bloqueo de clics duplicados y aviso de error con posibilidad de reintento.
+
+- Añadida la landing pública en `/`: presentación del proyecto, accesos de registro e inicio de sesión y catálogo de nanobooks públicos listos para lectura, con diseño adaptable y estados de catálogo vacío o no disponible.
+- El acceso principal cambia a «Mis nanobooks» con sesión iniciada; `/login?mode=signup` abre directamente el registro. La landing evita caché compartida y el catálogo solo entrega nombre y slug, sin datos de propietario ni configuración.
+
+- Añadidas edición de nombre, slug y visibilidad y eliminación definitiva desde `/nanobooks`, con autorización de propietario, confirmación por nombre y endpoints `PATCH`/`DELETE /api/nanobooks/:nanobookId`.
+- El borrado de nanobooks elimina revisiones, eventos outbox y documentos en una transacción; un fallo revierte toda la operación y no afecta otras colecciones. La edición preserva la versión de contenido y el estado de inicialización.
+
 - Corregido el formulario de creación de nanobooks con `ClientRouter`: el controlador se vuelve a enlazar en cada `astro:page-load`, usa JavaScript válido en el script inline, evita la recarga nativa y muestra errores de red o de API.
 - Reubicada la exposición de controladores y capacidades concretas en `NanobookModule`; las rutas ya no importan controladores desde `Application` ni el barrel exporta sus implementaciones.
 - Retiradas del barrel de `NanobookModule` las exportaciones públicas de repositorios y del puerto `NanobookRepository`; permanecen privadas dentro de la composición y sus pruebas.

@@ -15,6 +15,8 @@ describe("profile page", () => {
     );
     expect(profile).toContain("<ProfilePage />");
     expect(profile).toContain("<ProfileFormController />");
+    expect(profile).toContain('import SignOutController from "../profiles/browser/SignOutController.astro"');
+    expect(profile).toContain("<SignOutController />");
     expect(profile).not.toContain("<Layout");
   });
 

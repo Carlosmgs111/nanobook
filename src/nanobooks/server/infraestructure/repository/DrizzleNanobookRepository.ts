@@ -1,4 +1,6 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import { document } from "../../../../documents/server/infraestructure/database/DrizzleDocumentSchema";
+import { documentRevision, contentOutbox } from "../../../../documents/server/infraestructure/database/DrizzleDocumentRevisionSchema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { Result } from "../../../../shared/domain/Result";
@@ -48,16 +50,55 @@ export class DrizzleNanobookRepository implements NanobookRepository {
     return this.findOne(eq(nanobook.id, id));
   }
 
+  async update(book: Nanobook) {
+    try {
+      const result = await this.database.update(nanobook).set({
+        name: book.getName(), slug: book.getSlug(), visibility: book.getVisibility(), updatedAt: new Date(),
+      }).where(and(eq(nanobook.id, book.getId()), eq(nanobook.ownerId, book.getOwnerId())));
+      if (result.rowsAffected === 0) return Result.fail(new NanobookRepositoryError("El nanobook ya no existe"));
+      return Result.ok();
+    } catch (error) {
+      if (isUniqueViolation(error)) return Result.fail(new NanobookSlugAlreadyTakenError(book.getSlug()));
+      return Result.fail(new NanobookRepositoryError("No fue posible editar el nanobook", { cause: error }));
+    }
+  }
+
+  async delete(book: Nanobook) {
+    try {
+      await this.database.transaction(async (tx) => {
+        const condition = and(eq(nanobook.id, book.getId()), eq(nanobook.ownerId, book.getOwnerId()), eq(nanobook.name, book.getName()));
+        const [current] = await tx.select({ id: nanobook.id }).from(nanobook).where(condition);
+        if (!current) throw new Error("El nanobook cambió; recarga la página");
+        const documentIds = tx.select({ id: document.id }).from(document).where(eq(document.nanobookId, book.getId()));
+        await tx.delete(documentRevision).where(inArray(documentRevision.documentId, documentIds));
+        await tx.delete(contentOutbox).where(eq(contentOutbox.nanobookId, book.getId()));
+        await tx.delete(document).where(eq(document.nanobookId, book.getId()));
+        await tx.delete(nanobook).where(condition);
+      });
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(new NanobookRepositoryError("No fue posible eliminar el nanobook; recarga la página e inténtalo de nuevo", { cause: error }));
+    }
+  }
+
   async findBySlug(slug: string) {
     return this.findOne(eq(nanobook.slug, slug.trim().toLowerCase()));
   }
 
   async listByOwner(ownerId: string) {
+    return this.listWhere(eq(nanobook.ownerId, ownerId));
+  }
+
+  async listPublic() {
+    return this.listWhere(and(eq(nanobook.visibility, "public"), eq(nanobook.setupStatus, "ready"))!);
+  }
+
+  private async listWhere(condition: ReturnType<typeof eq>) {
     try {
       const rows = await this.database
         .select()
         .from(nanobook)
-        .where(eq(nanobook.ownerId, ownerId))
+        .where(condition)
         .orderBy(asc(nanobook.name));
       const books = rows.map((row) => this.toDomain(row));
       const invalid = books.find((result) => !result.isSuccess);

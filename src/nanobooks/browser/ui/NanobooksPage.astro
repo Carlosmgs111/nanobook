@@ -1,0 +1,88 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import type { Nanobook } from "../../server/domain/Nanobook";
+import NanobookCard from "./NanobookCard.astro";
+
+interface Props { nanobooks: Nanobook[] }
+const { nanobooks } = Astro.props;
+---
+
+<Layout title="Nanobooks" description="Gestiona tus nanobooks">
+  <div class="mx-auto max-w-4xl space-y-8">
+    <div class="border-b border-[var(--grid-line-strong)] pb-6">
+      <span class="tech-label mb-2 block">Workspace</span>
+      <h1 class="glow-text text-4xl font-semibold text-[var(--accent)]">Nanobooks</h1>
+      <p class="mt-2 text-sm text-[var(--muted)]">Cada nanobook contiene su propio árbol, configuración y permisos.</p>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      {nanobooks.map((nanobook) => (
+        <NanobookCard nanobook={nanobook} />
+      ))}
+    </div>
+
+    <form id="create-nanobook" class="space-y-4 border border-[var(--grid-line-strong)] p-5">
+      <h2 class="text-lg font-semibold">Crear nanobook</h2>
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="space-y-1 text-sm">
+          <span class="block">Nombre</span>
+          <input name="name" required class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2" />
+        </label>
+        <label class="space-y-1 text-sm">
+          <span class="block">Slug</span>
+          <input name="slug" required pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2" />
+        </label>
+      </div>
+      <label class="flex items-center gap-2 text-sm">
+        <input name="visibility" type="checkbox" /> Público
+      </label>
+      <div data-create-error class="text-sm text-red-500" role="alert"></div>
+      <button type="submit" class="border border-[var(--grid-line-strong)] bg-[var(--text)] px-4 py-2 text-sm font-medium text-[var(--bg)]">Crear</button>
+    </form>
+  </div>
+</Layout>
+
+<script data-astro-rerun>
+  const initCreateNanobookForm = () => {
+    const form = document.querySelector("#create-nanobook");
+    const error = document.querySelector("[data-create-error]");
+    if (!form || form.dataset.bound === "true") return;
+
+    form.dataset.bound = "true";
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      if (error) error.textContent = "";
+
+      try {
+        const response = await fetch("/api/nanobooks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.get("name"),
+            slug: data.get("slug"),
+            visibility: data.get("visibility") === "on" ? "public" : "private",
+          }),
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          if (error) {
+            error.textContent = payload.error || "No fue posible crear el nanobook";
+          }
+          return;
+        }
+        const payload = await response.json();
+        window.location.href = `/n/${payload.slug}`;
+      } catch (requestError) {
+        if (error) {
+          error.textContent = requestError instanceof Error
+            ? requestError.message
+            : "No fue posible crear el nanobook";
+        }
+      }
+    });
+  };
+
+  document.addEventListener("astro:page-load", initCreateNanobookForm);
+  initCreateNanobookForm();
+</script>

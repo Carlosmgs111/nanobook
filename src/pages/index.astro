@@ -1,0 +1,18 @@
+---
+import { getApp } from "../application/server/Application";
+import LandingPage from "../application/browser/ui/LandingPage.astro";
+
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "private, no-store");
+const app = await getApp();
+const [session, catalog] = await Promise.all([
+  app.authServerModule.getSession(Astro.request),
+  app.nanobookModule.listPublicNanobooks.execute(),
+]);
+if (!catalog.isSuccess) Astro.response.status = 503;
+---
+<LandingPage
+  signedIn={Boolean(session)}
+  nanobooks={catalog.isSuccess ? catalog.getValue() : []}
+  catalogUnavailable={!catalog.isSuccess}
+/>

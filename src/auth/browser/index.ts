@@ -1,8 +1,7 @@
-import { HttpAuthApi, type AuthApi } from "./HttpAuthApi";
+import { HttpAuthApi, type AuthSignOutApi } from "./HttpAuthApi";
 import { HttpAuthSessionReader } from "./HttpAuthSessionReader";
 import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
 import { SessionCachingAuthApi } from "./SessionCachingAuthApi";
-import { navigate } from "astro:transitions/client";
 import type {
   AuthenticatedSessionReader,
   AuthenticatedUser,
@@ -18,7 +17,7 @@ export class GetAuthenticatedSession {
 
 class Signout {
   constructor(
-    private readonly authApi: AuthApi,
+    private readonly authApi: AuthSignOutApi,
     private readonly confirm: () => boolean,
     private readonly navigate: (destination: string) => void
   ) {}
@@ -44,7 +43,8 @@ export class AuthModule {
     const signOut = new Signout(
       authApi,
       () => globalThis.confirm("¿Seguro que deseas cerrar sesión?"),
-      () => navigate("/")
+      // A fresh URL bypasses redirects cached for /; reload clears client state.
+      (destination) => globalThis.location.replace(`${destination}?signed-out=${Date.now()}`)
     );
     const getAuthenticatedSession = new GetAuthenticatedSession(sessionReader);
     return new AuthModule(getAuthenticatedSession, signOut);

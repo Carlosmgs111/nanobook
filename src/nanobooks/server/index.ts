@@ -3,9 +3,13 @@ import type { RouteProtector } from "../../shared/server/capabilities/RouteProte
 import { DocumentModule } from "../../documents/server";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { CreateNanobook } from "./application/CreateNanobook";
+import { UpdateNanobook } from "./application/UpdateNanobook";
+import { DeleteNanobook } from "./application/DeleteNanobook";
+import { NanobookLifecycleController } from "./infraestructure/rest/NanobookLifecycleController";
 import { GetNanobookById } from "./application/GetNanobookById";
 import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
 import { ListNanobooks } from "./application/ListNanobooks";
+import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 import { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
 import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
@@ -33,6 +37,8 @@ export class NanobookModule {
     public readonly listNanobooks: ListNanobooks,
     public readonly listNanobooksController: ListNanobooksController,
     public readonly documentModule: DocumentModule,
+    public readonly lifecycleController: NanobookLifecycleController,
+    public readonly listPublicNanobooks: ListPublicNanobooks,
   ) {}
 
   static async create(routeProtector: RouteProtector): Promise<NanobookModule> {
@@ -54,6 +60,8 @@ export class NanobookModule {
       listNanobooks,
       new ListNanobooksController(listNanobooks),
       documentModule,
+      new NanobookLifecycleController(new UpdateNanobook(repository), new DeleteNanobook(repository)),
+      new ListPublicNanobooks(repository),
     );
   }
 }

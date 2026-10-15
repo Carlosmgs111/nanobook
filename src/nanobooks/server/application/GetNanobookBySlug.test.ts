@@ -13,11 +13,14 @@ describe("GetNanobookBySlug", () => {
       name: "Manual",
     }).getValue();
     const repository: NanobookRepository = {
+      listPublic: vi.fn(),
       findById: vi.fn(),
       findBySlug: vi.fn().mockResolvedValue(Result.ok(nanobook)),
       listByOwner: vi.fn(),
       create: vi.fn(),
       updateSetupStatus: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     };
 
     const result = await new GetNanobookBySlug(repository).execute("manual");
@@ -29,11 +32,14 @@ describe("GetNanobookBySlug", () => {
 
   it("returns null when the slug is not registered", async () => {
     const repository: NanobookRepository = {
+      listPublic: vi.fn(),
       findById: vi.fn(),
       findBySlug: vi.fn().mockResolvedValue(Result.ok(null)),
       listByOwner: vi.fn(),
       create: vi.fn(),
       updateSetupStatus: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     };
 
     const result = await new GetNanobookBySlug(repository).execute("missing");

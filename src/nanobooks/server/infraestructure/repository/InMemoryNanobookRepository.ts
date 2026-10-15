@@ -64,6 +64,27 @@ export class InMemoryNanobookRepository implements NanobookRepository {
     );
   }
 
+  async listPublic(): Promise<Result<NanobookRepositoryFailure, Nanobook[]>> {
+    return Result.ok([...this.nanobooks.values()]
+      .filter(book => book.getVisibility() === "public" && book.getSetupStatus() === "ready")
+      .sort((a, b) => a.getName().localeCompare(b.getName())));
+  }
+
+  async update(book: Nanobook): Promise<Result<NanobookRepositoryFailure, void>> {
+    if (!this.nanobooks.has(book.getId())) return Result.fail(new NanobookRepositoryError("El nanobook no existe"));
+    const existing = (await this.findBySlug(book.getSlug())).getValue();
+    if (existing && existing.getId() !== book.getId()) return Result.fail(new NanobookSlugAlreadyTakenError(book.getSlug()));
+    this.nanobooks.set(book.getId(), book);
+    return Result.ok();
+  }
+
+  async delete(book: Nanobook): Promise<Result<NanobookRepositoryFailure, void>> {
+    const current = this.nanobooks.get(book.getId());
+    if (!current || current.getName() !== book.getName()) return Result.fail(new NanobookRepositoryError("El nanobook cambió; recarga la página"));
+    this.nanobooks.delete(book.getId());
+    return Result.ok();
+  }
+
   async updateSetupStatus(
     id: string,
     status: NanobookSetupStatus,

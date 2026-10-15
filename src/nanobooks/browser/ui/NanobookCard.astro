@@ -1,0 +1,50 @@
+---
+import type { Nanobook } from "../../server/domain/Nanobook";
+interface Props { nanobook: Nanobook }
+const { nanobook } = Astro.props;
+const inputClass = "w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2";
+---
+<article data-nanobook-card data-id={nanobook.getId()} class="space-y-4 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] p-5">
+  <a href={`/n/${nanobook.getSlug()}`} class="block">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-xl font-semibold text-[var(--accent)]">{nanobook.getName()}</h2>
+      <span class="text-xs text-[var(--muted)]">{nanobook.getVisibility() === "public" ? "Público" : "Privado"}</span>
+    </div>
+    <p class="mt-2 font-mono text-xs text-[var(--muted)]">/n/{nanobook.getSlug()}</p>
+  </a>
+  <details data-edit>
+    <summary class="cursor-pointer text-sm text-[var(--accent)]">Editar</summary>
+    <form data-operation="edit" class="mt-4 space-y-3 text-sm">
+      <label class="block">Nombre<input name="name" value={nanobook.getName()} required class={inputClass} /></label>
+      <label class="block">Slug<input name="slug" value={nanobook.getSlug()} required pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" class={inputClass} /></label>
+      <p class="text-xs text-[var(--muted)]">Cambiar el slug cambia la URL. Los enlaces anteriores dejarán de funcionar.</p>
+      <label class="block">Visibilidad
+        <select name="visibility" class={inputClass}>
+          <option value="private" selected={nanobook.getVisibility() === "private"}>Privado</option>
+          <option value="public" selected={nanobook.getVisibility() === "public"}>Público</option>
+        </select>
+      </label>
+      <p data-error role="alert" class="text-red-500"></p>
+      <button type="submit" class="border border-[var(--grid-line-strong)] px-3 py-2">Guardar cambios</button>
+      <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+    </form>
+  </details>
+  <details data-delete>
+    <summary class="cursor-pointer text-sm text-red-500">Eliminar</summary>
+    <form data-operation="delete" class="mt-4 space-y-3 text-sm">
+      <p>Se eliminarán definitivamente este nanobook, todos sus documentos y su historial. Esta acción no se puede deshacer.</p>
+      <label class="block">Escribe <strong>{nanobook.getName()}</strong> para confirmar.
+        <input name="confirmationName" required autocomplete="off" class={inputClass} />
+      </label>
+      <p data-error role="alert" class="text-red-500"></p>
+      <button type="submit" class="border border-red-500 px-3 py-2 text-red-500">Eliminar definitivamente</button>
+      <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+    </form>
+  </details>
+</article>
+
+<script>
+  import { initNanobookCards } from "../nanobookCards";
+  document.addEventListener("astro:page-load", initNanobookCards);
+  initNanobookCards();
+</script>

@@ -7,6 +7,7 @@ import { ListNanobooks } from "./ListNanobooks";
 describe("ListNanobooks", () => {
   it("lists only the authenticated owner's nanobooks", async () => {
     const repository: NanobookRepository = {
+      listPublic: vi.fn(),
       findById: vi.fn(),
       findBySlug: vi.fn(),
       listByOwner: vi.fn().mockResolvedValue(Result.ok([
@@ -14,6 +15,8 @@ describe("ListNanobooks", () => {
       ])),
       create: vi.fn(),
       updateSetupStatus: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     };
 
     const result = await new ListNanobooks(repository).execute("owner-1");
