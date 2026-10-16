@@ -23,6 +23,12 @@ describe("Nanobook", () => {
     });
   });
 
+  it("keeps legacy empty settings valid and accepts a closed theme reference", () => {
+    expect(Nanobook.create({ id: "legacy", ownerId: "user-1", slug: "legacy", name: "Legacy", settings: {} }).isSuccess).toBe(true);
+    const themed = Nanobook.create({ id: "new", ownerId: "user-1", slug: "new", name: "New", settings: { theme: { kind: "official", id: "nanobook" } } });
+    expect(themed.isSuccess).toBe(true);
+  });
+
   it("supports a pending setup status and immutable status changes", () => {
     const result = Nanobook.create({
       id: "book-1",

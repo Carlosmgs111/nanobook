@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@import "./theme.css";
+@import "../../theme/browser/styles/contract.css";
+@import "../../theme/browser/styles/classic.css";
+@import "../../theme/browser/styles/nanobook.css";
 @import "./base.css";
 @import "./utilities.css";
 @import "./prose.css";

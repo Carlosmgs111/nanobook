@@ -11,6 +11,7 @@ export class AuthStatusController {
 
     const profile = root.querySelector<HTMLElement>("[data-auth-profile]");
     const nanobooks = root.querySelector<HTMLElement>("[data-auth-nanobooks]");
+    const themes = root.querySelector<HTMLElement>("[data-auth-themes]");
     const login = root.querySelector<HTMLElement>("[data-auth-login]");
     const user = await this.getAuthenticatedSession.execute();
     const documentMutationActions = document.querySelectorAll<HTMLElement>(
@@ -24,6 +25,7 @@ export class AuthStatusController {
     if (!user) {
       if (profile) profile.hidden = true;
       if (nanobooks) nanobooks.hidden = true;
+      if (themes) themes.hidden = true;
       if (login) login.hidden = false;
       return;
     }
@@ -33,6 +35,7 @@ export class AuthStatusController {
       profile.hidden = false;
     }
     if (nanobooks) nanobooks.hidden = false;
+    if (themes) themes.hidden = false;
     if (login) login.hidden = true;
   }
 }

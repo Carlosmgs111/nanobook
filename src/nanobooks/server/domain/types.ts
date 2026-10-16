@@ -9,7 +9,7 @@ export type NanobookSetupStatus = "pending" | "ready" | "failed";
  * hidden configuration API. New settings must be added here with validation
  * in the domain before they are exposed through HTTP or migration manifests.
  */
-export type NanobookSettings = Record<string, never>;
+export interface NanobookSettings { theme?: ThemeReference; }
 
 export interface CreateNanobookData {
   id: string;
@@ -36,3 +36,4 @@ export interface PersistedNanobook {
   createdAt: Date;
   updatedAt: Date;
 }
+import type { ThemeReference } from "../../../shared/theme/ThemeReference";

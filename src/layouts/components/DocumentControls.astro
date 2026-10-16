@@ -1,5 +1,5 @@
 ---
-import ThemeToggle from "../../theme/browser/components/ThemeToggle.astro";
+import ColorModeToggle from "../../theme/browser/components/ColorModeToggle.astro";
 import ContentWidthToggle from "./ContentWidthToggle.astro";
 
 interface Props {
@@ -17,7 +17,7 @@ const { editHref, viewHref, newHref } = Astro.props;
       href={newHref}
       data-auth-document-mutation
       hidden
-      class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+      class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--theme-border-subtle)] transition-colors"
     >
       Nuevo
     </a>
@@ -29,7 +29,7 @@ const { editHref, viewHref, newHref } = Astro.props;
       href={editHref}
       data-auth-document-mutation
       hidden
-      class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+      class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--theme-border-subtle)] transition-colors"
     >
       Editar
     </a>
@@ -39,11 +39,11 @@ const { editHref, viewHref, newHref } = Astro.props;
   viewHref && (
     <a
       href={viewHref}
-      class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--grid-line)] transition-colors"
+      class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--theme-border-subtle)] transition-colors"
     >
       Ver
     </a>
   )
 }
 <ContentWidthToggle />
-<ThemeToggle />
+<ColorModeToggle />

@@ -33,15 +33,15 @@ import Layout from "../layouts/Layout.astro";
 
   .verification-card {
     width: min(100%, 29rem);
-    border: 1px solid var(--grid-line-strong);
+    border: 1px solid var(--theme-border);
     padding: clamp(1.5rem, 5vw, 2.75rem);
-    background: color-mix(in srgb, var(--bg) 86%, transparent);
-    box-shadow: 12px 12px 0 var(--grid-line-subtle);
+    background: color-mix(in srgb, var(--theme-page-bg) 86%, transparent);
+    box-shadow: 12px 12px 0 var(--theme-border-subtle);
   }
 
   .verification-card__brand {
     margin: 0 0 2.75rem;
-    color: var(--muted);
+    color: var(--theme-text-muted);
     font-size: 0.8rem;
     font-weight: 650;
     letter-spacing: 0.06em;
@@ -49,7 +49,7 @@ import Layout from "../layouts/Layout.astro";
 
   .verification-card h1 {
     margin: 0;
-    color: var(--text);
+    color: var(--theme-text);
     font-size: clamp(1.8rem, 4vw, 2.5rem);
     font-weight: 520;
     letter-spacing: -0.045em;
@@ -57,7 +57,7 @@ import Layout from "../layouts/Layout.astro";
   }
 
   .verification-card p {
-    color: var(--muted);
+    color: var(--theme-text-muted);
     line-height: 1.55;
   }
 
@@ -69,7 +69,7 @@ import Layout from "../layouts/Layout.astro";
   .verification-card a {
     display: inline-block;
     margin-top: 1.25rem;
-    color: var(--text);
+    color: var(--theme-text);
     font-weight: 650;
   }
 </style>

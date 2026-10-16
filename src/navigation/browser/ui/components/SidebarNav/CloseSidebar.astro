@@ -6,7 +6,7 @@ const { sidebarId, backdropId, buttonId = "sidebar-close" } = Astro.props;
 <button
   id={buttonId}
   type="button"
-  class="w-10 aspect-square border border-[var(--grid-line-strong)] font-mono text-xs text-[var(--muted)] hover:text-[var(--accent)] md:hidden"
+  class="w-10 aspect-square border border-[var(--theme-border)] font-[family-name:var(--theme-font-code)] text-xs text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] md:hidden"
   aria-label="Cerrar navegación"
 >
   <CloseSVG />

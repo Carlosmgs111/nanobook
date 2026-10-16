@@ -4,6 +4,7 @@ import { DocumentModule } from "../../documents/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { CreateNanobook } from "./application/CreateNanobook";
 import { UpdateNanobook } from "./application/UpdateNanobook";
+import { SetNanobookTheme } from "./application/SetNanobookTheme";
 import { DeleteNanobook } from "./application/DeleteNanobook";
 import { NanobookLifecycleController } from "./infraestructure/rest/NanobookLifecycleController";
 import { GetNanobookById } from "./application/GetNanobookById";
@@ -31,6 +32,7 @@ export class NanobookModule {
     public readonly documentModule: DocumentModule,
     public readonly lifecycleController: NanobookLifecycleController,
     public readonly listPublicNanobooks: ListPublicNanobooks,
+    public readonly setNanobookTheme: SetNanobookTheme,
   ) {}
 
   static async create(routeProtector: RouteProtector, eventBus: EventBus): Promise<NanobookModule> {
@@ -54,6 +56,7 @@ export class NanobookModule {
       documentModule,
       new NanobookLifecycleController(new UpdateNanobook(repository), new DeleteNanobook(repository)),
       new ListPublicNanobooks(repository),
+      new SetNanobookTheme(repository),
     );
   }
 }

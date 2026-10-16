@@ -53,7 +53,7 @@ export class DrizzleNanobookRepository implements NanobookRepository {
   async update(book: Nanobook) {
     try {
       const result = await this.database.update(nanobook).set({
-        name: book.getName(), slug: book.getSlug(), visibility: book.getVisibility(), updatedAt: new Date(),
+        name: book.getName(), slug: book.getSlug(), visibility: book.getVisibility(), settingsJson: JSON.stringify(book.getSettings()), updatedAt: new Date(),
       }).where(and(eq(nanobook.id, book.getId()), eq(nanobook.ownerId, book.getOwnerId())));
       if (result.rowsAffected === 0) return Result.fail(new NanobookRepositoryError("El nanobook ya no existe"));
       return Result.ok();

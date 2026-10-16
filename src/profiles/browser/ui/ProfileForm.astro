@@ -12,9 +12,9 @@
       maxlength="32"
       pattern="[a-zA-Z0-9][a-zA-Z0-9-]{1,30}[a-zA-Z0-9]"
       required
-      class="border border-[var(--grid-line-strong)] bg-transparent px-3 py-2"
+      class="border border-[var(--theme-border)] bg-transparent px-3 py-2"
     />
-    <p class="text-sm text-[var(--muted)]">
+    <p class="text-sm text-[var(--theme-text-muted)]">
       Será público y no podrá cambiarse.
     </p>
   </div>
@@ -29,21 +29,21 @@
       type="text"
       autocomplete="name"
       required
-      class="border border-[var(--grid-line-strong)] bg-transparent px-3 py-2"
+      class="border border-[var(--theme-border)] bg-transparent px-3 py-2"
     />
   </div>
 
   <p
     data-profile-status
     aria-live="polite"
-    class="min-h-6 text-sm text-[var(--muted)]"
+    class="min-h-6 text-sm text-[var(--theme-text-muted)]"
   >
   </p>
 
   <button
     type="submit"
     data-profile-submit
-    class="inline-flex w-fit items-center justify-center bg-black px-4 py-2 text-sm font-medium !text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+    class="inline-flex w-fit items-center justify-center bg-[var(--theme-text)] px-4 py-2 text-sm font-medium !text-[var(--theme-page-bg)] transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]/50"
   >
     Guardar perfil
   </button>

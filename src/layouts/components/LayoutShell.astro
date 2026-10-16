@@ -37,16 +37,16 @@ const {
 ---
 
 <body
-  class="relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--text)]"
+  class="relative min-h-screen overflow-x-hidden bg-[var(--theme-page-bg)] text-[var(--theme-text)]"
 >
   <div class="grid-overlay" aria-hidden="true"></div>
   <div
-    class="fixed top-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]"
+    class="fixed top-0 left-0 right-0 h-px bg-[var(--theme-border)]"
     aria-hidden="true"
   >
   </div>
   <div
-    class="fixed bottom-0 left-0 right-0 h-px bg-[var(--grid-line-strong)]"
+    class="fixed bottom-0 left-0 right-0 h-px bg-[var(--theme-border)]"
     aria-hidden="true"
   >
   </div>
@@ -64,7 +64,7 @@ const {
   >
     <SidebarNav navigationService={navigationService} />
     <main
-      class="border-x border-[var(--grid-line)] md:px-6 flex-1 min-w-0 overflow-x-hidden md:overflow-x-visible"
+      class="border-x border-[var(--theme-border-subtle)] md:px-6 flex-1 min-w-0 overflow-x-hidden md:overflow-x-visible"
     >
       <div class="glass-panel corner-plus">
         <div class="prose max-w-none">

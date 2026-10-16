@@ -1,0 +1,30 @@
+:root[data-theme="nanobook"] {
+  --theme-light-page-bg: #f7f5ef;
+  --theme-light-surface-bg: #ffffff;
+  --theme-light-text: #171717;
+  --theme-light-text-muted: #68655f;
+  --theme-light-accent: #111111;
+  --theme-light-border: #d8d4ca;
+  --theme-light-border-subtle: #ebe7de;
+  --theme-light-font-body: Arial, Helvetica, sans-serif;
+  --theme-light-font-heading: Arial, Helvetica, sans-serif;
+  --theme-light-font-code: ui-monospace, monospace;
+  --theme-light-control-radius: 5px;
+  --theme-light-panel-radius: 8px;
+  --theme-light-content-gap: 2rem;
+  --theme-light-page-pattern: none;
+  --theme-dark-page-bg: #121210;
+  --theme-dark-surface-bg: #1b1a17;
+  --theme-dark-text: #f1efe8;
+  --theme-dark-text-muted: #aaa69c;
+  --theme-dark-accent: #ffffff;
+  --theme-dark-border: #393730;
+  --theme-dark-border-subtle: #282721;
+  --theme-dark-font-body: Arial, Helvetica, sans-serif;
+  --theme-dark-font-heading: Arial, Helvetica, sans-serif;
+  --theme-dark-font-code: ui-monospace, monospace;
+  --theme-dark-control-radius: 5px;
+  --theme-dark-panel-radius: 8px;
+  --theme-dark-content-gap: 2rem;
+  --theme-dark-page-pattern: none;
+}

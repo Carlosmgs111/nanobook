@@ -17,14 +17,15 @@ export function initNanobookCards() {
         error.textContent = "";
         const data = new FormData(form);
         const deleting = form.dataset.operation === "delete";
+        const assigningTheme = form.dataset.operation === "theme";
         const controls = card.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>("input, button, select");
         controls.forEach(control => control.disabled = true);
         form.setAttribute("aria-busy", "true");
         try {
-          const response = await fetch(`/api/nanobooks/${encodeURIComponent(card.dataset.id!)}`, {
-            method: deleting ? "DELETE" : "PATCH",
+          const response = await fetch(`/api/nanobooks/${encodeURIComponent(card.dataset.id!)}${assigningTheme ? "/theme" : ""}`, {
+            method: assigningTheme ? "POST" : deleting ? "DELETE" : "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(deleting ? { confirmationName: data.get("confirmationName") } : {
+            body: JSON.stringify(assigningTheme ? { reference: JSON.parse(String(data.get("themeReference"))) } : deleting ? { confirmationName: data.get("confirmationName") } : {
               name: data.get("name"), slug: data.get("slug"), visibility: data.get("visibility"),
             }),
           });

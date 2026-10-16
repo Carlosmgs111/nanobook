@@ -24,6 +24,10 @@ if (!nanobook) {
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const theme = await app.themeModule.resolveTheme.execute(
+  nanobook.getSettings().theme,
+  Astro.request,
+);
 const navigationService = await navigationModule.getNavigation(nanobookId, {
   rootPath: "index",
   basePath: `/n/${nanobook.getSlug()}`,
@@ -44,6 +48,7 @@ const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 <Layout
   editHref={editHref}
   navigationService={navigationService}
+  theme={theme}
 >
   <h1><mark>Preview de {slug || "index"}</mark></h1>
   <div id="preview-container" data-document-id={documentId}></div>

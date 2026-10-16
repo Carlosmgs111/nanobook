@@ -37,9 +37,10 @@ describe("DrizzleNanobookRepository", () => {
     const book = Nanobook.create({ id: "book-1", ownerId: "user-1", slug: "manual", name: "Manual" }).getValue();
     await repository.create(book);
     await connection.db.run(sql`UPDATE nanobook SET content_version = 9 WHERE id = 'book-1'`);
-    const updated = Nanobook.create({ ...book.toPersistence(), slug: "new", name: "New", visibility: "public" }).getValue();
+    const updated = Nanobook.create({ ...book.toPersistence(), slug: "new", name: "New", visibility: "public", settings: { theme: { kind: "official", id: "nanobook" } } }).getValue();
     expect((await repository.update(updated)).isSuccess).toBe(true);
     expect((await repository.findBySlug("new")).getValue()?.getContentVersion()).toBe(9);
+    expect((await repository.findBySlug("new")).getValue()?.getSettings()).toEqual({ theme: { kind: "official", id: "nanobook" } });
     expect((await repository.findBySlug("manual")).getValue()).toBeNull();
     await repository.create(Nanobook.create({ id: "book-2", ownerId: "user-1", slug: "taken", name: "Other" }).getValue());
     const conflicting = Nanobook.create({ ...updated.toPersistence(), slug: "taken" }).getValue();

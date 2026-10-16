@@ -22,6 +22,10 @@ if (!nanobook) {
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const theme = await app.themeModule.resolveTheme.execute(
+  nanobook.getSettings().theme,
+  Astro.request,
+);
 const navigationService = await navigationModule.getNavigation(nanobookId, {
   rootPath: "index",
   basePath: `/n/${nanobook.getSlug()}`,
@@ -61,11 +65,12 @@ const parentHref = editableEntry.parentPath
   viewHref={viewHref}
   newHref={newHref}
   navigationService={navigationService}
+  theme={theme}
 >
-  <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+  <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
     <span class="tech-label mb-3 block">Editing document</span>
     <h1
-      class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
+      class="glow-text text-3xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-4xl"
     >
       {entry.title}
     </h1>
@@ -74,10 +79,10 @@ const parentHref = editableEntry.parentPath
   {
     entry.ref && (
       <div
-        class="mb-4 border border-[var(--grid-line-strong)] bg-[var(--bg-elevated)] p-6 text-[var(--muted)]"
+        class="mb-4 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-6 text-[var(--theme-text-muted)]"
         role="status"
       >
-        <h2 class="mb-3 text-lg font-semibold text-[var(--accent)]">
+        <h2 class="mb-3 text-lg font-semibold text-[var(--theme-accent)]">
           Proxy: solo se edita el frontmatter
         </h2>
         <p>

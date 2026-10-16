@@ -44,6 +44,8 @@ describe("Application", () => {
     expect("documentModule" in app).toBe(false);
     expect(app.navigationModule).toBeDefined();
     expect(app.publishingModule.eventBus).toBe(app.nanobookModule.documentModule.eventBus);
+    expect(app.themeModule).toBeDefined();
+    expect(app.themeModule.assignNanobookThemeRoute).toBeDefined();
     expect("createNanobookController" in app).toBe(false);
     expect("navigationFor" in app.nanobookModule).toBe(false);
     expect("publishingFor" in app.nanobookModule).toBe(false);

@@ -1,0 +1,59 @@
+---
+import SunSVG from "../../../shared/icons/sun.svg";
+import MoonSVG from "../../../shared/icons/moon.svg";
+---
+
+<button
+  id="color-mode-toggle"
+  type="button"
+  class="group flex h-9 w-9 items-center justify-center border border-[var(--theme-border)] text-[var(--theme-text-muted)] transition-colors hover:border-[var(--theme-accent)] hover:text-[var(--theme-accent)]"
+  aria-label="Cambiar modo de color"
+  data-color-mode="system"
+>
+  <span class="color-mode-icon-sun" aria-hidden="true"><SunSVG /></span>
+  <span class="color-mode-icon-moon" aria-hidden="true"><MoonSVG /></span>
+</button>
+
+<script is:inline>
+  (function () {
+    if (window.__nanobookColorModeToggleRestored) return;
+    window.__nanobookColorModeToggleRestored = true;
+
+    function restoreColorModeToggle() {
+      const toggle = document.getElementById("color-mode-toggle");
+      if (toggle) {
+        toggle.setAttribute(
+          "data-color-mode",
+          document.documentElement.dataset.colorMode || "system",
+        );
+      }
+    }
+
+    restoreColorModeToggle();
+    document.addEventListener("astro:after-swap", restoreColorModeToggle);
+  })();
+</script>
+
+<script type="module">
+  document.addEventListener("astro:page-load", function () {
+    const root = document.documentElement;
+    const toggle = document.getElementById("color-mode-toggle");
+    if (!toggle || toggle.dataset.mounted === "true") return;
+    toggle.dataset.mounted = "true";
+
+    toggle.addEventListener("click", function () {
+      const current = root.dataset.colorMode || "system";
+      const next = current === "system" ? "light" : current === "light" ? "dark" : "system";
+      root.dataset.colorMode = next;
+      toggle.dataset.colorMode = next;
+      document.cookie = `nanobook-color-mode=${next}; Path=/; SameSite=Lax`;
+    });
+  });
+</script>
+
+<style>
+  .color-mode-icon-sun { display: none; }
+  .color-mode-icon-moon { display: block; }
+  #color-mode-toggle[data-color-mode="dark"] .color-mode-icon-sun { display: block; }
+  #color-mode-toggle[data-color-mode="dark"] .color-mode-icon-moon { display: none; }
+</style>

@@ -9,6 +9,7 @@ export default defineConfig({
     "./src/nanobooks/server/infraestructure/database/DrizzleNanobookSchema.ts",
     "./src/documents/server/infraestructure/database/DrizzleDocumentSchema.ts",
     "./src/documents/server/infraestructure/database/DrizzleDocumentRevisionSchema.ts",
+    "./src/theme/server/infraestructure/database/DrizzleThemeSchema.ts",
   ],
 
   out: "./drizzle",

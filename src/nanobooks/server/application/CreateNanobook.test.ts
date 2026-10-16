@@ -47,6 +47,9 @@ describe("CreateNanobook", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().getSetupStatus()).toBe("ready");
+    expect(result.getValue().getSettings()).toEqual({
+      theme: { kind: "official", id: "nanobook" },
+    });
     expect(documentModule.getDocument.executeRaw).toHaveBeenCalledWith(
       result.getValue().getId(),
       "index",

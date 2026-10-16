@@ -160,10 +160,10 @@ const loginHref = "/login";
 
 <style>
   .landing {
-    --secondary: color-mix(in srgb, var(--text) 72%, var(--bg));
+    --secondary: color-mix(in srgb, var(--theme-text) 72%, var(--theme-page-bg));
     font-family: Arial, Helvetica, sans-serif;
-    color: var(--text);
-    background: var(--bg);
+    color: var(--theme-text);
+    background: var(--theme-page-bg);
   }
   .page-width {
     width: min(1200px, calc(100% - 96px));
@@ -173,7 +173,7 @@ const loginHref = "/login";
     text-decoration: none;
   }
   a:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--theme-accent);
     outline-offset: 6px;
   }
   .skip-link {
@@ -181,8 +181,8 @@ const loginHref = "/login";
     top: -100px;
     left: 20px;
     padding: 12px;
-    background: var(--accent);
-    color: var(--bg);
+    background: var(--theme-accent);
+    color: var(--theme-page-bg);
     z-index: 20;
   }
   .skip-link:focus {
@@ -194,7 +194,7 @@ const loginHref = "/login";
     justify-content: space-between;
     min-height: 104px;
     gap: 24px;
-    border-bottom: 1px solid var(--grid-line-strong);
+    border-bottom: 1px solid var(--theme-border);
   }
   .wordmark {
     display: inline-flex;
@@ -253,8 +253,8 @@ const loginHref = "/login";
     min-height: 48px;
   }
   .primary {
-    background: var(--accent);
-    color: var(--bg);
+    background: var(--theme-accent);
+    color: var(--theme-page-bg);
   }
   .primary:hover {
     opacity: 0.85;
@@ -291,7 +291,7 @@ const loginHref = "/login";
     padding: 32px 30px 28px 38px;
     border: 1px solid var(--border-medium);
     border-radius: 3px 10px 10px 3px;
-    background: var(--bg);
+    background: var(--theme-page-bg);
     box-shadow: 12px 20px 40px rgba(var(--shadow-rgb), 0.12);
     transform: rotate(-5deg);
   }
@@ -331,7 +331,7 @@ const loginHref = "/login";
     color: var(--secondary);
   }
   .catalog {
-    border-top: 1px solid var(--grid-line-strong);
+    border-top: 1px solid var(--theme-border);
     background: var(--layer-1);
     padding-block: 62px 80px;
     scroll-margin-top: 24px;
@@ -380,13 +380,13 @@ const loginHref = "/login";
     position: relative;
     padding: 26px 28px 30px 38px;
     border: 1px solid var(--border-medium);
-    background: var(--bg);
+    background: var(--theme-page-bg);
     border-radius: 3px 9px 9px 3px;
   }
   .cover-spine {
     position: absolute;
     inset: 0 auto 0 12px;
-    border-right: 1px solid var(--grid-line-strong);
+    border-right: 1px solid var(--theme-border);
   }
   .cover-brand {
     color: var(--secondary);
@@ -402,7 +402,7 @@ const loginHref = "/login";
     overflow-wrap: anywhere;
   }
   .catalog-book:hover .catalog-cover {
-    border-color: var(--accent);
+    border-color: var(--theme-accent);
   }
   .catalog-book-caption {
     display: flex;
@@ -418,7 +418,7 @@ const loginHref = "/login";
     min-width: 0;
   }
   .read-label {
-    color: var(--text);
+    color: var(--theme-text);
     white-space: nowrap;
   }
   .catalog-state {

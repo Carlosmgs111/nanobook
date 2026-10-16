@@ -3,6 +3,11 @@ import "../shared/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import LayoutShell from "./components/LayoutShell.astro";
 import type { NavigationService } from "../navigation/server";
+import { getApp } from "../application/server/Application";
+import {
+  normalizeColorModePreference,
+  type AppliedTheme,
+} from "../theme/server";
 
 interface Heading {
   depth: number;
@@ -21,6 +26,7 @@ interface Props {
   loginHref?: string;
   canonicalHref?: string;
   navigationService?: NavigationService;
+  theme?: AppliedTheme;
 }
 
 const {
@@ -34,11 +40,34 @@ const {
   loginHref = "/login",
   canonicalHref,
   navigationService,
+  theme: suppliedTheme,
 } = Astro.props;
+const app = await getApp();
+const theme =
+  suppliedTheme ??
+  (await app.themeModule.resolveTheme.execute({
+    kind: "official",
+    id: "classic",
+  }));
+const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;
+const colorModePreference = normalizeColorModePreference(storedMode);
+const themeVariables = Object.fromEntries([
+  ...Object.entries(theme.lightVariables),
+  ...Object.entries(theme.darkVariables),
+]);
+const themeStyle = Object.entries(themeVariables)
+  .map(([key, value]) => `${key}:${value}`)
+  .join(";");
 ---
 
 <!doctype html>
-<html lang="en">
+<html
+  lang="es"
+  data-theme={theme.baseId}
+  data-theme-key={theme.key}
+  data-color-mode={colorModePreference}
+  style={themeStyle}
+>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -48,6 +77,13 @@ const {
     {canonicalHref && <link rel="canonical" href={canonicalHref} />}
     <title>{title}</title>
     <ClientRouter transition:animate="none" />
+    <meta
+      data-theme-state
+      data-theme={theme.baseId}
+      data-theme-key={theme.key}
+      data-color-mode={colorModePreference}
+      data-theme-variables={JSON.stringify(themeVariables)}
+    />
   </head>
   <LayoutShell
     description={description}

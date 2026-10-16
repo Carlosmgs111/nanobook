@@ -22,6 +22,10 @@ if (!nanobook) {
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const theme = await app.themeModule.resolveTheme.execute(
+  nanobook.getSettings().theme,
+  Astro.request,
+);
 const navigationService = await navigationModule.getNavigation(nanobookId, {
   rootPath: "index",
   basePath: `/n/${nanobook.getSlug()}`,
@@ -50,11 +54,12 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
   description="Crear un nuevo documento"
   hideToc={true}
   navigationService={navigationService}
+  theme={theme}
 >
-  <div class="mb-10 border-b border-[var(--grid-line-strong)] pb-8">
+  <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
     <span class="tech-label mb-3 block">Nuevo documento</span>
     <h1
-      class="glow-text text-3xl font-semibold tracking-tight text-[var(--accent)] md:text-4xl"
+      class="glow-text text-3xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-4xl"
     >
       Crear documento
     </h1>
@@ -67,13 +72,13 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
         <select
           id="new-doc-type"
           name="type"
-          class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+          class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2 text-sm"
           data-type-select
         >
           <option value="document" selected>Documento</option>
           <option value="directory">Directorio</option>
         </select>
-        <p class="text-xs text-[var(--text-muted)]" data-type-help>
+        <p class="text-xs text-[var(--theme-text-muted)]" data-type-help>
           Crea un archivo Markdown directamente bajo la ruta actual.
         </p>
       </div>
@@ -83,7 +88,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           >Nombre</label
         >
         <div class="flex items-center gap-2 text-sm">
-          <span class="text-[var(--text-muted)] whitespace-nowrap"
+          <span class="text-[var(--theme-text-muted)] whitespace-nowrap"
             >/{basePath}</span
           >
           <input
@@ -93,11 +98,11 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
             required
             placeholder="nuevo-elemento"
             pattern="[\p{L}\p{N}\-_]+"
-            class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+            class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2 text-sm"
             data-name-input
           />
         </div>
-        <p class="text-xs text-[var(--text-muted)]">
+        <p class="text-xs text-[var(--theme-text-muted)]">
           Solo letras, números, guiones y guiones bajos. Sin barras ni espacios.
         </p>
       </div>
@@ -111,7 +116,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           name="title"
           type="text"
           required
-          class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+          class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2 text-sm"
         />
       </div>
 
@@ -124,7 +129,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           name="description"
           type="text"
           required
-          class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+          class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2 text-sm"
         />
       </div>
 
@@ -136,7 +141,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           id="new-doc-position"
           name="position"
           type="number"
-          class="w-full border border-[var(--grid-line-strong)] bg-[var(--bg)] px-3 py-2 text-sm"
+          class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2 text-sm"
           value="0"
         />
       </div>
@@ -158,13 +163,13 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           type="submit"
           data-auth-document-mutation
           hidden
-          class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] bg-[var(--text)] px-4 py-2 text-sm font-medium text-[var(--bg)] hover:opacity-90"
+          class="inline-flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-sm font-medium text-[var(--theme-page-bg)] hover:opacity-90"
         >
           Crear y editar
         </button>
         <a
           href={slug === "index" ? `${baseHref || "/"}` : `${baseHref}/${slug}/`}
-          class="inline-flex items-center justify-center border border-[var(--grid-line-strong)] px-4 py-2 text-sm font-medium hover:bg-[var(--grid-line)]"
+          class="inline-flex items-center justify-center border border-[var(--theme-border)] px-4 py-2 text-sm font-medium hover:bg-[var(--theme-border-subtle)]"
         >
           Cancelar
         </a>

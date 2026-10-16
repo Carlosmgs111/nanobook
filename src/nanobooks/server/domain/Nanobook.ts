@@ -1,4 +1,5 @@
 import { Result } from "../../../shared/domain/Result";
+import { isThemeReference } from "../../../shared/theme/ThemeReference";
 import {
   InvalidNanobookError,
   InvalidNanobookSlugError,
@@ -131,5 +132,7 @@ export class Nanobook {
 
 function isNanobookSettings(value: unknown): value is NanobookSettings {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  return Object.keys(value).length === 0;
+  const settings = value as Record<string, unknown>;
+  if (Object.keys(settings).some((key) => key !== "theme")) return false;
+  return settings.theme === undefined || isThemeReference(settings.theme);
 }

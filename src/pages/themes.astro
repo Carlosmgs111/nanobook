@@ -1,0 +1,14 @@
+---
+import { getApp } from "../application/server/Application";
+import ThemesPage from "../theme/browser/ui/ThemesPage.astro";
+export const prerender = false;
+const app = await getApp();
+const session = await app.authServerModule.getSession(Astro.request);
+if (!session) return Astro.redirect(`/login?callbackURL=${encodeURIComponent("/themes")}`);
+const listed = await app.themeModule.listThemes.execute(session.id);
+if (!listed.isSuccess) return new Response("No fue posible cargar los temas", { status: 500 });
+const selectedId = Astro.url.searchParams.get("theme");
+const selectedResult = selectedId ? await app.themeModule.getTheme.execute(session.id, selectedId) : null;
+if (selectedResult && !selectedResult.isSuccess) return new Response(selectedResult.getError().message, { status: selectedResult.getError().name === "ThemeAccessDeniedError" ? 403 : 404 });
+---
+<ThemesPage themes={listed.getValue()} selected={selectedResult?.getValue()} />
