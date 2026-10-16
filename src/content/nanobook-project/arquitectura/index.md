@@ -18,6 +18,7 @@ nanobook: true
 - [Composición de la aplicación de navegador](./composicion-application-browser): composición síncrona de `AuthModule` y `EditionModule` mediante `Application` y `getApp()`.
 - [Composición por nanobook](./composicion-nanobook-modulo): por qué `NanobookModule` posee la composición y el ciclo de vida de cada contexto aislado, manteniendo delgada la aplicación raíz.
 - [Temas oficiales y personalizados](./modulo-temas): cómo se almacenan, resuelven y aplican los temas por nanobook sin acoplar el módulo a otros dominios.
+- [Contrato y aplicación de temas](./contrato-aplicacion-temas): opciones para que `theme` sea propietario de los roles semánticos, la compilación CSS y la instalación del tema.
 - [Autenticación del servidor y decorador de capacidades](./autenticacion-servidor-decorador-capacidades): frontera de servidor del módulo `auth`, composición única y protección reutilizable de rutas HTTP.
 - [Composición raíz modular](./composicion-raiz-modular): por qué se introdujo `src/Application.ts` y los módulos `DocumentModule`, `NavigationModule` y `PublishingModule`.
 - [Refactorización del grafo de dependencias](./refactorizacion-grafo-dependencias): por qué `DocumentsGraph` se movió a `navigation` y cómo se calculan los `invalidatedIds`.
