@@ -1,5 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { OfficialThemeCatalog } from "../../server/infraestructure/OfficialThemeCatalog";
+import { InMemoryThemeRepository } from "../../server/infraestructure/repository/InMemoryThemeRepository";
+import { ResolveTheme } from "../../server/application/ResolveTheme";
+import { CompileTheme } from "../../server/application/CompileTheme";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -34,9 +38,13 @@ const businessPresentationFiles = [
 ];
 
 describe("official theme styles", () => {
-  it.each(["classic", "nanobook"])("implements both palettes for %s", (theme) => {
-    const css = read(`src/theme/browser/styles/${theme}.css`);
-    expect(css).toContain(`:root[data-theme="${theme}"]`);
+  it.each(["classic", "nanobook"] as const)("compiles both palettes for %s", async (theme) => {
+    const resolved = await new ResolveTheme(
+      new OfficialThemeCatalog(),
+      new InMemoryThemeRepository(),
+    ).execute({ kind: "official", id: theme });
+    const css = new CompileTheme().execute(resolved).cssText;
+    expect(css).toContain(":root[data-theme-key]");
     for (const mode of ["light", "dark"]) {
       for (const token of [
         "page-bg",
@@ -65,8 +73,9 @@ describe("official theme styles", () => {
       expect(source).toContain("data-theme={theme.baseId}");
       expect(source).toContain("data-theme-key={theme.key}");
       expect(source).toContain("data-color-mode={colorModePreference}");
-      expect(source).toContain("theme.lightVariables");
-      expect(source).toContain("theme.darkVariables");
+      expect(source).toContain("themeModule.compileTheme.execute(theme)");
+      expect(source).toContain("installation.cssText");
+      expect(source).toContain("installation.variables");
     }
   });
 
@@ -94,6 +103,15 @@ describe("official theme styles", () => {
       );
       expect(source, file).not.toMatch(/\.light\b|classList\.toggle\(["']light["']/);
     }
+
+    const contract = read("src/theme/browser/styles/contract.css");
+    const prose = read("src/shared/styles/prose.css");
+    expect(contract).toContain("--theme-content-inline-code-bg");
+    expect(contract).toContain("--theme-content-block-code-bg");
+    expect(prose).toContain("var(--theme-content-inline-code-bg)");
+    expect(prose).toContain("var(--theme-content-block-code-bg)");
+    expect(prose).toContain('pre[data-language="plaintext"]');
+    expect(prose).toContain("--theme-content-block-code-text");
   });
 
   it("stores the color mode in a cookie and only migrates legacy storage", () => {
@@ -105,6 +123,36 @@ describe("official theme styles", () => {
     expect(restore).toContain('localStorage.getItem("theme")');
     expect(restore).toContain('localStorage.removeItem("theme")');
     expect(restore).not.toContain("classList");
+  });
+
+  it("keeps color mode deterministic and excludes the removed system mode", () => {
+    const preference = read("src/theme/server/application/ColorModePreference.ts");
+    const toggle = read("src/theme/browser/components/ColorModeToggle.astro");
+    const contract = read("src/theme/browser/styles/contract.css");
+    const prose = read("src/shared/styles/prose.css");
+
+    expect(preference).toContain('ColorModePreference = "light" | "dark"');
+    expect(preference).toContain(': "light";');
+    expect(toggle).toContain('root.dataset.colorMode || "light"');
+    expect(toggle).not.toContain("matchMedia");
+    for (const source of [toggle, contract, prose]) {
+      expect(source).not.toContain('data-color-mode="system"');
+      expect(source).not.toContain("prefers-color-scheme");
+    }
+    for (const unusedRole of [
+      "--theme-danger",
+      "--theme-focus-ring",
+      "--theme-content-code-bg",
+      "--theme-content-code-text",
+      "--theme-content-code-border",
+      "--theme-content-code-grid",
+      "--theme-content-code-glow",
+      "--theme-content-table-header-bg",
+      "--theme-decoration-grid",
+      "--theme-decoration-overlay",
+    ]) {
+      expect(contract).not.toContain(unusedRole);
+    }
   });
 
   it("keeps business presentation on semantic theme tokens", () => {

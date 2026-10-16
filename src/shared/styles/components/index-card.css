@@ -6,26 +6,26 @@
   background:
     linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%),
     repeating-linear-gradient(135deg, rgba(var(--surface-rgb), 0.06) 0, rgba(var(--surface-rgb), 0.06) 1px, transparent 1px, transparent 10px),
-    var(--layer-1);
+    var(--theme-navigation-index-card-bg);
   background-size: 100% 100%, 100% 100%, 100% 100%;
 }
 
 /* Type icons */
 .index-card-icon {
-  color: var(--theme-text-muted);
+  color: var(--theme-content-muted);
   transition: color 0.2s ease;
 }
 
 .index-card-icon.folder {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
 }
 
 .index-card:hover .index-card-icon.folder {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
 }
 
 .index-card:hover .index-card-icon.file {
-  color: var(--theme-text);
+  color: var(--theme-content-primary);
 }
 
 /* Render card content from data-* attributes */

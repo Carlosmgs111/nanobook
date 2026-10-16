@@ -49,15 +49,9 @@ const theme =
     kind: "official",
     id: "classic",
   }));
+const installation = app.themeModule.compileTheme.execute(theme);
 const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;
 const colorModePreference = normalizeColorModePreference(storedMode);
-const themeVariables = Object.fromEntries([
-  ...Object.entries(theme.lightVariables),
-  ...Object.entries(theme.darkVariables),
-]);
-const themeStyle = Object.entries(themeVariables)
-  .map(([key, value]) => `${key}:${value}`)
-  .join(";");
 ---
 
 <!doctype html>
@@ -66,7 +60,6 @@ const themeStyle = Object.entries(themeVariables)
   data-theme={theme.baseId}
   data-theme-key={theme.key}
   data-color-mode={colorModePreference}
-  style={themeStyle}
 >
   <head>
     <meta charset="utf-8" />
@@ -77,12 +70,13 @@ const themeStyle = Object.entries(themeVariables)
     {canonicalHref && <link rel="canonical" href={canonicalHref} />}
     <title>{title}</title>
     <ClientRouter transition:animate="none" />
+    <style data-nanobook-theme is:inline set:html={installation.cssText}></style>
     <meta
       data-theme-state
       data-theme={theme.baseId}
       data-theme-key={theme.key}
       data-color-mode={colorModePreference}
-      data-theme-variables={JSON.stringify(themeVariables)}
+      data-theme-variables={JSON.stringify(installation.variables)}
     />
   </head>
   <LayoutShell

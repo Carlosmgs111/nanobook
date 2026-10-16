@@ -25,13 +25,13 @@ const { parentEntry, toggleId } = Astro.props;
 
 <div
   id="sidebar-header"
-  class="sidebar-header z-10 mb-6 flex items-end justify-between border-b border-[var(--theme-border)] pb-2"
+  class="sidebar-header z-10 mb-6 flex items-end justify-between border-b border-[var(--theme-navigation-sidebar-border)] pb-2"
 >
   {
     parentEntry && (
       <a
         href={parentEntry.href}
-        class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] ellipsis"
+        class="sidebar-parent group flex items-center gap-2 text-sm text-[var(--theme-content-muted)] hover:text-[var(--theme-action-primary)] ellipsis"
         data-tooltip={parentEntry.data.title}
       >
         <ToolTip id={"tooltip-" + parentEntry.id}>
@@ -61,7 +61,7 @@ const { parentEntry, toggleId } = Astro.props;
     display: flex;
     align-items: end;
     justify-content: space-between;
-    border-bottom: 1px solid var(--theme-border);
+    border-bottom: 1px solid var(--theme-navigation-sidebar-border);
     padding-bottom: 0.5rem;
     gap: 0.5rem;
   }

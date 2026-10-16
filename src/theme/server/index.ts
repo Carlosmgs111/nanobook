@@ -12,6 +12,7 @@ import { ThemeCollectionController } from "./infraestructure/rest/ThemeCollectio
 import { ThemeItemController } from "./infraestructure/rest/ThemeItemController";
 import { AssignNanobookTheme } from "./application/AssignNanobookTheme";
 import { AssignNanobookThemeController } from "./infraestructure/rest/AssignNanobookThemeController";
+import { CompileTheme } from "./application/CompileTheme";
 import type { Result } from "../../shared/domain/Result";
 import type { ThemeReference } from "../../shared/theme/ThemeReference";
 
@@ -20,11 +21,13 @@ interface NanobookThemeWriter {
 }
 
 export type { AppliedTheme, ThemeReference } from "./application/ResolveTheme";
+export type { ThemeInstallation } from "./application/CompileTheme";
 export { normalizeColorModePreference } from "./application/ColorModePreference";
 
 export class ThemeModule {
   private constructor(
     public readonly resolveTheme: ResolveTheme,
+    public readonly compileTheme: CompileTheme,
     public readonly getAssignableTheme: GetAssignableTheme,
     public readonly createTheme: CreateTheme,
     public readonly updateTheme: UpdateTheme,
@@ -48,6 +51,7 @@ export class ThemeModule {
     const assignController = new AssignNanobookThemeController(assign);
     return new ThemeModule(
       new ResolveTheme(new OfficialThemeCatalog(), repository),
+      new CompileTheme(),
       getAssignableTheme, createTheme, updateTheme, listThemes, getTheme,
       { GET: routeProtector.protect(collection.get), POST: routeProtector.protect(collection.post) },
       { GET: routeProtector.protect(item.get), PATCH: routeProtector.protect(item.patch) },

@@ -3,7 +3,7 @@
    ───────────────────────────────────────────── */
 html {
   background-color: var(--theme-page-bg);
-  color: var(--theme-text);
+  color: var(--theme-content-primary);
   font-family: var(--theme-font-body);
 }
 
@@ -34,7 +34,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-text-muted);
+  background: var(--theme-content-muted);
 }
 
 ::-webkit-scrollbar-corner {

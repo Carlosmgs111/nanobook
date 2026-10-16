@@ -27,11 +27,11 @@
 }
 
 .glow {
-  box-shadow: 0 0 60px 0 var(--glow-color);
+  box-shadow: 0 0 60px 0 var(--theme-decoration-glow);
 }
 
 .glow-text {
-  text-shadow: 0 0 40px var(--glow-color);
+  text-shadow: 0 0 40px var(--theme-decoration-glow);
 }
 
 .tech-label {
@@ -39,7 +39,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--theme-text-muted);
+  color: var(--theme-content-muted);
 }
 
 .rule {
@@ -102,7 +102,7 @@
 .prose details,
 .prose table {
   position: relative;
-  --corner-color: rgba(var(--surface-rgb), 0.22);
+  --corner-color: var(--theme-decoration-hatch);
 }
 
 .corner-plus-sm::after,
@@ -145,7 +145,7 @@
 /* L-shaped corner marks for folder cards */
 .corner-L-sm {
   position: relative;
-  --corner-color: rgba(var(--surface-rgb), 0.22);
+  --corner-color: var(--theme-decoration-hatch);
 }
 
 .corner-L-sm::after {

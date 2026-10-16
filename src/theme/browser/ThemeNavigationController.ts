@@ -1,18 +1,24 @@
+import { serializeThemeCss } from "../shared/ThemeCss";
+
 export interface ThemeNavigationState {
   theme: string;
   key: string;
   variables: Record<string, string>;
-  colorMode?: "light" | "dark" | "system";
+  colorMode?: "light" | "dark";
 }
 
 export class ThemeNavigationController {
   constructor(private readonly root: HTMLElement = document.documentElement) {}
 
   apply(state: ThemeNavigationState) {
-    for (const name of Array.from(this.root.style as unknown as Iterable<string>)) {
-      if (name.startsWith("--theme-light-") || name.startsWith("--theme-dark-")) this.root.style.removeProperty(name);
+    const document = this.root.ownerDocument ?? globalThis.document;
+    let style = document.querySelector<HTMLStyleElement>("style[data-nanobook-theme]");
+    if (!style) {
+      style = document.createElement("style");
+      style.dataset.nanobookTheme = "";
+      document.head.append(style);
     }
-    for (const [name, value] of Object.entries(state.variables)) this.root.style.setProperty(name, value);
+    style.textContent = serializeThemeCss(state.variables);
     this.root.dataset.theme = state.theme;
     this.root.dataset.themeKey = state.key;
     if (state.colorMode) this.root.dataset.colorMode = state.colorMode;

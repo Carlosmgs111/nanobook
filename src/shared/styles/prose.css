@@ -6,11 +6,11 @@
   z-index: 1;
   --content-pad: 2rem;
   padding: var(--content-pad);
-  color: var(--theme-text);
+  color: var(--theme-content-primary);
 }
 
 .prose :is(p, li, td, dd, figcaption, summary) {
-  color: var(--theme-text);
+  color: var(--theme-content-primary);
 }
 
 @media (min-width: 768px) {
@@ -24,37 +24,37 @@
    ───────────────────────────────────────────── */
 .prose h1 {
   font-family: var(--theme-font-heading);
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   text-shadow: 0 0 32px var(--glow-color), 0 0 64px var(--glow-color);
 }
 
 .prose h2 {
   font-family: var(--theme-font-heading);
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   text-shadow: 0 0 24px var(--glow-color), 0 0 48px var(--glow-color);
 }
 
 .prose h3 {
   font-family: var(--theme-font-heading);
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   text-shadow: 0 0 18px var(--glow-color), 0 0 36px var(--glow-color);
 }
 
 .prose h4 {
   font-family: var(--theme-font-heading);
-  color: var(--theme-text);
+  color: var(--theme-content-primary);
   text-shadow: 0 0 14px var(--glow-color), 0 0 28px var(--glow-color);
 }
 
 .prose h5 {
   font-family: var(--theme-font-heading);
-  color: var(--theme-text);
+  color: var(--theme-content-primary);
   text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
 }
 
 .prose h6 {
   font-family: var(--theme-font-heading);
-  color: var(--theme-text-muted);
+  color: var(--theme-content-muted);
   text-shadow: 0 0 6px var(--glow-color), 0 0 12px var(--glow-color);
 }
 
@@ -62,15 +62,15 @@
    Links
    ───────────────────────────────────────────── */
 .prose a {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   text-decoration: underline;
-  text-decoration-color: var(--border-soft);
+  text-decoration-color: var(--theme-border-soft);
   text-underline-offset: 0.2em;
   transition: text-decoration-color 150ms ease;
 }
 
 .prose a:hover {
-  text-decoration-color: var(--theme-accent);
+  text-decoration-color: var(--theme-action-primary);
 }
 
 /* ─────────────────────────────────────────────
@@ -78,7 +78,7 @@
    ───────────────────────────────────────────── */
 .prose strong,
 .prose b {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   text-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
   font-weight: 600;
 }
@@ -89,11 +89,11 @@
 .prose code {
   padding: 0.15rem 0.35rem;
   border-radius: var(--theme-panel-radius);
-  border: 1px solid var(--inline-code-border);
-  color: var(--inline-code-fg);
-  background: var(--inline-code-bg);
-  box-shadow: 0 0 16px var(--inline-code-glow), 0 0 32px var(--inline-code-glow);
-  text-shadow: 0 0 8px var(--inline-code-glow);
+  border: 1px solid var(--theme-content-inline-code-border);
+  color: var(--theme-content-inline-code-fg);
+  background: var(--theme-content-inline-code-bg);
+  box-shadow: 0 0 16px var(--theme-content-inline-code-glow), 0 0 32px var(--theme-content-inline-code-glow);
+  text-shadow: 0 0 8px var(--theme-content-inline-code-glow);
   font-family: var(--theme-font-code);
   font-size: 0.9em;
 }
@@ -107,8 +107,8 @@
   padding: 1.25rem;
   border: 1px solid var(--theme-border);
   border-radius: var(--theme-panel-radius);
-  background: linear-gradient(var(--pre-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--pre-grid) 1px, transparent 1px), var(--pre-bg);
+  background: linear-gradient(var(--theme-content-block-code-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--theme-content-block-code-grid) 1px, transparent 1px), var(--theme-content-block-code-bg);
   background-size: 8px 8px, 8px 8px, 100% 100%;
   overflow-x: auto;
 }
@@ -116,10 +116,27 @@
 .prose pre code {
   padding: 0;
   border: none;
-  color: inherit;
+  color: var(--theme-content-block-code-text);
   background: transparent;
   box-shadow: none;
   font-size: 0.85em;
+}
+
+/*
+ * Astro/Shiki puede añadir color y fondo inline a un bloque plaintext aunque
+ * no tenga lenguaje. El contrato del documento debe seguir gobernando ese
+ * caso para conservar el contraste del tema claro y oscuro.
+ */
+.prose pre[data-language="plaintext"] {
+  color: var(--theme-content-block-code-text) !important;
+  background: linear-gradient(var(--theme-content-block-code-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--theme-content-block-code-grid) 1px, transparent 1px),
+    var(--theme-content-block-code-bg) !important;
+}
+
+.prose pre[data-language="plaintext"] code,
+.prose pre[data-language="plaintext"] code span {
+  color: var(--theme-content-block-code-text) !important;
 }
 
 /* ─────────────────────────────────────────────
@@ -252,7 +269,7 @@
    ───────────────────────────────────────────── */
 .prose :is(ul, ol) {
   padding: 0.5rem 0 0.5rem 2.5rem;
-  border-left: 1px solid var(--border-soft);
+  border-left: 1px solid var(--theme-border-soft);
   background-color: var(--layer-1);
 }
 
@@ -343,20 +360,20 @@
 }
 
 .prose ul li::marker {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   font-size: 1.1em;
   text-shadow: 0 0 8px var(--glow-color);
 }
 
 .prose ol li::marker {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   font-weight: 600;
   font-family: var(--theme-font-code);
   text-shadow: 0 0 8px var(--glow-color);
 }
 
 .prose :is(ul, ol) :is(ul, ol) li::marker {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   opacity: 0.8;
   text-shadow: 0 0 6px var(--glow-color);
 }
@@ -376,7 +393,7 @@
   appearance: none;
   width: 1em;
   height: 1em;
-  border: 1.5px solid var(--theme-accent);
+  border: 1.5px solid var(--theme-action-primary);
   border-radius: var(--theme-control-radius);
   background: transparent;
   box-shadow: 0 0 8px var(--glow-color);
@@ -388,8 +405,8 @@
 }
 
 .prose input[type="checkbox"]:checked {
-  background: var(--theme-accent);
-  border-color: var(--theme-accent);
+  background: var(--theme-action-primary);
+  border-color: var(--theme-action-primary);
   box-shadow: 0 0 10px var(--glow-color);
 }
 
@@ -410,8 +427,8 @@
    ───────────────────────────────────────────── */
 .prose blockquote {
   padding: 0.75rem 1.25rem;
-  border-left: 2px solid rgba(var(--surface-rgb), 0.18);
-  background-color: var(--layer-2);
+  border-left: 2px solid var(--theme-border-medium);
+  background-color: var(--theme-content-quote-bg);
 }
 
 .prose blockquote blockquote {
@@ -429,8 +446,8 @@
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid var(--border-medium);
-  background-color: var(--layer-1);
+  border: 1px solid var(--theme-border-medium);
+  background-color: var(--theme-surface-raised);
 }
 
 .prose tbody tr:nth-child(even) {
@@ -440,11 +457,11 @@
 .prose th,
 .prose td {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--theme-border-soft);
 }
 
 .prose th {
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   text-shadow: 0 0 12px var(--glow-color);
   background: repeating-linear-gradient(
       45deg,
@@ -461,14 +478,14 @@
    ───────────────────────────────────────────── */
 .prose details {
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--theme-border-soft);
   border-radius: var(--theme-panel-radius);
   background-color: var(--layer-1);
 }
 
 .prose details summary {
   cursor: pointer;
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   font-weight: 500;
 }
 
@@ -484,14 +501,14 @@
    ───────────────────────────────────────────── */
 .md-details {
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--theme-border-soft);
   border-radius: var(--theme-panel-radius);
   background-color: var(--layer-1);
 }
 
 .md-details-summary {
   cursor: pointer;
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
   font-weight: 500;
   list-style: none;
 }
@@ -505,7 +522,7 @@
   display: inline-block;
   width: 1.2em;
   font-family: var(--theme-font-code);
-  color: var(--theme-accent);
+  color: var(--theme-action-primary);
 }
 
 .md-details[open] > .md-details-summary::before {
@@ -526,7 +543,7 @@
   position: relative;
   margin: 1.5rem 0;
   padding: 0.75rem 1rem;
-  border-left: 2px solid var(--callout-border, var(--border-strong));
+  border-left: 2px solid var(--callout-border, var(--theme-border-strong));
   background-color: var(--callout-bg, var(--layer-1));
 }
 
@@ -536,7 +553,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 600;
-  color: var(--callout-accent, var(--theme-accent));
+  color: var(--callout-accent, var(--theme-action-primary));
   margin-bottom: 0.5rem;
 }
 
@@ -549,30 +566,30 @@
 }
 
 .callout-note {
-  --callout-accent: var(--theme-accent);
-  --callout-border: var(--border-strong);
-  --callout-bg: var(--layer-1);
+  --callout-accent: var(--theme-action-primary);
+  --callout-border: var(--theme-border-strong);
+  --callout-bg: var(--theme-surface-raised);
 }
 
 .callout-warning {
-  --callout-accent: #f59e0b;
-  --callout-border: rgba(245, 158, 11, 0.5);
-  --callout-bg: rgba(245, 158, 11, 0.08);
-  --corner-color: rgba(245, 158, 11, 0.22);
+  --callout-accent: var(--theme-status-warning);
+  --callout-border: color-mix(in srgb, var(--theme-status-warning) 50%, transparent);
+  --callout-bg: color-mix(in srgb, var(--theme-status-warning) 8%, transparent);
+  --corner-color: color-mix(in srgb, var(--theme-status-warning) 22%, transparent);
 }
 
 .callout-tip {
-  --callout-accent: #10b981;
-  --callout-border: rgba(16, 185, 129, 0.5);
-  --callout-bg: rgba(16, 185, 129, 0.08);
-  --corner-color: rgba(16, 185, 129, 0.22);
+  --callout-accent: var(--theme-status-success);
+  --callout-border: color-mix(in srgb, var(--theme-status-success) 50%, transparent);
+  --callout-bg: color-mix(in srgb, var(--theme-status-success) 8%, transparent);
+  --corner-color: color-mix(in srgb, var(--theme-status-success) 22%, transparent);
 }
 
 .callout-info {
-  --callout-accent: #3b82f6;
-  --callout-border: rgba(59, 130, 246, 0.5);
-  --callout-bg: rgba(59, 130, 246, 0.08);
-  --corner-color: rgba(59, 130, 246, 0.22);
+  --callout-accent: var(--theme-status-info);
+  --callout-border: color-mix(in srgb, var(--theme-status-info) 50%, transparent);
+  --callout-bg: color-mix(in srgb, var(--theme-status-info) 8%, transparent);
+  --corner-color: color-mix(in srgb, var(--theme-status-info) 22%, transparent);
 }
 
 :root[data-color-mode="light"] .callout-warning {
@@ -585,16 +602,4 @@
 
 :root[data-color-mode="light"] .callout-info {
   --callout-bg: rgba(59, 130, 246, 0.1);
-}
-
-@media (prefers-color-scheme: light) {
-  :root[data-color-mode="system"] .callout-warning {
-    --callout-bg: rgba(245, 158, 11, 0.1);
-  }
-  :root[data-color-mode="system"] .callout-tip {
-    --callout-bg: rgba(16, 185, 129, 0.1);
-  }
-  :root[data-color-mode="system"] .callout-info {
-    --callout-bg: rgba(59, 130, 246, 0.1);
-  }
 }

@@ -20,7 +20,7 @@ describe("profile page", () => {
     expect(profile).not.toContain("<Layout");
   });
 
-  it("offers a black sign-out action backed by the sign-out controller", () => {
+  it("offers a themed sign-out action backed by the sign-out controller", () => {
     const profilePage = read("src/profiles/browser/ui/ProfilePage.astro");
     const controller = read("src/profiles/browser/ProfileFormController.astro");
 
@@ -31,12 +31,12 @@ describe("profile page", () => {
     expect(controller).not.toContain('import { authModule }');
   });
 
-  it("offers a black button back to the home page", () => {
+  it("offers a themed button back to the home page", () => {
     const profile = read("src/profiles/browser/ui/ProfilePage.astro");
 
     expect(profile).toContain('href="/"');
     expect(profile).toContain("Volver al inicio");
-    expect(profile).toContain("bg-black");
-    expect(profile).toContain("!text-white");
+    expect(profile).toContain("bg-[var(--theme-text)]");
+    expect(profile).toContain("!text-[var(--theme-page-bg)]");
   });
 });

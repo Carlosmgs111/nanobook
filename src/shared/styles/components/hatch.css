@@ -9,8 +9,8 @@
   border-bottom: 1px solid var(--theme-border);
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(var(--surface-rgb), 0.10) 0,
-    rgba(var(--surface-rgb), 0.10) 1px,
+    var(--theme-decoration-hatch) 0,
+    var(--theme-decoration-hatch) 1px,
     transparent 1px,
     transparent var(--hatch-gap)
   );
@@ -33,11 +33,11 @@
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--theme-text-muted);
+  color: var(--theme-content-muted);
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(var(--surface-rgb), 0.10) 0,
-    rgba(var(--surface-rgb), 0.10) 1px,
+    var(--theme-decoration-hatch) 0,
+    var(--theme-decoration-hatch) 1px,
     transparent 1px,
     transparent 5px
   );
@@ -47,8 +47,8 @@
 .hatch {
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(var(--surface-rgb), 0.18) 0,
-    rgba(var(--surface-rgb), 0.18) 1px,
+    var(--theme-decoration-hatch) 0,
+    var(--theme-decoration-hatch) 1px,
     transparent 1px,
     transparent var(--hatch-gap)
   );

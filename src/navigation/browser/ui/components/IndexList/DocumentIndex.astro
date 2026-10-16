@@ -44,7 +44,8 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    border: 1px solid var(--theme-border);
+    border: 1px solid var(--theme-navigation-sidebar-border);
+    background-color: var(--theme-navigation-index-card-bg);
     padding: 1rem;
     transition:
       border-color 150ms ease,
@@ -54,17 +55,17 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
   .index-card span{
     backdrop-filter: blur(5px) brightness(0.9);
     padding: 0.5rem 1rem;
-    color: var(--theme-text);
+    color: var(--theme-content-primary);
   }
 
   .index-card:hover {
-    border-color: var(--theme-accent);
-    background-color: rgba(var(--surface-rgb), 0.05);
+    border-color: var(--theme-action-primary);
+    background-color: var(--theme-navigation-index-card-hover);
   }
 
   .index-card-folder {
     border-right-width: 2px;
-    border-right-color: var(--theme-accent);
+    border-right-color: var(--theme-action-primary);
   }
 
   .index-card-main {
@@ -76,7 +77,7 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
     font-family: var(--theme-font-code);
     font-size: 0.75rem;
     line-height: 1rem;
-    color: var(--theme-text-muted);
+    color: var(--theme-content-muted);
   }
 
   .index-card-body {
@@ -90,12 +91,12 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
     font-size: 1rem;
     line-height: 1.5rem;
     font-weight: 500;
-    color: var(--theme-text);
+    color: var(--theme-content-primary);
     transition: color 150ms ease;
   }
 
   .index-card:hover .index-card-title {
-    color: var(--theme-accent);
+    color: var(--theme-action-primary);
   }
 
   .index-card-desc {
@@ -105,7 +106,7 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
     overflow: hidden;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: var(--theme-text-muted);
+    color: var(--theme-content-muted);
   }
 
   .index-card-path {
@@ -116,7 +117,7 @@ const coverVar = page.metadata.cover ? `url('${page.metadata.cover}')` : undefin
     font-family: var(--theme-font-code);
     font-size: 0.75rem;
     line-height: 1rem;
-    color: var(--theme-text-muted);
+    color: var(--theme-content-muted);
   }
 
   @media (min-width: 768px) {

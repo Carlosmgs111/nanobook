@@ -1,8 +1,8 @@
-export type ColorModePreference = "light" | "dark" | "system";
+export type ColorModePreference = "light" | "dark";
 export function normalizeColorModePreference(
   value: string | undefined
 ): ColorModePreference {
-  return value === "light" || value === "dark" || value === "system"
+  return value === "light" || value === "dark"
     ? value
-    : "system";
+    : "light";
 }

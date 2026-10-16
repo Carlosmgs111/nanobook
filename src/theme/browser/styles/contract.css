@@ -1,3 +1,11 @@
+/*
+ * Contrato visual del módulo theme.
+ *
+ * Los temas solo instalan las variables --theme-light-* y --theme-dark-*.
+ * Este archivo selecciona la paleta activa y deriva los roles que consumen
+ * navegación, contenido Markdown y decoraciones. Así los componentes no
+ * conocen la forma en que se almacenó el tema.
+ */
 :root {
   --theme-page-bg: var(--theme-light-page-bg);
   --theme-surface-bg: var(--theme-light-surface-bg);
@@ -6,7 +14,6 @@
   --theme-accent: var(--theme-light-accent);
   --theme-border: var(--theme-light-border);
   --theme-border-subtle: var(--theme-light-border-subtle);
-  --theme-danger: #ef4444;
   --theme-font-body: var(--theme-light-font-body);
   --theme-font-heading: var(--theme-light-font-heading);
   --theme-font-code: var(--theme-light-font-code);
@@ -15,26 +22,68 @@
   --theme-content-gap: var(--theme-light-content-gap);
   --theme-page-pattern: var(--theme-light-page-pattern);
 
+  /* Foundation */
+  --theme-surface-raised: color-mix(in srgb, var(--theme-surface-bg) 92%, var(--theme-text) 8%);
+  --theme-content-primary: var(--theme-text);
+  --theme-content-muted: var(--theme-text-muted);
+  --theme-action-primary: var(--theme-accent);
+  --theme-border-soft: color-mix(in srgb, var(--theme-text) 15%, transparent);
+  --theme-border-medium: color-mix(in srgb, var(--theme-text) 25%, transparent);
+  --theme-border-strong: color-mix(in srgb, var(--theme-text) 45%, transparent);
+
+  /* Navigation */
+  --theme-navigation-breadcrumb-text: var(--theme-text-muted);
+  --theme-navigation-breadcrumb-current: var(--theme-text);
+  --theme-navigation-breadcrumb-separator: var(--theme-border);
+  --theme-navigation-breadcrumb-hover: var(--theme-accent);
+  --theme-navigation-sidebar-bg: var(--theme-page-bg);
+  --theme-navigation-sidebar-bg-raised: color-mix(in srgb, var(--theme-page-bg) 94%, var(--theme-text) 6%);
+  --theme-navigation-sidebar-backdrop: color-mix(in srgb, var(--theme-text) 60%, transparent);
+  --theme-navigation-sidebar-border: var(--theme-border);
+  --theme-navigation-index-card-bg: var(--theme-surface-bg);
+  --theme-navigation-index-card-hover: color-mix(in srgb, var(--theme-surface-bg) 92%, var(--theme-accent) 8%);
+
+  /* Renderizado Markdown */
+  /* Mantienen la jerarquía visual anterior: inline code oscuro en claro y
+     bloques neutros con trama suave. */
+  --theme-content-inline-code-bg: #232328;
+  --theme-content-inline-code-fg: #ffffff;
+  --theme-content-inline-code-grid: rgba(255, 255, 255, 0.08);
+  --theme-content-inline-code-border: rgba(0, 0, 0, 0.25);
+  --theme-content-inline-code-glow: rgba(0, 0, 0, 0.12);
+  --theme-content-block-code-bg: rgba(0, 0, 0, 0.06);
+  --theme-content-block-code-grid: rgba(0, 0, 0, 0.07);
+  --theme-content-block-code-text: var(--theme-content-primary);
+  --theme-content-quote-bg: color-mix(in srgb, var(--theme-surface-bg) 88%, var(--theme-text) 12%);
+
+  /* Estados y decoraciones */
+  --theme-status-warning: #f59e0b;
+  --theme-status-success: #10b981;
+  --theme-status-info: #3b82f6;
+  --theme-decoration-glow: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+  --theme-decoration-hatch: color-mix(in srgb, var(--theme-text) 22%, transparent);
+
+  /* Compatibilidad para estilos que todavía están en migración. */
   --surface-rgb: 0, 0, 0;
   --shadow-rgb: 0, 0, 0;
-  --glow-color: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+  --glow-color: var(--theme-decoration-glow);
   --grid-step: 32px;
   --line-thickness: 1px;
   --hatch-gap: 8px;
-  --inline-code-bg: #232328;
-  --inline-code-fg: #ffffff;
-  --inline-code-grid: rgba(255, 255, 255, 0.08);
-  --inline-code-border: rgba(0, 0, 0, 0.25);
-  --inline-code-glow: rgba(0, 0, 0, 0.12);
-  --pre-bg: rgba(0, 0, 0, 0.06);
-  --pre-grid: rgba(0, 0, 0, 0.07);
+  --inline-code-bg: var(--theme-content-inline-code-bg);
+  --inline-code-fg: var(--theme-content-inline-code-fg);
+  --inline-code-grid: var(--theme-content-inline-code-grid);
+  --inline-code-border: var(--theme-content-inline-code-border);
+  --inline-code-glow: var(--theme-content-inline-code-glow);
+  --pre-bg: var(--theme-content-block-code-bg);
+  --pre-grid: var(--theme-content-block-code-grid);
   --layer-1: color-mix(in srgb, var(--theme-text) 3%, transparent);
   --layer-2: color-mix(in srgb, var(--theme-text) 6%, transparent);
   --layer-3: color-mix(in srgb, var(--theme-text) 9%, transparent);
   --layer-4: color-mix(in srgb, var(--theme-text) 12%, transparent);
-  --border-soft: color-mix(in srgb, var(--theme-text) 15%, transparent);
-  --border-medium: color-mix(in srgb, var(--theme-text) 25%, transparent);
-  --border-strong: color-mix(in srgb, var(--theme-text) 45%, transparent);
+  --border-soft: var(--theme-border-soft);
+  --border-medium: var(--theme-border-medium);
+  --border-strong: var(--theme-border-strong);
 }
 
 :root[data-color-mode="dark"] {
@@ -53,31 +102,12 @@
   --theme-content-gap: var(--theme-dark-content-gap);
   --theme-page-pattern: var(--theme-dark-page-pattern);
   --surface-rgb: 255, 255, 255;
-  --inline-code-bg: rgba(255, 255, 255, 0.92);
-  --inline-code-fg: #000000;
-  --inline-code-grid: rgba(0, 0, 0, 0.04);
-  --inline-code-border: rgba(255, 255, 255, 0.6);
-  --inline-code-glow: rgba(255, 255, 255, 0.25);
-  --pre-bg: rgba(0, 0, 0, 0.3);
-  --pre-grid: rgba(255, 255, 255, 0.03);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-color-mode="system"] {
-    --theme-page-bg: var(--theme-dark-page-bg);
-    --theme-surface-bg: var(--theme-dark-surface-bg);
-    --theme-text: var(--theme-dark-text);
-    --theme-text-muted: var(--theme-dark-text-muted);
-    --theme-accent: var(--theme-dark-accent);
-    --theme-border: var(--theme-dark-border);
-    --theme-border-subtle: var(--theme-dark-border-subtle);
-    --theme-font-body: var(--theme-dark-font-body);
-    --theme-font-heading: var(--theme-dark-font-heading);
-    --theme-font-code: var(--theme-dark-font-code);
-    --theme-control-radius: var(--theme-dark-control-radius);
-    --theme-panel-radius: var(--theme-dark-panel-radius);
-    --theme-content-gap: var(--theme-dark-content-gap);
-    --theme-page-pattern: var(--theme-dark-page-pattern);
-    --surface-rgb: 255, 255, 255;
-  }
+  --theme-content-inline-code-bg: rgba(255, 255, 255, 0.92);
+  --theme-content-inline-code-fg: #000000;
+  --theme-content-inline-code-grid: rgba(0, 0, 0, 0.04);
+  --theme-content-inline-code-border: rgba(255, 255, 255, 0.6);
+  --theme-content-inline-code-glow: rgba(255, 255, 255, 0.25);
+  --theme-content-block-code-bg: rgba(0, 0, 0, 0.3);
+  --theme-content-block-code-grid: rgba(255, 255, 255, 0.03);
+  --theme-content-block-code-text: var(--theme-content-primary);
 }

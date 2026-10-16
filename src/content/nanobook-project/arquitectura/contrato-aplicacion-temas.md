@@ -175,7 +175,45 @@ El resultado será un contrato único: los módulos de presentación consumen ro
 CSS estables y `theme` es el único módulo que conoce cómo se resuelven,
 serializan, instalan y reaplican.
 
+## Implementación adoptada
+
+La primera iteración implementa la frontera del proveedor y el compilador
+interno sin cambiar el formato persistido de los temas. `CompileTheme` reúne
+las dos paletas resueltas y genera una sola hoja `style[data-nanobook-theme]`.
+Los layouts colocan esa hoja y el estado serializado; ya no escriben variables
+en `style` del elemento `html`.
+
+`ThemeNavigationController` reemplaza el contenido de esa misma hoja cuando
+Astro navega entre páginas. Por tanto, la carga inicial y la navegación usan
+el mismo mecanismo y no pueden dejar variables de un tema anterior.
+
+El contrato visual de `contract.css` selecciona la paleta activa y deriva roles
+para navegación (`--theme-navigation-*`), contenido Markdown
+(`--theme-content-*`), estados y decoraciones (`--theme-decoration-*`). Los
+alias heredados se conservan durante la migración, pero todos son derivados y
+no se guardan en la base de datos. Las definiciones oficiales se compilan
+desde `OfficialThemeCatalog`, igual que los temas personalizados; ya no hay
+hojas CSS oficiales paralelas.
+
 ## Estado
 
-Propuesta abierta. No cambia todavía el contrato de ejecución; sirve como base
-para la siguiente refactorización del módulo `theme`.
+### Alternancia de modo de color
+
+El botón del header alterna entre claro y oscuro a partir de la apariencia
+efectiva. La preferencia `system` se retiró porque no era una configuración
+persistida ni una capacidad que los componentes necesitaran: mezclaba la
+preferencia del navegador con el estado explícito de Nanobook y podía producir
+una apariencia distinta entre SSR y cliente. Una cookie ausente, antigua o
+inválida se normaliza a `light`, por lo que el HTML inicial y la navegación
+siempre parten de un modo determinista. Los iconos consultan directamente
+`html[data-color-mode]` y la elección explícita se conserva en la cookie
+`nanobook-color-mode`.
+
+Implementado en la primera fase. La migración de consumidores continúa por
+capas: navegación, renderizado Markdown y decoraciones ya consumen roles
+semánticos. La validación del contrato también eliminó roles CSS sin
+consumidores (`danger`, `focus-ring`, el grupo genérico de `content-code` y
+dos alias de decoración); se mantienen solo los roles que consumen
+navegación, Markdown, callouts y decoraciones actuales. Los alias de
+compatibilidad permiten completar el resto sin duplicar el origen de los
+valores.

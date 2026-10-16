@@ -73,23 +73,23 @@ const { entries, navigationService } = Astro.props;
     line-height: 1.25rem;
     width: 100%;
     min-width: 0;
-    color: var(--theme-text-muted);
+    color: var(--theme-navigation-breadcrumb-text);
     position: relative;
     z-index: 10;
   }
 
   .sidebar-link:hover .sidebar-icon,
   .sidebar-link:hover .sidebar-text {
-    border-color: var(--theme-border);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--theme-text);
+    border-color: var(--theme-navigation-sidebar-border);
+    background: var(--theme-navigation-index-card-hover);
+    color: var(--theme-content-primary);
   }
 
   .sidebar-link[aria-current="page"] .sidebar-icon,
   .sidebar-link[aria-current="page"] .sidebar-text {
-    border-color: var(--theme-accent);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--theme-text);
+    border-color: var(--theme-action-primary);
+    background: var(--theme-navigation-index-card-hover);
+    color: var(--theme-content-primary);
   }
 
   .sidebar-icon {
@@ -117,6 +117,6 @@ const { entries, navigationService } = Astro.props;
   .sidebar-empty {
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: var(--theme-text-muted);
+    color: var(--theme-content-muted);
   }
 </style>
