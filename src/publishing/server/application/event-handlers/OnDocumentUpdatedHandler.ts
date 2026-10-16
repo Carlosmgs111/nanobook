@@ -8,6 +8,7 @@ export class OnDocumentUpdatedHandler implements EventHandler<DocumentUpdated> {
   constructor(private pagePublisher: PagePublisher) {}
 
   async handle(event: DocumentUpdated): Promise<Result<EventBusError, void>> {
+
     if (!event.documentId) return Result.ok();
     const result = await this.pagePublisher.invalidate([event.documentId]);
     if (!result.isSuccess) {

@@ -1,4 +1,4 @@
-import { HttpAuthApi, type AuthSignOutApi } from "./HttpAuthApi";
+import { HttpAuthApi, type AuthApi } from "./HttpAuthApi";
 import { HttpAuthSessionReader } from "./HttpAuthSessionReader";
 import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
 import { SessionCachingAuthApi } from "./SessionCachingAuthApi";
@@ -17,7 +17,7 @@ export class GetAuthenticatedSession {
 
 class Signout {
   constructor(
-    private readonly authApi: AuthSignOutApi,
+    private readonly authApi: AuthApi,
     private readonly confirm: () => boolean,
     private readonly navigate: (destination: string) => void
   ) {}

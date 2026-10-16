@@ -1,9 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Document } from "../../../documents/server/domain/Document";
 import { DocumentCreated } from "../../../documents/server/domain/events/DocumentCreated";
 import { DocumentUpdated } from "../../../documents/server/domain/events/DocumentUpdated";
 import { DocumentDeleted } from "../../../documents/server/domain/events/DocumentDeleted";
-import { DocumentPath } from "../../../documents/server/domain/DocumentPath";
 import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
 import type { DocumentProvider } from "../domain/ports/DocumentProvider";
 import { NavigationModule } from "../index";
@@ -23,69 +22,44 @@ function document(path: string, id: string, title = path) {
 }
 
 describe("NavigationModule", () => {
-  it("rebuilds the graph when a document is created", async () => {
-    const root = document("index", "doc-root", "Home");
-    const section = document("guides/index", "doc-guides", "Guides");
-    const child = document("guides/cache", "doc-cache", "Cache");
-    let documents = [root, section];
-    const provider: DocumentProvider = { getAll: async () => documents };
-    const eventBus = new InMemoryEventBus();
-    const module = await NavigationModule.create(provider, eventBus);
+  it.each([DocumentCreated, DocumentUpdated, DocumentDeleted])(
+    "refreshes the affected nanobook on %s",
+    async (Event) => {
+      const provider: DocumentProvider = {
+        getAll: vi.fn(async () => []),
+        refresh: vi.fn(async () => []),
+      };
+      const eventBus = new InMemoryEventBus();
+      await NavigationModule.create(provider, eventBus);
+      const result = await eventBus.publish(new Event("doc-1", "book-a"));
+      expect(result.isSuccess).toBe(true);
+      expect(provider.refresh).toHaveBeenCalledExactlyOnceWith("book-a");
+    },
+  );
 
-    documents = [root, section, child];
-    const result = await eventBus.publish(new DocumentCreated("doc-cache"));
-
-    expect(result.isSuccess).toBe(true);
-    expect(
-      module.navigationService.getImmediateChildren(
-        DocumentPath.create("guides/index").getValue()
-      )
-    ).toEqual([
-      expect.objectContaining({ id: "doc-cache", path: "guides/cache" }),
+  it("keeps concurrent navigation queries isolated without retaining a tenant graph", async () => {
+    const provider: DocumentProvider = {
+      getAll: async (id) => [document("index", `${id}-root`, id)],
+      refresh: async () => [],
+    };
+    const module = await NavigationModule.create(provider, new InMemoryEventBus());
+    const [a, b] = await Promise.all([
+      module.getNavigation("a", { rootPath: "index", basePath: "/n/a" }),
+      module.getNavigation("b", { rootPath: "index", basePath: "/n/b" }),
     ]);
+    expect(a.getBreadcrumbs("index")[0]).toMatchObject({ title: "a", href: "/n/a" });
+    expect(b.getBreadcrumbs("index")[0]).toMatchObject({ title: "b", href: "/n/b" });
+    expect(a.getDocumentIdByPath("index")).toBe("a-root");
+    expect(b.getDocumentIdByPath("index")).toBe("b-root");
   });
 
-  it("rebuilds the graph when document metadata changes", async () => {
-    const root = document("index", "doc-root", "Home");
-    const oldChild = document("guides/cache", "doc-cache", "Old title");
-    const newChild = document("guides/cache", "doc-cache", "New title");
-    let documents = [root, oldChild];
-    const provider: DocumentProvider = { getAll: async () => documents };
-    const eventBus = new InMemoryEventBus();
-    const module = await NavigationModule.create(provider, eventBus);
-
-    documents = [root, newChild];
-    const result = await eventBus.publish(new DocumentUpdated("doc-cache"));
-
-    expect(result.isSuccess).toBe(true);
-    expect(
-      module.navigationService.getBreadcrumbs(
-        DocumentPath.create("guides/cache").getValue()
-      )
-    ).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: "guides/cache", title: "New title" }),
-      ])
-    );
-  });
-
-  it("rebuilds the graph when a document is deleted", async () => {
-    const root = document("index", "doc-root", "Home");
-    const section = document("guides/index", "doc-guides", "Guides");
-    const child = document("guides/cache", "doc-cache", "Cache");
-    let documents = [root, section, child];
-    const provider: DocumentProvider = { getAll: async () => documents };
-    const eventBus = new InMemoryEventBus();
-    const module = await NavigationModule.create(provider, eventBus);
-
-    documents = [root];
-    const result = await eventBus.publish(new DocumentDeleted("doc-guides"));
-
-    expect(result.isSuccess).toBe(true);
-    expect(
-      module.navigationService.getImmediateChildren(
-        DocumentPath.create("index").getValue()
-      )
-    ).toEqual([]);
+  it("reports refresh failures through the event bus", async () => {
+    const provider: DocumentProvider = {
+      getAll: async () => [],
+      refresh: async () => { throw new Error("unavailable"); },
+    };
+    const bus = new InMemoryEventBus();
+    await NavigationModule.create(provider, bus);
+    expect((await bus.publish(new DocumentUpdated("doc", "book"))).isSuccess).toBe(false);
   });
 });

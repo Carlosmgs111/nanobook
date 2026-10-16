@@ -6,6 +6,15 @@ import { InMemoryThemeRepository } from "../infraestructure/repository/InMemoryT
 import { ResolveTheme } from "./ResolveTheme";
 
 describe("ResolveTheme", () => {
+  it("uses classic when the nanobook has no selected theme", async () => {
+    const result = await new ResolveTheme(
+      new OfficialThemeCatalog(),
+      new InMemoryThemeRepository(),
+    ).execute(undefined);
+
+    expect(result.key).toBe("official:classic");
+  });
+
   it("resolves the complete classic theme", async () => {
     const result = await new ResolveTheme(new OfficialThemeCatalog(), new InMemoryThemeRepository()).execute({
       kind: "official",

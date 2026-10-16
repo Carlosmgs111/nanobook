@@ -22,9 +22,16 @@ if (!nanobook) {
   return new Response("Nanobook not found", { status: 404 });
 }
 const documentModule = app.nanobookModule.documentModule;
-const { publishingModule, navigationModule, theme } =
-  await app.createNanobookCapabilities(nanobook, Astro.request);
+const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const theme = await app.themeModule.resolveTheme.execute(
+  nanobook.getSettings().theme,
+  Astro.request,
+);
+const navigationService = await navigationModule.getNavigation(nanobookId, {
+  rootPath: "index",
+  basePath: `/n/${nanobook.getSlug()}`,
+});
 if (!slug) return new Response("Document not found", { status: 404 });
 
 const document = await documentModule.getDocument.execute(nanobookId, slug);
@@ -40,7 +47,7 @@ const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
 <Layout
   editHref={editHref}
-  navigationService={navigationModule.navigationService}
+  navigationService={navigationService}
   theme={theme}
 >
   <h1><mark>Preview de {slug || "index"}</mark></h1>

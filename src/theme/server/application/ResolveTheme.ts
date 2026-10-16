@@ -20,9 +20,10 @@ export class ResolveTheme {
     private readonly repository: ThemeRepository,
   ) {}
 
-  async execute(reference: ThemeReference, _request?: Request): Promise<AppliedTheme> {
-    if (reference.kind === "custom") {
-      const found = await this.repository.findById(reference.id);
+  async execute(reference: ThemeReference | undefined, _request?: Request): Promise<AppliedTheme> {
+    const selected = reference ?? { kind: "official", id: "classic" } as const;
+    if (selected.kind === "custom") {
+      const found = await this.repository.findById(selected.id);
       if (found.isSuccess && found.getValue()) {
         const custom = found.getValue()!;
         const definition = this.catalog.get(custom.getBaseThemeId());
@@ -35,7 +36,7 @@ export class ResolveTheme {
         };
       }
     }
-    const definition = this.catalog.get(reference.id);
+    const definition = this.catalog.get(selected.id);
     return {
       key: `official:${definition.id}`,
       baseId: definition.id,

@@ -52,8 +52,6 @@ export class RedisRenderedPageCache implements RenderedPageCache {
   }
 
   async invalidate(pageIds: string[]): Promise<Result<PageCacheError, void>> {
-    console.log("invalidate", { pageIds });
-
     try {
       await this.ensureConnected();
       if (pageIds.length === 0) return Result.ok();

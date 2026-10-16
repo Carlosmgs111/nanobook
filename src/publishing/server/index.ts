@@ -1,5 +1,4 @@
 import type { EventBus } from "../../shared/domain/bus/EventBus";
-import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import type { RenderedPageCache } from "./domain/cache";
 import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../../documents/server";
 import { PagePublisher } from "./application/PagePublisher";
@@ -24,25 +23,27 @@ export class PublishingModule {
   ) {}
 
   static async create(
-    eventBus: EventBus = new InMemoryEventBus(),
-    options: { cacheNamespace?: string } = {},
+    eventBus: EventBus,
   ) {
     const pageRenderer = new UnifiedMarkdownRenderer();
     const renderedPageCache = await createRenderedPageCache();
 
-    const pagePublisher = new PagePublisher(pageRenderer, renderedPageCache, options);
+    const pagePublisher = new PagePublisher(pageRenderer, renderedPageCache);
 
     const invalidatePagesController = new InvalidatePagesController(pagePublisher);
-    return new PublishingModule(
+    const module = new PublishingModule(
       invalidatePagesController,
       pagePublisher,
       pageRenderer,
       renderedPageCache,
       eventBus
     );
+    module.registerEventHandlers();
+    return module;
   }
 
   registerEventHandlers() {
+    if (this.unsubscribes.length) return;
     this.unsubscribes.push(
       this.eventBus.subscribe(
         DocumentCreated,

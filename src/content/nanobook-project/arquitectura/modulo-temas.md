@@ -16,6 +16,9 @@ oficiales, el dominio de temas personalizados, la persistencia, la resolución
 de valores y las capacidades HTTP y de edición. No conoce documentos,
 perfiles, navegación ni autenticación; la aplicación raíz solo compone sus
 capacidades y el módulo de nanobooks conserva una referencia de asignación.
+La aplicación raíz inyecta en `ThemeModule` la capacidad de mutar esa
+referencia; la persistencia y la autorización siguen siendo responsabilidad de
+`NanobookModule`.
 
 Los componentes consumen variables semánticas (`--theme-*`) y atributos
 `data-theme`. Así, un componente no necesita conocer si el valor proviene de
@@ -41,10 +44,16 @@ El nanobook guarda una referencia estricta `{ kind, id }` dentro de
 4. Los nanobooks existentes con configuración `{}` conservan `classic`; los
    nuevos se crean con `official:nanobook`.
 
-La composición SSR resuelve el tema efectivo por solicitud y lo entrega al
-layout. El layout publica ambas paletas de color y el modo claro/oscuro en el
-documento para evitar que la navegación cliente deje valores del nanobook
-anterior.
+Cada página SSR obtiene el nanobook y solicita directamente
+`ThemeModule.resolveTheme`; no existe un compositor contextual por nanobook.
+Después entrega el resultado al layout, que publica ambas paletas de color y
+el modo claro/oscuro en el documento para evitar que la navegación cliente deje
+valores del nanobook anterior.
+
+La asignación se gobierna desde `theme`: su caso de uso valida la referencia y
+su controlador atiende el endpoint, mientras que recibe por inyección
+`NanobookModule.setNanobookTheme` para guardar el cambio. Así ningún módulo de
+negocio importa al otro.
 
 ## Límites actuales
 

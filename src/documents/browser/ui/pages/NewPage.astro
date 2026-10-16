@@ -20,9 +20,16 @@ if (!nanobook) {
   return new Response("Nanobook not found", { status: 404 });
 }
 const documentModule = app.nanobookModule.documentModule;
-const { publishingModule, navigationModule, theme } =
-  await app.createNanobookCapabilities(nanobook, Astro.request);
+const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const theme = await app.themeModule.resolveTheme.execute(
+  nanobook.getSettings().theme,
+  Astro.request,
+);
+const navigationService = await navigationModule.getNavigation(nanobookId, {
+  rootPath: "index",
+  basePath: `/n/${nanobook.getSlug()}`,
+});
 
 export const prerender = false;
 
@@ -46,7 +53,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
   title={`Nuevo documento en ${entry.title}`}
   description="Crear un nuevo documento"
   hideToc={true}
-  navigationService={navigationModule.navigationService}
+  navigationService={navigationService}
   theme={theme}
 >
   <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
@@ -71,7 +78,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           <option value="document" selected>Documento</option>
           <option value="directory">Directorio</option>
         </select>
-        <p class="text-xs text-[var(--text-muted)]" data-type-help>
+        <p class="text-xs text-[var(--theme-text-muted)]" data-type-help>
           Crea un archivo Markdown directamente bajo la ruta actual.
         </p>
       </div>
@@ -81,7 +88,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
           >Nombre</label
         >
         <div class="flex items-center gap-2 text-sm">
-          <span class="text-[var(--text-muted)] whitespace-nowrap"
+          <span class="text-[var(--theme-text-muted)] whitespace-nowrap"
             >/{basePath}</span
           >
           <input
@@ -95,7 +102,7 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
             data-name-input
           />
         </div>
-        <p class="text-xs text-[var(--text-muted)]">
+        <p class="text-xs text-[var(--theme-text-muted)]">
           Solo letras, números, guiones y guiones bajos. Sin barras ni espacios.
         </p>
       </div>

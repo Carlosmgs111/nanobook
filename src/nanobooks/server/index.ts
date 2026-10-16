@@ -1,7 +1,7 @@
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { DocumentModule } from "../../documents/server";
-import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
+import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { CreateNanobook } from "./application/CreateNanobook";
 import { UpdateNanobook } from "./application/UpdateNanobook";
 import { SetNanobookTheme } from "./application/SetNanobookTheme";
@@ -21,14 +21,6 @@ export { AuthorizeNanobook, NanobookAccessDeniedError } from "./application/Auth
 export type { NanobookPermission } from "./application/AuthorizeNanobook";
 export { NanobookNotFoundError } from "./application/errors";
 
-/**
- * Composición de las capacidades globales de nanobooks.
- *
- * El repositorio, los casos de uso, los controladores y el módulo documental
- * son globales. Las capacidades de presentación se construyen en la raíz de
- * aplicación para cada solicitud y nunca se indexan ni se conservan por
- * nanobook.
- */
 export class NanobookModule {
   private constructor(
     public readonly createNanobook: CreateNanobook,
@@ -43,13 +35,13 @@ export class NanobookModule {
     public readonly setNanobookTheme: SetNanobookTheme,
   ) {}
 
-  static async create(routeProtector: RouteProtector): Promise<NanobookModule> {
+  static async create(routeProtector: RouteProtector, eventBus: EventBus): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(db);
     const listNanobooks = new ListNanobooks(repository);
     const getNanobookById = new GetNanobookById(repository);
     const getNanobookBySlug = new GetNanobookBySlug(repository);
     const documentModule = await DocumentModule.create(
-      new InMemoryEventBus(),
+      eventBus,
       routeProtector,
     );
     const createNanobook = new CreateNanobook(repository, documentModule);
