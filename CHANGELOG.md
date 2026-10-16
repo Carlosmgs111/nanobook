@@ -9,6 +9,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - Eliminado `createNanobookCapabilities`: navegación y publicación se componen una vez en `Application` y comparten un `InMemoryEventBus` obligatorio con documentos. Los eventos refrescan navegación e invalidan páginas por ID global; las consultas reciben el nanobook explícitamente.
 - Añadido el módulo transversal de temas: catálogo oficial, temas personalizados persistidos, editor reutilizable y asignación por nanobook. Cada página SSR resuelve el tema efectivo de su nanobook y la navegación con `ClientRouter` reaplica sus variables semánticas.
+- Mejorado el editor de temas personalizados: permite crear y actualizar temas, editar paletas claras y oscuras, elegir tipografía, radio, densidad y decoración, y previsualizar el resultado en ambos modos de color.
 
 - El cierre de sesión carga la portada pública mediante una navegación completa y una URL nueva, evitando redirecciones antiguas cacheadas para `/` y descartando el estado cliente de la sesión anterior.
 

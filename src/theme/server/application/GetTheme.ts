@@ -5,8 +5,13 @@ import { findOwned } from "./ownership";
 
 export class GetTheme {
   constructor(private readonly repository: ThemeRepository) {}
-  async execute(ownerId: string, id: string): Promise<Result<Error, ThemeDetails>> {
+  async execute(
+    ownerId: string,
+    id: string
+  ): Promise<Result<Error, ThemeDetails>> {
     const found = await findOwned(this.repository, ownerId, id);
-    return found.isSuccess ? Result.ok(toThemeDetails(found.getValue())) : Result.fail(found.getError());
+    return found.isSuccess
+      ? Result.ok(toThemeDetails(found.getValue()))
+      : Result.fail(found.getError());
   }
 }

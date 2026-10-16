@@ -1,44 +1,228 @@
 ---
 import type { ThemeDetailsDto } from "../HttpThemeApi";
 import ThemeEditorController from "../ThemeEditorController.astro";
-interface Props { theme?: ThemeDetailsDto }
+interface Props {
+  theme?: ThemeDetailsDto;
+}
 const { theme } = Astro.props;
-const token = (mode: "light" | "dark", name: "pageBackground" | "surfaceBackground" | "text" | "textMuted" | "accent" | "border", fallback: string) => theme?.tokens[mode]?.[name] ?? fallback;
+const token = (
+  mode: "light" | "dark",
+  name:
+    | "pageBackground"
+    | "surfaceBackground"
+    | "text"
+    | "textMuted"
+    | "accent"
+    | "border",
+  fallback: string
+) => theme?.tokens[mode]?.[name] ?? fallback;
 const colors = [
-  ["pageBackground", "Fondo"], ["surfaceBackground", "Superficie"], ["text", "Texto"],
-  ["textMuted", "Texto secundario"], ["accent", "Acento"], ["border", "Borde"],
+  ["pageBackground", "Fondo"],
+  ["surfaceBackground", "Superficie"],
+  ["text", "Texto"],
+  ["textMuted", "Texto secundario"],
+  ["accent", "Acento"],
+  ["border", "Borde"],
 ] as const;
 ---
 
-<section data-theme-editor data-theme-id={theme?.reference.id} class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]">
-  <form class="space-y-6 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-5">
+<section
+  data-theme-editor
+  data-theme-id={theme?.reference.id}
+  class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]"
+>
+  <form
+    class="space-y-6 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-5"
+  >
     <div class="grid gap-4 sm:grid-cols-2">
-      <label class="space-y-1 text-sm"><span>Nombre</span><input name="name" value={theme?.name ?? ""} class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2" /></label>
-      <label class="space-y-1 text-sm"><span>Tema base</span><select name="baseThemeId" disabled={Boolean(theme)} class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2"><option value="nanobook" selected={theme?.baseThemeId !== "classic"}>Nanobook</option><option value="classic" selected={theme?.baseThemeId === "classic"}>Clásico</option></select></label>
+      <label class="space-y-1 text-sm"
+        ><span>Nombre</span><input
+          name="name"
+          value={theme?.name ?? ""}
+          class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2"
+        /></label
+      >
+      <label class="space-y-1 text-sm"
+        ><span>Tema base</span><select
+          name="baseThemeId"
+          disabled={Boolean(theme)}
+          class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2"
+          ><option value="nanobook" selected={theme?.baseThemeId !== "classic"}
+            >Nanobook</option
+          ><option value="classic" selected={theme?.baseThemeId === "classic"}
+            >Clásico</option
+          ></select
+        ></label
+      >
     </div>
-    {(["light", "dark"] as const).map((mode) => <fieldset class="grid gap-3 sm:grid-cols-2"><legend class="mb-2 font-semibold">Paleta {mode === "light" ? "clara" : "oscura"}</legend>{colors.map(([name, label]) => <label class="flex items-center justify-between gap-3 text-sm"><span>{label}</span><input type="color" data-theme-field={`${mode}.${name}`} value={token(mode, name, ({ light: { pageBackground: "#f7f5ef", surfaceBackground: "#ffffff", text: "#171717", textMuted: "#68655f", accent: "#111111", border: "#d8d4ca" }, dark: { pageBackground: "#121210", surfaceBackground: "#1b1a17", text: "#f1efe8", textMuted: "#aaa69c", accent: "#ffffff", border: "#393730" } } as const)[mode][name])} /></label>)}</fieldset>)}
+    {
+      (["light", "dark"] as const).map((mode) => (
+        <fieldset class="grid gap-3 sm:grid-cols-2">
+          <legend class="mb-2 font-semibold">
+            Paleta {mode === "light" ? "clara" : "oscura"}
+          </legend>
+          {colors.map(([name, label]) => (
+            <label class="flex items-center justify-between gap-3 text-sm">
+              <span>{label}</span>
+              <input
+                type="color"
+                data-theme-field={`${mode}.${name}`}
+                value={token(
+                  mode,
+                  name,
+                  (
+                    {
+                      light: {
+                        pageBackground: "#f7f5ef",
+                        surfaceBackground: "#ffffff",
+                        text: "#171717",
+                        textMuted: "#68655f",
+                        accent: "#111111",
+                        border: "#d8d4ca",
+                      },
+                      dark: {
+                        pageBackground: "#121210",
+                        surfaceBackground: "#1b1a17",
+                        text: "#f1efe8",
+                        textMuted: "#aaa69c",
+                        accent: "#ffffff",
+                        border: "#393730",
+                      },
+                    } as const
+                  )[mode][name]
+                )}
+              />
+            </label>
+          ))}
+        </fieldset>
+      ))
+    }
     <div class="grid gap-3 sm:grid-cols-2">
-      <label class="text-sm">Tipografía<select data-theme-field="typography.family" class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"><option value="system-sans">Sans del sistema</option><option value="editorial-serif" selected={theme?.tokens.typography?.family === "editorial-serif"}>Serif editorial</option><option value="mono" selected={theme?.tokens.typography?.family === "mono"}>Monoespaciada</option></select></label>
-      <label class="text-sm">Radio<select data-theme-field="shape.radius" class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"><option value="square">Recto</option><option value="soft" selected={theme?.tokens.shape?.radius === "soft"}>Suave</option><option value="rounded" selected={theme?.tokens.shape?.radius === "rounded"}>Redondeado</option></select></label>
-      <label class="text-sm">Densidad<select data-theme-field="layout.density" class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"><option value="compact">Compacta</option><option value="comfortable">Cómoda</option><option value="relaxed" selected={theme?.tokens.layout?.density === "relaxed"}>Relajada</option></select></label>
-      <label class="text-sm">Decoración<select data-theme-field="decoration.pattern" class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"><option value="none">Ninguna</option><option value="grid" selected={theme?.tokens.decoration?.pattern === "grid"}>Cuadrícula</option><option value="hatch" selected={theme?.tokens.decoration?.pattern === "hatch"}>Rayado</option></select></label>
+      <label class="text-sm"
+        >Tipografía<select
+          data-theme-field="typography.family"
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="system-sans">Sans del sistema</option><option
+            value="editorial-serif"
+            selected={theme?.tokens.typography?.family === "editorial-serif"}
+            >Serif editorial</option
+          ><option
+            value="mono"
+            selected={theme?.tokens.typography?.family === "mono"}
+            >Monoespaciada</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Radio<select
+          data-theme-field="shape.radius"
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="square">Recto</option><option
+            value="soft"
+            selected={theme?.tokens.shape?.radius === "soft"}>Suave</option
+          ><option
+            value="rounded"
+            selected={theme?.tokens.shape?.radius === "rounded"}
+            >Redondeado</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Densidad<select
+          data-theme-field="layout.density"
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="compact">Compacta</option><option value="comfortable"
+            >Cómoda</option
+          ><option
+            value="relaxed"
+            selected={theme?.tokens.layout?.density === "relaxed"}
+            >Relajada</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Decoración<select
+          data-theme-field="decoration.pattern"
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="none">Ninguna</option><option
+            value="grid"
+            selected={theme?.tokens.decoration?.pattern === "grid"}
+            >Cuadrícula</option
+          ><option
+            value="hatch"
+            selected={theme?.tokens.decoration?.pattern === "hatch"}
+            >Rayado</option
+          ></select
+        ></label
+      >
     </div>
-    <p data-theme-notice class="min-h-6 text-sm text-[var(--theme-text-muted)]" role="status"></p>
-    <button data-theme-submit type="submit" class="border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-[var(--theme-page-bg)]">Guardar tema</button>
+    <p
+      data-theme-notice
+      class="min-h-6 text-sm text-[var(--theme-text-muted)]"
+      role="status"
+    >
+    </p>
+    <button
+      data-theme-submit
+      type="submit"
+      class="border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-[var(--theme-page-bg)]"
+      >Guardar tema</button
+    >
   </form>
-  <aside data-theme-preview data-preview-mode="light" class="min-h-80 border p-6">
-    <button type="button" data-preview-mode-toggle class="mb-6 border px-3 py-2 text-sm">Alternar claro/oscuro</button>
-    <p class="mb-2 text-sm opacity-70">Vista previa local</p><h2 class="mb-4 text-3xl font-semibold">Un tema para tus ideas</h2>
-    <div class="preview-panel border p-4"><p>Los componentes consumen el mismo contrato semántico.</p><a href="#">Enlace de ejemplo</a></div>
+  <aside
+    data-theme-preview
+    data-preview-mode="light"
+    class="min-h-80 border p-6"
+  >
+    <button
+      type="button"
+      data-preview-mode-toggle
+      class="mb-6 border px-3 py-2 text-sm">Alternar claro/oscuro</button
+    >
+    <p class="mb-2 text-sm opacity-70">Vista previa local</p><h2
+      class="mb-4 text-3xl font-semibold"
+    >
+      Un tema para tus ideas
+    </h2>
+    <div class="preview-panel border p-4">
+      <p>Los componentes consumen el mismo contrato semántico.</p><a href="#"
+        >Enlace de ejemplo</a>
+    </div>
   </aside>
 </section>
 <ThemeEditorController />
 
 <style>
-  [data-theme-preview] { background: var(--theme-light-page-bg); color: var(--theme-light-text); border-color: var(--theme-light-border); font-family: var(--theme-light-font-body); background-image: var(--theme-light-page-pattern); border-radius: var(--theme-light-panel-radius); }
-  [data-theme-preview][data-preview-mode="dark"] { background-color: var(--theme-dark-page-bg); color: var(--theme-dark-text); border-color: var(--theme-dark-border); font-family: var(--theme-dark-font-body); background-image: var(--theme-dark-page-pattern); border-radius: var(--theme-dark-panel-radius); }
-  [data-theme-preview] h2 { color: var(--theme-light-accent); font-family: var(--theme-light-font-heading); }
-  [data-theme-preview][data-preview-mode="dark"] h2 { color: var(--theme-dark-accent); font-family: var(--theme-dark-font-heading); }
-  .preview-panel { background: var(--theme-light-surface-bg); border-color: var(--theme-light-border); }
-  [data-preview-mode="dark"] .preview-panel { background: var(--theme-dark-surface-bg); border-color: var(--theme-dark-border); }
+  [data-theme-preview] {
+    background: var(--theme-light-page-bg);
+    color: var(--theme-light-text);
+    border-color: var(--theme-light-border);
+    font-family: var(--theme-light-font-body);
+    background-image: var(--theme-light-page-pattern);
+    border-radius: var(--theme-light-panel-radius);
+  }
+  [data-theme-preview][data-preview-mode="dark"] {
+    background-color: var(--theme-dark-page-bg);
+    color: var(--theme-dark-text);
+    border-color: var(--theme-dark-border);
+    font-family: var(--theme-dark-font-body);
+    background-image: var(--theme-dark-page-pattern);
+    border-radius: var(--theme-dark-panel-radius);
+  }
+  [data-theme-preview] h2 {
+    color: var(--theme-light-accent);
+    font-family: var(--theme-light-font-heading);
+  }
+  [data-theme-preview][data-preview-mode="dark"] h2 {
+    color: var(--theme-dark-accent);
+    font-family: var(--theme-dark-font-heading);
+  }
+  .preview-panel {
+    background: var(--theme-light-surface-bg);
+    border-color: var(--theme-light-border);
+  }
+  [data-preview-mode="dark"] .preview-panel {
+    background: var(--theme-dark-surface-bg);
+    border-color: var(--theme-dark-border);
+  }
 </style>
