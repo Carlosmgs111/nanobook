@@ -89,7 +89,7 @@ describe("official theme styles", () => {
       "src/layouts/components/LayoutShell.astro",
       "src/layouts/components/Header.astro",
       "src/layouts/components/Footer.astro",
-      "src/layouts/components/DocumentControls.astro",
+      "src/documents/browser/ui/components/DocumentActionLink.astro",
       "src/layouts/components/ContentWidthToggle.astro",
       "src/layouts/components/StateRestoreScripts.astro",
       "src/theme/browser/components/ColorModeToggle.astro",

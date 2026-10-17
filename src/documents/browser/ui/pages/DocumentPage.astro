@@ -2,6 +2,8 @@
 import IndexList from "../../../../navigation/browser/ui/components/IndexList/index.astro";
 import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
+import { AuthorizeNanobook } from "../../../../nanobooks/server";
+import DocumentActionLink from "../components/DocumentActionLink.astro";
 
 const app = await getApp();
 
@@ -22,6 +24,9 @@ if (!nanobook) {
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
+const user = await app.authServerModule.getSession(Astro.request);
+const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
+const navigationContext = { section: "read" as const, book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` } };
 const theme = await app.themeModule.resolveTheme.execute(
   nanobook.getSettings().theme,
   Astro.request,
@@ -47,11 +52,11 @@ const { entry, renderedBody } = rendered;
 const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
-const newHref = entry.isIndex
+const newHref = canEdit && entry.isIndex
     ? entry.slug === "index"
       ? `${baseHref}/index/new`
       : `${baseHref}/${entry.slug}/new`
-    : `${baseHref}/new`;
+    : undefined;
 const canonicalHref = entry.ref
   ? entry.ref === "index"
     ? `${baseHref || "/"}`
@@ -66,11 +71,10 @@ Astro.response.headers.set("Cache-Control", "no-store");
   title={entry.title}
   description={entry.description}
   headings={headings}
-  editHref={editHref}
-  newHref={newHref}
   canonicalHref={canonicalHref}
   navigationService={navigationService}
   theme={theme}
+  navigationContext={navigationContext}
 >
 {
   entry.isIndex ? (
@@ -79,14 +83,17 @@ Astro.response.headers.set("Cache-Control", "no-store");
       description={entry.description}
       label="Index"
       navigationService={navigationService}
+      editHref={canEdit ? editHref : undefined}
+      newHref={newHref}
     />
   ) : (
     <Fragment>
       <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
         <span class="tech-label mb-3 block">Document</span>
-        <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-5xl">
-          {entry.title}
-        </h1>
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-5xl">{entry.title}</h1>
+          {canEdit && <DocumentActionLink href={editHref} label="Editar" />}
+        </div>
       </div>
 
       <div class="mb-12 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] px-4 py-3 font-[family-name:var(--theme-font-code)] text-xs text-[var(--theme-text-muted)]">

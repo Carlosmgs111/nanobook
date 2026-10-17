@@ -1,6 +1,7 @@
 ---
 import DocumentIndex from "./DocumentIndex.astro"
 import type { NavigationService } from "../../../../server";
+import DocumentActionLink from "../../../../../documents/browser/ui/components/DocumentActionLink.astro";
 
 interface Props {
   title: string;
@@ -8,10 +9,12 @@ interface Props {
   label?: string;
   art?: string;
   navigationService: NavigationService;
+  editHref?: string;
+  newHref?: string;
 }
 const slug = Astro.params.slug || "index";
 
-const { title, description, label = "Index", navigationService } = Astro.props;
+const { title, description, label = "Index", navigationService, editHref, newHref } = Astro.props;
 
 const sortedEntries = navigationService.getImmediateChildren(slug)
   .filter((page) => !page.metadata.draft)
@@ -25,11 +28,13 @@ const sortedEntries = navigationService.getImmediateChildren(slug)
 
 <div class="mb-12 border-b border-[var(--theme-border)] pb-8">
   <span class="tech-label mb-3 block">{label}</span>
-  <h1
-    class="glow-text text-4xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-5xl"
-  >
-    {title}
-  </h1>
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-5xl">{title}</h1>
+    {(editHref || newHref) && <div class="flex flex-wrap gap-2">
+      {editHref && <DocumentActionLink href={editHref} label="Editar" />}
+      {newHref && <DocumentActionLink href={newHref} label="Nuevo en esta sección" primary />}
+    </div>}
+  </div>
   {description && <p class="mt-4 text-[var(--theme-text-muted)]">{description}</p>}
 </div>
 

@@ -4,6 +4,7 @@ import { ClientRouter } from "astro:transitions";
 import LayoutShell from "./components/LayoutShell.astro";
 import type { NavigationService } from "../navigation/server";
 import { getApp } from "../application/server/Application";
+import type { NavigationContext } from "../navigation/browser/ui/NavigationContext";
 import {
   normalizeColorModePreference,
   type AppliedTheme,
@@ -20,13 +21,11 @@ interface Props {
   description?: string;
   headings?: Heading[];
   hideToc?: boolean;
-  editHref?: string;
-  viewHref?: string;
-  newHref?: string;
   loginHref?: string;
   canonicalHref?: string;
   navigationService?: NavigationService;
   theme?: AppliedTheme;
+  navigationContext?: NavigationContext;
 }
 
 const {
@@ -34,15 +33,14 @@ const {
   description,
   headings,
   hideToc = false,
-  editHref,
-  viewHref,
-  newHref,
   loginHref = "/login",
   canonicalHref,
   navigationService,
   theme: suppliedTheme,
+  navigationContext = { section: "project" },
 } = Astro.props;
 const app = await getApp();
+const session = await app.authServerModule.getSession(Astro.request);
 const theme =
   suppliedTheme ??
   (await app.themeModule.resolveTheme.execute({
@@ -83,11 +81,11 @@ const colorModePreference = normalizeColorModePreference(storedMode);
     description={description}
     headings={headings}
     hideToc={hideToc}
-    editHref={editHref}
-    viewHref={viewHref}
-    newHref={newHref}
     loginHref={loginHref}
     navigationService={navigationService}
+    navigationContext={navigationContext}
+    userName={session?.name}
+    signedIn={Boolean(session)}
   >
     <slot />
   </LayoutShell>

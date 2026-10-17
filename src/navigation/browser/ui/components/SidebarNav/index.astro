@@ -2,12 +2,14 @@
 import SidebarHeader from "./SidebarHeader.astro";
 import SidebarList from "./SidebarList.astro";
 import type { NavigationService } from "../../../../server";
+import type { BookNavigationContext } from "../../NavigationContext";
 
 interface Props {
   navigationService?: NavigationService;
+  book?: BookNavigationContext;
 }
 
-const { navigationService: providedNavigationService } = Astro.props;
+const { navigationService: providedNavigationService, book } = Astro.props;
 
 const slug = Astro.params.slug || "index";
 
@@ -19,7 +21,7 @@ const sortedEntries = entries
   .sort((a, b) => a.title.localeCompare(b.title));
 
 const toggleId = "sidebar-mode-toggle";
-const display = Boolean(entries.length);
+const display = Boolean(book);
 ---
 
 <div
@@ -37,7 +39,7 @@ const display = Boolean(entries.length);
   data-is-hidden="true"
   data-display={display}
 >
-  <SidebarHeader toggleId={toggleId} parentEntry={parentEntry} />
+  <SidebarHeader toggleId={toggleId} parentEntry={parentEntry} book={book} />
   {providedNavigationService && (
     <SidebarList
       entries={sortedEntries}

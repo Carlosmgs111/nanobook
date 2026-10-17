@@ -15,28 +15,27 @@ describe("profile page", () => {
     );
     expect(profile).toContain("<ProfilePage />");
     expect(profile).toContain("<ProfileFormController />");
-    expect(profile).toContain('import SignOutController from "../profiles/browser/SignOutController.astro"');
-    expect(profile).toContain("<SignOutController />");
+    const shell = read("src/layouts/components/LayoutShell.astro");
+    expect(shell).toContain('import SignOutController from "../../profiles/browser/SignOutController.astro"');
+    expect(shell).toContain("<SignOutController />");
     expect(profile).not.toContain("<Layout");
   });
 
-  it("offers a themed sign-out action backed by the sign-out controller", () => {
-    const profilePage = read("src/profiles/browser/ui/ProfilePage.astro");
+  it("offers sign-out from the shared account menu", () => {
+    const header = read("src/layouts/components/Header.astro");
     const controller = read("src/profiles/browser/ProfileFormController.astro");
 
-    expect(profilePage).toContain("Cerrar sesión");
-    expect(profilePage).toContain("data-sign-out");
+    expect(header).toContain("Cerrar sesión");
+    expect(header).toContain("data-sign-out");
     expect(controller).toContain("ProfileFormController");
     expect(controller).toContain("data-profile-form");
     expect(controller).not.toContain('import { authModule }');
   });
 
-  it("offers a themed button back to the home page", () => {
+  it("uses the shared project link for returning home", () => {
     const profile = read("src/profiles/browser/ui/ProfilePage.astro");
-
-    expect(profile).toContain('href="/"');
-    expect(profile).toContain("Volver al inicio");
-    expect(profile).toContain("bg-[var(--theme-text)]");
-    expect(profile).toContain("!text-[var(--theme-page-bg)]");
+    const header = read("src/layouts/components/Header.astro");
+    expect(profile).toContain("<Layout");
+    expect(header).toContain('aria-label="Nanobook, volver al inicio"');
   });
 });

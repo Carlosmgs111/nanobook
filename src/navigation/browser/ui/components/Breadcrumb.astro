@@ -1,11 +1,15 @@
 ---
 import type { NavigationService } from "../../../server";
+import type { BookNavigationContext } from "../../NavigationContext";
+import type { NavigationContext } from "../../NavigationContext";
 
 interface Props {
   navigationService?: NavigationService;
+  book?: BookNavigationContext;
+  mode?: NavigationContext["section"];
 }
 
-const { navigationService: providedNavigationService } = Astro.props;
+const { navigationService: providedNavigationService, book, mode = "read" } = Astro.props;
 
 const slug = Astro.params.slug || "index";
 
@@ -15,7 +19,13 @@ export interface Crumb {
   href: string;
   current: boolean;
 }
-const crumbs = providedNavigationService?.getBreadcrumbs(slug) ?? [];
+const baseCrumbs = (providedNavigationService?.getBreadcrumbs(slug) ?? []).map((crumb, index) =>
+  index === 0 && book ? { ...crumb, title: book.name } : crumb
+);
+const modeTitle = mode === "edit" ? "Editar" : mode === "new" ? "Nuevo documento" : mode === "preview" ? "Vista previa" : undefined;
+const crumbs = modeTitle
+  ? [...baseCrumbs.map((crumb) => ({ ...crumb, current: false })), { id: mode, title: modeTitle, href: Astro.url.pathname, current: true }]
+  : baseCrumbs;
 const display = Boolean(crumbs.length);
 ---
 

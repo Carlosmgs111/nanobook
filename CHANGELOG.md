@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregido el contraste del texto en la acción «Nuevo en esta sección» dentro del contenido de documentos.
+- Separada la navegación global de la estructura interna de cada nanobook: el header enlaza a la portada, exploración, espacio de trabajo y cuenta; el breadcrumb y sidebar identifican el libro actual. Las acciones Editar y Nuevo se ubican junto al documento o índice y se muestran según el permiso de escritura.
+
 - Retirado el modo de color `system`: la preferencia admitida queda limitada a `light` y `dark`, las entradas antiguas o inválidas se normalizan a `light` y el botón del header alterna de forma determinista entre ambos modos. También se eliminaron roles CSS sin consumidores del contrato visual.
 
 - Eliminado `createNanobookCapabilities`: navegación y publicación se componen una vez en `Application` y comparten un `InMemoryEventBus` obligatorio con documentos. Los eventos refrescan navegación e invalidan páginas por ID global; las consultas reciben el nanobook explícitamente.

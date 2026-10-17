@@ -1,104 +1,113 @@
 ---
 import Breadcrumb from "../../navigation/browser/ui/components/Breadcrumb.astro";
-import DocumentControls from "./DocumentControls.astro";
 import OpenSidebar from "../../navigation/browser/ui/components/SidebarNav/OpenSidebar.astro";
+import ColorModeToggle from "../../theme/browser/components/ColorModeToggle.astro";
+import ContentWidthToggle from "./ContentWidthToggle.astro";
 import type { NavigationService } from "../../navigation/server";
+import type { NavigationContext } from "../../navigation/browser/ui/NavigationContext";
 
 interface Props {
-  editHref?: string;
-  viewHref?: string;
-  newHref?: string;
   loginHref?: string;
   navigationService?: NavigationService;
+  navigationContext: NavigationContext;
+  userName?: string;
+  signedIn: boolean;
 }
 
-const { editHref, viewHref, newHref, loginHref, navigationService } = Astro.props;
-const isProfilePage = Astro.url.pathname === "/profile";
+const { loginHref, navigationService, navigationContext, userName, signedIn } = Astro.props;
 ---
 
-<header
-  class="sticky top-0 z-50 border-b border-[var(--theme-border)] bg-[var(--theme-page-bg)]/90 backdrop-blur-sm"
-  data-auth-header
->
-  <div
-    id="header-inner"
-    class="header-inner mx-auto flex w-full items-center justify-between gap-4 px-6 py-5"
-    data-content-mode="constrained"
-  >
-    <OpenSidebar
-      sidebarId="sidebar"
-      backdropId="sidebar-backdrop"
-      buttonId="sidebar-open"
-    />
-    <div class="min-w-0 flex-1">
-      <Breadcrumb navigationService={navigationService} />
+<header class="sticky top-0 z-50 border-b border-[var(--theme-border)] bg-[var(--theme-page-bg)]/95 backdrop-blur-sm">
+  <div id="header-inner" class="header-inner mx-auto grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 md:flex md:flex-wrap md:gap-x-5 md:px-6" data-content-mode="constrained">
+    {navigationContext.book && (
+      <OpenSidebar sidebarId="sidebar" backdropId="sidebar-backdrop" buttonId="sidebar-open" />
+    )}
+    <a href="/" class="brand-link shrink-0 font-semibold tracking-tight text-[var(--theme-accent)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--theme-accent)]" aria-label="Nanobook, volver al inicio">nanobook</a>
+
+    <nav class="hidden items-center gap-4 text-sm md:flex" aria-label="Proyecto">
+      <a href="/#nanobooks-publicos" class="hover:text-[var(--theme-accent)] hover:underline">Explorar</a>
+      {signedIn && <a href="/nanobooks" class="hover:text-[var(--theme-accent)] hover:underline" aria-current={Astro.url.pathname === "/nanobooks" ? "page" : undefined}>Mis nanobooks</a>}
+      {signedIn && <a href="/themes" class="hover:text-[var(--theme-accent)] hover:underline" aria-current={Astro.url.pathname === "/themes" ? "page" : undefined}>Temas</a>}
+    </nav>
+
+    <div class="header-actions md:ml-auto md:flex md:items-center md:gap-2">
+      <details class="menu-root project-menu md:hidden" data-header-menu>
+        <summary class="menu-trigger">Proyecto</summary>
+        <nav class="menu-panel" aria-label="Proyecto móvil">
+          <a href="/#nanobooks-publicos">Explorar</a>
+          {signedIn && <a href="/nanobooks" aria-current={Astro.url.pathname === "/nanobooks" ? "page" : undefined}>Mis nanobooks</a>}
+          {signedIn && <a href="/themes" aria-current={Astro.url.pathname === "/themes" ? "page" : undefined}>Temas</a>}
+        </nav>
+      </details>
+
+      <details class="menu-root view-menu" data-header-menu>
+        <summary class="menu-trigger">Vista</summary>
+        <div class="menu-panel menu-panel-view" aria-label="Preferencias de lectura">
+          <span>Modo de color</span><ColorModeToggle />
+          {navigationContext.book && <><span>Ancho del contenido</span><ContentWidthToggle /></>}
+        </div>
+      </details>
+
+      {signedIn ? (
+        <details class="menu-root account-menu" data-header-menu>
+          <summary class="menu-trigger max-w-36 truncate">{userName || "Cuenta"}</summary>
+          <div class="menu-panel" aria-label="Cuenta">
+            <a href="/profile" aria-current={Astro.url.pathname === "/profile" ? "page" : undefined}>Perfil</a>
+            <button type="button" data-sign-out>Cerrar sesión</button>
+          </div>
+        </details>
+      ) : loginHref && (
+        <a href={loginHref} class="menu-trigger account-menu">Ingresar</a>
+      )}
     </div>
-    <div class="flex flex-shrink-0 items-center gap-2">
-      <DocumentControls
-        editHref={editHref}
-        viewHref={viewHref}
-        newHref={newHref}
-      />
-      <a
-        href="/profile"
-        data-auth-profile
-        hidden
-        class="inline-flex items-center justify-center bg-black px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]/50"
-      ></a>
-      <a
-        href="/nanobooks"
-        data-auth-nanobooks
-        hidden
-        class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--theme-border-subtle)]"
-      >Nanobooks</a>
-      <a
-        href="/themes"
-        data-auth-themes
-        hidden
-        class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--theme-border-subtle)]"
-      >Temas</a>
-      {
-        loginHref && !isProfilePage && (
-          <a
-            href={loginHref}
-            data-auth-login
-            aria-label="Ingresar a tu cuenta"
-            class="inline-flex items-center justify-center border border-[var(--theme-border)] px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[var(--theme-border-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]/50"
-          >
-            Ingresar
-          </a>
-        )
-      }
-    </div>
+
+    {navigationContext.book && (
+      <div class="book-breadcrumb w-full min-w-0 border-t border-[var(--theme-border-subtle)] pt-2 text-sm">
+        <Breadcrumb navigationService={navigationService} book={navigationContext.book} mode={navigationContext.section} />
+      </div>
+    )}
   </div>
 </header>
 
 <script>
-  import { AuthStatusController } from "./AuthStatusController";
-  import { getApp } from "../../application/browser/Application";
-
-  const app = getApp();
-
-  const authStatusController = new AuthStatusController(
-    app.authModule.getAuthenticatedSession
-  );
-
-  document.addEventListener("astro:page-load", () =>
-    authStatusController.mount()
-  );
-  authStatusController.mount();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      document.querySelectorAll<HTMLDetailsElement>("[data-header-menu]").forEach((menu) => {
+        if (menu.open && menu.contains(document.activeElement)) menu.querySelector<HTMLElement>("summary")?.focus();
+        menu.open = false;
+      });
+    }
+  });
+  document.addEventListener("click", (event) => {
+    document.querySelectorAll<HTMLDetailsElement>("[data-header-menu]").forEach((menu) => {
+      if (!menu.contains(event.target as Node)) menu.open = false;
+    });
+  });
 </script>
 
 <style>
-  .header-inner {
-    max-width: 72rem;
+  .header-inner { max-width: 72rem; }
+  .header-inner[data-content-mode="full"] { max-width: none; }
+  .brand-link { grid-column: 2; grid-row: 1; }
+  .header-actions { display: contents; }
+  .project-menu { grid-column: 1 / 3; grid-row: 2; }
+  .view-menu { grid-column: 3; grid-row: 2; justify-self: end; }
+  .account-menu { grid-column: 3; grid-row: 1; justify-self: end; }
+  .book-breadcrumb { grid-column: 1 / -1; grid-row: 3; }
+  .account-menu > .menu-trigger { max-width: 8rem; }
+  .project-menu .menu-panel { left: 0; right: auto; }
+  @media (min-width: 768px) {
+    .brand-link, .view-menu, .account-menu, .book-breadcrumb { grid-column: auto; grid-row: auto; }
+    .header-actions { display: flex; }
+    .account-menu > .menu-trigger { max-width: 9rem; }
   }
-  .header-inner[data-content-mode="full"] {
-    max-width: none;
-  }
-  @media (max-width: 1279px) {
-    :global(#content-width-toggle) {
-      display: none;
-    }
-  }
+  .menu-root { position: relative; }
+  .menu-trigger { display: inline-flex; min-height: 2.25rem; align-items: center; border: 1px solid var(--theme-border); padding: 0.35rem 0.7rem; font-size: 0.875rem; cursor: pointer; }
+  .menu-trigger:hover, .menu-root[open] > .menu-trigger { border-color: var(--theme-accent); color: var(--theme-accent); }
+  .menu-trigger:focus-visible, .menu-panel :is(a,button):focus-visible { outline: 2px solid var(--theme-accent); outline-offset: 2px; }
+  .menu-panel { position: absolute; right: 0; top: calc(100% + 0.4rem); z-index: 70; display: flex; min-width: 11rem; flex-direction: column; gap: 0.2rem; border: 1px solid var(--theme-border); background: var(--theme-page-bg); padding: 0.4rem; box-shadow: 0 8px 24px #0002; }
+  .menu-root:not([open]) > .menu-panel { display: none; }
+  .menu-panel:not(.menu-panel-view) :is(a,button) { display: block; width: 100%; padding: 0.5rem 0.6rem; text-align: left; font-size: 0.875rem; }
+  .menu-panel:not(.menu-panel-view) :is(a,button):hover { background: var(--theme-border-subtle); color: var(--theme-accent); }
+  .menu-panel-view { display: grid; grid-template-columns: minmax(8rem, 1fr) auto; align-items: center; gap: 0.6rem; min-width: 14rem; padding: 0.75rem; font-size: 0.8rem; }
 </style>

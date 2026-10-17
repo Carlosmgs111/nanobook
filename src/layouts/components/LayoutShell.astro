@@ -6,6 +6,8 @@ import SidebarNav from "../../navigation/browser/ui/components/SidebarNav/index.
 import TableOfContents from "../../documents/browser/ui/components/TableOfContents/index.astro";
 import ToastHost from "../../toast/browser/ToastHost.astro";
 import type { NavigationService } from "../../navigation/server";
+import type { NavigationContext } from "../../navigation/browser/ui/NavigationContext";
+import SignOutController from "../../profiles/browser/SignOutController.astro";
 
 interface Heading {
   depth: number;
@@ -18,21 +20,21 @@ interface Props {
   description?: string;
   headings?: Heading[];
   hideToc?: boolean;
-  editHref?: string;
-  viewHref?: string;
-  newHref?: string;
   loginHref?: string;
   navigationService?: NavigationService;
+  navigationContext: NavigationContext;
+  userName?: string;
+  signedIn: boolean;
 }
 
 const {
   headings,
   hideToc = false,
-  editHref,
-  viewHref,
-  newHref,
   loginHref,
   navigationService,
+  navigationContext,
+  userName,
+  signedIn,
 } = Astro.props;
 ---
 
@@ -51,18 +53,18 @@ const {
   >
   </div>
   <Header
-    editHref={editHref}
-    viewHref={viewHref}
-    newHref={newHref}
     loginHref={loginHref}
     navigationService={navigationService}
+    navigationContext={navigationContext}
+    userName={userName}
+    signedIn={signedIn}
   />
   <div
     id="content-wrapper"
     class="content-wrapper z-10 mx-auto flex gap-6 md:px-6 md:py-12"
     data-content-mode="constrained"
   >
-    <SidebarNav navigationService={navigationService} />
+    <SidebarNav navigationService={navigationService} book={navigationContext.book} />
     <main
       class="border-x border-[var(--theme-border-subtle)] md:px-6 flex-1 min-w-0 overflow-x-hidden md:overflow-x-visible"
     >
@@ -76,6 +78,7 @@ const {
   </div>
   <Footer />
   <ToastHost />
+  <SignOutController />
 
   <script type="module">
     document.addEventListener("astro:page-load", function () {

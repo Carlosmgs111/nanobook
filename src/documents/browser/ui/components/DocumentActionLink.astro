@@ -1,0 +1,20 @@
+---
+interface Props { href: string; label: string; primary?: boolean }
+const { href, label, primary = false } = Astro.props;
+---
+
+<a href={href} data-primary={primary} class:list={["document-action-link inline-flex min-h-10 shrink-0 items-center justify-center border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--theme-accent)]", primary ? "border-[var(--theme-accent)] bg-[var(--theme-accent)] hover:opacity-80" : "border-[var(--theme-border)] hover:border-[var(--theme-accent)]"]}>{label}</a>
+
+<style>
+  .document-action-link[data-primary="true"] {
+    color: var(--theme-page-bg);
+    text-decoration: none;
+  }
+  .document-action-link[data-primary="false"] {
+    color: var(--theme-text);
+    text-decoration: none;
+  }
+  .document-action-link[data-primary="false"]:hover {
+    color: var(--theme-accent);
+  }
+</style>

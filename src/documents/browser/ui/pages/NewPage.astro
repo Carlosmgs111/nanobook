@@ -2,6 +2,7 @@
 import Layout from "../../../../layouts/Layout.astro";
 import NewDocumentPageController from "../NewDocumentPageController.astro";
 import { getApp } from "../../../../application/server/Application";
+import DocumentActionLink from "../components/DocumentActionLink.astro";
 
 const app = await getApp();
 
@@ -55,14 +56,14 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
   hideToc={true}
   navigationService={navigationService}
   theme={theme}
+  navigationContext={{ section: "new", book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` } }}
 >
   <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
     <span class="tech-label mb-3 block">Nuevo documento</span>
-    <h1
-      class="glow-text text-3xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-4xl"
-    >
-      Crear documento
-    </h1>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <h1 class="glow-text text-3xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-4xl">Crear documento</h1>
+      <DocumentActionLink href={slug === "index" ? `${baseHref || "/"}` : `${baseHref}/${slug}/`} label="Volver a la sección" />
+    </div>
   </div>
 
   <div class="new-document-form" data-base-path={basePath} data-base-href={baseHref} data-nanobook-id={nanobookId}>
@@ -161,8 +162,6 @@ const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
       <div class="flex gap-3">
         <button
           type="submit"
-          data-auth-document-mutation
-          hidden
           class="inline-flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-sm font-medium text-[var(--theme-page-bg)] hover:opacity-90"
         >
           Crear y editar
