@@ -7,10 +7,12 @@ const { href, label, primary = false } = Astro.props;
 
 <style>
   .document-action-link[data-primary="true"] {
-    color: var(--theme-page-bg);
+    border-radius: var(--theme-control-radius);
+    color: var(--theme-accent-text);
     text-decoration: none;
   }
   .document-action-link[data-primary="false"] {
+    border-radius: var(--theme-control-radius);
     color: var(--theme-text);
     text-decoration: none;
   }

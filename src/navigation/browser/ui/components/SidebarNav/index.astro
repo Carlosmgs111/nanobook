@@ -54,7 +54,6 @@ const display = Boolean(book);
     inset: 0;
     z-index: 50;
     background-color: var(--theme-navigation-sidebar-backdrop);
-    backdrop-filter: blur(4px);
     display: none;
   }
 
@@ -74,6 +73,8 @@ const display = Boolean(book);
     border-right-width: 1px;
     border-color: var(--theme-navigation-sidebar-border);
     background-color: var(--theme-navigation-sidebar-bg);
+    border-radius: var(--theme-panel-radius);
+    box-shadow: var(--theme-decoration-shadow);
     padding: 1.5rem;
     transition-property: width, padding;
     transition-duration: 200ms;
@@ -82,6 +83,21 @@ const display = Boolean(book);
     width: min(80vw, 20rem);
     overflow: hidden;
     height: 100%;
+  }
+
+  .sidebar-root::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background-image: var(--theme-decoration-corner-image);
+    pointer-events: none;
+  }
+
+  .sidebar-root > * {
+    position: relative;
+    z-index: 2;
   }
 
   .sidebar-root[data-is-hidden="false"] {

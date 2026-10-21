@@ -31,6 +31,12 @@ const { toggleId, tocRootId } = Astro.props;
     position: relative;
   }
 
+  .toc-toggle[data-toc-mode="compact"] {
+    border-color: var(--theme-accent);
+    background: var(--theme-navigation-index-card-hover);
+    color: var(--theme-accent);
+  }
+
   .toc-toggle[data-toc-mode="standard"] .toc-toggle-icon-standard,
   .toc-toggle[data-toc-mode="compact"] .toc-toggle-icon-compact {
     display: none;

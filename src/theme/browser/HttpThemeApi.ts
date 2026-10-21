@@ -5,14 +5,39 @@ export interface ThemePaletteDto {
   textMuted?: string;
   accent?: string;
   border?: string;
+  borderSubtle?: string;
+  accentText?: string;
+  statusError?: string;
+  statusWarning?: string;
+  statusSuccess?: string;
+  statusInfo?: string;
+  link?: string;
+  focusRing?: string;
+  selectionBg?: string;
+  selectionText?: string;
+  surfaceRaised?: string;
 }
 export interface ThemeTokensDto {
   light?: ThemePaletteDto;
   dark?: ThemePaletteDto;
-  typography?: { family?: "system-sans" | "editorial-serif" | "mono" };
-  shape?: { radius?: "square" | "soft" | "rounded" };
-  layout?: { density?: "compact" | "comfortable" | "relaxed" };
-  decoration?: { pattern?: "none" | "grid" | "hatch" };
+  typography?: {
+    family?: "system-sans" | "editorial-serif" | "mono";
+    heading?: "system-sans" | "editorial-serif" | "mono";
+    code?: "system-sans" | "editorial-serif" | "mono";
+    scale?: "small" | "normal" | "large";
+    rhythm?: "compact" | "balanced" | "airy";
+  };
+  shape?: {
+    radius?: "square" | "soft" | "rounded";
+    cover?: "book" | "square" | "rounded";
+  };
+  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" };
+  decoration?: {
+    pattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
+    pagePattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
+    corners?: "none" | "cross" | "line";
+    shadow?: "flat" | "offset" | "soft";
+  };
 }
 export interface ThemeSummaryDto {
   reference: { kind: "official" | "custom"; id: string };
@@ -34,7 +59,6 @@ export interface UpdateThemeInput {
 }
 
 export class HttpThemeApi {
-  constructor(private readonly fetcher: typeof fetch = fetch) {}
   list() {
     return this.request<ThemeSummaryDto[]>("/api/themes", { method: "GET" });
   }
@@ -56,9 +80,8 @@ export class HttpThemeApi {
       jsonRequest("PATCH", input)
     );
   }
-
   private async request<T>(url: string, init: RequestInit): Promise<T> {
-    const response = await this.fetcher(url, init);
+    const response = await globalThis.fetch(url, init);
     const payload = await response.json().catch(() => ({}));
     if (!response.ok)
       throw new Error(

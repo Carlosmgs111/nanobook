@@ -12,21 +12,44 @@
   --theme-text: var(--theme-light-text);
   --theme-text-muted: var(--theme-light-text-muted);
   --theme-accent: var(--theme-light-accent);
+  --theme-accent-text: var(--theme-light-accent-text);
   --theme-border: var(--theme-light-border);
   --theme-border-subtle: var(--theme-light-border-subtle);
+  --theme-link: var(--theme-light-link);
+  --theme-focus-ring: var(--theme-light-focus-ring);
+  --theme-selection-bg: var(--theme-light-selection-bg);
+  --theme-selection-text: var(--theme-light-selection-text);
+  --theme-surface-raised: var(--theme-light-surface-raised);
   --theme-font-body: var(--theme-light-font-body);
   --theme-font-heading: var(--theme-light-font-heading);
   --theme-font-code: var(--theme-light-font-code);
+  --theme-font-scale: var(--theme-light-font-scale);
+  --theme-body-line-height: var(--theme-light-body-line-height);
+  --theme-heading-scale: var(--theme-light-heading-scale);
+  --theme-paragraph-gap: var(--theme-light-paragraph-gap);
+  --theme-reading-measure: var(--theme-light-reading-measure);
   --theme-control-radius: var(--theme-light-control-radius);
   --theme-panel-radius: var(--theme-light-panel-radius);
   --theme-content-gap: var(--theme-light-content-gap);
+  --theme-space-inline: var(--theme-light-space-inline);
+  --theme-space-block: var(--theme-light-space-block);
+  --theme-space-section: var(--theme-light-space-section);
   --theme-page-pattern: var(--theme-light-page-pattern);
+  --theme-cover-radius: var(--theme-light-cover-radius);
+  --theme-cover-spine-width: var(--theme-light-cover-spine-width);
+  --theme-decoration-corner-image: var(--theme-light-decoration-corner-image);
+  --theme-decoration-hatch-image: var(--theme-light-decoration-hatch-image);
+  --theme-decoration-shadow: var(--theme-light-decoration-shadow);
 
   /* Foundation */
-  --theme-surface-raised: color-mix(in srgb, var(--theme-surface-bg) 92%, var(--theme-text) 8%);
   --theme-content-primary: var(--theme-text);
   --theme-content-muted: var(--theme-text-muted);
   --theme-action-primary: var(--theme-accent);
+  --theme-action-hover: color-mix(in srgb, var(--theme-accent) 85%, var(--theme-page-bg) 15%);
+  --theme-action-active: color-mix(in srgb, var(--theme-accent) 75%, var(--theme-page-bg) 25%);
+  --theme-control-disabled: color-mix(in srgb, var(--theme-text) 40%, var(--theme-page-bg) 60%);
+  --theme-navigation-selected-bg: var(--theme-surface-raised);
+  --theme-navigation-selected-text: var(--theme-text);
   --theme-border-soft: color-mix(in srgb, var(--theme-text) 15%, transparent);
   --theme-border-medium: color-mix(in srgb, var(--theme-text) 25%, transparent);
   --theme-border-strong: color-mix(in srgb, var(--theme-text) 45%, transparent);
@@ -44,24 +67,26 @@
   --theme-navigation-index-card-hover: color-mix(in srgb, var(--theme-surface-bg) 92%, var(--theme-accent) 8%);
 
   /* Renderizado Markdown */
-  /* Mantienen la jerarquía visual anterior: inline code oscuro en claro y
-     bloques neutros con trama suave. */
-  --theme-content-inline-code-bg: #232328;
-  --theme-content-inline-code-fg: #ffffff;
-  --theme-content-inline-code-grid: rgba(255, 255, 255, 0.08);
-  --theme-content-inline-code-border: rgba(0, 0, 0, 0.25);
-  --theme-content-inline-code-glow: rgba(0, 0, 0, 0.12);
-  --theme-content-block-code-bg: rgba(0, 0, 0, 0.06);
-  --theme-content-block-code-grid: rgba(0, 0, 0, 0.07);
-  --theme-content-block-code-text: var(--theme-content-primary);
+  /* El código inline se integra con la superficie; los bloques sin resaltado
+     invierten fondo y texto en claro y usan la superficie activa en oscuro. */
+  --theme-content-inline-code-bg: var(--theme-surface-raised);
+  --theme-content-inline-code-fg: var(--theme-content-primary);
+  --theme-content-inline-code-grid: transparent;
+  --theme-content-inline-code-border: var(--theme-border-medium);
+  --theme-content-inline-code-glow: transparent;
+  --theme-content-block-code-bg: color-mix(in srgb, var(--theme-text) 88%, var(--theme-page-bg) 12%);
+  --theme-content-block-code-grid: transparent;
+  --theme-content-block-code-text: var(--theme-page-bg);
   --theme-content-quote-bg: color-mix(in srgb, var(--theme-surface-bg) 88%, var(--theme-text) 12%);
 
   /* Estados y decoraciones */
-  --theme-status-warning: #f59e0b;
-  --theme-status-success: #10b981;
-  --theme-status-info: #3b82f6;
-  --theme-decoration-glow: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+  --theme-status-error: var(--theme-light-status-error);
+  --theme-status-warning: var(--theme-light-status-warning);
+  --theme-status-success: var(--theme-light-status-success);
+  --theme-status-info: var(--theme-light-status-info);
+  --theme-decoration-glow: transparent;
   --theme-decoration-hatch: color-mix(in srgb, var(--theme-text) 22%, transparent);
+  --theme-decoration-hatch-subtle: color-mix(in srgb, var(--theme-text) 6%, transparent);
 
   /* Compatibilidad para estilos que todavía están en migración. */
   --surface-rgb: 0, 0, 0;
@@ -92,22 +117,44 @@
   --theme-text: var(--theme-dark-text);
   --theme-text-muted: var(--theme-dark-text-muted);
   --theme-accent: var(--theme-dark-accent);
+  --theme-accent-text: var(--theme-dark-accent-text);
   --theme-border: var(--theme-dark-border);
   --theme-border-subtle: var(--theme-dark-border-subtle);
+  --theme-link: var(--theme-dark-link);
+  --theme-focus-ring: var(--theme-dark-focus-ring);
+  --theme-selection-bg: var(--theme-dark-selection-bg);
+  --theme-selection-text: var(--theme-dark-selection-text);
+  --theme-surface-raised: var(--theme-dark-surface-raised);
   --theme-font-body: var(--theme-dark-font-body);
   --theme-font-heading: var(--theme-dark-font-heading);
   --theme-font-code: var(--theme-dark-font-code);
+  --theme-font-scale: var(--theme-dark-font-scale);
+  --theme-body-line-height: var(--theme-dark-body-line-height);
+  --theme-heading-scale: var(--theme-dark-heading-scale);
+  --theme-paragraph-gap: var(--theme-dark-paragraph-gap);
+  --theme-reading-measure: var(--theme-dark-reading-measure);
   --theme-control-radius: var(--theme-dark-control-radius);
   --theme-panel-radius: var(--theme-dark-panel-radius);
   --theme-content-gap: var(--theme-dark-content-gap);
+  --theme-space-inline: var(--theme-dark-space-inline);
+  --theme-space-block: var(--theme-dark-space-block);
+  --theme-space-section: var(--theme-dark-space-section);
   --theme-page-pattern: var(--theme-dark-page-pattern);
+  --theme-cover-radius: var(--theme-dark-cover-radius);
+  --theme-cover-spine-width: var(--theme-dark-cover-spine-width);
+  --theme-decoration-corner-image: var(--theme-dark-decoration-corner-image);
+  --theme-decoration-hatch-image: var(--theme-dark-decoration-hatch-image);
+  --theme-decoration-shadow: var(--theme-dark-decoration-shadow);
+  --theme-status-error: var(--theme-dark-status-error);
+  --theme-status-warning: var(--theme-dark-status-warning);
+  --theme-status-success: var(--theme-dark-status-success);
+  --theme-status-info: var(--theme-dark-status-info);
   --surface-rgb: 255, 255, 255;
-  --theme-content-inline-code-bg: rgba(255, 255, 255, 0.92);
-  --theme-content-inline-code-fg: #000000;
-  --theme-content-inline-code-grid: rgba(0, 0, 0, 0.04);
-  --theme-content-inline-code-border: rgba(255, 255, 255, 0.6);
-  --theme-content-inline-code-glow: rgba(255, 255, 255, 0.25);
-  --theme-content-block-code-bg: rgba(0, 0, 0, 0.3);
-  --theme-content-block-code-grid: rgba(255, 255, 255, 0.03);
-  --theme-content-block-code-text: var(--theme-content-primary);
+  --theme-content-inline-code-bg: var(--theme-surface-raised);
+  --theme-content-inline-code-fg: var(--theme-content-primary);
+  --theme-content-inline-code-border: var(--theme-border-medium);
+  --theme-content-inline-code-glow: transparent;
+  --theme-content-block-code-bg: var(--theme-surface-bg);
+  --theme-content-block-code-grid: transparent;
+  --theme-content-block-code-text: var(--theme-text);
 }

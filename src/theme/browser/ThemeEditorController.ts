@@ -1,4 +1,7 @@
 import type { HttpThemeApi, ThemeTokensDto } from "./HttpThemeApi";
+import { cornerImage, coverValues, hatchImage, pagePatternImage, shadowValue, rhythmValues, readingMeasureValue, densityValues, type ThemePattern } from "../shared/ThemePresets";
+import { colorInputValue, raisedColorInputValue } from "../shared/ColorPreview";
+import { analyzeThemeContrast } from "../shared/ThemeContrast";
 
 interface Options {
   api: Pick<HttpThemeApi, "create" | "update">;
@@ -21,10 +24,33 @@ export class ThemeEditorController {
         "[data-theme-field]"
       )
       .forEach((control) => {
-        const update = () => this.updatePreview(control);
+        const update = () => {
+          control.dataset.themeOverride = "true";
+          if (control.dataset.themeField === "typography.family") {
+            const heading = root.querySelector<HTMLSelectElement>('[data-theme-field="typography.heading"]');
+            if (heading?.dataset.themeOverride === "false") heading.value = control.value;
+          }
+          if (control.dataset.themeField === "decoration.pattern") {
+            const pagePattern = root.querySelector<HTMLSelectElement>('[data-theme-field="decoration.pagePattern"]');
+            if (pagePattern?.dataset.themeOverride === "false") {
+              pagePattern.dataset.themeOverride = "true";
+              this.updatePreview(pagePattern);
+            }
+          }
+          this.updatePreview(control);
+        };
         control.addEventListener("input", update);
         control.addEventListener("change", update);
-        update();
+        if (control.dataset.themeOverride !== "false") this.updatePreview(control);
+      });
+    root.querySelector<HTMLSelectElement>('[name="baseThemeId"]')
+      ?.addEventListener("change", () => this.updateBasePreview());
+    root.querySelector<HTMLElement>("[data-theme-reset]")
+      ?.addEventListener("click", () => {
+        root.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-theme-field]")
+          .forEach((control) => { control.dataset.themeOverride = "false"; });
+        this.updateBasePreview();
+        this.notice("Valores heredados del tema base restaurados. Guarda para aplicar el cambio.");
       });
     const preview = root.querySelector<HTMLElement>("[data-theme-preview]");
     if (preview) preview.dataset.previewMode = "light";
@@ -38,6 +64,7 @@ export class ThemeEditorController {
     root
       .querySelector<HTMLFormElement>("form")
       ?.addEventListener("submit", (event) => this.submit(event));
+    this.updateContrast();
   }
 
   private getRoot() {
@@ -64,16 +91,143 @@ export class ThemeEditorController {
           textMuted: "text-muted",
           accent: "accent",
           border: "border",
+          borderSubtle: "border-subtle",
+          accentText: "accent-text",
+          statusError: "status-error",
+          statusWarning: "status-warning",
+          statusSuccess: "status-success",
+          statusInfo: "status-info",
+          link: "link",
+          focusRing: "focus-ring",
+          selectionBg: "selection-bg",
+          selectionText: "selection-text",
+          surfaceRaised: "surface-raised",
         } as Record<string, string>
       )[token];
       if (cssName)
         preview.style.setProperty(`--theme-${group}-${cssName}`, control.value);
+      const dependent = token === "accent"
+        ? ["link", "focusRing", "selectionBg"]
+        : token === "accentText" ? ["selectionText"] : [];
+      for (const name of dependent) {
+        const field = this.getRoot()?.querySelector<HTMLInputElement>(`[data-theme-field="${group}.${name}"]`);
+        if (field?.dataset.themeOverride === "false") {
+          const cssName = name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+          field.value = control.value;
+          preview.style.setProperty(`--theme-${group}-${cssName}`, control.value);
+        }
+      }
+      this.updateContrast();
       return;
+    }
+    if (path === "decoration.pattern") {
+      const pagePattern = this.getRoot()?.querySelector<HTMLSelectElement>('[data-theme-field="decoration.pagePattern"]');
+      if (pagePattern?.dataset.themeOverride === "false") {
+        for (const mode of ["light", "dark"] as const) {
+          preview.style.setProperty(`--theme-${mode}-page-pattern`, pagePatternImage(control.value as ThemePattern));
+        }
+      }
     }
     for (const [name, value] of Object.entries(
       presetVariables(path, control.value)
     ))
       preview.style.setProperty(name, value);
+  }
+
+  private updateBasePreview() {
+    const root = this.getRoot();
+    const preview = root?.querySelector<HTMLElement>("[data-theme-preview]");
+    const selected = root?.querySelector<HTMLSelectElement>('[name="baseThemeId"]')?.value;
+    if (!root || !preview || !selected || !root.dataset.themeBases) return;
+    const bases = JSON.parse(root.dataset.themeBases) as Record<string, { light: Record<string, string>; dark: Record<string, string> }>;
+    const base = bases[selected];
+    if (!base) return;
+    preview.style.cssText = "";
+    for (const mode of ["light", "dark"] as const) {
+      for (const [name, value] of Object.entries(base[mode])) {
+        preview.style.setProperty(`--theme-${mode}-${name}`, value);
+      }
+    }
+    root.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-theme-field]")
+      .forEach((control) => {
+        if (control.dataset.themeOverride === "false") {
+          const [mode, name] = (control.dataset.themeField ?? "").split(".");
+          const defaults: Record<string, Record<string, string>> = {
+            classic: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "square", "shape.cover": "square", "layout.density": "comfortable", "layout.readingMeasure": "standard", "decoration.pattern": "stripes", "decoration.pagePattern": "grid", "decoration.corners": "none", "decoration.shadow": "flat" },
+            nanobook: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "soft", "shape.cover": "book", "layout.density": "relaxed", "layout.readingMeasure": "standard", "decoration.pattern": "texture", "decoration.pagePattern": "none", "decoration.corners": "none", "decoration.shadow": "offset" },
+          };
+          if (defaults[selected][control.dataset.themeField ?? ""]) control.value = defaults[selected][control.dataset.themeField ?? ""];
+          if (mode === "light" || mode === "dark") {
+            const cssName = ({ pageBackground: "page-bg", surfaceBackground: "surface-bg" } as Record<string, string>)[name] ?? name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+            const color = base[mode][cssName];
+            control.value = name === "surfaceRaised"
+              ? raisedColorInputValue(base[mode]["surface-bg"], base[mode].text, base[mode]["page-bg"])
+              : colorInputValue(color, base[mode]["page-bg"]);
+          }
+        } else this.updatePreview(control);
+      });
+    const family = root.querySelector<HTMLSelectElement>('[data-theme-field="typography.family"]');
+    const heading = root.querySelector<HTMLSelectElement>('[data-theme-field="typography.heading"]');
+    if (family?.dataset.themeOverride === "true" && heading?.dataset.themeOverride === "false") {
+      heading.value = family.value;
+    }
+    for (const mode of ["light", "dark"] as const) {
+      for (const name of ["accent", "accentText"] as const) {
+        const control = root.querySelector<HTMLInputElement>(`[data-theme-field="${mode}.${name}"]`);
+        if (control?.dataset.themeOverride === "true") this.updatePreview(control);
+      }
+    }
+    this.updateContrast();
+  }
+
+  private updateContrast(): void {
+    const root = this.getRoot();
+    const node = root?.querySelector<HTMLElement>("[data-theme-contrast]");
+    const selected = root?.querySelector<HTMLSelectElement>('[name="baseThemeId"]')?.value;
+    if (!root || !node || !selected || !root.dataset.themeBases) return;
+    const bases = JSON.parse(root.dataset.themeBases) as Record<string, {
+      light: Record<string, string>; dark: Record<string, string>;
+    }>;
+    const base = bases[selected];
+    if (!base) return;
+    const palettes = { light: { ...base.light }, dark: { ...base.dark } };
+    root.querySelectorAll<HTMLInputElement>("[data-theme-field]").forEach((control) => {
+      if (control.dataset.themeOverride !== "true") return;
+      const [mode, token] = (control.dataset.themeField ?? "").split(".");
+      if (mode !== "light" && mode !== "dark") return;
+      const cssName = ({ pageBackground: "page-bg", surfaceBackground: "surface-bg" } as Record<string, string>)[token]
+        ?? token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+      palettes[mode][cssName] = control.value;
+    });
+    for (const mode of ["light", "dark"] as const) {
+      const palette = palettes[mode];
+      const isOverridden = (name: string) => root.querySelector<HTMLInputElement>(`[data-theme-field="${mode}.${name}"]`)?.dataset.themeOverride === "true";
+      if (!isOverridden("link")) palette.link = palette.accent;
+      if (!isOverridden("focusRing")) palette["focus-ring"] = palette.accent;
+      if (!isOverridden("selectionBg")) palette["selection-bg"] = palette.accent;
+      if (!isOverridden("selectionText")) palette["selection-text"] = palette["accent-text"];
+    }
+    const labels: Record<string, string> = {
+      "text/page-bg": "Texto sobre página",
+      "text/surface-bg": "Texto sobre superficie",
+      "text-muted/page-bg": "Texto secundario sobre página",
+      "text-muted/surface-bg": "Texto secundario sobre superficie",
+      "link/page-bg": "Enlace sobre página",
+      "link/surface-bg": "Enlace sobre superficie",
+      "accent-text/accent": "Texto sobre acento",
+      "selection-text/selection-bg": "Texto seleccionado",
+      "focus-ring/page-bg": "Foco sobre página",
+      "focus-ring/surface-bg": "Foco sobre superficie",
+      "border/surface-bg": "Borde sobre superficie",
+      "status-error/surface-bg": "Error sobre superficie",
+      "status-warning/surface-bg": "Aviso sobre superficie",
+      "status-success/surface-bg": "Éxito sobre superficie",
+      "status-info/surface-bg": "Información sobre superficie",
+    };
+    const issues = analyzeThemeContrast(palettes);
+    node.textContent = issues.length === 0
+      ? "Contraste suficiente en las combinaciones comprobadas."
+      : issues.map((issue) => `${issue.mode === "light" ? "Modo claro" : "Modo oscuro"}: ${labels[issue.pair] ?? issue.pair} — ${issue.status === "unverifiable" ? "no verificable" : `${issue.ratio.toFixed(2)}:1; mínimo ${issue.minimum}:1`}.`).join("\n");
   }
 
   private async submit(event: Event) {
@@ -122,7 +276,7 @@ export class ThemeEditorController {
       )
       .forEach((control) => {
         const [group, token] = (control.dataset.themeField ?? "").split(".");
-        if (!group || !token || !control.value) return;
+        if (!group || !token || !control.value || control.dataset.themeOverride === "false") return;
         tokens[group] ??= {};
         tokens[group][token] = control.value;
       });
@@ -144,20 +298,33 @@ export class ThemeEditorController {
 }
 
 function presetVariables(path: string, value: string): Record<string, string> {
-  if (path === "typography.family") {
+  if (["typography.family", "typography.heading", "typography.code"].includes(path)) {
     const font = {
       "system-sans": "system-ui, sans-serif",
       "editorial-serif": 'Georgia, "Times New Roman", serif',
-      mono: "ui-monospace, monospace",
+      mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     }[value];
-    return font
-      ? {
-          "--theme-light-font-body": font,
-          "--theme-light-font-heading": font,
-          "--theme-dark-font-body": font,
-          "--theme-dark-font-heading": font,
-        }
-      : {};
+    if (!font) return {};
+    const roles = path === "typography.family" ? ["body", "heading"] : [path.split(".")[1]];
+    return Object.fromEntries(roles.flatMap((role) => [
+      [`--theme-light-font-${role}`, font], [`--theme-dark-font-${role}`, font],
+    ]));
+  }
+  if (path === "typography.scale") {
+    const size = { small: "0.875rem", normal: "1rem", large: "1.125rem" }[value];
+    return size ? { "--theme-light-font-scale": size, "--theme-dark-font-scale": size } : {};
+  }
+  if (path === "typography.rhythm" && ["compact", "balanced", "airy"].includes(value)) {
+    const rhythm = rhythmValues(value as "compact" | "balanced" | "airy");
+    return Object.fromEntries((["light", "dark"] as const).flatMap((mode) => [
+      [`--theme-${mode}-body-line-height`, rhythm.lineHeight],
+      [`--theme-${mode}-heading-scale`, rhythm.headingScale],
+      [`--theme-${mode}-paragraph-gap`, rhythm.paragraphGap],
+    ]));
+  }
+  if (path === "layout.readingMeasure" && ["narrow", "standard", "wide"].includes(value)) {
+    const measure = readingMeasureValue(value as "narrow" | "standard" | "wide");
+    return { "--theme-light-reading-measure": measure, "--theme-dark-reading-measure": measure };
   }
   if (path === "shape.radius") {
     const radius = { square: "0px", soft: "5px", rounded: "14px" }[value];
@@ -170,27 +337,54 @@ function presetVariables(path: string, value: string): Record<string, string> {
         }
       : {};
   }
+  if (path === "shape.cover" && ["book", "square", "rounded"].includes(value)) {
+    const cover = coverValues(value as "book" | "square" | "rounded");
+    return {
+      "--theme-light-cover-radius": cover.radius,
+      "--theme-dark-cover-radius": cover.radius,
+      "--theme-light-cover-spine-width": cover.spine,
+      "--theme-dark-cover-spine-width": cover.spine,
+    };
+  }
   if (path === "layout.density") {
-    const gap = { compact: "1rem", comfortable: "1.5rem", relaxed: "2rem" }[
-      value
-    ];
-    return gap
-      ? { "--theme-light-content-gap": gap, "--theme-dark-content-gap": gap }
-      : {};
+    if (!["compact", "comfortable", "relaxed"].includes(value)) return {};
+    const density = densityValues(value as "compact" | "comfortable" | "relaxed");
+    return Object.fromEntries((["light", "dark"] as const).flatMap((mode) => [
+      [`--theme-${mode}-content-gap`, density.contentGap],
+      [`--theme-${mode}-space-inline`, density.inline],
+      [`--theme-${mode}-space-block`, density.block],
+      [`--theme-${mode}-space-section`, density.section],
+    ]));
   }
   if (path === "decoration.pattern") {
-    const patterns: Record<string, string> = {
-      none: "none",
-      grid: "linear-gradient(currentColor 1px, transparent 1px)",
-      hatch:
-        "repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 10px)",
-    };
-    return patterns[value]
+    return ["none", "grid", "texture", "stripes", "hatch"].includes(value)
       ? {
-          "--theme-light-page-pattern": patterns[value],
-          "--theme-dark-page-pattern": patterns[value],
+          "--theme-light-decoration-hatch-image": hatchImage(value as ThemePattern),
+          "--theme-dark-decoration-hatch-image": hatchImage(value as ThemePattern),
         }
       : {};
+  }
+  if (path === "decoration.pagePattern") {
+    return ["none", "grid", "texture", "stripes", "hatch"].includes(value)
+      ? {
+          "--theme-light-page-pattern": pagePatternImage(value as ThemePattern),
+          "--theme-dark-page-pattern": pagePatternImage(value as ThemePattern),
+        }
+      : {};
+  }
+  if (path === "decoration.corners" && ["none", "cross", "line"].includes(value)) {
+    const image = cornerImage(value as "none" | "cross" | "line");
+    return {
+      "--theme-light-decoration-corner-image": image,
+      "--theme-dark-decoration-corner-image": image,
+    };
+  }
+  if (path === "decoration.shadow" && ["flat", "offset", "soft"].includes(value)) {
+    const shadow = shadowValue(value as "flat" | "offset" | "soft");
+    return {
+      "--theme-light-decoration-shadow": shadow,
+      "--theme-dark-decoration-shadow": shadow,
+    };
   }
   return {};
 }

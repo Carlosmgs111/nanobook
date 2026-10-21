@@ -17,7 +17,11 @@ import type { Result } from "../../shared/domain/Result";
 import type { ThemeReference } from "../../shared/theme/ThemeReference";
 
 interface NanobookThemeWriter {
-  execute(userId: string, nanobookId: string, reference: ThemeReference): Promise<Result<Error, unknown>>;
+  execute(
+    userId: string,
+    nanobookId: string,
+    reference: ThemeReference
+  ): Promise<Result<Error, unknown>>;
 }
 
 export type { AppliedTheme, ThemeReference } from "./application/ResolveTheme";
@@ -33,12 +37,23 @@ export class ThemeModule {
     public readonly updateTheme: UpdateTheme,
     public readonly listThemes: ListThemes,
     public readonly getTheme: GetTheme,
-    public readonly collectionRoutes: { GET: ReturnType<RouteProtector["protect"]>; POST: ReturnType<RouteProtector["protect"]> },
-    public readonly itemRoutes: { GET: ReturnType<RouteProtector["protect"]>; PATCH: ReturnType<RouteProtector["protect"]> },
-    public readonly assignNanobookThemeRoute: ReturnType<RouteProtector["protect"]>,
+    public readonly collectionRoutes: {
+      GET: ReturnType<RouteProtector["protect"]>;
+      POST: ReturnType<RouteProtector["protect"]>;
+    },
+    public readonly itemRoutes: {
+      GET: ReturnType<RouteProtector["protect"]>;
+      PATCH: ReturnType<RouteProtector["protect"]>;
+    },
+    public readonly assignNanobookThemeRoute: ReturnType<
+      RouteProtector["protect"]
+    >
   ) {}
 
-  static create(routeProtector: RouteProtector, nanobookThemeWriter: NanobookThemeWriter): ThemeModule {
+  static create(
+    routeProtector: RouteProtector,
+    nanobookThemeWriter: NanobookThemeWriter
+  ): ThemeModule {
     const repository = new DrizzleThemeRepository(db);
     const createTheme = new CreateTheme(repository);
     const updateTheme = new UpdateTheme(repository);
@@ -47,15 +62,28 @@ export class ThemeModule {
     const getAssignableTheme = new GetAssignableTheme(repository);
     const collection = new ThemeCollectionController(listThemes, createTheme);
     const item = new ThemeItemController(getTheme, updateTheme);
-    const assign = new AssignNanobookTheme(getAssignableTheme, nanobookThemeWriter);
+    const assign = new AssignNanobookTheme(
+      getAssignableTheme,
+      nanobookThemeWriter
+    );
     const assignController = new AssignNanobookThemeController(assign);
     return new ThemeModule(
       new ResolveTheme(new OfficialThemeCatalog(), repository),
       new CompileTheme(),
-      getAssignableTheme, createTheme, updateTheme, listThemes, getTheme,
-      { GET: routeProtector.protect(collection.get), POST: routeProtector.protect(collection.post) },
-      { GET: routeProtector.protect(item.get), PATCH: routeProtector.protect(item.patch) },
-      routeProtector.protect(assignController.handle),
+      getAssignableTheme,
+      createTheme,
+      updateTheme,
+      listThemes,
+      getTheme,
+      {
+        GET: routeProtector.protect(collection.get),
+        POST: routeProtector.protect(collection.post),
+      },
+      {
+        GET: routeProtector.protect(item.get),
+        PATCH: routeProtector.protect(item.patch),
+      },
+      routeProtector.protect(assignController.handle)
     );
   }
 }

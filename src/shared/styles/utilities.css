@@ -4,13 +4,10 @@
 .glass-panel {
   position: relative;
   padding: 0;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), 0.04) 0%, rgba(var(--surface-rgb), 0.01) 100%);
+  background: var(--theme-surface-bg);
   border: 1px solid var(--theme-border);
-  box-shadow:
-    0 0 0 1px rgba(var(--surface-rgb), 0.04) inset,
-    0 24px 80px -24px rgba(var(--shadow-rgb), 0.2);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  border-radius: var(--theme-panel-radius);
+  box-shadow: var(--theme-decoration-shadow);
 }
 
 .glass-panel::before {
@@ -19,11 +16,9 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image:
-    linear-gradient(var(--theme-border-subtle) 1px, transparent 1px),
-    linear-gradient(90deg, var(--theme-border-subtle) 1px, transparent 1px);
-  background-size: 16px 16px;
-  opacity: 0.6;
+  background-image: var(--theme-decoration-hatch-image);
+  background-size: 10px 10px;
+  opacity: 0.14;
 }
 
 .glow {
@@ -65,33 +60,10 @@
 .corner-plus::after {
   content: "";
   position: absolute;
-  inset: -13px;
+  inset: -7px;
   pointer-events: none;
   z-index: 2;
-  background-image:
-    /* top-left vertical stroke */
-    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* top-left horizontal stroke */
-    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* top-right vertical stroke */
-    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* top-right horizontal stroke */
-    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* bottom-left vertical stroke */
-    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* bottom-left horizontal stroke */
-    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* bottom-right vertical stroke */
-    linear-gradient(transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px),
-    /* bottom-right horizontal stroke */
-    linear-gradient(90deg, transparent 12px, rgba(var(--surface-rgb), 0.28) 12px, rgba(var(--surface-rgb), 0.28) 14px, transparent 14px);
-  background-size: 26px 26px;
-  background-repeat: no-repeat;
-  background-position:
-    0 0, 0 0,
-    top 0 right 0, top 0 right 0,
-    bottom 0 left 0, bottom 0 left 0,
-    bottom 0 right 0, bottom 0 right 0;
+  background: var(--theme-decoration-corner-image);
 }
 
 /* Small plus-shaped corner marks for nested/inner elements */
@@ -116,30 +88,7 @@
   inset: -7px;
   pointer-events: none;
   z-index: 2;
-  background-image:
-    /* top-left vertical stroke */
-    linear-gradient(transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* top-left horizontal stroke */
-    linear-gradient(90deg, transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* top-right vertical stroke */
-    linear-gradient(transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* top-right horizontal stroke */
-    linear-gradient(90deg, transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* bottom-left vertical stroke */
-    linear-gradient(transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* bottom-left horizontal stroke */
-    linear-gradient(90deg, transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* bottom-right vertical stroke */
-    linear-gradient(transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px),
-    /* bottom-right horizontal stroke */
-    linear-gradient(90deg, transparent 6px, var(--corner-color) 6px, var(--corner-color) 8px, transparent 8px);
-  background-size: 14px 14px;
-  background-repeat: no-repeat;
-  background-position:
-    0 0, 0 0,
-    top 0 right 0, top 0 right 0,
-    bottom 0 left 0, bottom 0 left 0,
-    bottom 0 right 0, bottom 0 right 0;
+  background: var(--theme-decoration-corner-image);
 }
 
 /* L-shaped corner marks for folder cards */
@@ -154,34 +103,7 @@
   inset: -7px;
   pointer-events: none;
   z-index: 2;
-  background-image:
-    /* top-left horizontal stroke */
-    linear-gradient(to bottom, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* top-left vertical stroke */
-    linear-gradient(to right, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* top-right horizontal stroke */
-    linear-gradient(to bottom, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* top-right vertical stroke */
-    linear-gradient(to right, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* bottom-left horizontal stroke */
-    linear-gradient(to bottom, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* bottom-left vertical stroke */
-    linear-gradient(to right, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* bottom-right horizontal stroke */
-    linear-gradient(to bottom, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px),
-    /* bottom-right vertical stroke */
-    linear-gradient(to right, var(--corner-color) 0, var(--corner-color) 2px, transparent 2px);
-  background-size:
-    8px 2px, 2px 8px,
-    8px 2px, 2px 8px,
-    8px 2px, 2px 8px,
-    8px 2px, 2px 8px;
-  background-repeat: no-repeat;
-  background-position:
-    0 0, 0 0,
-    100% 0, 100% 0,
-    0 100%, 0 100%,
-    100% 100%, 100% 100%;
+  background: var(--theme-decoration-corner-image);
 }
 
 /* Suppress corner accents on nested blockquotes */

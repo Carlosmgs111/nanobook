@@ -65,6 +65,12 @@ const { toggleId } = Astro.props;
 </script>
 
 <style>
+  .sidebar-mode-toggle[data-sidebar-mode="collapsed"] {
+    border-color: var(--theme-accent);
+    background: var(--theme-navigation-index-card-hover);
+    color: var(--theme-accent);
+  }
+
   .sidebar-mode-toggle[data-sidebar-mode="collapsed"]
     .sidebar-toggle-icon-expanded,
   .sidebar-mode-toggle[data-sidebar-mode="expanded"]

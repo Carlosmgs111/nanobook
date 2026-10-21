@@ -26,9 +26,39 @@ describe("Theme", () => {
     expect(result.isSuccess).toBe(true);
   });
 
+  it("accepts safe cover and decoration presets", () => {
+    const result = Theme.create(validTheme({
+      tokens: {
+        shape: { cover: "book" },
+        decoration: { corners: "line", shadow: "offset", pattern: "hatch", pagePattern: "none" },
+      },
+    }));
+
+    expect(result.isSuccess).toBe(true);
+  });
+
+  it("accepts subtle texture and diagonal stripe patterns", () => {
+    const result = Theme.create(validTheme({
+      tokens: { decoration: { pattern: "stripes", pagePattern: "texture" } },
+    }));
+
+    expect(result.isSuccess).toBe(true);
+  });
+
+  it("accepts common color and typography overrides", () => {
+    const result = Theme.create(validTheme({ tokens: {
+      light: { borderSubtle: "#ddeeff", accentText: "#ffffff", statusError: "#cc2222", statusWarning: "#aa7700", statusSuccess: "#008855", statusInfo: "#2255aa" },
+      typography: { heading: "editorial-serif", code: "mono", scale: "large" },
+    } }));
+    expect(result.isSuccess).toBe(true);
+  });
+
   it.each([
     { light: { accent: "red;display:none" } },
     { typography: { family: "url(https://example.com/font)" } },
+    { shape: { cover: "untrusted-css" } },
+    { decoration: { corners: "star" } },
+    { decoration: { shadow: "blur(100px)" } },
     { unknown: "value" },
   ])("rejects unsafe or unknown tokens", (tokens) => {
     expect(Theme.create(validTheme({ tokens })).isSuccess).toBe(false);

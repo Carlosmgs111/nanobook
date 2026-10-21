@@ -152,7 +152,9 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
   .toc-nav {
     padding: 1rem;
     border: 1px solid var(--theme-border);
-    background: var(--layer-1);
+    border-radius: var(--theme-panel-radius);
+    background: var(--theme-surface-bg);
+    box-shadow: var(--theme-decoration-shadow);
     max-height: calc(100vh - 10rem);
     overflow-y: auto;
     width: 18rem;
@@ -166,11 +168,10 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
     width: 220px;
     min-height: 100%;
     padding: 0.5rem;
-    background: rgba(var(--surface-rgb), 0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--theme-surface-bg);
     border: 1px solid var(--theme-border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    border-radius: var(--theme-panel-radius);
+    box-shadow: var(--theme-decoration-shadow);
     opacity: 0;
     visibility: hidden;
     transform: translateX(8px);
@@ -210,7 +211,9 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
   .toc-nav-header {
     display: flex;
     align-items: flex-end;
+    gap: 0.5rem;
     padding: 0.5rem;
+    border-bottom: 1px solid var(--theme-border-subtle);
   }
 
   :global(#toc-root[data-toc-mode="compact"]) .toc-nav-header {
@@ -218,7 +221,7 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
     top: 0;
     z-index: 10;
     gap: 0.5rem;
-    background-color: #2c2c2ce2;
+    background-color: color-mix(in srgb, var(--theme-surface-bg) 94%, transparent);
     border-bottom: 1px solid var(--theme-border);
   }
 
@@ -248,17 +251,20 @@ const { headings, tocRootId, tocNavId, toggleId } = Astro.props;
     border-left: 2px solid transparent;
     color: var(--theme-text-muted);
     background: unset;
+    text-decoration: none;
+    transition: background-color 150ms ease, color 150ms ease;
   }
 
   .toc-item a:hover {
     border-left-color: var(--theme-border);
     color: var(--theme-text);
+    background: var(--theme-navigation-index-card-hover);
   }
 
   .toc-item a[data-is-active="true"] {
     border-left: 2px solid var(--theme-accent);
     color: var(--theme-text);
-    background: #ffffff0d;
+    background: var(--theme-navigation-index-card-hover);
   }
 
   .toc-item a[data-is-active="true"]:hover {

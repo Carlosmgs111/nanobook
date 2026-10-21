@@ -161,7 +161,7 @@ const loginHref = "/login";
 <style>
   .landing {
     --secondary: color-mix(in srgb, var(--theme-text) 72%, var(--theme-page-bg));
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--theme-font-body);
     color: var(--theme-text);
     background: var(--theme-page-bg);
   }
@@ -182,7 +182,7 @@ const loginHref = "/login";
     left: 20px;
     padding: 12px;
     background: var(--theme-accent);
-    color: var(--theme-page-bg);
+    color: var(--theme-accent-text);
     z-index: 20;
   }
   .skip-link:focus {
@@ -213,7 +213,7 @@ const loginHref = "/login";
   .nav-account {
     border: 1px solid var(--border-medium);
     padding: 11px 18px;
-    border-radius: 5px;
+    border-radius: var(--theme-control-radius);
   }
   .hero {
     display: grid;
@@ -254,7 +254,7 @@ const loginHref = "/login";
   }
   .primary {
     background: var(--theme-accent);
-    color: var(--theme-page-bg);
+    color: var(--theme-accent-text);
   }
   .primary:hover {
     opacity: 0.85;
@@ -280,7 +280,7 @@ const loginHref = "/login";
     inset: 12px -15px -10px 13px;
     background: var(--layer-3);
     border: 1px solid var(--border-medium);
-    border-radius: 3px 12px 12px 3px;
+    border-radius: var(--theme-cover-radius);
     transform: rotate(7deg);
   }
   .book-cover {
@@ -290,15 +290,15 @@ const loginHref = "/login";
     flex-direction: column;
     padding: 32px 30px 28px 38px;
     border: 1px solid var(--border-medium);
-    border-radius: 3px 10px 10px 3px;
-    background: var(--theme-page-bg);
-    box-shadow: 12px 20px 40px rgba(var(--shadow-rgb), 0.12);
+    border-radius: var(--theme-cover-radius);
+    background: var(--theme-surface-bg);
+    box-shadow: var(--theme-decoration-shadow);
     transform: rotate(-5deg);
   }
   .book-cover::before {
     content: "";
     position: absolute;
-    inset: 0 auto 0 10px;
+    inset: 0 auto 0 var(--theme-cover-spine-width);
     border-right: 1px solid var(--border-medium);
   }
   .book-brand {
@@ -381,11 +381,11 @@ const loginHref = "/login";
     padding: 26px 28px 30px 38px;
     border: 1px solid var(--border-medium);
     background: var(--theme-page-bg);
-    border-radius: 3px 9px 9px 3px;
+    border-radius: var(--theme-cover-radius);
   }
   .cover-spine {
     position: absolute;
-    inset: 0 auto 0 12px;
+    inset: 0 auto 0 var(--theme-cover-spine-width);
     border-right: 1px solid var(--theme-border);
   }
   .cover-brand {

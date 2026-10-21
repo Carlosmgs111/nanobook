@@ -7,6 +7,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Ampliados los temas con roles de enlace, foco, selección y superficie elevada; el editor advierte sobre contraste insuficiente en ambos modos y previsualiza estados y lectura.
+- Añadidos presets de ritmo tipográfico y ancho de lectura, y una escala espacial coordinada por densidad; la prosa mantiene una medida de línea independiente del lienzo.
+
+- Investigados productos y sistemas de diseño con personalización visual y documentadas las prioridades de legibilidad, composición y estados para los próximos tokens de Nanobook.
+
+- Ampliada la personalización de temas con borde sutil, texto sobre acento, colores de estado, fuentes separadas para títulos y código y escala de lectura; el editor previsualiza estos roles y conserva los valores heredados del tema base al guardar.
+
+- Renovadas las tarjetas del IndexList con una zona de cubierta propia, jerarquía tipográfica más clara y distinción entre secciones y documentos; la ruta pública reemplaza el nombre de archivo interno.
+
+- Corregida la llamada HTTP del editor de temas para invocar `fetch` con el contexto global del navegador y evitar `Illegal invocation`.
+
+- Documentado en `src/content/nanobook-project/historial-codex/` el trabajo verificable de Codex en autenticación, perfiles, layout, módulos, documentos, nanobooks, temas y navegación, con referencias y límites de atribución.
+
+- El tema Clásico usa rayas diagonales sutiles como fondo de las tarjetas del IndexList, en ambos modos de color.
+- Ajustado el patrón de rayas en las cubiertas: líneas diagonales de 1 px al 6 % de opacidad y capas de sombreado más sutiles.
+- Añadido el marcador de bloque `graph` para diagramas de texto con interlineado compacto, preservando saltos y espacios sin alterar el estilo de bloques de código normales.
+- Ajustado el contraste de los bloques de código sin lenguaje en ambos modos de color mediante roles semánticos de fondo y texto.
+- Completada la adaptación visual al tema en estados de error, controles de formulario, TOC compacto y cubiertas de la landing; colores, radios, tipografía, lomo y elevación ahora usan roles semánticos.
+- Alineados los componentes internos del nanobook con la identidad editorial de la landing: cubiertas con lomo, tramas diagonales, marcas de esquina configurables y sombras semánticas. Los temas personalizados ahora pueden controlar por separado la trama de componentes y la del fondo de página; los valores antiguos conservan su comportamiento.
+- Separada la textura diagonal sutil (6 % de opacidad) de las rayas diagonales marcadas en los patrones del tema; los temas guardados con `hatch` conservan la textura sutil.
 - Corregido el contraste del texto en la acción «Nuevo en esta sección» dentro del contenido de documentos.
 - Separada la navegación global de la estructura interna de cada nanobook: el header enlaza a la portada, exploración, espacio de trabajo y cuenta; el breadcrumb y sidebar identifican el libro actual. Las acciones Editar y Nuevo se ubican junto al documento o índice y se muestran según el permiso de escritura.
 

@@ -37,7 +37,7 @@ const { nanobooks, themes } = Astro.props;
       <label class="flex items-center gap-2 text-sm">
         <input name="visibility" type="checkbox" /> Público
       </label>
-      <div data-create-error class="text-sm text-red-500" role="alert"></div>
+      <div data-create-error class="text-sm text-[var(--theme-status-error)]" role="alert"></div>
       <button type="submit" class="border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-sm font-medium text-[var(--theme-page-bg)]">Crear</button>
     </form>
   </div>

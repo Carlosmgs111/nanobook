@@ -8,6 +8,16 @@ const COLOR_KEYS = [
   "accent",
   "border",
   "borderSubtle",
+  "accentText",
+  "statusError",
+  "statusWarning",
+  "statusSuccess",
+  "statusInfo",
+  "link",
+  "focusRing",
+  "selectionBg",
+  "selectionText",
+  "surfaceRaised",
 ] as const;
 const ROOT_KEYS = [
   "light",
@@ -23,10 +33,24 @@ export type ThemeColorTokens = Partial<Record<ColorKey, string>>;
 export type ThemeTokens = {
   light?: ThemeColorTokens;
   dark?: ThemeColorTokens;
-  typography?: { family: "system-sans" | "editorial-serif" | "mono" };
-  shape?: { radius: "square" | "soft" | "rounded" };
-  layout?: { density: "compact" | "comfortable" | "relaxed" };
-  decoration?: { pattern: "none" | "grid" | "hatch" };
+  typography?: {
+    family?: "system-sans" | "editorial-serif" | "mono";
+    heading?: "system-sans" | "editorial-serif" | "mono";
+    code?: "system-sans" | "editorial-serif" | "mono";
+    scale?: "small" | "normal" | "large";
+    rhythm?: "compact" | "balanced" | "airy";
+  };
+  shape?: {
+    radius?: "square" | "soft" | "rounded";
+    cover?: "book" | "square" | "rounded";
+  };
+  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" };
+  decoration?: {
+    pattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
+    pagePattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
+    corners?: "none" | "cross" | "line";
+    shadow?: "flat" | "offset" | "soft";
+  };
 };
 
 export function validateThemeTokens(
@@ -60,21 +84,43 @@ export function validateThemeTokens(
     }
   }
 
-  const presetChecks = [
-    ["typography", "family", ["system-sans", "editorial-serif", "mono"]],
-    ["shape", "radius", ["square", "soft", "rounded"]],
-    ["layout", "density", ["compact", "comfortable", "relaxed"]],
-    ["decoration", "pattern", ["none", "grid", "hatch"]],
-  ] as const;
-  for (const [group, key, allowed] of presetChecks) {
+  const presetChecks = {
+    typography: {
+      family: ["system-sans", "editorial-serif", "mono"],
+      heading: ["system-sans", "editorial-serif", "mono"],
+      code: ["system-sans", "editorial-serif", "mono"],
+      scale: ["small", "normal", "large"],
+      rhythm: ["compact", "balanced", "airy"],
+    },
+    shape: {
+      radius: ["square", "soft", "rounded"],
+      cover: ["book", "square", "rounded"],
+    },
+    layout: { density: ["compact", "comfortable", "relaxed"], readingMeasure: ["narrow", "standard", "wide"] },
+    decoration: {
+      pattern: ["none", "grid", "texture", "stripes", "hatch"],
+      pagePattern: ["none", "grid", "texture", "stripes", "hatch"],
+      corners: ["none", "cross", "line"],
+      shadow: ["flat", "offset", "soft"],
+    },
+  } as const;
+  for (const [group, fields] of Object.entries(presetChecks) as Array<[
+    keyof typeof presetChecks,
+    Record<string, readonly string[]>,
+  ]>) {
     const entry = value[group];
     if (entry === undefined) continue;
     if (
       !isRecord(entry) ||
-      Object.keys(entry).length !== 1 ||
-      !allowed.includes(entry[key] as never)
+      Object.keys(entry).length === 0 ||
+      Object.keys(entry).some((key) => !(key in fields))
     ) {
-      return new InvalidThemeError(`${group}.${key} es inválido`);
+      return new InvalidThemeError(`${group} contiene campos no permitidos`);
+    }
+    for (const [key, selected] of Object.entries(entry)) {
+      if (!fields[key].includes(selected as string)) {
+        return new InvalidThemeError(`${group}.${key} es inválido`);
+      }
     }
   }
 

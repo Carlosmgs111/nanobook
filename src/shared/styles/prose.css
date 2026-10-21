@@ -4,9 +4,32 @@
 .prose {
   position: relative;
   z-index: 1;
+  font-size: var(--theme-font-scale);
+  line-height: var(--theme-body-line-height);
   --content-pad: 2rem;
   padding: var(--content-pad);
   color: var(--theme-content-primary);
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote) {
+  max-width: var(--theme-reading-measure);
+}
+
+.prose p + p {
+  margin-block-start: var(--theme-paragraph-gap);
+}
+
+.prose > :where(h2, h3):not(:first-child) {
+  margin-block-start: var(--theme-space-section);
+}
+
+.prose blockquote {
+  padding-inline-start: var(--theme-space-inline);
+  padding-block: var(--theme-space-block);
+}
+
+.prose > :where(p, ul, ol, pre, blockquote, table, details, hr):not(:first-child) {
+  margin-block-start: var(--theme-content-gap);
 }
 
 .prose :is(p, li, td, dd, figcaption, summary) {
@@ -23,24 +46,28 @@
    Headings
    ───────────────────────────────────────────── */
 .prose h1 {
+  font-size: calc(2.25em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
   color: var(--theme-action-primary);
   text-shadow: 0 0 32px var(--glow-color), 0 0 64px var(--glow-color);
 }
 
 .prose h2 {
+  font-size: calc(1.5em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
   color: var(--theme-action-primary);
   text-shadow: 0 0 24px var(--glow-color), 0 0 48px var(--glow-color);
 }
 
 .prose h3 {
+  font-size: calc(1.25em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
   color: var(--theme-action-primary);
   text-shadow: 0 0 18px var(--glow-color), 0 0 36px var(--glow-color);
 }
 
 .prose h4 {
+  font-size: calc(1em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
   color: var(--theme-content-primary);
   text-shadow: 0 0 14px var(--glow-color), 0 0 28px var(--glow-color);
@@ -62,7 +89,7 @@
    Links
    ───────────────────────────────────────────── */
 .prose a {
-  color: var(--theme-action-primary);
+  color: var(--theme-link);
   text-decoration: underline;
   text-decoration-color: var(--theme-border-soft);
   text-underline-offset: 0.2em;
@@ -70,7 +97,7 @@
 }
 
 .prose a:hover {
-  text-decoration-color: var(--theme-action-primary);
+  text-decoration-color: var(--theme-action-hover);
 }
 
 /* ─────────────────────────────────────────────
@@ -88,12 +115,12 @@
    ───────────────────────────────────────────── */
 .prose code {
   padding: 0.15rem 0.35rem;
-  border-radius: var(--theme-panel-radius);
+  border-radius: var(--theme-control-radius);
   border: 1px solid var(--theme-content-inline-code-border);
   color: var(--theme-content-inline-code-fg);
   background: var(--theme-content-inline-code-bg);
-  box-shadow: 0 0 16px var(--theme-content-inline-code-glow), 0 0 32px var(--theme-content-inline-code-glow);
-  text-shadow: 0 0 8px var(--theme-content-inline-code-glow);
+  box-shadow: none;
+  text-shadow: none;
   font-family: var(--theme-font-code);
   font-size: 0.9em;
 }
@@ -107,9 +134,9 @@
   padding: 1.25rem;
   border: 1px solid var(--theme-border);
   border-radius: var(--theme-panel-radius);
-  background: linear-gradient(var(--theme-content-block-code-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--theme-content-block-code-grid) 1px, transparent 1px), var(--theme-content-block-code-bg);
-  background-size: 8px 8px, 8px 8px, 100% 100%;
+  background-color: var(--theme-content-block-code-bg);
+  background-image: var(--theme-decoration-hatch-image);
+  background-size: 9px 9px;
   overflow-x: auto;
 }
 
@@ -122,21 +149,11 @@
   font-size: 0.85em;
 }
 
-/*
- * Astro/Shiki puede añadir color y fondo inline a un bloque plaintext aunque
- * no tenga lenguaje. El contrato del documento debe seguir gobernando ese
- * caso para conservar el contraste del tema claro y oscuro.
- */
-.prose pre[data-language="plaintext"] {
-  color: var(--theme-content-block-code-text) !important;
-  background: linear-gradient(var(--theme-content-block-code-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--theme-content-block-code-grid) 1px, transparent 1px),
-    var(--theme-content-block-code-bg) !important;
-}
-
-.prose pre[data-language="plaintext"] code,
-.prose pre[data-language="plaintext"] code span {
-  color: var(--theme-content-block-code-text) !important;
+/* Graph fences use tight rows so box-drawing lines connect across lines. */
+.prose pre > code.language-graph {
+  display: block;
+  line-height: 1;
+  white-space: pre;
 }
 
 /* ─────────────────────────────────────────────
@@ -153,17 +170,11 @@
   border-bottom: 1px solid var(--theme-border);
   background: linear-gradient(
       180deg,
-      rgba(var(--surface-rgb), 0.03) 0%,
+      color-mix(in srgb, var(--theme-surface-bg) 92%, transparent) 0%,
       transparent 50%,
-      rgba(var(--surface-rgb), 0.03) 100%
+      color-mix(in srgb, var(--theme-surface-bg) 92%, transparent) 100%
     ),
-    repeating-linear-gradient(
-      45deg,
-      rgba(var(--surface-rgb), 0.12) 0,
-      rgba(var(--surface-rgb), 0.12) 1px,
-      transparent 1px,
-      transparent 6px
-    ),
+    var(--theme-decoration-hatch-image),
     linear-gradient(
       180deg,
       transparent calc(50% - 0.5px),
@@ -174,7 +185,7 @@
   overflow: visible;
 }
 
-/* Small plus-shaped corner marks on horizontal rules */
+/* Theme-selected corner treatment on horizontal rules */
 .prose hr::before,
 .hatch-divider::before {
   content: "";
@@ -182,70 +193,7 @@
   inset: -7px;
   pointer-events: none;
   z-index: 2;
-  background-image:
-    /* top-left vertical stroke */ linear-gradient(
-      transparent 6px,
-      rgba(var(--surface-rgb), 0.22) 6px,
-      rgba(var(--surface-rgb), 0.22) 8px,
-      transparent 8px
-    ),
-    /* top-left horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* top-right vertical stroke */
-      linear-gradient(
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* top-right horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-left vertical stroke */
-      linear-gradient(
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-left horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-right vertical stroke */
-      linear-gradient(
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-right horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      );
-  background-size: 14px 14px;
-  background-repeat: no-repeat;
-  background-position: 0 0, 0 0, top 0 right 0, top 0 right 0, bottom 0 left 0,
-    bottom 0 left 0, bottom 0 right 0, bottom 0 right 0;
+  background: var(--theme-decoration-corner-image);
 }
 
 .prose hr::after,
@@ -275,14 +223,14 @@
 
 .prose :is(ul, ol) :is(ul, ol) {
   background-color: var(--layer-2);
-  border-left-color: rgba(var(--surface-rgb), 0.22);
+  border-left-color: var(--theme-border-medium);
 }
 
 .prose :is(ul, ol) :is(ul, ol) :is(ul, ol) {
   background-color: var(--layer-3);
 }
 
-/* Corner accents on non-nested lists only */
+/* Theme-selected corner accents on non-nested lists only */
 .prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol)) {
   position: relative;
 }
@@ -293,70 +241,7 @@
   inset: -7px;
   pointer-events: none;
   z-index: 2;
-  background-image:
-    /* top-left vertical stroke */ linear-gradient(
-      transparent 6px,
-      rgba(var(--surface-rgb), 0.22) 6px,
-      rgba(var(--surface-rgb), 0.22) 8px,
-      transparent 8px
-    ),
-    /* top-left horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* top-right vertical stroke */
-      linear-gradient(
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* top-right horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-left vertical stroke */
-      linear-gradient(
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-left horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-right vertical stroke */
-      linear-gradient(
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      ),
-    /* bottom-right horizontal stroke */
-      linear-gradient(
-        90deg,
-        transparent 6px,
-        rgba(var(--surface-rgb), 0.22) 6px,
-        rgba(var(--surface-rgb), 0.22) 8px,
-        transparent 8px
-      );
-  background-size: 14px 14px;
-  background-repeat: no-repeat;
-  background-position: 0 0, 0 0, top 0 right 0, top 0 right 0, bottom 0 left 0,
-    bottom 0 left 0, bottom 0 right 0, bottom 0 right 0;
+  background: var(--theme-decoration-corner-image);
 }
 
 .prose ul li::marker {
@@ -417,7 +302,7 @@
   top: 50%;
   width: 0.25em;
   height: 0.45em;
-  border: solid var(--theme-page-bg);
+  border: solid var(--theme-accent-text);
   border-width: 0 0.15em 0.15em 0;
   transform: translate(-50%, -55%) rotate(45deg);
 }
@@ -463,14 +348,9 @@
 .prose th {
   color: var(--theme-action-primary);
   text-shadow: 0 0 12px var(--glow-color);
-  background: repeating-linear-gradient(
-      45deg,
-      rgba(var(--surface-rgb), 0.06) 0,
-      rgba(var(--surface-rgb), 0.06) 1px,
-      transparent 1px,
-      transparent 10px
-    ),
-    var(--layer-2);
+  background-color: var(--layer-2);
+  background-image: var(--theme-decoration-hatch-image);
+  background-size: 9px 9px;
 }
 
 /* ─────────────────────────────────────────────
@@ -590,16 +470,4 @@
   --callout-border: color-mix(in srgb, var(--theme-status-info) 50%, transparent);
   --callout-bg: color-mix(in srgb, var(--theme-status-info) 8%, transparent);
   --corner-color: color-mix(in srgb, var(--theme-status-info) 22%, transparent);
-}
-
-:root[data-color-mode="light"] .callout-warning {
-  --callout-bg: rgba(245, 158, 11, 0.1);
-}
-
-:root[data-color-mode="light"] .callout-tip {
-  --callout-bg: rgba(16, 185, 129, 0.1);
-}
-
-:root[data-color-mode="light"] .callout-info {
-  --callout-bg: rgba(59, 130, 246, 0.1);
 }

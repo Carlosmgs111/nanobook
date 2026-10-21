@@ -26,7 +26,7 @@ const inputClass = "w-full border border-[var(--theme-border)] bg-[var(--theme-p
           <option value="public" selected={nanobook.getVisibility() === "public"}>Público</option>
         </select>
       </label>
-      <p data-error role="alert" class="text-red-500"></p>
+      <p data-error role="alert" class="text-[var(--theme-status-error)]"></p>
       <button type="submit" class="border border-[var(--theme-border)] px-3 py-2">Guardar cambios</button>
       <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
     </form>
@@ -39,20 +39,20 @@ const inputClass = "w-full border border-[var(--theme-border)] bg-[var(--theme-p
           {themes.map((theme) => <option value={JSON.stringify(theme.reference)} selected={theme.reference.kind === currentTheme.kind && theme.reference.id === currentTheme.id}>{theme.name}{theme.editable ? "" : " · oficial"}</option>)}
         </select>
       </label>
-      <p data-error role="alert" class="text-red-500"></p>
+      <p data-error role="alert" class="text-[var(--theme-status-error)]"></p>
       <button type="submit" class="border border-[var(--theme-border)] px-3 py-2">Aplicar tema</button>
       <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
     </form>
   </details>
   <details data-delete>
-    <summary class="cursor-pointer text-sm text-red-500">Eliminar</summary>
+    <summary class="cursor-pointer text-sm text-[var(--theme-status-error)]">Eliminar</summary>
     <form data-operation="delete" class="mt-4 space-y-3 text-sm">
       <p>Se eliminarán definitivamente este nanobook, todos sus documentos y su historial. Esta acción no se puede deshacer.</p>
       <label class="block">Escribe <strong>{nanobook.getName()}</strong> para confirmar.
         <input name="confirmationName" required autocomplete="off" class={inputClass} />
       </label>
-      <p data-error role="alert" class="text-red-500"></p>
-      <button type="submit" class="border border-red-500 px-3 py-2 text-red-500">Eliminar definitivamente</button>
+      <p data-error role="alert" class="text-[var(--theme-status-error)]"></p>
+      <button type="submit" class="border border-[var(--theme-status-error)] px-3 py-2 text-[var(--theme-status-error)]">Eliminar definitivamente</button>
       <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
     </form>
   </details>

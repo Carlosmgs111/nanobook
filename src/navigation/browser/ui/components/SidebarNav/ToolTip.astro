@@ -35,7 +35,7 @@ const { id } = Astro.props;
       width: auto;
       min-width: auto;
       white-space: nowrap;
-      backdrop-filter: blur(16px);
+      border-radius: var(--theme-control-radius);
     }
 
     :global(#sidebar[data-sidebar-mode="collapsed"]) .tool-label::before {

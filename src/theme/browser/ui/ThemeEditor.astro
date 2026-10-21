@@ -1,10 +1,31 @@
 ---
 import type { ThemeDetailsDto } from "../HttpThemeApi";
 import ThemeEditorController from "../ThemeEditorController.astro";
+import { OfficialThemeCatalog } from "../../server/infraestructure/OfficialThemeCatalog";
+import { colorInputValue, raisedColorInputValue } from "../../shared/ColorPreview";
 interface Props {
   theme?: ThemeDetailsDto;
 }
 const { theme } = Astro.props;
+const isClassic = theme?.baseThemeId === "classic";
+const catalog = new OfficialThemeCatalog();
+const baseDefinitions = Object.fromEntries((["classic", "nanobook"] as const).map((id) => [id, catalog.get(id)]));
+const initialBase = baseDefinitions[theme?.baseThemeId ?? "nanobook"];
+const initialPreviewStyle = Object.entries({
+  ...Object.fromEntries(Object.entries(initialBase.light).map(([name, value]) => [`--theme-light-${name}`, value])),
+  ...Object.fromEntries(Object.entries(initialBase.dark).map(([name, value]) => [`--theme-dark-${name}`, value])),
+}).map(([name, value]) => `${name}: ${value}`).join("; ");
+const baseColor = (mode: "light" | "dark", name: string) => {
+  if (name === "surfaceRaised") return raisedColorInputValue(
+    initialBase[mode]["surface-bg"], initialBase[mode].text, initialBase[mode]["page-bg"],
+  );
+  const cssName = ({ pageBackground: "page-bg", surfaceBackground: "surface-bg" } as Record<string, string>)[name] ?? name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  const value = initialBase[mode][cssName];
+  return colorInputValue(value, initialBase[mode]["page-bg"]);
+};
+const storedPagePattern = theme?.tokens.decoration?.pagePattern ?? theme?.tokens.decoration?.pattern;
+const pagePattern = storedPagePattern === "hatch" ? "texture" : storedPagePattern ?? (isClassic ? "grid" : "none");
+const headingFamily = theme?.tokens.typography?.heading ?? theme?.tokens.typography?.family ?? "system-sans";
 const token = (
   mode: "light" | "dark",
   name:
@@ -13,7 +34,18 @@ const token = (
     | "text"
     | "textMuted"
     | "accent"
-    | "border",
+    | "border"
+    | "borderSubtle"
+    | "accentText"
+    | "statusError"
+    | "statusWarning"
+    | "statusSuccess"
+    | "statusInfo"
+    | "link"
+    | "focusRing"
+    | "selectionBg"
+    | "selectionText"
+    | "surfaceRaised",
   fallback: string
 ) => theme?.tokens[mode]?.[name] ?? fallback;
 const colors = [
@@ -23,12 +55,24 @@ const colors = [
   ["textMuted", "Texto secundario"],
   ["accent", "Acento"],
   ["border", "Borde"],
+  ["borderSubtle", "Borde sutil"],
+  ["accentText", "Texto sobre acento"],
+  ["statusError", "Error"],
+  ["statusWarning", "Aviso"],
+  ["statusSuccess", "Éxito"],
+  ["statusInfo", "Información"],
+  ["link", "Enlace"],
+  ["focusRing", "Anillo de foco"],
+  ["selectionBg", "Fondo de selección"],
+  ["selectionText", "Texto seleccionado"],
+  ["surfaceRaised", "Superficie elevada"],
 ] as const;
 ---
 
 <section
   data-theme-editor
   data-theme-id={theme?.reference.id}
+  data-theme-bases={JSON.stringify(baseDefinitions)}
   class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]"
 >
   <form
@@ -67,29 +111,11 @@ const colors = [
               <input
                 type="color"
                 data-theme-field={`${mode}.${name}`}
+                data-theme-override={theme?.tokens[mode]?.[name] ? "true" : "false"}
                 value={token(
                   mode,
                   name,
-                  (
-                    {
-                      light: {
-                        pageBackground: "#f7f5ef",
-                        surfaceBackground: "#ffffff",
-                        text: "#171717",
-                        textMuted: "#68655f",
-                        accent: "#111111",
-                        border: "#d8d4ca",
-                      },
-                      dark: {
-                        pageBackground: "#121210",
-                        surfaceBackground: "#1b1a17",
-                        text: "#f1efe8",
-                        textMuted: "#aaa69c",
-                        accent: "#ffffff",
-                        border: "#393730",
-                      },
-                    } as const
-                  )[mode][name]
+                  baseColor(mode, name)
                 )}
               />
             </label>
@@ -101,6 +127,7 @@ const colors = [
       <label class="text-sm"
         >Tipografía<select
           data-theme-field="typography.family"
+          data-theme-override={theme?.tokens.typography?.family ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
           ><option value="system-sans">Sans del sistema</option><option
             value="editorial-serif"
@@ -114,12 +141,38 @@ const colors = [
         ></label
       >
       <label class="text-sm"
+        >Tipografía de títulos<select data-theme-field="typography.heading" data-theme-override={theme?.tokens.typography?.heading ? "true" : "false"} class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="system-sans" selected={headingFamily === "system-sans"}>Sans del sistema</option><option value="editorial-serif" selected={headingFamily === "editorial-serif"}>Serif editorial</option><option value="mono" selected={headingFamily === "mono"}>Monoespaciada</option></select
+        ></label
+      >
+      <label class="text-sm"
+        >Tipografía de código<select data-theme-field="typography.code" data-theme-override={theme?.tokens.typography?.code ? "true" : "false"} class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="mono">Monoespaciada</option><option value="system-sans" selected={theme?.tokens.typography?.code === "system-sans"}>Sans del sistema</option><option value="editorial-serif" selected={theme?.tokens.typography?.code === "editorial-serif"}>Serif editorial</option></select
+        ></label
+      >
+      <label class="text-sm"
+        >Tamaño de lectura<select data-theme-field="typography.scale" data-theme-override={theme?.tokens.typography?.scale ? "true" : "false"} class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="small" selected={theme?.tokens.typography?.scale === "small"}>Pequeño</option><option value="normal" selected={!theme?.tokens.typography?.scale || theme?.tokens.typography?.scale === "normal"}>Normal</option><option value="large" selected={theme?.tokens.typography?.scale === "large"}>Grande</option></select
+        ></label
+      >
+      <label class="text-sm"
+        >Ritmo tipográfico<select data-theme-field="typography.rhythm" data-theme-override={theme?.tokens.typography?.rhythm ? "true" : "false"} class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="compact" selected={theme?.tokens.typography?.rhythm === "compact"}>Compacto</option><option value="balanced" selected={!theme?.tokens.typography?.rhythm || theme?.tokens.typography?.rhythm === "balanced"}>Equilibrado</option><option value="airy" selected={theme?.tokens.typography?.rhythm === "airy"}>Amplio</option></select
+        ></label
+      >
+      <label class="text-sm"
+        >Ancho de lectura<select data-theme-field="layout.readingMeasure" data-theme-override={theme?.tokens.layout?.readingMeasure ? "true" : "false"} class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="narrow" selected={theme?.tokens.layout?.readingMeasure === "narrow"}>Estrecho</option><option value="standard" selected={!theme?.tokens.layout?.readingMeasure || theme?.tokens.layout?.readingMeasure === "standard"}>Estándar</option><option value="wide" selected={theme?.tokens.layout?.readingMeasure === "wide"}>Amplio</option></select
+        ></label
+      >
+      <label class="text-sm"
         >Radio<select
           data-theme-field="shape.radius"
+          data-theme-override={theme?.tokens.shape?.radius ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="square">Recto</option><option
+          ><option value="square" selected={theme?.tokens.shape?.radius === "square" || (!theme?.tokens.shape?.radius && isClassic)}>Recto</option><option
             value="soft"
-            selected={theme?.tokens.shape?.radius === "soft"}>Suave</option
+            selected={theme?.tokens.shape?.radius === "soft" || (!theme?.tokens.shape?.radius && !isClassic)}>Suave</option
           ><option
             value="rounded"
             selected={theme?.tokens.shape?.radius === "rounded"}
@@ -128,30 +181,98 @@ const colors = [
         ></label
       >
       <label class="text-sm"
+        >Forma de cubierta<select
+          data-theme-field="shape.cover"
+          data-theme-override={theme?.tokens.shape?.cover ? "true" : "false"}
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="book" selected={theme?.tokens.shape?.cover === "book" || (!theme?.tokens.shape?.cover && !isClassic)}
+            >Libro con lomo</option
+          ><option value="square" selected={theme?.tokens.shape?.cover === "square" || (!theme?.tokens.shape?.cover && isClassic)}
+            >Recta</option
+          ><option
+            value="rounded"
+            selected={theme?.tokens.shape?.cover === "rounded"}
+            >Redondeada</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
         >Densidad<select
           data-theme-field="layout.density"
+          data-theme-override={theme?.tokens.layout?.density ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="compact">Compacta</option><option value="comfortable"
+          ><option value="compact" selected={theme?.tokens.layout?.density === "compact"}>Compacta</option><option value="comfortable" selected={theme?.tokens.layout?.density === "comfortable" || (!theme?.tokens.layout?.density && isClassic)}
             >Cómoda</option
           ><option
             value="relaxed"
-            selected={theme?.tokens.layout?.density === "relaxed"}
+            selected={theme?.tokens.layout?.density === "relaxed" || (!theme?.tokens.layout?.density && !isClassic)}
             >Relajada</option
           ></select
         ></label
       >
       <label class="text-sm"
-        >Decoración<select
+        >Trama de componentes<select
           data-theme-field="decoration.pattern"
+          data-theme-override={theme?.tokens.decoration?.pattern ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="none">Ninguna</option><option
+          ><option value="none" selected={theme?.tokens.decoration?.pattern === "none"}>Ninguna</option><option
             value="grid"
             selected={theme?.tokens.decoration?.pattern === "grid"}
             >Cuadrícula</option
           ><option
-            value="hatch"
-            selected={theme?.tokens.decoration?.pattern === "hatch"}
-            >Rayado</option
+            value="texture"
+            selected={theme?.tokens.decoration?.pattern === "texture" || theme?.tokens.decoration?.pattern === "hatch" || (!theme?.tokens.decoration?.pattern && !isClassic)}
+            >Textura sutil</option
+          ><option value="stripes" selected={theme?.tokens.decoration?.pattern === "stripes" || (!theme?.tokens.decoration?.pattern && isClassic)}
+            >Rayas diagonales</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Trama de página<select
+          data-theme-field="decoration.pagePattern"
+          data-theme-override={theme?.tokens.decoration?.pagePattern ? "true" : "false"}
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="none" selected={pagePattern === "none"}>Ninguna</option><option
+            value="grid"
+            selected={pagePattern === "grid"}
+            >Cuadrícula</option
+          ><option value="texture" selected={pagePattern === "texture"}
+            >Textura sutil</option
+          ><option value="stripes" selected={pagePattern === "stripes"}
+            >Rayas diagonales</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Marcas de esquina<select
+          data-theme-field="decoration.corners"
+          data-theme-override={theme?.tokens.decoration?.corners ? "true" : "false"}
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="none" selected={theme?.tokens.decoration?.corners === "none" || !theme?.tokens.decoration?.corners}>Ninguna</option><option
+            value="cross"
+            selected={theme?.tokens.decoration?.corners === "cross"}
+            >Cruces</option
+          ><option
+            value="line"
+            selected={theme?.tokens.decoration?.corners === "line"}
+            >Líneas</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Sombra<select
+          data-theme-field="decoration.shadow"
+          data-theme-override={theme?.tokens.decoration?.shadow ? "true" : "false"}
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="flat" selected={theme?.tokens.decoration?.shadow === "flat" || (!theme?.tokens.decoration?.shadow && isClassic)}>Plana</option><option
+            value="offset"
+            selected={theme?.tokens.decoration?.shadow === "offset" || (!theme?.tokens.decoration?.shadow && !isClassic)}
+            >Desplazada</option
+          ><option
+            value="soft"
+            selected={theme?.tokens.decoration?.shadow === "soft"}
+            >Suave</option
           ></select
         ></label
       >
@@ -162,15 +283,21 @@ const colors = [
       role="status"
     >
     </p>
+    <div class="space-y-2 text-sm" role="status" aria-live="polite">
+      <strong>Contraste de la paleta</strong>
+      <p data-theme-contrast class="max-h-36 overflow-y-auto whitespace-pre-line text-[var(--theme-text-muted)]"></p>
+    </div>
     <button
       data-theme-submit
       type="submit"
       class="border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-[var(--theme-page-bg)]"
       >Guardar tema</button
     >
+    <button type="button" data-theme-reset class="ml-3 border border-[var(--theme-border)] px-4 py-2 text-sm">Restablecer valores del tema base</button>
   </form>
   <aside
     data-theme-preview
+    style={initialPreviewStyle}
     data-preview-mode="light"
     class="min-h-80 border p-6"
   >
@@ -179,14 +306,30 @@ const colors = [
       data-preview-mode-toggle
       class="mb-6 border px-3 py-2 text-sm">Alternar claro/oscuro</button
     >
-    <p class="mb-2 text-sm opacity-70">Vista previa local</p><h2
-      class="mb-4 text-3xl font-semibold"
-    >
-      Un tema para tus ideas
+    <p class="mb-2 text-sm opacity-70">Vista previa local</p><h2 class="mb-4 text-3xl font-semibold">
+      Un nanobook para tus ideas
     </h2>
-    <div class="preview-panel border p-4">
-      <p>Los componentes consumen el mismo contrato semántico.</p><a href="#"
-        >Enlace de ejemplo</a>
+    <div class="preview-gallery">
+      <div class="preview-book">
+        <span class="preview-spine" aria-hidden="true"></span>
+        <span class="preview-brand">nanobook</span>
+        <strong>Una idea.<br />Su propio espacio.</strong>
+      </div>
+      <div class="preview-card">
+        <span class="preview-index">01 / DOCUMENTO</span>
+        <strong>Organiza tus notas</strong>
+        <span class="preview-muted">Tarjeta del índice</span>
+      </div>
+      <div class="preview-markdown">
+        <strong>Muestra Markdown</strong>
+        <p class="preview-reading">Los bloques y controles comparten la misma identidad visual. Un párrafo largo deja ver el ancho de lectura y el ritmo tipográfico al cambiar las opciones del tema. <span class="preview-link">Enlace de ejemplo</span>.</p>
+        <blockquote>Una cita con sus marcas de esquina.</blockquote>
+        <code>contenido.inline()</code>
+        <nav class="preview-navigation" aria-label="Navegación de ejemplo"><span>Introducción</span><strong aria-current="page">Capítulo actual</strong></nav>
+        <button type="button" class="preview-focus">Control con foco visible</button>
+        <div class="preview-wide" aria-label="Tabla de ejemplo"><span>Columna</span><span>Valor</span><span>Detalle</span></div>
+        <div class="preview-actions"><span class="preview-accent">Acción principal</span><span class="preview-error">Error</span><span class="preview-warning">Aviso</span><span class="preview-success">Éxito</span><span class="preview-info">Información</span></div>
+      </div>
     </div>
   </aside>
 </section>
@@ -194,22 +337,79 @@ const colors = [
 
 <style>
   [data-theme-preview] {
+    --preview-page: var(--theme-light-page-bg);
+    --preview-surface: var(--theme-light-surface-bg);
+    --preview-text: var(--theme-light-text);
+    --preview-muted: var(--theme-light-text-muted);
+    --preview-border: var(--theme-light-border);
+    --preview-cover-radius: var(--theme-light-cover-radius);
+    --preview-cover-spine-width: var(--theme-light-cover-spine-width);
+    --preview-corner-image: var(--theme-light-decoration-corner-image);
+    --preview-hatch-image: var(--theme-light-decoration-hatch-image);
+    --preview-shadow: var(--theme-light-decoration-shadow);
+    --preview-accent: var(--theme-light-accent);
+    --preview-accent-text: var(--theme-light-accent-text);
+    --preview-link: var(--theme-light-link);
+    --preview-focus-ring: var(--theme-light-focus-ring);
+    --preview-raised: var(--theme-light-surface-raised);
+    --preview-reading-measure: var(--theme-light-reading-measure);
+    --preview-line-height: var(--theme-light-body-line-height);
+    --preview-heading-scale: var(--theme-light-heading-scale);
+    --preview-section-space: var(--theme-light-space-section);
+    --preview-error: var(--theme-light-status-error);
+    --preview-warning: var(--theme-light-status-warning);
+    --preview-success: var(--theme-light-status-success);
+    --preview-info: var(--theme-light-status-info);
+    --theme-border-strong: color-mix(in srgb, var(--preview-text) 45%, transparent);
+    --theme-decoration-hatch: color-mix(in srgb, var(--preview-text) 22%, transparent);
+    --theme-decoration-hatch-subtle: color-mix(in srgb, var(--preview-text) 6%, transparent);
+    --theme-border-subtle: var(--theme-light-border-subtle);
     background: var(--theme-light-page-bg);
     color: var(--theme-light-text);
     border-color: var(--theme-light-border);
     font-family: var(--theme-light-font-body);
+    font-size: var(--theme-light-font-scale);
     background-image: var(--theme-light-page-pattern);
     border-radius: var(--theme-light-panel-radius);
   }
   [data-theme-preview][data-preview-mode="dark"] {
+    --preview-page: var(--theme-dark-page-bg);
+    --preview-surface: var(--theme-dark-surface-bg);
+    --preview-text: var(--theme-dark-text);
+    --preview-muted: var(--theme-dark-text-muted);
+    --preview-border: var(--theme-dark-border);
+    --preview-cover-radius: var(--theme-dark-cover-radius);
+    --preview-cover-spine-width: var(--theme-dark-cover-spine-width);
+    --preview-corner-image: var(--theme-dark-decoration-corner-image);
+    --preview-hatch-image: var(--theme-dark-decoration-hatch-image);
+    --preview-shadow: var(--theme-dark-decoration-shadow);
+    --preview-accent: var(--theme-dark-accent);
+    --preview-accent-text: var(--theme-dark-accent-text);
+    --preview-link: var(--theme-dark-link);
+    --preview-focus-ring: var(--theme-dark-focus-ring);
+    --preview-raised: var(--theme-dark-surface-raised);
+    --preview-reading-measure: var(--theme-dark-reading-measure);
+    --preview-line-height: var(--theme-dark-body-line-height);
+    --preview-heading-scale: var(--theme-dark-heading-scale);
+    --preview-section-space: var(--theme-dark-space-section);
+    --preview-error: var(--theme-dark-status-error);
+    --preview-warning: var(--theme-dark-status-warning);
+    --preview-success: var(--theme-dark-status-success);
+    --preview-info: var(--theme-dark-status-info);
+    --theme-border-strong: color-mix(in srgb, var(--preview-text) 45%, transparent);
+    --theme-decoration-hatch: color-mix(in srgb, var(--preview-text) 22%, transparent);
+    --theme-decoration-hatch-subtle: color-mix(in srgb, var(--preview-text) 6%, transparent);
+    --theme-border-subtle: var(--theme-dark-border-subtle);
     background-color: var(--theme-dark-page-bg);
     color: var(--theme-dark-text);
     border-color: var(--theme-dark-border);
     font-family: var(--theme-dark-font-body);
+    font-size: var(--theme-dark-font-scale);
     background-image: var(--theme-dark-page-pattern);
     border-radius: var(--theme-dark-panel-radius);
   }
   [data-theme-preview] h2 {
+    font-size: calc(1.875rem * var(--preview-heading-scale));
     color: var(--theme-light-accent);
     font-family: var(--theme-light-font-heading);
   }
@@ -217,12 +417,102 @@ const colors = [
     color: var(--theme-dark-accent);
     font-family: var(--theme-dark-font-heading);
   }
-  .preview-panel {
-    background: var(--theme-light-surface-bg);
-    border-color: var(--theme-light-border);
+  .preview-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    align-items: start;
+    gap: 1rem;
   }
-  [data-preview-mode="dark"] .preview-panel {
-    background: var(--theme-dark-surface-bg);
-    border-color: var(--theme-dark-border);
+  .preview-book,
+  .preview-card,
+  .preview-markdown {
+    position: relative;
+    border: 1px solid var(--preview-border);
+    border-radius: var(--preview-cover-radius);
+    box-shadow: var(--preview-shadow);
+    background-color: var(--preview-surface);
+    background-image: var(--preview-hatch-image);
+    background-size: 9px 9px;
+    color: var(--preview-text);
   }
+  .preview-book {
+    display: flex;
+    min-height: 12rem;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 1.25rem 1rem 1rem 1.75rem;
+    background-color: var(--preview-page);
+  }
+  .preview-spine {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--preview-cover-spine-width);
+    background: linear-gradient(90deg, transparent calc(100% - 1px), var(--preview-border) calc(100% - 1px));
+  }
+  .preview-book strong {
+    font-size: 1.2rem;
+    line-height: 1.15;
+  }
+  .preview-brand,
+  .preview-index,
+  .preview-muted {
+    color: var(--preview-muted);
+    font-size: 0.72rem;
+  }
+  .preview-card {
+    display: grid;
+    min-height: 8rem;
+    align-content: space-between;
+    padding: 1rem;
+  }
+  .preview-card::after,
+  .preview-markdown::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    pointer-events: none;
+    background: var(--preview-corner-image);
+  }
+  .preview-markdown {
+    grid-column: 1 / -1;
+    padding: 1rem;
+  }
+  .preview-markdown p {
+    margin: 0.65rem 0;
+    color: var(--preview-muted);
+    font-size: 0.9rem;
+  }
+  .preview-reading {
+    max-width: var(--preview-reading-measure);
+    line-height: var(--preview-line-height);
+  }
+  .preview-link { color: var(--preview-link); text-decoration: underline; }
+  .preview-navigation { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: var(--preview-section-space); font-size: 0.8rem; }
+  .preview-navigation > * { padding: 0.4rem 0.65rem; border: 1px solid var(--preview-border); }
+  .preview-navigation [aria-current="page"] { background: var(--preview-raised); color: var(--preview-text); }
+  .preview-focus { display: block; margin: 1rem 0; padding: 0.45rem 0.65rem; border: 1px solid var(--preview-border); outline: 2px solid var(--preview-focus-ring); outline-offset: 2px; color: var(--preview-text); }
+  .preview-wide { display: flex; min-width: 0; overflow-x: auto; gap: 2rem; border: 1px solid var(--preview-border); padding: 0.5rem; font-size: 0.75rem; white-space: nowrap; }
+  .preview-markdown blockquote {
+    margin: 0.75rem 0;
+    border-left: 2px solid var(--preview-border);
+    padding: 0.5rem 0.75rem;
+    background: var(--preview-surface);
+  }
+  .preview-markdown code {
+    border: 1px solid var(--preview-border);
+    border-radius: var(--theme-light-control-radius);
+    background: var(--preview-page);
+    padding: 0.15rem 0.35rem;
+    font-family: var(--theme-light-font-code);
+    font-size: 0.85em;
+  }
+  [data-preview-mode="dark"] .preview-markdown code { font-family: var(--theme-dark-font-code); }
+  .preview-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; font-size: 0.75rem; }
+  .preview-actions span { padding: 0.35rem 0.55rem; border: 1px solid currentColor; border-radius: var(--theme-light-control-radius); }
+  .preview-accent { color: var(--preview-accent-text); background: var(--preview-accent); }
+  .preview-error { color: var(--preview-error); }
+  .preview-warning { color: var(--preview-warning); }
+  .preview-success { color: var(--preview-success); }
+  .preview-info { color: var(--preview-info); }
 </style>

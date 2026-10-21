@@ -29,6 +29,46 @@ describe("theme controllers", () => {
     expect(invalid.status).toBe(400);
   });
 
+  it("persists safe cover and decoration presets through the API", async () => {
+    const repository = new InMemoryThemeRepository();
+    const controller = new ThemeCollectionController(new ListThemes(repository), new CreateTheme(repository, () => "new"));
+    const response = await controller.post(context(new Request("http://localhost/api/themes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Book style",
+        baseThemeId: "nanobook",
+        tokens: {
+          shape: { cover: "book" },
+          decoration: { corners: "line", shadow: "offset", pattern: "stripes", pagePattern: "texture" },
+        },
+      }),
+    }), "owner-1"));
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      tokens: {
+        shape: { cover: "book" },
+        decoration: { corners: "line", shadow: "offset", pattern: "stripes", pagePattern: "texture" },
+      },
+    });
+  });
+
+  it("rejects CSS values in identity presets", async () => {
+    const repository = new InMemoryThemeRepository();
+    const controller = new ThemeCollectionController(new ListThemes(repository), new CreateTheme(repository, () => "new"));
+    const response = await controller.post(context(new Request("http://localhost/api/themes", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Unsafe",
+        baseThemeId: "nanobook",
+        tokens: { decoration: { shadow: "blur(100px)", pagePattern: "none" } },
+      }),
+    }), "owner-1"));
+
+    expect(response.status).toBe(400);
+  });
+
   it("maps foreign themes to 403 and missing themes to 404", async () => {
     const repository = seed();
     const controller = new ThemeItemController(new GetTheme(repository), new UpdateTheme(repository));

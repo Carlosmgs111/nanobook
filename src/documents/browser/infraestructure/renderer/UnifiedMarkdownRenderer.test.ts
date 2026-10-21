@@ -10,4 +10,14 @@ describe("UnifiedMarkdownRenderer", () => {
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual({ Content: '<h1 id="hello">Hello</h1>' });
   }, 15_000);
+
+  it("preserves the graph fence marker for graph-specific presentation", async () => {
+    const renderer = new UnifiedMarkdownRenderer();
+
+    const result = await renderer.render("```graph\n┌───┐\n│   │\n└───┘\n```");
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().Content).toContain('<code class="language-graph">');
+    expect(result.getValue().Content).toContain("┌───┐");
+  }, 15_000);
 });

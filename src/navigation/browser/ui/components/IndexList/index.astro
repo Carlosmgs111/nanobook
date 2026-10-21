@@ -39,10 +39,9 @@ const sortedEntries = navigationService.getImmediateChildren(slug)
 </div>
 
 <div class="index-panel relative space-y-4">
-  {sortedEntries.map((page, index) => (
+  {sortedEntries.map((page) => (
     <DocumentIndex
       page={page}
-      index={index}
       navigationService={navigationService}
     />
   ))}
@@ -51,7 +50,7 @@ const sortedEntries = navigationService.getImmediateChildren(slug)
 {
   sortedEntries.length === 0 && (
     <div class="border border-[var(--theme-border)] p-8 text-center text-[var(--theme-text-muted)]">
-      <p>No entries found.</p>
+      <p>Todavía no hay documentos en esta sección.</p>
     </div>
   )
 }

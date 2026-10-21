@@ -7,6 +7,33 @@ html {
   font-family: var(--theme-font-body);
 }
 
+:where(button, input, select, textarea) {
+  border-radius: var(--theme-control-radius);
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  color: var(--theme-content-primary);
+}
+
+:where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--theme-accent);
+}
+
+::selection {
+  background: var(--theme-selection-bg);
+  color: var(--theme-selection-text);
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+:where(button, input, select, textarea):disabled {
+  color: var(--theme-control-disabled);
+  cursor: not-allowed;
+}
+
 .grid-overlay {
   position: fixed;
   inset: 0;

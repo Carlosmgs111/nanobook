@@ -106,7 +106,7 @@
     padding: 1rem 1.125rem;
     color: var(--theme-text);
     background: var(--theme-page-bg);
-    box-shadow: 8px 8px 0 var(--theme-border-subtle);
+    box-shadow: var(--theme-decoration-shadow);
     pointer-events: auto;
     animation: toast-enter 160ms ease-out;
   }
@@ -117,7 +117,7 @@
   }
 
   .toast-host__item[data-kind="error"] {
-    border-left-color: #e06c75;
+    border-left-color: var(--theme-status-error);
   }
 
   .toast-host__message {

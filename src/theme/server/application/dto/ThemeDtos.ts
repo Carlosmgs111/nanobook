@@ -5,14 +5,17 @@ import type { ThemeTokens } from "../../domain/ThemeTokens";
 
 export interface ThemePaletteDto {
   pageBackground?: string; surfaceBackground?: string; text?: string;
-  textMuted?: string; accent?: string; border?: string;
+  textMuted?: string; accent?: string; border?: string; borderSubtle?: string;
+  accentText?: string; statusError?: string; statusWarning?: string;
+  statusSuccess?: string; statusInfo?: string; link?: string; focusRing?: string;
+  selectionBg?: string; selectionText?: string; surfaceRaised?: string;
 }
 export interface ThemeTokensDto {
   light?: ThemePaletteDto; dark?: ThemePaletteDto;
-  typography?: { family?: "system-sans" | "editorial-serif" | "mono" };
-  shape?: { radius?: "square" | "soft" | "rounded" };
-  layout?: { density?: "compact" | "comfortable" | "relaxed" };
-  decoration?: { pattern?: "none" | "grid" | "hatch" };
+  typography?: { family?: "system-sans" | "editorial-serif" | "mono"; heading?: "system-sans" | "editorial-serif" | "mono"; code?: "system-sans" | "editorial-serif" | "mono"; scale?: "small" | "normal" | "large"; rhythm?: "compact" | "balanced" | "airy" };
+  shape?: { radius?: "square" | "soft" | "rounded"; cover?: "book" | "square" | "rounded" };
+  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" };
+  decoration?: { pattern?: "none" | "grid" | "texture" | "stripes" | "hatch"; pagePattern?: "none" | "grid" | "texture" | "stripes" | "hatch"; corners?: "none" | "cross" | "line"; shadow?: "flat" | "offset" | "soft" };
 }
 export interface ThemeSummary {
   reference: { kind: "official" | "custom"; id: string };
@@ -21,8 +24,8 @@ export interface ThemeSummary {
 export interface ThemeDetails extends ThemeSummary { tokens: ThemeTokensDto; }
 
 const ROOT_KEYS = ["light", "dark", "typography", "shape", "layout", "decoration"];
-const PALETTE_KEYS = ["pageBackground", "surfaceBackground", "text", "textMuted", "accent", "border"];
-const mapping = { pageBackground: "pageBg", surfaceBackground: "surfaceBg", text: "text", textMuted: "textMuted", accent: "accent", border: "border" } as const;
+const PALETTE_KEYS = ["pageBackground", "surfaceBackground", "text", "textMuted", "accent", "border", "borderSubtle", "accentText", "statusError", "statusWarning", "statusSuccess", "statusInfo", "link", "focusRing", "selectionBg", "selectionText", "surfaceRaised"];
+const mapping = { pageBackground: "pageBg", surfaceBackground: "surfaceBg", text: "text", textMuted: "textMuted", accent: "accent", border: "border", borderSubtle: "borderSubtle", accentText: "accentText", statusError: "statusError", statusWarning: "statusWarning", statusSuccess: "statusSuccess", statusInfo: "statusInfo", link: "link", focusRing: "focusRing", selectionBg: "selectionBg", selectionText: "selectionText", surfaceRaised: "surfaceRaised" } as const;
 
 export function parseThemeTokensDto(value: unknown): Result<InvalidThemeError, ThemeTokens> {
   if (!record(value) || Object.keys(value).some((key) => !ROOT_KEYS.includes(key))) return Result.fail(new InvalidThemeError("tokens contiene campos no permitidos"));
@@ -39,16 +42,23 @@ export function parseThemeTokensDto(value: unknown): Result<InvalidThemeError, T
     tokens[mode] = mapped;
   }
   const groups = {
-    typography: ["family", ["system-sans", "editorial-serif", "mono"]],
-    shape: ["radius", ["square", "soft", "rounded"]],
-    layout: ["density", ["compact", "comfortable", "relaxed"]],
-    decoration: ["pattern", ["none", "grid", "hatch"]],
+    typography: { family: ["system-sans", "editorial-serif", "mono"], heading: ["system-sans", "editorial-serif", "mono"], code: ["system-sans", "editorial-serif", "mono"], scale: ["small", "normal", "large"], rhythm: ["compact", "balanced", "airy"] },
+    shape: { radius: ["square", "soft", "rounded"], cover: ["book", "square", "rounded"] },
+    layout: { density: ["compact", "comfortable", "relaxed"], readingMeasure: ["narrow", "standard", "wide"] },
+    decoration: { pattern: ["none", "grid", "texture", "stripes", "hatch"], pagePattern: ["none", "grid", "texture", "stripes", "hatch"], corners: ["none", "cross", "line"], shadow: ["flat", "offset", "soft"] },
   } as const;
-  for (const [group, [key, allowed]] of Object.entries(groups) as Array<[keyof typeof groups, readonly [string, readonly string[]]]>) {
+  for (const [group, fields] of Object.entries(groups) as Array<[keyof typeof groups, Record<string, readonly string[]>]>) {
     const entry = value[group];
     if (entry === undefined) continue;
-    if (!record(entry) || Object.keys(entry).length !== 1 || !allowed.includes(entry[key] as string)) return Result.fail(new InvalidThemeError(`${group}.${key} es inválido`));
-    (tokens as any)[group] = { [key]: entry[key] };
+    if (!record(entry) || Object.keys(entry).length === 0 || Object.keys(entry).some((key) => !(key in fields))) {
+      return Result.fail(new InvalidThemeError(`${group} contiene campos no permitidos`));
+    }
+    for (const [key, selected] of Object.entries(entry)) {
+      if (typeof selected !== "string" || !fields[key].includes(selected)) {
+        return Result.fail(new InvalidThemeError(`${group}.${key} es inválido`));
+      }
+    }
+    (tokens as any)[group] = entry;
   }
   return Result.ok(tokens);
 }

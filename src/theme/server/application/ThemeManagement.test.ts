@@ -27,6 +27,21 @@ describe("theme management", () => {
     });
   });
 
+  it("round trips the extended public tokens through the DTO", async () => {
+    const repository = new InMemoryThemeRepository();
+    const created = await new CreateTheme(repository, () => "extended").execute("owner-1", {
+      name: "Extended", baseThemeId: "classic",
+      tokens: {
+        light: { borderSubtle: "#ddddee", accentText: "#ffffff", statusWarning: "#996600" },
+        dark: { statusSuccess: "#22cc99" },
+        typography: { heading: "editorial-serif", code: "mono", scale: "large" },
+      },
+    });
+    expect(created.isSuccess).toBe(true);
+    const fetched = await new GetTheme(repository).execute("owner-1", "extended");
+    expect(fetched.getValue().tokens).toEqual(created.getValue().tokens);
+  });
+
   it("lists official choices and only custom themes owned by the caller", async () => {
     const repository = new InMemoryThemeRepository([existing(), existing("foreign", "owner-2")]);
     const result = await new ListThemes(repository).execute("owner-1");
