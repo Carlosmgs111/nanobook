@@ -2,7 +2,7 @@ import {
   OfficialThemeCatalog,
   type OfficialThemeId,
 } from "../infraestructure/OfficialThemeCatalog";
-import { cornerImage, coverValues, hatchImage, pagePatternImage, shadowValue, rhythmValues, readingMeasureValue, densityValues } from "../../shared/ThemePresets";
+import { cornerImage, coverValues, patternImage, patternStep, patternContrast, shadowValue, rhythmValues, readingMeasureValue, densityValues } from "../../shared/ThemePresets";
 import type { ThemeTokens } from "../domain/ThemeTokens";
 import type { ThemeRepository } from "../domain/ports/ThemeRepository";
 import type { ThemeReference } from "../../../shared/theme/ThemeReference";
@@ -125,18 +125,18 @@ function overlayTokens(
 
   if (tokens.decoration) {
     if (tokens.decoration.pattern) {
-      light["decoration-hatch-image"] = hatchImage(tokens.decoration.pattern);
-      dark["decoration-hatch-image"] = hatchImage(tokens.decoration.pattern);
-      if (!tokens.decoration.pagePattern) {
-        const legacyPagePattern = pagePatternImage(tokens.decoration.pattern);
-        light["page-pattern"] = legacyPagePattern;
-        dark["page-pattern"] = legacyPagePattern;
-      }
+      light["decoration-pattern-image"] = patternImage(tokens.decoration.pattern);
+      dark["decoration-pattern-image"] = patternImage(tokens.decoration.pattern);
     }
-    if (tokens.decoration.pagePattern) {
-      const pagePattern = pagePatternImage(tokens.decoration.pagePattern);
-      light["page-pattern"] = pagePattern;
-      dark["page-pattern"] = pagePattern;
+    if (tokens.decoration.patternScale) {
+      const step = patternStep(tokens.decoration.patternScale);
+      light["decoration-pattern-step"] = step;
+      dark["decoration-pattern-step"] = step;
+    }
+    if (tokens.decoration.patternContrast) {
+      const contrast = patternContrast(tokens.decoration.patternContrast);
+      light["decoration-pattern-contrast"] = contrast;
+      dark["decoration-pattern-contrast"] = contrast;
     }
     if (tokens.decoration.corners) {
       const image = cornerImage(tokens.decoration.corners);

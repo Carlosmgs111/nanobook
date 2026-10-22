@@ -23,9 +23,10 @@ const baseColor = (mode: "light" | "dark", name: string) => {
   const value = initialBase[mode][cssName];
   return colorInputValue(value, initialBase[mode]["page-bg"]);
 };
-const storedPagePattern = theme?.tokens.decoration?.pagePattern ?? theme?.tokens.decoration?.pattern;
-const pagePattern = storedPagePattern === "hatch" ? "texture" : storedPagePattern ?? (isClassic ? "grid" : "none");
-const headingFamily = theme?.tokens.typography?.heading ?? theme?.tokens.typography?.family ?? "system-sans";
+const pattern = theme?.tokens.decoration?.pattern ?? (isClassic ? "grid" : "texture");
+const patternScale = theme?.tokens.decoration?.patternScale ?? (isClassic ? "coarse" : "regular");
+const patternContrast = theme?.tokens.decoration?.patternContrast ?? "subtle";
+const headingFamily = theme?.tokens.typography?.heading ?? theme?.tokens.typography?.family ?? (isClassic ? "system-sans" : "editorial-serif");
 const token = (
   mode: "light" | "dark",
   name:
@@ -162,7 +163,7 @@ const colors = [
       >
       <label class="text-sm"
         >Ancho de lectura<select data-theme-field="layout.readingMeasure" data-theme-override={theme?.tokens.layout?.readingMeasure ? "true" : "false"} class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="narrow" selected={theme?.tokens.layout?.readingMeasure === "narrow"}>Estrecho</option><option value="standard" selected={!theme?.tokens.layout?.readingMeasure || theme?.tokens.layout?.readingMeasure === "standard"}>Estándar</option><option value="wide" selected={theme?.tokens.layout?.readingMeasure === "wide"}>Amplio</option></select
+          ><option value="narrow" selected={theme?.tokens.layout?.readingMeasure === "narrow"}>Estrecho</option><option value="standard" selected={theme?.tokens.layout?.readingMeasure === "standard"}>Estándar</option><option value="wide" selected={theme?.tokens.layout?.readingMeasure === "wide"}>Amplio</option><option value="full" selected={!theme?.tokens.layout?.readingMeasure || theme?.tokens.layout?.readingMeasure === "full"}>Todo el ancho</option></select
         ></label
       >
       <label class="text-sm"
@@ -215,32 +216,44 @@ const colors = [
           data-theme-field="decoration.pattern"
           data-theme-override={theme?.tokens.decoration?.pattern ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="none" selected={theme?.tokens.decoration?.pattern === "none"}>Ninguna</option><option
+          ><option value="none" selected={pattern === "none"}>Ninguna</option><option
             value="grid"
-            selected={theme?.tokens.decoration?.pattern === "grid"}
+            selected={pattern === "grid"}
             >Cuadrícula</option
           ><option
             value="texture"
-            selected={theme?.tokens.decoration?.pattern === "texture" || theme?.tokens.decoration?.pattern === "hatch" || (!theme?.tokens.decoration?.pattern && !isClassic)}
+            selected={pattern === "texture" || pattern === "hatch"}
             >Textura sutil</option
-          ><option value="stripes" selected={theme?.tokens.decoration?.pattern === "stripes" || (!theme?.tokens.decoration?.pattern && isClassic)}
+          ><option value="stripes" selected={pattern === "stripes"}
             >Rayas diagonales</option
           ></select
         ></label
       >
       <label class="text-sm"
-        >Trama de página<select
-          data-theme-field="decoration.pagePattern"
-          data-theme-override={theme?.tokens.decoration?.pagePattern ? "true" : "false"}
+        >Escala del patrón<select
+          data-theme-field="decoration.patternScale"
+          data-theme-override={theme?.tokens.decoration?.patternScale ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="none" selected={pagePattern === "none"}>Ninguna</option><option
-            value="grid"
-            selected={pagePattern === "grid"}
-            >Cuadrícula</option
-          ><option value="texture" selected={pagePattern === "texture"}
-            >Textura sutil</option
-          ><option value="stripes" selected={pagePattern === "stripes"}
-            >Rayas diagonales</option
+          ><option value="fine" selected={patternScale === "fine"}>Fina</option><option
+            value="regular"
+            selected={patternScale === "regular"}
+            >Regular</option
+          ><option value="coarse" selected={patternScale === "coarse"}
+            >Amplia</option
+          ></select
+        ></label
+      >
+      <label class="text-sm"
+        >Contraste del patrón<select
+          data-theme-field="decoration.patternContrast"
+          data-theme-override={theme?.tokens.decoration?.patternContrast ? "true" : "false"}
+          class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
+          ><option value="subtle" selected={patternContrast === "subtle"}>Sutil</option><option
+            value="balanced"
+            selected={patternContrast === "balanced"}
+            >Equilibrado</option
+          ><option value="strong" selected={patternContrast === "strong"}
+            >Marcado</option
           ></select
         ></label
       >
@@ -345,7 +358,7 @@ const colors = [
     --preview-cover-radius: var(--theme-light-cover-radius);
     --preview-cover-spine-width: var(--theme-light-cover-spine-width);
     --preview-corner-image: var(--theme-light-decoration-corner-image);
-    --preview-hatch-image: var(--theme-light-decoration-hatch-image);
+    --preview-pattern-image: var(--theme-light-decoration-pattern-image);
     --preview-shadow: var(--theme-light-decoration-shadow);
     --preview-accent: var(--theme-light-accent);
     --preview-accent-text: var(--theme-light-accent-text);
@@ -361,15 +374,17 @@ const colors = [
     --preview-success: var(--theme-light-status-success);
     --preview-info: var(--theme-light-status-info);
     --theme-border-strong: color-mix(in srgb, var(--preview-text) 45%, transparent);
-    --theme-decoration-hatch: color-mix(in srgb, var(--preview-text) 22%, transparent);
-    --theme-decoration-hatch-subtle: color-mix(in srgb, var(--preview-text) 6%, transparent);
+    --theme-decoration-pattern-step: var(--theme-light-decoration-pattern-step);
+    --theme-decoration-pattern-contrast: var(--theme-light-decoration-pattern-contrast);
+    --theme-decoration-pattern-color: color-mix(in srgb, var(--preview-text) var(--theme-decoration-pattern-contrast), transparent);
     --theme-border-subtle: var(--theme-light-border-subtle);
     background: var(--theme-light-page-bg);
     color: var(--theme-light-text);
     border-color: var(--theme-light-border);
     font-family: var(--theme-light-font-body);
     font-size: var(--theme-light-font-scale);
-    background-image: var(--theme-light-page-pattern);
+    background-image: var(--preview-pattern-image);
+    background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
     border-radius: var(--theme-light-panel-radius);
   }
   [data-theme-preview][data-preview-mode="dark"] {
@@ -381,7 +396,7 @@ const colors = [
     --preview-cover-radius: var(--theme-dark-cover-radius);
     --preview-cover-spine-width: var(--theme-dark-cover-spine-width);
     --preview-corner-image: var(--theme-dark-decoration-corner-image);
-    --preview-hatch-image: var(--theme-dark-decoration-hatch-image);
+    --preview-pattern-image: var(--theme-dark-decoration-pattern-image);
     --preview-shadow: var(--theme-dark-decoration-shadow);
     --preview-accent: var(--theme-dark-accent);
     --preview-accent-text: var(--theme-dark-accent-text);
@@ -397,15 +412,16 @@ const colors = [
     --preview-success: var(--theme-dark-status-success);
     --preview-info: var(--theme-dark-status-info);
     --theme-border-strong: color-mix(in srgb, var(--preview-text) 45%, transparent);
-    --theme-decoration-hatch: color-mix(in srgb, var(--preview-text) 22%, transparent);
-    --theme-decoration-hatch-subtle: color-mix(in srgb, var(--preview-text) 6%, transparent);
+    --theme-decoration-pattern-step: var(--theme-dark-decoration-pattern-step);
+    --theme-decoration-pattern-contrast: var(--theme-dark-decoration-pattern-contrast);
+    --theme-decoration-pattern-color: color-mix(in srgb, var(--preview-text) var(--theme-decoration-pattern-contrast), transparent);
     --theme-border-subtle: var(--theme-dark-border-subtle);
     background-color: var(--theme-dark-page-bg);
     color: var(--theme-dark-text);
     border-color: var(--theme-dark-border);
     font-family: var(--theme-dark-font-body);
     font-size: var(--theme-dark-font-scale);
-    background-image: var(--theme-dark-page-pattern);
+    background-image: var(--preview-pattern-image);
     border-radius: var(--theme-dark-panel-radius);
   }
   [data-theme-preview] h2 {
@@ -431,8 +447,8 @@ const colors = [
     border-radius: var(--preview-cover-radius);
     box-shadow: var(--preview-shadow);
     background-color: var(--preview-surface);
-    background-image: var(--preview-hatch-image);
-    background-size: 9px 9px;
+    background-image: var(--preview-pattern-image);
+    background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
     color: var(--preview-text);
   }
   .preview-book {

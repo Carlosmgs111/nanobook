@@ -25,7 +25,7 @@ describe("ResolveTheme", () => {
       key: "official:classic",
       baseId: "classic",
     });
-    expect(result.darkVariables["--theme-dark-page-bg"]).toBe("#050505");
+    expect(result.darkVariables["--theme-dark-page-bg"]).toBe("#131517");
     expect(Object.keys(result.lightVariables)).toEqual(
       Object.keys(result.darkVariables).map((key) => key.replace("--theme-dark-", "--theme-light-")),
     );
@@ -39,17 +39,16 @@ describe("ResolveTheme", () => {
     expect(nanobook.lightVariables["--theme-light-cover-radius"]).toBe("3px 9px 9px 3px");
     expect(nanobook.lightVariables["--theme-light-cover-spine-width"]).toBe("12px");
     expect(nanobook.lightVariables["--theme-light-decoration-corner-image"]).toBe("none");
-    expect(nanobook.lightVariables["--theme-light-decoration-hatch-image"]).toContain("var(--theme-decoration-hatch-subtle)");
-    expect(nanobook.lightVariables["--theme-light-decoration-shadow"]).toContain("12px 12px 0");
+    expect(nanobook.lightVariables["--theme-light-decoration-pattern-image"]).toContain("var(--theme-decoration-pattern-color)");
+    expect(nanobook.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
     expect(classic.lightVariables["--theme-light-cover-radius"]).toBe("0px");
     expect(classic.lightVariables["--theme-light-decoration-corner-image"]).toBe("none");
     expect(classic.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
-    expect(classic.lightVariables["--theme-light-decoration-hatch-image"]).toContain(
-      "repeating-linear-gradient(135deg, var(--theme-decoration-hatch-subtle)",
-    );
-    expect(classic.darkVariables["--theme-dark-decoration-hatch-image"]).toContain(
-      "repeating-linear-gradient(135deg, var(--theme-decoration-hatch-subtle)",
-    );
+    expect(classic.lightVariables["--theme-light-decoration-pattern-image"]).toContain("linear-gradient(");
+    expect(classic.darkVariables["--theme-dark-decoration-pattern-image"]).toContain("linear-gradient(");
+    expect(classic.lightVariables["--theme-light-decoration-pattern-image"]).toContain("var(--theme-decoration-pattern-color)");
+    expect(classic.lightVariables["--theme-light-decoration-pattern-step"]).toBe("32px");
+    expect(nanobook.lightVariables["--theme-light-decoration-pattern-contrast"]).toBe("4%");
   });
 
   it("falls back to classic for an unknown official id", async () => {
@@ -119,33 +118,35 @@ describe("ResolveTheme", () => {
     const overridden = await resolver.execute({ kind: "custom", id: "custom-cover" });
 
     expect(inherited.lightVariables["--theme-light-cover-spine-width"]).toBe("12px");
-    expect(inherited.lightVariables["--theme-light-decoration-shadow"]).toContain("12px 12px 0");
+    expect(inherited.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
     expect(overridden.lightVariables["--theme-light-cover-spine-width"]).toBe("0px");
     expect(overridden.lightVariables["--theme-light-decoration-corner-image"]).toBe("none");
-    expect(overridden.lightVariables["--theme-light-decoration-hatch-image"]).toBe("none");
+    expect(overridden.lightVariables["--theme-light-decoration-pattern-image"]).toBe("none");
     expect(overridden.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
   });
 
-  it("keeps component and page patterns independent while preserving legacy page patterns", async () => {
-    const separated = Theme.create({
-      id: "separated", ownerId: "owner-1", name: "Separated", baseThemeId: "nanobook",
-      tokens: { decoration: { pattern: "stripes", pagePattern: "none" } },
-    });
-    expect(separated.isSuccess).toBe(true);
+  it("migrates persisted page patterns into the global primitive", async () => {
     const legacy = Theme.create({
       id: "legacy-hatch", ownerId: "owner-1", name: "Legacy hatch", baseThemeId: "nanobook",
-      tokens: { decoration: { pattern: "hatch" } },
+      tokens: { decoration: { pagePattern: "grid" } },
     }).getValue();
-    const resolved = await new ResolveTheme(
-      new OfficialThemeCatalog(), new InMemoryThemeRepository([separated.getValue(), legacy]),
-    ).execute({ kind: "custom", id: "separated" });
-    const legacyResolved = await new ResolveTheme(
-      new OfficialThemeCatalog(), new InMemoryThemeRepository([legacy]),
-    ).execute({ kind: "custom", id: "legacy-hatch" });
+    const resolved = await new ResolveTheme(new OfficialThemeCatalog(), new InMemoryThemeRepository([legacy]))
+      .execute({ kind: "custom", id: "legacy-hatch" });
 
-    expect(resolved.lightVariables["--theme-light-decoration-hatch-image"]).toContain("1px 10px");
-    expect(resolved.lightVariables["--theme-light-page-pattern"]).toBe("none");
-    expect(legacyResolved.lightVariables["--theme-light-page-pattern"]).toContain("var(--theme-decoration-hatch-subtle)");
+    expect(resolved.lightVariables["--theme-light-decoration-pattern-image"]).toContain("var(--theme-decoration-pattern-color)");
+  });
+
+  it("resolves global pattern primitives for all potential consumers", async () => {
+    const custom = Theme.create({
+      id: "global-pattern", ownerId: "owner-1", name: "Global pattern", baseThemeId: "classic",
+      tokens: { decoration: { pattern: "grid", patternScale: "fine", patternContrast: "strong" } },
+    }).getValue();
+    const result = await new ResolveTheme(new OfficialThemeCatalog(), new InMemoryThemeRepository([custom]))
+      .execute({ kind: "custom", id: "global-pattern" });
+
+    expect(result.lightVariables["--theme-light-decoration-pattern-image"]).toContain("var(--theme-decoration-pattern-color)");
+    expect(result.darkVariables["--theme-dark-decoration-pattern-step"]).toBe("12px");
+    expect(result.lightVariables["--theme-light-decoration-pattern-contrast"]).toBe("14%");
   });
 
   it("falls back to the complete classic theme when a custom theme is missing", async () => {
@@ -153,7 +154,7 @@ describe("ResolveTheme", () => {
       new OfficialThemeCatalog(), new InMemoryThemeRepository(),
     ).execute({ kind: "custom", id: "missing" });
     expect(result.key).toBe("official:classic");
-    expect(result.lightVariables["--theme-light-page-bg"]).toBe("#f5f5f7");
+    expect(result.lightVariables["--theme-light-page-bg"]).toBe("#f1f2f4");
     expect(Object.keys(result.lightVariables)).toHaveLength(Object.keys(result.darkVariables).length);
   });
 
@@ -168,13 +169,13 @@ describe("ResolveTheme", () => {
     expect(result.lightVariables["--theme-light-link"]).toBe("#2144bb");
     expect(result.lightVariables["--theme-light-focus-ring"]).toBe("#3159d8");
     expect(result.lightVariables["--theme-light-selection-bg"]).toBe("#3159d8");
-    expect(result.lightVariables["--theme-light-selection-text"]).toBe("#f7f5ef");
+    expect(result.lightVariables["--theme-light-selection-text"]).toBe("#fffaf4");
     expect(result.lightVariables["--theme-light-surface-raised"]).toContain("color-mix");
     expect(result.darkVariables["--theme-dark-focus-ring"]).toBe("#ffcc00");
-    expect(result.darkVariables["--theme-dark-link"]).toBe("#ffffff");
+    expect(result.darkVariables["--theme-dark-link"]).toBe("#e1a17f");
   });
 
-  it("resolves editorial rhythm and reading measure without changing legacy defaults", async () => {
+  it("uses the available width by default and keeps custom reading measures", async () => {
     const custom = Theme.create({
       id: "reading", ownerId: "owner-1", name: "Reading", baseThemeId: "nanobook",
       tokens: { typography: { rhythm: "airy" }, layout: { readingMeasure: "narrow" } },
@@ -184,7 +185,7 @@ describe("ResolveTheme", () => {
     const legacy = await resolver.execute({ kind: "official", id: "nanobook" });
     expect(result.lightVariables["--theme-light-reading-measure"]).toBe("60ch");
     expect(result.darkVariables["--theme-dark-body-line-height"]).toBe("1.9");
-    expect(legacy.lightVariables["--theme-light-reading-measure"]).toBe("72ch");
+    expect(legacy.lightVariables["--theme-light-reading-measure"]).toBe("100%");
     expect(legacy.lightVariables["--theme-light-body-line-height"]).toBe("1.75");
   });
 });

@@ -29,7 +29,7 @@ const sortedEntries = navigationService.getImmediateChildren(slug)
 <div class="mb-12 border-b border-[var(--theme-border)] pb-8">
   <span class="tech-label mb-3 block">{label}</span>
   <div class="flex flex-wrap items-start justify-between gap-4">
-    <h1 class="glow-text text-4xl font-semibold tracking-tight text-[var(--theme-accent)] md:text-5xl">{title}</h1>
+    <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">{title}</h1>
     {(editHref || newHref) && <div class="flex flex-wrap gap-2">
       {editHref && <DocumentActionLink href={editHref} label="Editar" />}
       {newHref && <DocumentActionLink href={newHref} label="Nuevo en esta sección" primary />}

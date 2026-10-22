@@ -36,8 +36,8 @@
   overflow: hidden;
   border-right: 1px solid var(--theme-border);
   background-color: var(--theme-surface-raised);
-  background-image: var(--theme-decoration-hatch-image);
-  background-size: 10px 10px;
+  background-image: var(--theme-decoration-pattern-image);
+  background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
 }
 
 .index-card-folder .index-card-media {

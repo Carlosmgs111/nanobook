@@ -15,6 +15,10 @@
   max-width: var(--theme-reading-measure);
 }
 
+.prose #document-body {
+  --theme-reading-measure: 100%;
+}
+
 .prose p + p {
   margin-block-start: var(--theme-paragraph-gap);
 }
@@ -48,41 +52,43 @@
 .prose h1 {
   font-size: calc(2.25em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
-  color: var(--theme-action-primary);
-  text-shadow: 0 0 32px var(--glow-color), 0 0 64px var(--glow-color);
+  color: var(--theme-content-primary);
+  letter-spacing: -0.035em;
+  line-height: 1.12;
 }
 
 .prose h2 {
   font-size: calc(1.5em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
-  color: var(--theme-action-primary);
-  text-shadow: 0 0 24px var(--glow-color), 0 0 48px var(--glow-color);
+  color: var(--theme-content-primary);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .prose h3 {
   font-size: calc(1.25em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
-  color: var(--theme-action-primary);
-  text-shadow: 0 0 18px var(--glow-color), 0 0 36px var(--glow-color);
+  color: var(--theme-link);
+  line-height: 1.3;
 }
 
 .prose h4 {
   font-size: calc(1em * var(--theme-heading-scale));
   font-family: var(--theme-font-heading);
   color: var(--theme-content-primary);
-  text-shadow: 0 0 14px var(--glow-color), 0 0 28px var(--glow-color);
+  text-shadow: none;
 }
 
 .prose h5 {
   font-family: var(--theme-font-heading);
   color: var(--theme-content-primary);
-  text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
+  text-shadow: none;
 }
 
 .prose h6 {
   font-family: var(--theme-font-heading);
   color: var(--theme-content-muted);
-  text-shadow: 0 0 6px var(--glow-color), 0 0 12px var(--glow-color);
+  text-shadow: none;
 }
 
 /* ─────────────────────────────────────────────
@@ -105,8 +111,8 @@
    ───────────────────────────────────────────── */
 .prose strong,
 .prose b {
-  color: var(--theme-action-primary);
-  text-shadow: 0 0 16px var(--glow-color), 0 0 32px var(--glow-color);
+  color: var(--theme-content-primary);
+  text-shadow: none;
   font-weight: 600;
 }
 
@@ -135,8 +141,8 @@
   border: 1px solid var(--theme-border);
   border-radius: var(--theme-panel-radius);
   background-color: var(--theme-content-block-code-bg);
-  background-image: var(--theme-decoration-hatch-image);
-  background-size: 9px 9px;
+  background-image: var(--theme-decoration-pattern-image);
+  background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
   overflow-x: auto;
 }
 
@@ -168,20 +174,21 @@
   border: none;
   border-top: 1px solid var(--theme-border);
   border-bottom: 1px solid var(--theme-border);
-  background: linear-gradient(
+  background: linear-gradient( /* taste-skill-ignore: Classic keeps its patterned reading divider */
       180deg,
       color-mix(in srgb, var(--theme-surface-bg) 92%, transparent) 0%,
       transparent 50%,
       color-mix(in srgb, var(--theme-surface-bg) 92%, transparent) 100%
     ),
-    var(--theme-decoration-hatch-image),
-    linear-gradient(
+    var(--theme-decoration-pattern-image),
+    linear-gradient( /* taste-skill-ignore: Classic keeps its patterned reading divider */
       180deg,
       transparent calc(50% - 0.5px),
       var(--theme-border) calc(50% - 0.5px),
       var(--theme-border) calc(50% + 0.5px),
       transparent calc(50% + 0.5px)
     );
+  background-size: auto, var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step), auto;
   overflow: visible;
 }
 
@@ -212,22 +219,87 @@
   z-index: 3;
 }
 
+:root[data-theme="nanobook"] .prose hr,
+:root[data-theme="nanobook"] .hatch-divider {
+  width: 100%;
+  height: 1px;
+  margin: var(--theme-space-section) 0;
+  border: 0;
+}
+
+:root[data-theme="nanobook"] .prose hr::before,
+:root[data-theme="nanobook"] .hatch-divider::before,
+:root[data-theme="nanobook"] .prose hr::after,
+:root[data-theme="nanobook"] .hatch-divider::after {
+  content: none;
+}
+
+:root[data-theme="nanobook"] .prose :is(ul, ol),
+:root[data-theme="nanobook"] .prose :is(ul, ol) :is(ul, ol),
+:root[data-theme="nanobook"] .prose :is(ul, ol) :is(ul, ol) :is(ul, ol) {
+  border-left: 0;
+}
+
+:root[data-theme="nanobook"] .prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol))::after {
+  content: none;
+}
+
+:root[data-theme="nanobook"] .prose tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+:root[data-theme="nanobook"] .prose th {
+  color: var(--theme-content-muted);
+  background: var(--theme-surface-raised);
+  background-image: none;
+  text-shadow: none;
+}
+
+:root[data-theme="classic"] main {
+  border-inline: 0;
+}
+
+:root[data-theme="classic"] .prose pre {
+  background-image: none;
+}
+
+:root[data-theme="classic"] .prose :is(ul, ol),
+:root[data-theme="classic"] .prose :is(ul, ol) :is(ul, ol),
+:root[data-theme="classic"] .prose :is(ul, ol) :is(ul, ol) :is(ul, ol) {
+  border-left: 0;
+}
+
+:root[data-theme="classic"] .prose :is(ul, ol):not(.prose :is(ul, ol) :is(ul, ol))::after {
+  content: none;
+}
+
+:root[data-theme="classic"] .prose tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+:root[data-theme="classic"] .prose th {
+  color: var(--theme-content-muted);
+  background: var(--theme-surface-raised);
+  background-image: none;
+  text-shadow: none;
+}
+
 /* ─────────────────────────────────────────────
    Nested lists
    ───────────────────────────────────────────── */
 .prose :is(ul, ol) {
   padding: 0.5rem 0 0.5rem 2.5rem;
   border-left: 1px solid var(--theme-border-soft);
-  background-color: var(--layer-1);
+  background-color: color-mix(in srgb, var(--theme-surface-bg) 96%, var(--theme-text));
 }
 
 .prose :is(ul, ol) :is(ul, ol) {
-  background-color: var(--layer-2);
+  background-color: color-mix(in srgb, var(--theme-surface-bg) 93%, var(--theme-text));
   border-left-color: var(--theme-border-medium);
 }
 
 .prose :is(ul, ol) :is(ul, ol) :is(ul, ol) {
-  background-color: var(--layer-3);
+  background-color: color-mix(in srgb, var(--theme-surface-bg) 90%, var(--theme-text));
 }
 
 /* Theme-selected corner accents on non-nested lists only */
@@ -349,8 +421,8 @@
   color: var(--theme-action-primary);
   text-shadow: 0 0 12px var(--glow-color);
   background-color: var(--layer-2);
-  background-image: var(--theme-decoration-hatch-image);
-  background-size: 9px 9px;
+  background-image: var(--theme-decoration-pattern-image);
+  background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
 }
 
 /* ─────────────────────────────────────────────

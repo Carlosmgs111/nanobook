@@ -35,11 +35,22 @@ describe("theme management", () => {
         light: { borderSubtle: "#ddddee", accentText: "#ffffff", statusWarning: "#996600" },
         dark: { statusSuccess: "#22cc99" },
         typography: { heading: "editorial-serif", code: "mono", scale: "large" },
+        decoration: { pattern: "grid", patternScale: "fine", patternContrast: "balanced" },
       },
     });
     expect(created.isSuccess).toBe(true);
     const fetched = await new GetTheme(repository).execute("owner-1", "extended");
     expect(fetched.getValue().tokens).toEqual(created.getValue().tokens);
+  });
+
+  it("returns migrated pattern tokens without the retired page field", async () => {
+    const legacy = Theme.create({
+      id: "legacy", ownerId: "owner-1", name: "Legacy", baseThemeId: "classic",
+      tokens: { decoration: { pagePattern: "grid" } },
+    }).getValue();
+    const result = await new GetTheme(new InMemoryThemeRepository([legacy])).execute("owner-1", "legacy");
+
+    expect(result.getValue().tokens.decoration).toEqual({ pattern: "grid" });
   });
 
   it("lists official choices and only custom themes owned by the caller", async () => {

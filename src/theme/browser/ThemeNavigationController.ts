@@ -8,10 +8,11 @@ export interface ThemeNavigationState {
 }
 
 export class ThemeNavigationController {
-  constructor(private readonly root: HTMLElement = document.documentElement) {}
+  constructor(private readonly root?: HTMLElement) {}
 
   apply(state: ThemeNavigationState) {
-    const document = this.root.ownerDocument ?? globalThis.document;
+    const root = this.root ?? globalThis.document.documentElement;
+    const document = root.ownerDocument ?? globalThis.document;
     let style = document.querySelector<HTMLStyleElement>("style[data-nanobook-theme]");
     if (!style) {
       style = document.createElement("style");
@@ -19,9 +20,9 @@ export class ThemeNavigationController {
       document.head.append(style);
     }
     style.textContent = serializeThemeCss(state.variables);
-    this.root.dataset.theme = state.theme;
-    this.root.dataset.themeKey = state.key;
-    if (state.colorMode) this.root.dataset.colorMode = state.colorMode;
+    root.dataset.theme = state.theme;
+    root.dataset.themeKey = state.key;
+    if (state.colorMode) root.dataset.colorMode = state.colorMode;
   }
 
   syncFromDocument() {

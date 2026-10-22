@@ -39,8 +39,8 @@ html {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: var(--theme-page-pattern);
-  background-size: var(--grid-step) var(--grid-step);
+  background-image: var(--theme-decoration-pattern-image);
+  background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
 }
 
 /* ─────────────────────────────────────────────

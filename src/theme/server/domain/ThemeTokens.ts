@@ -44,9 +44,12 @@ export type ThemeTokens = {
     radius?: "square" | "soft" | "rounded";
     cover?: "book" | "square" | "rounded";
   };
-  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" };
+  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" | "full" };
   decoration?: {
     pattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
+    patternScale?: "fine" | "regular" | "coarse";
+    patternContrast?: "subtle" | "balanced" | "strong";
+    /** @deprecated Read only for themes persisted before global pattern primitives. */
     pagePattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
     corners?: "none" | "cross" | "line";
     shadow?: "flat" | "offset" | "soft";
@@ -96,9 +99,11 @@ export function validateThemeTokens(
       radius: ["square", "soft", "rounded"],
       cover: ["book", "square", "rounded"],
     },
-    layout: { density: ["compact", "comfortable", "relaxed"], readingMeasure: ["narrow", "standard", "wide"] },
+    layout: { density: ["compact", "comfortable", "relaxed"], readingMeasure: ["narrow", "standard", "wide", "full"] },
     decoration: {
       pattern: ["none", "grid", "texture", "stripes", "hatch"],
+      patternScale: ["fine", "regular", "coarse"],
+      patternContrast: ["subtle", "balanced", "strong"],
       pagePattern: ["none", "grid", "texture", "stripes", "hatch"],
       corners: ["none", "cross", "line"],
       shadow: ["flat", "offset", "soft"],
@@ -124,7 +129,13 @@ export function validateThemeTokens(
     }
   }
 
-  return structuredClone(value) as ThemeTokens;
+  const tokens = structuredClone(value) as ThemeTokens;
+  const legacyPagePattern = tokens.decoration?.pagePattern;
+  if (legacyPagePattern !== undefined) {
+    tokens.decoration.pattern ??= legacyPagePattern;
+    delete tokens.decoration.pagePattern;
+  }
+  return tokens;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

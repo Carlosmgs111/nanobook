@@ -83,11 +83,12 @@ describe("official theme styles", () => {
         "control-radius",
         "panel-radius",
         "content-gap",
-        "page-pattern",
         "cover-radius",
         "cover-spine-width",
         "decoration-corner-image",
-        "decoration-hatch-image",
+        "decoration-pattern-image",
+        "decoration-pattern-step",
+        "decoration-pattern-contrast",
         "decoration-shadow",
       ]) {
         expect(css).toContain(`--theme-${mode}-${token}:`);
@@ -175,24 +176,25 @@ describe("official theme styles", () => {
       "--theme-cover-radius",
       "--theme-cover-spine-width",
       "--theme-decoration-corner-image",
-      "--theme-decoration-hatch-image",
-      "--theme-decoration-hatch-subtle",
+      "--theme-decoration-pattern-image",
+      "--theme-decoration-pattern-step",
+      "--theme-decoration-mark-color",
       "--theme-decoration-shadow",
     ]) {
       expect(contract).toContain(variable);
     }
     expect(utilities).toContain("var(--theme-decoration-corner-image)");
-    expect(hatch).toContain("var(--theme-decoration-hatch-image)");
-    expect(cards).toContain("var(--theme-decoration-hatch-image)");
+    expect(hatch).toContain("var(--theme-decoration-pattern-image)");
+    expect(cards).toContain("var(--theme-decoration-pattern-image)");
     expect(cards).toContain(".index-card[data-cover] .index-card-media");
     expect(cards).toContain("background-size: cover");
     expect(cards).toContain("var(--theme-cover-radius)");
     expect(cards).toContain("var(--theme-cover-spine-width)");
     expect(cards).toContain("var(--theme-decoration-shadow)");
     expect(prose).toContain("var(--theme-decoration-corner-image)");
-    expect(prose).toContain("var(--theme-decoration-hatch-image)");
+    expect(prose).toContain("var(--theme-decoration-pattern-image)");
     expect(shell).toContain("glass-panel corner-plus");
-    expect(sidebar).not.toContain("background-image: var(--theme-decoration-hatch-image)");
+    expect(sidebar).not.toContain("background-image: var(--theme-decoration-pattern-image)");
     expect(sidebar).toContain("var(--theme-decoration-corner-image)");
     expect(sidebar).toContain("box-shadow: var(--theme-decoration-shadow)");
     expect(sidebar).toContain("border-radius: var(--theme-panel-radius)");
@@ -210,7 +212,9 @@ describe("official theme styles", () => {
     expect(editor).toContain('data-theme-field="shape.cover"');
     expect(editor).toContain('data-theme-field="decoration.corners"');
     expect(editor).toContain('data-theme-field="decoration.shadow"');
-    expect(editor).toContain('data-theme-field="decoration.pagePattern"');
+    expect(editor).toContain('data-theme-field="decoration.patternScale"');
+    expect(editor).toContain('data-theme-field="decoration.patternContrast"');
+    expect(editor).not.toContain('data-theme-field="decoration.pagePattern"');
     expect(editor).toContain("Textura sutil");
     expect(editor).toContain("Rayas diagonales");
     expect(editor).toContain('class="preview-book"');

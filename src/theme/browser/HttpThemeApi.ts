@@ -31,10 +31,11 @@ export interface ThemeTokensDto {
     radius?: "square" | "soft" | "rounded";
     cover?: "book" | "square" | "rounded";
   };
-  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" };
+  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" | "full" };
   decoration?: {
     pattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
-    pagePattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
+    patternScale?: "fine" | "regular" | "coarse";
+    patternContrast?: "subtle" | "balanced" | "strong";
     corners?: "none" | "cross" | "line";
     shadow?: "flat" | "offset" | "soft";
   };

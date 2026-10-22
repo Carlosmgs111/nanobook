@@ -40,7 +40,7 @@ describe("theme controllers", () => {
         baseThemeId: "nanobook",
         tokens: {
           shape: { cover: "book" },
-          decoration: { corners: "line", shadow: "offset", pattern: "stripes", pagePattern: "texture" },
+          decoration: { corners: "line", shadow: "offset", pattern: "stripes", patternScale: "fine", patternContrast: "balanced" },
         },
       }),
     }), "owner-1"));
@@ -49,7 +49,7 @@ describe("theme controllers", () => {
     expect(await response.json()).toMatchObject({
       tokens: {
         shape: { cover: "book" },
-        decoration: { corners: "line", shadow: "offset", pattern: "stripes", pagePattern: "texture" },
+        decoration: { corners: "line", shadow: "offset", pattern: "stripes", patternScale: "fine", patternContrast: "balanced" },
       },
     });
   });

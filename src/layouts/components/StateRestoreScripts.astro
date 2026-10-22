@@ -25,6 +25,7 @@
   if (!state.__nanobookThemeNavigation) {
     state.__nanobookThemeNavigation = new ThemeNavigationController();
     document.addEventListener("astro:after-swap", () => state.__nanobookThemeNavigation?.syncFromDocument());
+    document.addEventListener("astro:page-load", () => state.__nanobookThemeNavigation?.syncFromDocument());
   }
   state.__nanobookThemeNavigation.syncFromDocument();
 </script>

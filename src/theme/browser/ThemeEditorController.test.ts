@@ -15,18 +15,19 @@ class FakeElement {
 function view() {
   const root = new FakeElement(), form = new FakeElement(), preview = new FakeElement(), toggle = new FakeElement();
   const submit = new FakeElement(), reset = new FakeElement(), notice = new FakeElement(), name = new FakeElement(), base = new FakeElement(), accent = new FakeElement();
-  const cover = new FakeElement(), corners = new FakeElement(), shadow = new FakeElement(), pattern = new FakeElement(), pagePattern = new FakeElement();
+  const cover = new FakeElement(), corners = new FakeElement(), shadow = new FakeElement(), pattern = new FakeElement(), patternScale = new FakeElement(), patternContrast = new FakeElement();
   name.value = "Editorial"; base.value = "nanobook"; accent.value = "#3159d8"; accent.dataset.themeField = "light.accent";
   cover.value = "book"; cover.dataset.themeField = "shape.cover";
   corners.value = "line"; corners.dataset.themeField = "decoration.corners";
   shadow.value = "offset"; shadow.dataset.themeField = "decoration.shadow";
   pattern.value = "texture"; pattern.dataset.themeField = "decoration.pattern";
-  pagePattern.value = "none"; pagePattern.dataset.themeField = "decoration.pagePattern";
+  patternScale.value = "fine"; patternScale.dataset.themeField = "decoration.patternScale";
+  patternContrast.value = "balanced"; patternContrast.dataset.themeField = "decoration.patternContrast";
   root.one.set("form", form); root.one.set("[data-theme-preview]", preview); root.one.set("[data-preview-mode-toggle]", toggle);
   root.one.set("[data-theme-submit]", submit); root.one.set("[data-theme-notice]", notice); root.one.set('[name="name"]', name); root.one.set('[name="baseThemeId"]', base);
   root.one.set("[data-theme-reset]", reset);
-  root.many.set("[data-theme-field]", [accent, cover, corners, shadow, pattern, pagePattern]);
-  return { root, form, preview, toggle, submit, reset, notice, name, accent, cover, corners, shadow, pattern, pagePattern };
+  root.many.set("[data-theme-field]", [accent, cover, corners, shadow, pattern, patternScale, patternContrast]);
+  return { root, form, preview, toggle, submit, reset, notice, name, accent, cover, corners, shadow, pattern, patternScale, patternContrast };
 }
 
 describe("ThemeEditorController", () => {
@@ -60,7 +61,7 @@ describe("ThemeEditorController", () => {
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ tokens: {
       light: { accent: "#3159d8" },
       shape: { cover: "book" },
-      decoration: { corners: "line", shadow: "offset", pattern: "texture", pagePattern: "none" },
+      decoration: { corners: "line", shadow: "offset", pattern: "texture", patternScale: "fine", patternContrast: "balanced" },
     } }));
   });
 
@@ -106,21 +107,15 @@ describe("ThemeEditorController", () => {
     expect(v.accent.dataset.themeOverride).toBe("false");
   });
 
-  it("keeps component patterns separate from the page background preview", async () => {
+  it("previews global pattern primitives without binding them to a component", async () => {
     const v = view();
     new ThemeEditorController({ api: { create: vi.fn(), update: vi.fn() } as never, root: v.root as never }).mount();
-    const initialPagePattern = v.preview.style.values.get("--theme-light-page-pattern");
     await v.pattern.trigger("input");
-    expect(v.preview.style.values.get("--theme-light-decoration-hatch-image")).toContain("var(--theme-decoration-hatch-subtle)");
-    expect(v.preview.style.values.get("--theme-light-page-pattern")).toBe(initialPagePattern);
-
-    v.pattern.value = "stripes";
-    await v.pattern.trigger("input");
-    expect(v.preview.style.values.get("--theme-light-decoration-hatch-image")).toContain("1px 10px");
-
-    v.pagePattern.value = "stripes";
-    await v.pagePattern.trigger("input");
-    expect(v.preview.style.values.get("--theme-light-page-pattern")).toContain("2px 12px");
+    await v.patternScale.trigger("input");
+    await v.patternContrast.trigger("input");
+    expect(v.preview.style.values.get("--theme-light-decoration-pattern-image")).toContain("var(--theme-decoration-pattern-color)");
+    expect(v.preview.style.values.get("--theme-light-decoration-pattern-step")).toBe("12px");
+    expect(v.preview.style.values.get("--theme-light-decoration-pattern-contrast")).toBe("8%");
   });
 
   it("rejects an empty name before HTTP", async () => {

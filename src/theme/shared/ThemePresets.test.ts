@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cornerImage, coverValues, densityValues, hatchImage, pagePatternImage, shadowValue } from "./ThemePresets";
+import { cornerImage, coverValues, densityValues, patternImage, patternStep, patternContrast, shadowValue } from "./ThemePresets";
 
 describe("theme identity presets", () => {
   it("keeps book covers asymmetric and adds a spine", () => {
@@ -14,12 +14,18 @@ describe("theme identity presets", () => {
   });
 
   it("maps pattern and elevation choices to safe CSS values", () => {
-    expect(hatchImage("texture")).toContain("var(--theme-decoration-hatch-subtle)");
-    expect(hatchImage("hatch")).toBe(hatchImage("texture"));
-    expect(hatchImage("stripes")).toContain("repeating-linear-gradient(135deg, var(--theme-decoration-hatch-subtle) 0 1px, transparent 1px 10px)");
-    expect(hatchImage("none")).toBe("none");
-    expect(pagePatternImage("texture")).toContain("var(--theme-decoration-hatch-subtle)");
-    expect(pagePatternImage("stripes")).toContain("2px 12px");
+    expect(patternImage("texture")).toContain("var(--theme-decoration-pattern-color)");
+    expect(patternImage("texture")).toContain("var(--theme-decoration-pattern-step)");
+    expect(patternImage("grid")).toContain("linear-gradient(");
+    expect(patternImage("none")).toBe("none");
+    expect(patternStep("fine")).toBe("12px");
+    expect(patternStep("regular")).toBe("20px");
+    expect(patternStep("coarse")).toBe("32px");
+    expect(patternContrast("subtle")).toBe("4%");
+    expect(patternContrast("balanced")).toBe("8%");
+    expect(patternContrast("strong")).toBe("14%");
+    expect(patternImage("stripes")).toContain("repeating-linear-gradient(135deg, var(--theme-decoration-pattern-color)");
+    expect(patternImage("hatch")).toBe(patternImage("texture"));
     expect(shadowValue("offset")).toContain("12px 12px 0");
     expect(shadowValue("flat")).toBe("none");
   });

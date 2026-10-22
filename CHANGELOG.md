@@ -7,6 +7,13 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Recuperados los fondos graduales y visibles de las listas Markdown anidadas; la navegación cliente vuelve a aplicar el tema al documento activo.
+
+- El contenido renderizado de los documentos Markdown ocupa todo el ancho del panel, incluso con temas que tenían guardada una medida de lectura estrecha.
+
+- Unificadas las tramas del tema como primitivas globales reutilizables con escala y contraste; el editor ya no configura una trama separada para la página. Los temas guardados con `pagePattern` se normalizan a `decoration.pattern` al leerse.
+- Renovado el tema oficial Nanobook con una paleta de papel cálido y terracota, títulos serif, superficies limpias y metadatos editoriales; la auditoría conserva los roles de tema existentes y no añade opciones redundantes.
+- Modernizado el tema oficial Clásico con una escala neutra de papel y grafito, grilla discreta, estados legibles y superficies técnicas sin tramas ni filas zebra.
 - Ampliados los temas con roles de enlace, foco, selección y superficie elevada; el editor advierte sobre contraste insuficiente en ambos modos y previsualiza estados y lectura.
 - Añadidos presets de ritmo tipográfico y ancho de lectura, y una escala espacial coordinada por densidad; la prosa mantiene una medida de línea independiente del lienzo.
 

@@ -34,27 +34,41 @@ export function cornerImage(style: "none" | "cross" | "line") {
 
 export type ThemePattern = "none" | "grid" | "texture" | "stripes" | "hatch";
 
-export function hatchImage(pattern: ThemePattern) {
-  if (pattern === "none") return "none";
-  if (pattern === "grid") {
-    return "linear-gradient(var(--theme-decoration-hatch) 1px, transparent 1px), linear-gradient(90deg, var(--theme-decoration-hatch) 1px, transparent 1px)";
-  }
-  if (pattern === "stripes") {
-    return "repeating-linear-gradient(135deg, var(--theme-decoration-hatch-subtle) 0 1px, transparent 1px 10px)";
-  }
-  // `hatch` is retained as the legacy spelling for the subtle texture.
-  return "repeating-linear-gradient(45deg, var(--theme-decoration-hatch-subtle) 0 1px, transparent 1px 9px)";
+export type ThemePatternScale = "fine" | "regular" | "coarse";
+export type ThemePatternContrast = "subtle" | "balanced" | "strong";
+
+export function patternStep(scale: ThemePatternScale) {
+  return { fine: "12px", regular: "20px", coarse: "32px" }[scale];
 }
 
-export function pagePatternImage(pattern: ThemePattern) {
+export function patternContrast(contrast: ThemePatternContrast) {
+  return { subtle: "4%", balanced: "8%", strong: "14%" }[contrast];
+}
+
+export function patternValues(
+  pattern: ThemePattern,
+  scale: ThemePatternScale,
+  contrast: ThemePatternContrast,
+) {
+  return {
+    image: patternImage(pattern),
+    step: patternStep(scale),
+    contrast: patternContrast(contrast),
+  };
+}
+
+/** Global pattern primitive. Components opt into this image and its shared scale/color. */
+export function patternImage(pattern: ThemePattern) {
   if (pattern === "none") return "none";
+  const color = "var(--theme-decoration-pattern-color)";
+  const step = "var(--theme-decoration-pattern-step)";
   if (pattern === "grid") {
-    return "linear-gradient(var(--theme-decoration-hatch-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--theme-decoration-hatch-subtle) 1px, transparent 1px)";
+    return `linear-gradient(${color} 1px, transparent 1px), linear-gradient(90deg, ${color} 1px, transparent 1px)`;
   }
   if (pattern === "stripes") {
-    return "repeating-linear-gradient(135deg, var(--theme-decoration-hatch) 0 2px, transparent 2px 12px)";
+    return `repeating-linear-gradient(135deg, ${color} 0 1px, transparent 1px ${step})`;
   }
-  return "repeating-linear-gradient(135deg, var(--theme-decoration-hatch-subtle) 0 1px, transparent 1px 10px)";
+  return `repeating-linear-gradient(45deg, ${color} 0 1px, transparent 1px ${step})`;
 }
 
 export function shadowValue(shadow: "flat" | "offset" | "soft") {
@@ -72,8 +86,8 @@ export function rhythmValues(rhythm: "compact" | "balanced" | "airy") {
   }[rhythm];
 }
 
-export function readingMeasureValue(measure: "narrow" | "standard" | "wide") {
-  return { narrow: "60ch", standard: "72ch", wide: "84ch" }[measure];
+export function readingMeasureValue(measure: "narrow" | "standard" | "wide" | "full") {
+  return { narrow: "60ch", standard: "72ch", wide: "84ch", full: "100%" }[measure];
 }
 
 export function densityValues(density: "compact" | "comfortable" | "relaxed") {

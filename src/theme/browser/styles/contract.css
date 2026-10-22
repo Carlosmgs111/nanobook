@@ -34,11 +34,13 @@
   --theme-space-inline: var(--theme-light-space-inline);
   --theme-space-block: var(--theme-light-space-block);
   --theme-space-section: var(--theme-light-space-section);
-  --theme-page-pattern: var(--theme-light-page-pattern);
   --theme-cover-radius: var(--theme-light-cover-radius);
   --theme-cover-spine-width: var(--theme-light-cover-spine-width);
   --theme-decoration-corner-image: var(--theme-light-decoration-corner-image);
-  --theme-decoration-hatch-image: var(--theme-light-decoration-hatch-image);
+  --theme-decoration-pattern-image: var(--theme-light-decoration-pattern-image);
+  --theme-decoration-pattern-step: var(--theme-light-decoration-pattern-step);
+  --theme-decoration-pattern-contrast: var(--theme-light-decoration-pattern-contrast);
+  --theme-decoration-pattern-color: color-mix(in srgb, var(--theme-text) var(--theme-decoration-pattern-contrast), transparent);
   --theme-decoration-shadow: var(--theme-light-decoration-shadow);
 
   /* Foundation */
@@ -85,8 +87,7 @@
   --theme-status-success: var(--theme-light-status-success);
   --theme-status-info: var(--theme-light-status-info);
   --theme-decoration-glow: transparent;
-  --theme-decoration-hatch: color-mix(in srgb, var(--theme-text) 22%, transparent);
-  --theme-decoration-hatch-subtle: color-mix(in srgb, var(--theme-text) 6%, transparent);
+  --theme-decoration-mark-color: color-mix(in srgb, var(--theme-text) 22%, transparent);
 
   /* Compatibilidad para estilos que todavía están en migración. */
   --surface-rgb: 0, 0, 0;
@@ -139,11 +140,13 @@
   --theme-space-inline: var(--theme-dark-space-inline);
   --theme-space-block: var(--theme-dark-space-block);
   --theme-space-section: var(--theme-dark-space-section);
-  --theme-page-pattern: var(--theme-dark-page-pattern);
   --theme-cover-radius: var(--theme-dark-cover-radius);
   --theme-cover-spine-width: var(--theme-dark-cover-spine-width);
   --theme-decoration-corner-image: var(--theme-dark-decoration-corner-image);
-  --theme-decoration-hatch-image: var(--theme-dark-decoration-hatch-image);
+  --theme-decoration-pattern-image: var(--theme-dark-decoration-pattern-image);
+  --theme-decoration-pattern-step: var(--theme-dark-decoration-pattern-step);
+  --theme-decoration-pattern-contrast: var(--theme-dark-decoration-pattern-contrast);
+  --theme-decoration-pattern-color: color-mix(in srgb, var(--theme-text) var(--theme-decoration-pattern-contrast), transparent);
   --theme-decoration-shadow: var(--theme-dark-decoration-shadow);
   --theme-status-error: var(--theme-dark-status-error);
   --theme-status-warning: var(--theme-dark-status-warning);

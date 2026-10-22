@@ -16,9 +16,8 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: var(--theme-decoration-hatch-image);
-  background-size: 10px 10px;
-  opacity: 0.14;
+  background-image: var(--theme-decoration-pattern-image);
+  background-size: var(--theme-decoration-pattern-step) var(--theme-decoration-pattern-step);
 }
 
 .glow {
@@ -74,7 +73,7 @@
 .prose details,
 .prose table {
   position: relative;
-  --corner-color: var(--theme-decoration-hatch);
+  --corner-color: var(--theme-decoration-mark-color);
 }
 
 .corner-plus-sm::after,
@@ -94,7 +93,7 @@
 /* L-shaped corner marks for folder cards */
 .corner-L-sm {
   position: relative;
-  --corner-color: var(--theme-decoration-hatch);
+  --corner-color: var(--theme-decoration-mark-color);
 }
 
 .corner-L-sm::after {

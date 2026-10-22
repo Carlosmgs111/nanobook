@@ -1,5 +1,5 @@
 import type { HttpThemeApi, ThemeTokensDto } from "./HttpThemeApi";
-import { cornerImage, coverValues, hatchImage, pagePatternImage, shadowValue, rhythmValues, readingMeasureValue, densityValues, type ThemePattern } from "../shared/ThemePresets";
+import { cornerImage, coverValues, patternImage, patternStep, patternContrast, shadowValue, rhythmValues, readingMeasureValue, densityValues, type ThemePattern, type ThemePatternScale, type ThemePatternContrast } from "../shared/ThemePresets";
 import { colorInputValue, raisedColorInputValue } from "../shared/ColorPreview";
 import { analyzeThemeContrast } from "../shared/ThemeContrast";
 
@@ -29,13 +29,6 @@ export class ThemeEditorController {
           if (control.dataset.themeField === "typography.family") {
             const heading = root.querySelector<HTMLSelectElement>('[data-theme-field="typography.heading"]');
             if (heading?.dataset.themeOverride === "false") heading.value = control.value;
-          }
-          if (control.dataset.themeField === "decoration.pattern") {
-            const pagePattern = root.querySelector<HTMLSelectElement>('[data-theme-field="decoration.pagePattern"]');
-            if (pagePattern?.dataset.themeOverride === "false") {
-              pagePattern.dataset.themeOverride = "true";
-              this.updatePreview(pagePattern);
-            }
           }
           this.updatePreview(control);
         };
@@ -120,14 +113,6 @@ export class ThemeEditorController {
       this.updateContrast();
       return;
     }
-    if (path === "decoration.pattern") {
-      const pagePattern = this.getRoot()?.querySelector<HTMLSelectElement>('[data-theme-field="decoration.pagePattern"]');
-      if (pagePattern?.dataset.themeOverride === "false") {
-        for (const mode of ["light", "dark"] as const) {
-          preview.style.setProperty(`--theme-${mode}-page-pattern`, pagePatternImage(control.value as ThemePattern));
-        }
-      }
-    }
     for (const [name, value] of Object.entries(
       presetVariables(path, control.value)
     ))
@@ -153,8 +138,8 @@ export class ThemeEditorController {
         if (control.dataset.themeOverride === "false") {
           const [mode, name] = (control.dataset.themeField ?? "").split(".");
           const defaults: Record<string, Record<string, string>> = {
-            classic: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "square", "shape.cover": "square", "layout.density": "comfortable", "layout.readingMeasure": "standard", "decoration.pattern": "stripes", "decoration.pagePattern": "grid", "decoration.corners": "none", "decoration.shadow": "flat" },
-            nanobook: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "soft", "shape.cover": "book", "layout.density": "relaxed", "layout.readingMeasure": "standard", "decoration.pattern": "texture", "decoration.pagePattern": "none", "decoration.corners": "none", "decoration.shadow": "offset" },
+            classic: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "square", "shape.cover": "square", "layout.density": "comfortable", "layout.readingMeasure": "full", "decoration.pattern": "grid", "decoration.patternScale": "coarse", "decoration.patternContrast": "subtle", "decoration.corners": "none", "decoration.shadow": "flat" },
+            nanobook: { "typography.family": "system-sans", "typography.heading": "editorial-serif", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "soft", "shape.cover": "book", "layout.density": "relaxed", "layout.readingMeasure": "full", "decoration.pattern": "texture", "decoration.patternScale": "regular", "decoration.patternContrast": "subtle", "decoration.corners": "none", "decoration.shadow": "flat" },
           };
           if (defaults[selected][control.dataset.themeField ?? ""]) control.value = defaults[selected][control.dataset.themeField ?? ""];
           if (mode === "light" || mode === "dark") {
@@ -322,8 +307,8 @@ function presetVariables(path: string, value: string): Record<string, string> {
       [`--theme-${mode}-paragraph-gap`, rhythm.paragraphGap],
     ]));
   }
-  if (path === "layout.readingMeasure" && ["narrow", "standard", "wide"].includes(value)) {
-    const measure = readingMeasureValue(value as "narrow" | "standard" | "wide");
+  if (path === "layout.readingMeasure" && ["narrow", "standard", "wide", "full"].includes(value)) {
+    const measure = readingMeasureValue(value as "narrow" | "standard" | "wide" | "full");
     return { "--theme-light-reading-measure": measure, "--theme-dark-reading-measure": measure };
   }
   if (path === "shape.radius") {
@@ -359,16 +344,24 @@ function presetVariables(path: string, value: string): Record<string, string> {
   if (path === "decoration.pattern") {
     return ["none", "grid", "texture", "stripes", "hatch"].includes(value)
       ? {
-          "--theme-light-decoration-hatch-image": hatchImage(value as ThemePattern),
-          "--theme-dark-decoration-hatch-image": hatchImage(value as ThemePattern),
+          "--theme-light-decoration-pattern-image": patternImage(value as ThemePattern),
+          "--theme-dark-decoration-pattern-image": patternImage(value as ThemePattern),
         }
       : {};
   }
-  if (path === "decoration.pagePattern") {
-    return ["none", "grid", "texture", "stripes", "hatch"].includes(value)
+  if (path === "decoration.patternScale") {
+    return ["fine", "regular", "coarse"].includes(value)
       ? {
-          "--theme-light-page-pattern": pagePatternImage(value as ThemePattern),
-          "--theme-dark-page-pattern": pagePatternImage(value as ThemePattern),
+          "--theme-light-decoration-pattern-step": patternStep(value as ThemePatternScale),
+          "--theme-dark-decoration-pattern-step": patternStep(value as ThemePatternScale),
+        }
+      : {};
+  }
+  if (path === "decoration.patternContrast") {
+    return ["subtle", "balanced", "strong"].includes(value)
+      ? {
+          "--theme-light-decoration-pattern-contrast": patternContrast(value as ThemePatternContrast),
+          "--theme-dark-decoration-pattern-contrast": patternContrast(value as ThemePatternContrast),
         }
       : {};
   }

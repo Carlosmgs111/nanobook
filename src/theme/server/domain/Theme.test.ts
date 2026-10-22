@@ -39,10 +39,21 @@ describe("Theme", () => {
 
   it("accepts subtle texture and diagonal stripe patterns", () => {
     const result = Theme.create(validTheme({
-      tokens: { decoration: { pattern: "stripes", pagePattern: "texture" } },
+      tokens: { decoration: { pattern: "stripes", patternScale: "coarse", patternContrast: "balanced" } },
     }));
 
     expect(result.isSuccess).toBe(true);
+  });
+
+  it("migrates legacy page patterns into the global pattern primitive", () => {
+    const result = Theme.create(validTheme({
+      tokens: { decoration: { pattern: "stripes", pagePattern: "grid" } },
+    }));
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().getTokens().decoration).toEqual({ pattern: "stripes" });
+
+    const pageOnly = Theme.create(validTheme({ tokens: { decoration: { pagePattern: "grid" } } }));
+    expect(pageOnly.getValue().getTokens().decoration).toEqual({ pattern: "grid" });
   });
 
   it("accepts common color and typography overrides", () => {
