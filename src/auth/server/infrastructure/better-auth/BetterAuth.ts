@@ -71,10 +71,24 @@ export function createBetterAuth() {
       sendOnSignIn: true,
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url }) => {
-        await emailSender.sendVerificationEmail({ to: user.email, url });
+        await emailSender.sendVerificationEmail({
+          to: user.email,
+          url: getVerificationURL(url),
+        });
       },
     },
 
     socialProviders: github ? { github } : undefined,
   });
+}
+
+function getVerificationURL(url: string): string {
+  if (process.env.VERCEL !== "1" || !BETTER_AUTH_URL) return url;
+
+  const canonicalURL = new URL(BETTER_AUTH_URL);
+  const verificationURL = new URL(url, canonicalURL);
+  return new URL(
+    `${verificationURL.pathname}${verificationURL.search}${verificationURL.hash}`,
+    canonicalURL,
+  ).toString();
 }
