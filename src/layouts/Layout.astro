@@ -45,7 +45,7 @@ const theme =
   suppliedTheme ??
   (await app.themeModule.resolveTheme.execute({
     kind: "official",
-    id: "classic",
+    id: "monocromo",
   }));
 const installation = app.themeModule.compileTheme.execute(theme);
 const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;

@@ -6,13 +6,13 @@ import { InMemoryThemeRepository } from "../infraestructure/repository/InMemoryT
 import { ResolveTheme } from "./ResolveTheme";
 
 describe("ResolveTheme", () => {
-  it("uses classic when the nanobook has no selected theme", async () => {
+  it("uses monocromo when no theme is selected", async () => {
     const result = await new ResolveTheme(
       new OfficialThemeCatalog(),
       new InMemoryThemeRepository(),
     ).execute(undefined);
 
-    expect(result.key).toBe("official:classic");
+    expect(result.key).toBe("official:monocromo");
   });
 
   it("resolves the complete classic theme", async () => {
@@ -40,7 +40,7 @@ describe("ResolveTheme", () => {
     expect(nanobook.lightVariables["--theme-light-cover-spine-width"]).toBe("12px");
     expect(nanobook.lightVariables["--theme-light-decoration-corner-image"]).toBe("none");
     expect(nanobook.lightVariables["--theme-light-decoration-pattern-image"]).toContain("var(--theme-decoration-pattern-color)");
-    expect(nanobook.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
+    expect(nanobook.lightVariables["--theme-light-decoration-shadow"]).toContain("12px 12px 0");
     expect(classic.lightVariables["--theme-light-cover-radius"]).toBe("0px");
     expect(classic.lightVariables["--theme-light-decoration-corner-image"]).toBe("none");
     expect(classic.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
@@ -51,14 +51,14 @@ describe("ResolveTheme", () => {
     expect(nanobook.lightVariables["--theme-light-decoration-pattern-contrast"]).toBe("4%");
   });
 
-  it("falls back to classic for an unknown official id", async () => {
+  it("falls back to monocromo for an unknown official id", async () => {
     const result = await new ResolveTheme(new OfficialThemeCatalog(), new InMemoryThemeRepository()).execute({
       kind: "official",
       id: "missing",
     });
 
-    expect(result.key).toBe("official:classic");
-    expect(result.baseId).toBe("classic");
+    expect(result.key).toBe("official:monocromo");
+    expect(result.baseId).toBe("monocromo");
   });
 
   it("overlays validated custom tokens on the selected official base", async () => {
@@ -118,7 +118,7 @@ describe("ResolveTheme", () => {
     const overridden = await resolver.execute({ kind: "custom", id: "custom-cover" });
 
     expect(inherited.lightVariables["--theme-light-cover-spine-width"]).toBe("12px");
-    expect(inherited.lightVariables["--theme-light-decoration-shadow"]).toBe("none");
+    expect(inherited.lightVariables["--theme-light-decoration-shadow"]).toContain("12px 12px 0");
     expect(overridden.lightVariables["--theme-light-cover-spine-width"]).toBe("0px");
     expect(overridden.lightVariables["--theme-light-decoration-corner-image"]).toBe("none");
     expect(overridden.lightVariables["--theme-light-decoration-pattern-image"]).toBe("none");
@@ -149,12 +149,12 @@ describe("ResolveTheme", () => {
     expect(result.lightVariables["--theme-light-decoration-pattern-contrast"]).toBe("14%");
   });
 
-  it("falls back to the complete classic theme when a custom theme is missing", async () => {
+  it("falls back to the complete monocromo theme when a custom theme is missing", async () => {
     const result = await new ResolveTheme(
       new OfficialThemeCatalog(), new InMemoryThemeRepository(),
     ).execute({ kind: "custom", id: "missing" });
-    expect(result.key).toBe("official:classic");
-    expect(result.lightVariables["--theme-light-page-bg"]).toBe("#f1f2f4");
+    expect(result.key).toBe("official:monocromo");
+    expect(result.lightVariables["--theme-light-page-bg"]).toBe("#f1f1ee");
     expect(Object.keys(result.lightVariables)).toHaveLength(Object.keys(result.darkVariables).length);
   });
 
@@ -172,7 +172,7 @@ describe("ResolveTheme", () => {
     expect(result.lightVariables["--theme-light-selection-text"]).toBe("#fffaf4");
     expect(result.lightVariables["--theme-light-surface-raised"]).toContain("color-mix");
     expect(result.darkVariables["--theme-dark-focus-ring"]).toBe("#ffcc00");
-    expect(result.darkVariables["--theme-dark-link"]).toBe("#e1a17f");
+    expect(result.darkVariables["--theme-dark-link"]).toBe("#e4a080");
   });
 
   it("uses the available width by default and keeps custom reading measures", async () => {

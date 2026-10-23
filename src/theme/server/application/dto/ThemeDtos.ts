@@ -2,6 +2,7 @@ import { Result } from "../../../../shared/domain/Result";
 import type { Theme } from "../../domain/Theme";
 import { InvalidThemeError } from "../../domain/errors";
 import type { ThemeTokens } from "../../domain/ThemeTokens";
+import type { OfficialThemeId } from "../../infraestructure/OfficialThemeCatalog";
 
 export interface ThemePaletteDto {
   pageBackground?: string;
@@ -51,7 +52,7 @@ export interface ThemeTokensDto {
 export interface ThemeSummary {
   reference: { kind: "official" | "custom"; id: string };
   name: string;
-  baseThemeId: "classic" | "nanobook";
+  baseThemeId: OfficialThemeId;
   editable: boolean;
 }
 export interface ThemeDetails extends ThemeSummary {

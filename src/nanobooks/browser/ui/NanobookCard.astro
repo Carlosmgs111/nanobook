@@ -1,21 +1,35 @@
 ---
 import type { Nanobook } from "../../server/domain/Nanobook";
 import type { ThemeSummaryDto } from "../../../theme/browser/HttpThemeApi";
+
 interface Props { nanobook: Nanobook; themes: ThemeSummaryDto[] }
 const { nanobook, themes } = Astro.props;
-const currentTheme = nanobook.getSettings().theme ?? { kind: "official", id: "classic" };
+const id = nanobook.getId();
+const currentTheme = nanobook.getSettings().theme ?? { kind: "official", id: "monocromo" };
 const inputClass = "w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2";
+const panelId = (name: string) => `nanobook-${id}-${name}`;
 ---
-<article data-nanobook-card data-id={nanobook.getId()} class="space-y-4 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-5">
-  <a href={`/n/${nanobook.getSlug()}`} class="block">
+
+<article data-nanobook-card data-id={id} class="space-y-4 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-5">
+  <a href={`/n/${nanobook.getSlug()}`} class="block text-inherit no-underline">
     <div class="flex items-center justify-between gap-3">
       <h2 class="text-xl font-semibold text-[var(--theme-accent)]">{nanobook.getName()}</h2>
       <span class="text-xs text-[var(--theme-text-muted)]">{nanobook.getVisibility() === "public" ? "Público" : "Privado"}</span>
     </div>
     <p class="mt-2 font-[family-name:var(--theme-font-code)] text-xs text-[var(--theme-text-muted)]">/n/{nanobook.getSlug()}</p>
   </a>
-  <details data-edit>
-    <summary class="cursor-pointer text-sm text-[var(--theme-accent)]">Editar</summary>
+
+  <div class="nanobook-actions" aria-label={`Acciones para ${nanobook.getName()}`}>
+    <button type="button" data-open-panel="edit" aria-controls={panelId("edit")} aria-expanded="false">Editar</button>
+    <button type="button" data-open-panel="theme" aria-controls={panelId("theme")} aria-expanded="false">Apariencia</button>
+    <button type="button" data-open-panel="delete" aria-controls={panelId("delete")} aria-expanded="false" class="danger-action">Eliminar</button>
+  </div>
+
+  <section id={panelId("edit")} data-panel="edit" hidden aria-labelledby={`${panelId("edit")}-title`}>
+    <div class="panel-heading">
+      <h3 id={`${panelId("edit")}-title`} class="text-base font-semibold">Editar nanobook</h3>
+      <button type="button" data-close-panel aria-label="Cerrar edición">Cerrar</button>
+    </div>
     <form data-operation="edit" class="mt-4 space-y-3 text-sm">
       <label class="block">Nombre<input name="name" value={nanobook.getName()} required class={inputClass} /></label>
       <label class="block">Slug<input name="slug" value={nanobook.getSlug()} required pattern="[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?" class={inputClass} /></label>
@@ -27,35 +41,69 @@ const inputClass = "w-full border border-[var(--theme-border)] bg-[var(--theme-p
         </select>
       </label>
       <p data-error role="alert" class="text-[var(--theme-status-error)]"></p>
-      <button type="submit" class="border border-[var(--theme-border)] px-3 py-2">Guardar cambios</button>
-      <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="border border-[var(--theme-border)] px-3 py-2">Guardar cambios</button>
+        <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+      </div>
     </form>
-  </details>
-  <details data-theme>
-    <summary class="cursor-pointer text-sm text-[var(--theme-accent)]">Apariencia</summary>
-    <form data-operation="theme" class="mt-4 space-y-3 text-sm">
-      <label class="block">Tema
-        <select name="themeReference" class={inputClass}>
-          {themes.map((theme) => <option value={JSON.stringify(theme.reference)} selected={theme.reference.kind === currentTheme.kind && theme.reference.id === currentTheme.id}>{theme.name}{theme.editable ? "" : " · oficial"}</option>)}
-        </select>
-      </label>
+  </section>
+
+  <section id={panelId("theme")} data-panel="theme" hidden aria-labelledby={`${panelId("theme")}-title`}>
+    <div class="panel-heading">
+      <h3 id={`${panelId("theme")}-title`} class="text-base font-semibold">Apariencia</h3>
+      <button type="button" data-close-panel aria-label="Cerrar opciones de apariencia">Cerrar</button>
+    </div>
+    <form data-operation="theme" class="mt-4 space-y-4 text-sm">
+      <fieldset>
+        <legend class="mb-3 text-sm text-[var(--theme-text-muted)]">Elige un tema</legend>
+        <div class="theme-options">
+          {themes.map((theme, index) => {
+            const optionId = `${panelId("theme-option")}-${index}`;
+            const selected = theme.reference.kind === currentTheme.kind && theme.reference.id === currentTheme.id;
+            return (
+              <label for={optionId} class:list={["theme-option", selected && "theme-option-selected"]}>
+                <input
+                  id={optionId}
+                  type="radio"
+                  name="themeReference"
+                  value={JSON.stringify(theme.reference)}
+                  checked={selected}
+                  required
+                />
+                <span class="theme-option-copy">
+                  <span class="theme-option-name">{theme.name}</span>
+                  <span class="theme-option-kind">{theme.editable ? "Personalizado" : "Oficial"}{selected ? " · Actual" : ""}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
       <p data-error role="alert" class="text-[var(--theme-status-error)]"></p>
-      <button type="submit" class="border border-[var(--theme-border)] px-3 py-2">Aplicar tema</button>
-      <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="border border-[var(--theme-border)] px-3 py-2">Aplicar tema</button>
+        <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+      </div>
     </form>
-  </details>
-  <details data-delete>
-    <summary class="cursor-pointer text-sm text-[var(--theme-status-error)]">Eliminar</summary>
-    <form data-operation="delete" class="mt-4 space-y-3 text-sm">
+  </section>
+
+  <section id={panelId("delete")} data-panel="delete" hidden aria-labelledby={`${panelId("delete")}-title`}>
+    <div class="panel-heading">
+      <h3 id={`${panelId("delete")}-title`} class="text-base font-semibold text-[var(--theme-status-error)]">Eliminar nanobook</h3>
+      <button type="button" data-close-panel aria-label="Cerrar confirmación de eliminación">Cerrar</button>
+    </div>
+    <form data-operation="delete" class="mt-3 space-y-3 text-sm">
       <p>Se eliminarán definitivamente este nanobook, todos sus documentos y su historial. Esta acción no se puede deshacer.</p>
       <label class="block">Escribe <strong>{nanobook.getName()}</strong> para confirmar.
         <input name="confirmationName" required autocomplete="off" class={inputClass} />
       </label>
       <p data-error role="alert" class="text-[var(--theme-status-error)]"></p>
-      <button type="submit" class="border border-[var(--theme-status-error)] px-3 py-2 text-[var(--theme-status-error)]">Eliminar definitivamente</button>
-      <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="border border-[var(--theme-status-error)] px-3 py-2 text-[var(--theme-status-error)]">Eliminar definitivamente</button>
+        <button type="button" data-cancel class="px-3 py-2">Cancelar</button>
+      </div>
     </form>
-  </details>
+  </section>
 </article>
 
 <script>
@@ -63,3 +111,85 @@ const inputClass = "w-full border border-[var(--theme-border)] bg-[var(--theme-p
   document.addEventListener("astro:page-load", initNanobookCards);
   initNanobookCards();
 </script>
+
+<style>
+  [data-nanobook-card] {
+    position: relative;
+    border-radius: var(--theme-panel-radius);
+    box-shadow: var(--theme-decoration-shadow);
+  }
+  [data-nanobook-card][data-active-panel] { z-index: 30; }
+  .nanobook-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--theme-border-subtle);
+  }
+  .nanobook-actions button {
+    min-height: 2.5rem;
+    border: 1px solid var(--theme-border);
+    border-radius: var(--theme-control-radius);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text);
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+  }
+  .nanobook-actions button:hover,
+  .nanobook-actions button[aria-expanded="true"] {
+    border-color: var(--theme-accent);
+    background: var(--theme-navigation-index-card-hover);
+  }
+  .nanobook-actions .danger-action { color: var(--theme-status-error); }
+  [data-panel] {
+    position: absolute;
+    top: calc(100% + 0.65rem);
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    max-height: min(70vh, 42rem);
+    overflow-y: auto;
+    border: 1px solid var(--theme-border);
+    border-radius: var(--theme-panel-radius);
+    background: var(--theme-surface-bg);
+    box-shadow: var(--theme-decoration-shadow);
+    padding: 1rem;
+  }
+  [data-panel][hidden] { display: none; }
+  .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .panel-heading button {
+    flex: 0 0 auto;
+    border: 1px solid var(--theme-border);
+    border-radius: var(--theme-control-radius);
+    background: var(--theme-page-bg);
+    color: var(--theme-text-muted);
+    padding: 0.3rem 0.55rem;
+    cursor: pointer;
+  }
+  .panel-heading button:hover { border-color: var(--theme-accent); color: var(--theme-accent); }
+  .theme-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: 0.6rem;
+  }
+  .theme-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    min-height: 4rem;
+    border: 1px solid var(--theme-border);
+    border-radius: var(--theme-control-radius);
+    background: var(--theme-page-bg);
+    padding: 0.7rem;
+    cursor: pointer;
+  }
+  .theme-option:has(input:checked),
+  .theme-option:focus-within {
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 1px var(--theme-accent);
+  }
+  .theme-option input { margin-top: 0.2rem; accent-color: var(--theme-accent); }
+  .theme-option-copy { display: grid; gap: 0.2rem; }
+  .theme-option-name { font-weight: 600; }
+  .theme-option-kind { color: var(--theme-text-muted); font-size: 0.75rem; }
+</style>

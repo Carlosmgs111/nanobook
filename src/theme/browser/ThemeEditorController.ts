@@ -140,8 +140,12 @@ export class ThemeEditorController {
           const defaults: Record<string, Record<string, string>> = {
             classic: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "square", "shape.cover": "square", "layout.density": "comfortable", "layout.readingMeasure": "full", "decoration.pattern": "grid", "decoration.patternScale": "coarse", "decoration.patternContrast": "subtle", "decoration.corners": "none", "decoration.shadow": "flat" },
             nanobook: { "typography.family": "system-sans", "typography.heading": "editorial-serif", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "soft", "shape.cover": "book", "layout.density": "relaxed", "layout.readingMeasure": "full", "decoration.pattern": "texture", "decoration.patternScale": "regular", "decoration.patternContrast": "subtle", "decoration.corners": "none", "decoration.shadow": "flat" },
+            herbario: { "typography.family": "system-sans", "typography.heading": "editorial-serif", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "soft", "shape.cover": "book", "layout.density": "relaxed", "layout.readingMeasure": "full", "decoration.pattern": "texture", "decoration.patternScale": "fine", "decoration.patternContrast": "subtle", "decoration.corners": "none", "decoration.shadow": "flat" },
+            plano: { "typography.family": "system-sans", "typography.heading": "system-sans", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "square", "shape.cover": "square", "layout.density": "comfortable", "layout.readingMeasure": "full", "decoration.pattern": "grid", "decoration.patternScale": "fine", "decoration.patternContrast": "subtle", "decoration.corners": "none", "decoration.shadow": "flat" },
+            monocromo: { "typography.family": "system-sans", "typography.heading": "editorial-serif", "typography.code": "mono", "typography.scale": "normal", "typography.rhythm": "balanced", "shape.radius": "soft", "shape.cover": "book", "layout.density": "comfortable", "layout.readingMeasure": "full", "decoration.pattern": "texture", "decoration.patternScale": "fine", "decoration.patternContrast": "subtle", "decoration.corners": "line", "decoration.shadow": "offset" },
           };
-          if (defaults[selected][control.dataset.themeField ?? ""]) control.value = defaults[selected][control.dataset.themeField ?? ""];
+          const selectedDefaults = defaults[selected] ?? defaults.monocromo;
+          if (selectedDefaults[control.dataset.themeField ?? ""]) control.value = selectedDefaults[control.dataset.themeField ?? ""];
           if (mode === "light" || mode === "dark") {
             const cssName = ({ pageBackground: "page-bg", surfaceBackground: "surface-bg" } as Record<string, string>)[name] ?? name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
             const color = base[mode][cssName];
@@ -226,11 +230,7 @@ export class ThemeEditorController {
       this.notice("Escribe un nombre para el tema.");
       return;
     }
-    const baseThemeId =
-      root.querySelector<HTMLSelectElement>('[name="baseThemeId"]')?.value ===
-      "classic"
-        ? "classic"
-        : "nanobook";
+    const baseThemeId = (root.querySelector<HTMLSelectElement>('[name="baseThemeId"]')?.value ?? "monocromo") as import("../server/infraestructure/OfficialThemeCatalog").OfficialThemeId;
     const tokens = this.readTokens(root);
     this.submitting = true;
     this.setDisabled(true);

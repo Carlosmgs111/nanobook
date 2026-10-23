@@ -22,7 +22,7 @@ export class ResolveTheme {
   ) {}
 
   async execute(reference: ThemeReference | undefined, _request?: Request): Promise<AppliedTheme> {
-    const selected = reference ?? { kind: "official", id: "classic" } as const;
+    const selected = reference ?? { kind: "official", id: "monocromo" } as const;
     if (selected.kind === "custom") {
       const found = await this.repository.findById(selected.id);
       if (found.isSuccess && found.getValue()) {

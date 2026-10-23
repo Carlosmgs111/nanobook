@@ -7,6 +7,24 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Reorganizado el editor de temas en secciones con etiquetas y ayuda contextual, revisión de contraste junto a la paleta, acciones de guardado persistentes y vista previa adaptada al espacio disponible.
+
+- Reemplazados los desplegables de acciones del gestor de nanobooks por acciones visibles; cada formulario aparece en un panel flotante bajo su tarjeta, con botón de cierre, y la selección de tema usa opciones de radio comparables.
+
+- Aplicadas las esquinas suaves y sombras desplazadas a la lectura Markdown y al contenedor principal. Cuaderno también las activa para que sean visibles en nanobooks que ya usan ese tema.
+
+- Establecido Monocromo como tema por defecto de la aplicación, la landing, nuevos nanobooks y nuevos temas personalizados; los temas asignados explícitamente se conservan.
+
+- Añadida vista previa de Monocromo para la landing mediante `/?theme=monocromo`; el acceso normal continúa usando Cuaderno.
+
+- Refinado Monocromo con textura fina de bajo contraste, jerarquía tonal más clara, títulos editoriales y detalles de cubierta de libro usando las opciones de tema existentes.
+
+- Añadido el tema oficial Monocromo; Clásico y Nanobook ahora se presentan como Grafito y Cuaderno, respectivamente. Refinada la paleta clara y oscura de Cuaderno para separar mejor papel, superficies y acento editorial.
+
+- Modernizado el formulario de ingreso con una composición adaptable de dos columnas y una portada editorial de Nanobook, conservando los flujos de registro, autenticación social y acceso al inicio.
+
+- Añadidos los temas oficiales Herbario (tinta verde y textura editorial) y Plano (papel frío, grafito y grilla técnica), disponibles también como bases para temas personalizados.
+
 - Recuperados los fondos graduales y visibles de las listas Markdown anidadas; la navegación cliente vuelve a aplicar el tema al documento activo.
 
 - El contenido renderizado de los documentos Markdown ocupa todo el ancho del panel, incluso con temas que tenían guardada una medida de lectura estrecha.

@@ -6,7 +6,7 @@ export const theme = sqliteTable(
     id: text("id").primaryKey(),
     ownerId: text("owner_id").notNull(),
     name: text("name").notNull(),
-    baseThemeId: text("base_theme_id", { enum: ["classic", "nanobook"] }).notNull(),
+    baseThemeId: text("base_theme_id", { enum: ["classic", "nanobook", "herbario", "plano", "monocromo"] }).notNull(),
     tokensJson: text("tokens_json").notNull().default("{}"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),

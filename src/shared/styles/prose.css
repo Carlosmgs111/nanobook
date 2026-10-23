@@ -290,7 +290,9 @@
 .prose :is(ul, ol) {
   padding: 0.5rem 0 0.5rem 2.5rem;
   border-left: 1px solid var(--theme-border-soft);
+  border-radius: var(--theme-panel-radius);
   background-color: color-mix(in srgb, var(--theme-surface-bg) 96%, var(--theme-text));
+  box-shadow: var(--theme-decoration-shadow);
 }
 
 .prose :is(ul, ol) :is(ul, ol) {
@@ -385,7 +387,9 @@
 .prose blockquote {
   padding: 0.75rem 1.25rem;
   border-left: 2px solid var(--theme-border-medium);
+  border-radius: var(--theme-panel-radius);
   background-color: var(--theme-content-quote-bg);
+  box-shadow: var(--theme-decoration-shadow);
 }
 
 .prose blockquote blockquote {
@@ -404,7 +408,10 @@
   width: 100%;
   border-collapse: collapse;
   border: 1px solid var(--theme-border-medium);
+  border-radius: var(--theme-panel-radius);
   background-color: var(--theme-surface-raised);
+  box-shadow: var(--theme-decoration-shadow);
+  overflow: hidden;
 }
 
 .prose tbody tr:nth-child(even) {
@@ -433,6 +440,7 @@
   border: 1px solid var(--theme-border-soft);
   border-radius: var(--theme-panel-radius);
   background-color: var(--layer-1);
+  box-shadow: var(--theme-decoration-shadow);
 }
 
 .prose details summary {
@@ -456,6 +464,7 @@
   border: 1px solid var(--theme-border-soft);
   border-radius: var(--theme-panel-radius);
   background-color: var(--layer-1);
+  box-shadow: var(--theme-decoration-shadow);
 }
 
 .md-details-summary {
@@ -497,6 +506,8 @@
   padding: 0.75rem 1rem;
   border-left: 2px solid var(--callout-border, var(--theme-border-strong));
   background-color: var(--callout-bg, var(--layer-1));
+  border-radius: var(--theme-panel-radius);
+  box-shadow: var(--theme-decoration-shadow);
 }
 
 .callout-title {

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { OfficialThemeId } from "../infraestructure/OfficialThemeCatalog";
 import { Result } from "../../../shared/domain/Result";
 import { Theme } from "../domain/Theme";
 import type { ThemeRepository } from "../domain/ports/ThemeRepository";
@@ -18,7 +19,7 @@ export class CreateTheme {
     ownerId: string,
     input: {
       name: string;
-      baseThemeId: "classic" | "nanobook";
+      baseThemeId: OfficialThemeId;
       tokens?: ThemeTokensDto;
     }
   ): Promise<Result<Error, ThemeDetails>> {

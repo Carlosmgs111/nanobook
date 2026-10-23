@@ -87,3 +87,10 @@ const { nanobooks, themes } = Astro.props;
   document.addEventListener("astro:page-load", initCreateNanobookForm);
   initCreateNanobookForm();
 </script>
+
+<style>
+  #create-nanobook {
+    border-radius: var(--theme-panel-radius);
+    box-shadow: var(--theme-decoration-shadow);
+  }
+</style>

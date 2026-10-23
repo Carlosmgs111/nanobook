@@ -1,3 +1,5 @@
+import type { OfficialThemeId } from "../server/infraestructure/OfficialThemeCatalog";
+
 export interface ThemePaletteDto {
   pageBackground?: string;
   surfaceBackground?: string;
@@ -43,7 +45,7 @@ export interface ThemeTokensDto {
 export interface ThemeSummaryDto {
   reference: { kind: "official" | "custom"; id: string };
   name: string;
-  baseThemeId: "classic" | "nanobook";
+  baseThemeId: OfficialThemeId;
   editable: boolean;
 }
 export interface ThemeDetailsDto extends ThemeSummaryDto {
@@ -51,7 +53,7 @@ export interface ThemeDetailsDto extends ThemeSummaryDto {
 }
 export interface CreateThemeInput {
   name: string;
-  baseThemeId: "classic" | "nanobook";
+  baseThemeId: OfficialThemeId;
   tokens?: ThemeTokensDto;
 }
 export interface UpdateThemeInput {

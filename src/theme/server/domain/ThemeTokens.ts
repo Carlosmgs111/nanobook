@@ -44,7 +44,10 @@ export type ThemeTokens = {
     radius?: "square" | "soft" | "rounded";
     cover?: "book" | "square" | "rounded";
   };
-  layout?: { density?: "compact" | "comfortable" | "relaxed"; readingMeasure?: "narrow" | "standard" | "wide" | "full" };
+  layout?: {
+    density?: "compact" | "comfortable" | "relaxed";
+    readingMeasure?: "narrow" | "standard" | "wide" | "full";
+  };
   decoration?: {
     pattern?: "none" | "grid" | "texture" | "stripes" | "hatch";
     patternScale?: "fine" | "regular" | "coarse";
@@ -99,7 +102,10 @@ export function validateThemeTokens(
       radius: ["square", "soft", "rounded"],
       cover: ["book", "square", "rounded"],
     },
-    layout: { density: ["compact", "comfortable", "relaxed"], readingMeasure: ["narrow", "standard", "wide", "full"] },
+    layout: {
+      density: ["compact", "comfortable", "relaxed"],
+      readingMeasure: ["narrow", "standard", "wide", "full"],
+    },
     decoration: {
       pattern: ["none", "grid", "texture", "stripes", "hatch"],
       patternScale: ["fine", "regular", "coarse"],
@@ -109,10 +115,9 @@ export function validateThemeTokens(
       shadow: ["flat", "offset", "soft"],
     },
   } as const;
-  for (const [group, fields] of Object.entries(presetChecks) as Array<[
-    keyof typeof presetChecks,
-    Record<string, readonly string[]>,
-  ]>) {
+  for (const [group, fields] of Object.entries(presetChecks) as Array<
+    [keyof typeof presetChecks, Record<string, readonly string[]>]
+  >) {
     const entry = value[group];
     if (entry === undefined) continue;
     if (

@@ -7,10 +7,14 @@ interface Props {
   theme?: ThemeDetailsDto;
 }
 const { theme } = Astro.props;
-const isClassic = theme?.baseThemeId === "classic";
+const defaultBaseThemeId = theme?.baseThemeId ?? "monocromo";
+const isClassic = defaultBaseThemeId === "classic";
+const isMonochrome = defaultBaseThemeId === "monocromo";
+const isComfortable = isClassic || isMonochrome;
+const isTechnical = ["classic", "plano"].includes(defaultBaseThemeId);
 const catalog = new OfficialThemeCatalog();
-const baseDefinitions = Object.fromEntries((["classic", "nanobook"] as const).map((id) => [id, catalog.get(id)]));
-const initialBase = baseDefinitions[theme?.baseThemeId ?? "nanobook"];
+const baseDefinitions = Object.fromEntries((["classic", "nanobook", "herbario", "plano", "monocromo"] as const).map((id) => [id, catalog.get(id)]));
+const initialBase = baseDefinitions[defaultBaseThemeId];
 const initialPreviewStyle = Object.entries({
   ...Object.fromEntries(Object.entries(initialBase.light).map(([name, value]) => [`--theme-light-${name}`, value])),
   ...Object.fromEntries(Object.entries(initialBase.dark).map(([name, value]) => [`--theme-dark-${name}`, value])),
@@ -23,10 +27,10 @@ const baseColor = (mode: "light" | "dark", name: string) => {
   const value = initialBase[mode][cssName];
   return colorInputValue(value, initialBase[mode]["page-bg"]);
 };
-const pattern = theme?.tokens.decoration?.pattern ?? (isClassic ? "grid" : "texture");
-const patternScale = theme?.tokens.decoration?.patternScale ?? (isClassic ? "coarse" : "regular");
+const pattern = theme?.tokens.decoration?.pattern ?? (isTechnical ? "grid" : "texture");
+const patternScale = theme?.tokens.decoration?.patternScale ?? (isMonochrome ? "fine" : isClassic ? "coarse" : "regular");
 const patternContrast = theme?.tokens.decoration?.patternContrast ?? "subtle";
-const headingFamily = theme?.tokens.typography?.heading ?? theme?.tokens.typography?.family ?? (isClassic ? "system-sans" : "editorial-serif");
+const headingFamily = theme?.tokens.typography?.heading ?? theme?.tokens.typography?.family ?? (isTechnical ? "system-sans" : "editorial-serif");
 const token = (
   mode: "light" | "dark",
   name:
@@ -74,12 +78,15 @@ const colors = [
   data-theme-editor
   data-theme-id={theme?.reference.id}
   data-theme-bases={JSON.stringify(baseDefinitions)}
-  class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]"
+  class="theme-editor-layout grid gap-6"
 >
-  <form
-    class="space-y-6 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-5"
-  >
-    <div class="grid gap-4 sm:grid-cols-2">
+  <form class="theme-form space-y-8 border border-[var(--theme-border)] bg-[var(--theme-surface-bg)] p-5">
+    <section class="theme-section" id="theme-identity" aria-labelledby="theme-identity-title">
+      <header class="theme-section-heading">
+        <h2 id="theme-identity-title">Identidad del tema</h2>
+        <p>Define el nombre y la base que usarás para empezar.</p>
+      </header>
+      <div class="grid gap-4 sm:grid-cols-2">
       <label class="space-y-1 text-sm"
         ><span>Nombre</span><input
           name="name"
@@ -92,22 +99,35 @@ const colors = [
           name="baseThemeId"
           disabled={Boolean(theme)}
           class="w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] px-3 py-2"
-          ><option value="nanobook" selected={theme?.baseThemeId !== "classic"}
-            >Nanobook</option
+          ><option value="nanobook" selected={theme?.baseThemeId === "nanobook"}
+            >Cuaderno</option
           ><option value="classic" selected={theme?.baseThemeId === "classic"}
-            >Clásico</option
+            >Grafito</option
+          ><option value="herbario" selected={theme?.baseThemeId === "herbario"}
+            >Herbario</option
+          ><option value="plano" selected={theme?.baseThemeId === "plano"}
+            >Plano</option
+          ><option value="monocromo" selected={defaultBaseThemeId === "monocromo"}
+            >Monocromo</option
           ></select
-        ></label
+        >{theme && <small>La base se fija al crear el tema.</small>}</label
       >
-    </div>
+      </div>
+    </section>
+    <section class="theme-section" id="theme-colors" aria-labelledby="theme-colors-title">
+      <header class="theme-section-heading">
+        <h2 id="theme-colors-title">Colores</h2>
+        <p>Ajusta por separado los colores para los modos claro y oscuro.</p>
+      </header>
     {
       (["light", "dark"] as const).map((mode) => (
-        <fieldset class="grid gap-3 sm:grid-cols-2">
-          <legend class="mb-2 font-semibold">
-            Paleta {mode === "light" ? "clara" : "oscura"}
+        <fieldset class:list={["theme-palette", "grid", "gap-3", "sm:grid-cols-2", mode === "dark" && "theme-palette-dark"]}>
+          <legend>
+            <span class="palette-mode-dot" aria-hidden="true"></span>
+            Modo {mode === "light" ? "claro" : "oscuro"}
           </legend>
           {colors.map(([name, label]) => (
-            <label class="flex items-center justify-between gap-3 text-sm">
+            <label class="theme-color-field flex items-center justify-between gap-3 text-sm">
               <span>{label}</span>
               <input
                 type="color"
@@ -124,7 +144,17 @@ const colors = [
         </fieldset>
       ))
     }
-    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="theme-contrast" role="status" aria-live="polite">
+        <strong>Revisión de contraste</strong>
+        <p data-theme-contrast class="whitespace-pre-line text-[var(--theme-text-muted)]"></p>
+      </div>
+    </section>
+    <section class="theme-section" id="theme-reading" aria-labelledby="theme-reading-title">
+      <header class="theme-section-heading">
+        <h2 id="theme-reading-title">Tipografía y lectura</h2>
+        <p>Controla la voz del contenido y el espacio que ocupa al leer.</p>
+      </header>
+      <div class="grid gap-4 sm:grid-cols-2">
       <label class="text-sm"
         >Tipografía<select
           data-theme-field="typography.family"
@@ -166,6 +196,14 @@ const colors = [
           ><option value="narrow" selected={theme?.tokens.layout?.readingMeasure === "narrow"}>Estrecho</option><option value="standard" selected={theme?.tokens.layout?.readingMeasure === "standard"}>Estándar</option><option value="wide" selected={theme?.tokens.layout?.readingMeasure === "wide"}>Amplio</option><option value="full" selected={!theme?.tokens.layout?.readingMeasure || theme?.tokens.layout?.readingMeasure === "full"}>Todo el ancho</option></select
         ></label
       >
+      </div>
+    </section>
+    <section class="theme-section" id="theme-shape" aria-labelledby="theme-shape-title">
+      <header class="theme-section-heading">
+        <h2 id="theme-shape-title">Forma y distribución</h2>
+        <p>Define la escala de las esquinas, las cubiertas y el espacio entre elementos.</p>
+      </header>
+      <div class="grid gap-4 sm:grid-cols-2">
       <label class="text-sm"
         >Radio<select
           data-theme-field="shape.radius"
@@ -202,15 +240,23 @@ const colors = [
           data-theme-field="layout.density"
           data-theme-override={theme?.tokens.layout?.density ? "true" : "false"}
           class="mt-1 w-full border border-[var(--theme-border)] bg-[var(--theme-page-bg)] p-2"
-          ><option value="compact" selected={theme?.tokens.layout?.density === "compact"}>Compacta</option><option value="comfortable" selected={theme?.tokens.layout?.density === "comfortable" || (!theme?.tokens.layout?.density && isClassic)}
+          ><option value="compact" selected={theme?.tokens.layout?.density === "compact"}>Compacta</option><option value="comfortable" selected={theme?.tokens.layout?.density === "comfortable" || (!theme?.tokens.layout?.density && isComfortable)}
             >Cómoda</option
           ><option
             value="relaxed"
-            selected={theme?.tokens.layout?.density === "relaxed" || (!theme?.tokens.layout?.density && !isClassic)}
+            selected={theme?.tokens.layout?.density === "relaxed" || (!theme?.tokens.layout?.density && !isComfortable)}
             >Relajada</option
           ></select
         ></label
       >
+      </div>
+    </section>
+    <section class="theme-section" id="theme-decoration" aria-labelledby="theme-decoration-title">
+      <header class="theme-section-heading">
+        <h2 id="theme-decoration-title">Textura y detalles</h2>
+        <p>Personaliza el patrón de fondo, las marcas y las sombras de los componentes.</p>
+      </header>
+      <div class="grid gap-4 sm:grid-cols-2">
       <label class="text-sm"
         >Trama de componentes<select
           data-theme-field="decoration.pattern"
@@ -289,39 +335,41 @@ const colors = [
           ></select
         ></label
       >
-    </div>
+      </div>
+    </section>
     <p
       data-theme-notice
       class="min-h-6 text-sm text-[var(--theme-text-muted)]"
       role="status"
     >
     </p>
-    <div class="space-y-2 text-sm" role="status" aria-live="polite">
-      <strong>Contraste de la paleta</strong>
-      <p data-theme-contrast class="max-h-36 overflow-y-auto whitespace-pre-line text-[var(--theme-text-muted)]"></p>
+    <div class="theme-actions">
+      <button data-theme-submit type="submit" class="theme-save">Guardar tema</button>
+      <button type="button" data-theme-reset class="theme-reset">Restablecer valores del tema base</button>
     </div>
-    <button
-      data-theme-submit
-      type="submit"
-      class="border border-[var(--theme-border)] bg-[var(--theme-text)] px-4 py-2 text-[var(--theme-page-bg)]"
-      >Guardar tema</button
-    >
-    <button type="button" data-theme-reset class="ml-3 border border-[var(--theme-border)] px-4 py-2 text-sm">Restablecer valores del tema base</button>
   </form>
   <aside
     data-theme-preview
     style={initialPreviewStyle}
     data-preview-mode="light"
+    aria-labelledby="theme-preview-title"
     class="min-h-80 border p-6"
   >
-    <button
-      type="button"
-      data-preview-mode-toggle
-      class="mb-6 border px-3 py-2 text-sm">Alternar claro/oscuro</button
-    >
-    <p class="mb-2 text-sm opacity-70">Vista previa local</p><h2 class="mb-4 text-3xl font-semibold">
+    <header class="theme-preview-heading">
+      <div>
+        <p class="mb-1 text-sm opacity-70">Vista previa interactiva</p>
+        <h2 id="theme-preview-title">Así se verá tu tema</h2>
+      </div>
+      <button
+        type="button"
+        data-preview-mode-toggle
+        aria-label="Cambiar el modo de color de la vista previa"
+        class="border px-3 py-2 text-sm">Claro / oscuro</button
+      >
+    </header>
+    <h3 class="preview-sample-title">
       Un nanobook para tus ideas
-    </h2>
+    </h3>
     <div class="preview-gallery">
       <div class="preview-book">
         <span class="preview-spine" aria-hidden="true"></span>
@@ -531,4 +579,173 @@ const colors = [
   .preview-warning { color: var(--preview-warning); }
   .preview-success { color: var(--preview-success); }
   .preview-info { color: var(--preview-info); }
+  [data-theme-editor] > form {
+    border-radius: var(--theme-panel-radius);
+    box-shadow: var(--theme-decoration-shadow);
+  }
+  .theme-form { min-width: 0; }
+  .theme-section + .theme-section {
+    border-top: 1px solid var(--theme-border-subtle);
+    padding-top: 1.5rem;
+  }
+  .theme-section-heading { margin-bottom: 1rem; }
+  .theme-section-heading h2 {
+    margin: 0;
+    color: var(--theme-text);
+    font-family: var(--theme-font-heading);
+    font-size: 1.1rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+  .theme-section-heading p,
+  .theme-form label small {
+    display: block;
+    margin-top: 0.3rem;
+    color: var(--theme-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .theme-form label { display: block; font-weight: 550; }
+  .theme-form input:not([type="color"]),
+  .theme-form select {
+    min-height: 2.6rem;
+    border-radius: var(--theme-control-radius);
+  }
+  .theme-palette {
+    min-width: 0;
+    margin-top: 0.8rem;
+    border: 1px solid var(--theme-border-subtle);
+    border-radius: var(--theme-panel-radius);
+    background: var(--theme-page-bg);
+    padding: 0.85rem;
+  }
+  .theme-palette legend {
+    grid-column: 1 / -1;
+    padding: 0 0.45rem;
+    color: var(--theme-text);
+    font-size: 0.9rem;
+    font-weight: 650;
+  }
+  .palette-mode-dot {
+    display: inline-block;
+    width: 0.65rem;
+    height: 0.65rem;
+    margin-right: 0.35rem;
+    border: 1px solid var(--theme-border);
+    border-radius: 50%;
+    background: var(--theme-surface-bg);
+    vertical-align: 0.02rem;
+  }
+  .theme-palette-dark .palette-mode-dot { background: var(--theme-text); }
+  .theme-color-field {
+    min-height: 2.5rem;
+    border-bottom: 1px solid var(--theme-border-subtle);
+    color: var(--theme-text-muted);
+  }
+  .theme-form label.theme-color-field { display: flex; align-items: center; }
+  .theme-color-field input[type="color"] {
+    width: 2.5rem;
+    height: 1.85rem;
+    overflow: hidden;
+    border: 1px solid var(--theme-border);
+    border-radius: var(--theme-control-radius);
+    background: var(--theme-surface-bg);
+    padding: 0.15rem;
+    cursor: pointer;
+  }
+  .theme-contrast {
+    margin-top: 0.85rem;
+    border-left: 2px solid var(--theme-accent);
+    background: var(--theme-page-bg);
+    padding: 0.75rem 0.9rem;
+    font-size: 0.82rem;
+  }
+  .theme-contrast p { margin: 0.3rem 0 0; line-height: 1.5; }
+  .theme-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    border-top: 1px solid var(--theme-border-subtle);
+    background: var(--theme-surface-bg);
+    padding: 0.9rem 0 0.15rem;
+  }
+  .theme-actions button,
+  .theme-preview-heading button {
+    min-height: 2.5rem;
+    border-radius: var(--theme-control-radius);
+    cursor: pointer;
+  }
+  .theme-save {
+    border: 1px solid var(--theme-text);
+    background: var(--theme-text);
+    color: var(--theme-page-bg);
+    padding: 0.55rem 1rem;
+    font-weight: 650;
+  }
+  .theme-reset,
+  .theme-preview-heading button {
+    border: 1px solid var(--theme-border);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text);
+    padding: 0.55rem 0.8rem;
+  }
+  .theme-reset:hover,
+  .theme-preview-heading button:hover { border-color: var(--theme-accent); }
+  [data-theme-preview] {
+    align-self: start;
+    border-radius: var(--theme-panel-radius);
+    box-shadow: var(--theme-decoration-shadow);
+  }
+  .theme-preview-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .theme-preview-heading h2 {
+    margin: 0;
+    color: var(--preview-text);
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+  }
+  .theme-preview-heading p { margin: 0; color: var(--preview-muted); }
+  .prose .preview-sample-title {
+    margin: 0 0 1rem;
+    color: var(--preview-accent);
+    font-family: var(--theme-light-font-heading);
+    font-size: 1.5rem;
+    line-height: 1.15;
+  }
+  [data-preview-mode="dark"] .preview-sample-title { font-family: var(--theme-dark-font-heading); }
+  @media (max-width: 1023px) {
+    [data-theme-preview] {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      order: 1;
+    }
+    .theme-form { order: 0; }
+  }
+  @media (min-width: 80rem) {
+    .theme-editor-layout {
+      grid-template-columns: minmax(0, 1.15fr) minmax(19rem, 0.85fr);
+      align-items: start;
+    }
+    [data-theme-preview] {
+      position: sticky;
+      top: 1rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+    }
+  }
+  @media (max-width: 480px) {
+    .theme-form { padding: 1rem; }
+    [data-theme-preview] { padding: 1rem; }
+    .theme-preview-heading { flex-direction: column; }
+  }
 </style>

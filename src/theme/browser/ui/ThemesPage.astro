@@ -45,3 +45,10 @@ const { themes, selected } = Astro.props;
     <div id="editor"><ThemeEditor theme={selected} /></div>
   </div>
 </Layout>
+
+<style>
+  nav[aria-label="Biblioteca de temas"] a {
+    border-radius: var(--theme-control-radius);
+    box-shadow: var(--theme-decoration-shadow);
+  }
+</style>

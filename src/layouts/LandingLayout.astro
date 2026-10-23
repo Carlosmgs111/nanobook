@@ -6,7 +6,8 @@ import { getApp } from "../application/server/Application";
 import { normalizeColorModePreference } from "../theme/server";
 
 const app = await getApp();
-const theme = await app.themeModule.resolveTheme.execute({ kind: "official", id: "nanobook" });
+const themeId = Astro.url.searchParams.get("theme") === "nanobook" ? "nanobook" : "monocromo";
+const theme = await app.themeModule.resolveTheme.execute({ kind: "official", id: themeId });
 const installation = app.themeModule.compileTheme.execute(theme);
 const storedMode = Astro.cookies.get("nanobook-color-mode")?.value;
 const colorModePreference = normalizeColorModePreference(storedMode);

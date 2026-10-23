@@ -30,8 +30,8 @@ export class ThemeNavigationController {
     if (!marker) return;
     try {
       this.apply({
-        theme: marker.dataset.theme ?? "classic",
-        key: marker.dataset.themeKey ?? "official:classic",
+        theme: marker.dataset.theme ?? "monocromo",
+        key: marker.dataset.themeKey ?? "official:monocromo",
         colorMode: marker.dataset.colorMode as ThemeNavigationState["colorMode"],
         variables: JSON.parse(marker.dataset.themeVariables ?? "{}"),
       });

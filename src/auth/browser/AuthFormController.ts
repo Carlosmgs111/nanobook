@@ -33,6 +33,11 @@ const submitLabelByMode: Record<AuthFormMode, string> = {
   signup: "Crear cuenta",
 };
 
+const eyebrowByMode: Record<AuthFormMode, string> = {
+  login: "TU ESPACIO TE ESPERA",
+  signup: "EMPIEZA TU CUADERNO",
+};
+
 export class AuthFormController {
   private readonly formMode = new AuthFormModeCapability();
   private readonly navigate: (destination: string) => void;
@@ -94,6 +99,7 @@ export class AuthFormController {
     });
 
     this.setText("#auth-form-title", titleByMode[mode]);
+    this.setText("[data-auth-eyebrow]", eyebrowByMode[mode]);
     this.setText("[data-auth-copy]", copyByMode[mode]);
     this.setText("[data-auth-submit]", submitLabelByMode[mode]);
 

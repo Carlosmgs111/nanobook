@@ -5,14 +5,32 @@ import { toThemeDetails, type ThemeSummary } from "./dto/ThemeDtos";
 const official: ThemeSummary[] = [
   {
     reference: { kind: "official", id: "classic" },
-    name: "Clásico",
+    name: "Grafito",
     baseThemeId: "classic",
     editable: false,
   },
   {
     reference: { kind: "official", id: "nanobook" },
-    name: "Nanobook",
+    name: "Cuaderno",
     baseThemeId: "nanobook",
+    editable: false,
+  },
+  {
+    reference: { kind: "official", id: "herbario" },
+    name: "Herbario",
+    baseThemeId: "herbario",
+    editable: false,
+  },
+  {
+    reference: { kind: "official", id: "plano" },
+    name: "Plano",
+    baseThemeId: "plano",
+    editable: false,
+  },
+  {
+    reference: { kind: "official", id: "monocromo" },
+    name: "Monocromo",
+    baseThemeId: "monocromo",
     editable: false,
   },
 ];
