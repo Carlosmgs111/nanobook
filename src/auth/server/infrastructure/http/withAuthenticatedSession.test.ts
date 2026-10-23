@@ -58,5 +58,49 @@ describe("withAuthenticatedSession", () => {
       },
     });
     expect(handler).toHaveBeenCalledWith(context);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("rejects cross-origin and originless authenticated mutations", async () => {
+    const handler = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    const route = withAuthenticatedSession(
+      new BetterAuthSessionReader({
+        api: { getSession: async () => ({ user: { id: "user-1", name: "Ada", email: "ada@example.com" } }) },
+      }),
+      handler,
+    );
+
+    for (const headers of [{ Origin: "https://other.test" }, {}]) {
+      const response = await route({
+        request: new Request("https://nanobook.test/api/me/profile", { method: "PATCH", headers }),
+        locals: {},
+      } as never);
+      expect(response.status).toBe(403);
+    }
+    expect(handler).not.toHaveBeenCalled();
+
+    const response = await route({
+      request: new Request("https://nanobook.test/api/me/profile", {
+        method: "PATCH",
+        headers: { Origin: "https://nanobook.test" },
+      }),
+      locals: {},
+    } as never);
+    expect(response.status).toBe(204);
+  });
+
+  it("adds private cache headers to immutable redirect responses", async () => {
+    const route = withAuthenticatedSession(
+      new BetterAuthSessionReader({
+        api: { getSession: async () => ({ user: { id: "user-1", name: "Ada", email: "ada@example.com" } }) },
+      }),
+      async () => Response.redirect("https://nanobook.test/nanobooks"),
+    );
+    const response = await route({
+      request: new Request("https://nanobook.test/api/me/profile"),
+      locals: {},
+    } as never);
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
   });
 });

@@ -4,7 +4,9 @@ import type {
 } from "./model/AuthSession";
 
 export class CachedAuthSessionReader implements AuthenticatedSessionReader {
+  private static readonly maxCacheAgeMs = 60_000;
   private hasCachedUser = false;
+  private cacheUntil = 0;
   private currentUser: AuthenticatedUser | null = null;
   private pending: Promise<AuthenticatedUser | null> | null = null;
   private revision = 0;
@@ -12,7 +14,7 @@ export class CachedAuthSessionReader implements AuthenticatedSessionReader {
   constructor(private readonly source: AuthenticatedSessionReader) {}
 
   getCurrentUser(): Promise<AuthenticatedUser | null> {
-    if (this.hasCachedUser) return Promise.resolve(this.currentUser);
+    if (this.hasCachedUser && Date.now() < this.cacheUntil) return Promise.resolve(this.currentUser);
     if (this.pending) return this.pending;
 
     const revision = this.revision;
@@ -25,6 +27,7 @@ export class CachedAuthSessionReader implements AuthenticatedSessionReader {
 
         this.currentUser = user;
         this.hasCachedUser = true;
+        this.cacheUntil = Date.now() + CachedAuthSessionReader.maxCacheAgeMs;
         return user;
       },
       (error) => {
@@ -41,6 +44,7 @@ export class CachedAuthSessionReader implements AuthenticatedSessionReader {
     this.revision += 1;
     this.currentUser = user;
     this.hasCachedUser = true;
+    this.cacheUntil = Date.now() + CachedAuthSessionReader.maxCacheAgeMs;
     this.pending = null;
   }
 
@@ -48,6 +52,7 @@ export class CachedAuthSessionReader implements AuthenticatedSessionReader {
     this.revision += 1;
     this.currentUser = null;
     this.hasCachedUser = true;
+    this.cacheUntil = Date.now() + CachedAuthSessionReader.maxCacheAgeMs;
     this.pending = null;
   }
 }

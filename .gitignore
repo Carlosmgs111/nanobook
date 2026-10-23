@@ -47,6 +47,7 @@ pnpm-debug.log*
 !/src/content/nanobook-project/
 /src/content/nanobook-project/*
 !/src/content/nanobook-project/index.md
+!/src/content/nanobook-project/production-readiness.md
 !/src/content/nanobook-project/meta/
 /src/content/nanobook-project/meta/*
 !/src/content/nanobook-project/meta/index.md

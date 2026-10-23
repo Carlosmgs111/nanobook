@@ -11,4 +11,6 @@ draft: false
 
 ## Historial de trabajo
 
+- [Despliegue y seguridad de producción](./production-readiness): requisitos de Vercel, autenticación y acceso agéntico.
+
 - [Intervenciones verificadas de Codex](./historial-codex): cronología de implementaciones, correcciones y documentación, con referencias a tareas y commits. El registro distingue el trabajo confirmado de los cambios locales sin commit.

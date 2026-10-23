@@ -6,6 +6,15 @@ La instancia nueva comienza sin contenido importado. Los usuarios y sus nanobook
 
 Configura `DATABASE_URL` y, si se usa libSQL remoto, `DATABASE_AUTH_TOKEN` únicamente en el entorno del servidor. No guardes esos valores en el contenido, manifiestos ni logs.
 
+### Turso para Vercel
+
+1. Crea una base Turso dedicada a Nanobook. Copia su URL `libsql://...` a `DATABASE_URL`.
+2. Crea un token de base de datos con lectura y escritura. Guárdalo como `DATABASE_AUTH_TOKEN` en Vercel Production. La aplicación no usa un token de administración de la plataforma Turso.
+3. Configura ambas variables en el entorno de ejecución del comando de migración y ejecútalo **una vez antes de publicar** la nueva versión. No incluyas secretos en argumentos de comandos ni en archivos versionados.
+4. Comprueba que aparecen las tablas `user`, `session`, `rateLimit`, `nanobook`, `document`, `document_revision`, `content_outbox` y `theme` en el panel de Turso.
+
+Para desarrollo local conserva una base separada de Production, por defecto `file:./data/nanobook.db`. Si necesitas probar contra Turso, crea otra base o rama de prueba y usa credenciales diferentes. La base de Production tiene protección contra borrado y debe tener respaldos periódicos.
+
 ```powershell
 npm run database:migrate
 ```

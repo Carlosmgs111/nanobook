@@ -71,6 +71,13 @@
       "when": 1792089370916,
       "tag": "0009_custom_themes",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792777440396,
+      "tag": "0010_round_king_cobra",
+      "breakpoints": true
     }
   ]
 }

@@ -58,6 +58,8 @@ describe("theme management", () => {
     const result = await new ListThemes(repository).execute("owner-1");
     expect(result.getValue().map((theme) => theme.reference)).toEqual([
       { kind: "official", id: "classic" }, { kind: "official", id: "nanobook" },
+      { kind: "official", id: "herbario" }, { kind: "official", id: "plano" },
+      { kind: "official", id: "monocromo" },
       { kind: "custom", id: "owned" },
     ]);
   });

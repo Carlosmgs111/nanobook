@@ -53,4 +53,20 @@ describe("CachedAuthSessionReader", () => {
     await expect(cachedReader.getCurrentUser()).resolves.toBeNull();
     expect(reader.getCurrentUser).not.toHaveBeenCalled();
   });
+
+  it("revalidates a cached user after one minute", async () => {
+    vi.useFakeTimers();
+    try {
+      const reader: AuthenticatedSessionReader = {
+        getCurrentUser: vi.fn().mockResolvedValueOnce(ada).mockResolvedValueOnce(null),
+      };
+      const cachedReader = new CachedAuthSessionReader(reader);
+      await expect(cachedReader.getCurrentUser()).resolves.toEqual(ada);
+      vi.advanceTimersByTime(60_000);
+      await expect(cachedReader.getCurrentUser()).resolves.toBeNull();
+      expect(reader.getCurrentUser).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

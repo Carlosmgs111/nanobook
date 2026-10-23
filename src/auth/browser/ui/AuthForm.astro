@@ -31,19 +31,32 @@ const isSignup = initialMode === "signup";
   >
     <div class="auth-form__frame">
       <aside class="auth-form__story" aria-label="Sobre Nanobook">
-        <p class="auth-form__brand"><span aria-hidden="true">n.</span> nanobook</p>
+        <p class="auth-form__brand">
+          <span aria-hidden="true">n.</span> nanobook
+        </p>
         <div class="auth-form__book" aria-hidden="true">
-          <div class="auth-form__book-top"><span>CUADERNO DIGITAL</span><span>01 / 04</span></div>
-          <div class="auth-form__book-title">Ideas que<br />encuentran<br />su lugar.</div>
+          <div class="auth-form__book-top">
+            <span>CUADERNO DIGITAL</span><span>01 / 04</span>
+          </div>
+          <div class="auth-form__book-title">
+            Ideas que<br />encuentran<br />su lugar.
+          </div>
           <div class="auth-form__book-lines"><i></i><i></i><i></i></div>
-          <div class="auth-form__book-index"><span>01</span><span>Notas</span><span>02</span><span>Proyectos</span></div>
+          <div class="auth-form__book-index">
+            <span>01</span><span>Notas</span><span>02</span><span
+              >Proyectos</span>
+          </div>
         </div>
-        <p class="auth-form__story-note">Un espacio para escribir, conectar y publicar tus ideas en Markdown.</p>
+        <p class="auth-form__story-note">
+          Un espacio para escribir, conectar y publicar tus ideas en Markdown.
+        </p>
         <a href="/" class="auth-form__back">← Volver al inicio</a>
       </aside>
       <div class="auth-form__account">
         <div class="auth-form__header">
-          <p class="auth-form__eyebrow" data-auth-eyebrow>{isSignup ? "EMPIEZA TU CUADERNO" : "TU ESPACIO TE ESPERA"}</p>
+          <p class="auth-form__eyebrow" data-auth-eyebrow>
+            {isSignup ? "EMPIEZA TU CUADERNO" : "TU ESPACIO TE ESPERA"}
+          </p>
           <h1 id="auth-form-title">
             {isSignup ? "Crea tu cuenta" : "Bienvenido de nuevo"}
           </h1>
@@ -56,134 +69,381 @@ const isSignup = initialMode === "signup";
           </p>
         </div>
 
-      <div class="auth-form__switch" role="group" aria-label="Tipo de acceso">
-        <button
-          type="button"
-          class="auth-form__mode"
-          data-auth-mode="login"
-          aria-pressed={!isSignup ? "true" : "false"}
-        >
-          Ingresar
-        </button>
-        <button
-          type="button"
-          class="auth-form__mode"
-          data-auth-mode="signup"
-          aria-pressed={isSignup ? "true" : "false"}
-        >
-          Registrarme
-        </button>
-      </div>
-
-      <form class="auth-form__fields" action="#" method="post">
-        <div data-auth-only="signup" hidden={!isSignup}>
-          <label for="auth-name">Nombre</label>
-          <input
-            id="auth-name"
-            name="name"
-            type="text"
-            autocomplete="name"
-            required={isSignup}
-          />
+        <div class="auth-form__switch" role="group" aria-label="Tipo de acceso">
+          <button
+            type="button"
+            class="auth-form__mode"
+            data-auth-mode="login"
+            aria-pressed={!isSignup ? "true" : "false"}
+          >
+            Ingresar
+          </button>
+          <button
+            type="button"
+            class="auth-form__mode"
+            data-auth-mode="signup"
+            aria-pressed={isSignup ? "true" : "false"}
+          >
+            Registrarme
+          </button>
         </div>
 
-        <div>
-          <label for="auth-email">Correo electrónico</label>
-          <input
-            id="auth-email"
-            name="email"
-            type="email"
-            autocomplete="email"
-            required
-          />
-        </div>
-
-        <div>
-          <label for="auth-password">Contraseña</label>
-          <input
-            id="auth-password"
-            name="password"
-            type="password"
-            autocomplete={isSignup ? "new-password" : "current-password"}
-            required
-          />
-        </div>
-
-        <div data-auth-only="signup" hidden={!isSignup}>
-          <label for="auth-confirm-password">Confirmar contraseña</label>
-          <input
-            id="auth-confirm-password"
-            name="confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            required={isSignup}
-          />
-        </div>
-
-        <button class="auth-form__submit" type="submit" data-auth-submit>
-          {isSignup ? "Crear cuenta" : "Ingresar"}
-        </button>
-      </form>
-
-      {
-        githubEnabled && (
-          <div class="auth-form__provider">
-            <span aria-hidden="true">o</span>
-            <button
-              class="auth-form__github"
-              type="button"
-              data-auth-provider="github"
-            >
-              Continuar con GitHub
-            </button>
+        <form class="auth-form__fields" action="#" method="post">
+          <div data-auth-only="signup" hidden={!isSignup}>
+            <label for="auth-name">Nombre</label>
+            <input
+              id="auth-name"
+              name="name"
+              type="text"
+              autocomplete="name"
+              required={isSignup}
+            />
           </div>
-        )
-      }
+
+          <div>
+            <label for="auth-email">Correo electrónico</label>
+            <input
+              id="auth-email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="auth-password">Contraseña</label>
+            <input
+              id="auth-password"
+              name="password"
+              type="password"
+              autocomplete={isSignup ? "new-password" : "current-password"}
+              required
+            />
+          </div>
+
+          <div data-auth-only="signup" hidden={!isSignup}>
+            <label for="auth-confirm-password">Confirmar contraseña</label>
+            <input
+              id="auth-confirm-password"
+              name="confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              required={isSignup}
+            />
+          </div>
+
+          <button class="auth-form__submit" type="submit" data-auth-submit>
+            {isSignup ? "Crear cuenta" : "Ingresar"}
+          </button>
+        </form>
+
+        {
+          githubEnabled && (
+            <div class="auth-form__provider">
+              <span aria-hidden="true">o</span>
+              <button
+                class="auth-form__github"
+                type="button"
+                data-auth-provider="github"
+              >
+                Continuar con GitHub
+              </button>
+            </div>
+          )
+        }
       </div>
     </div>
   </section>
 </Layout>
 
 <style>
-  .auth-form { --auth-rule: var(--theme-border); display: grid; min-height: min(42rem, calc(100vh - 8rem)); place-items: center; padding: clamp(1rem, 4vw, 3rem); }
-  .auth-form__frame { display: grid; grid-template-columns: minmax(16rem, 0.88fr) minmax(20rem, 1.12fr); width: min(100%, 58rem); border: 1px solid var(--auth-rule); border-radius: var(--theme-panel-radius); background: var(--theme-surface-bg); box-shadow: var(--theme-decoration-shadow); overflow: hidden; }
-  .auth-form__story { display: flex; min-height: 39rem; flex-direction: column; padding: clamp(1.5rem, 4vw, 2.5rem); color: var(--theme-accent-text); background: var(--theme-accent); }
-  .auth-form__brand { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 1rem; font-weight: 650; letter-spacing: -0.03em; }
-  .auth-form__brand span { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid currentColor; border-radius: 50%; font-family: Georgia, serif; font-size: 1rem; }
-  .auth-form__book { position: relative; margin-top: auto; padding: 1.25rem 1.3rem 1.1rem; border: 1px solid color-mix(in srgb, var(--theme-accent-text) 28%, transparent); border-left: 5px solid color-mix(in srgb, var(--theme-accent-text) 68%, var(--theme-accent)); border-radius: var(--theme-cover-radius); background: color-mix(in srgb, var(--theme-accent) 88%, var(--theme-accent-text)); }
-  .auth-form__book-top, .auth-form__book-index { display: flex; justify-content: space-between; gap: 0.7rem; font-family: var(--theme-font-code); font-size: 0.58rem; letter-spacing: 0.08em; opacity: 0.8; }
-  .auth-form__book-title { margin: 1.6rem 0 1.1rem; font-family: var(--theme-font-heading); font-size: clamp(1.65rem, 3vw, 2.2rem); line-height: 1.06; letter-spacing: -0.04em; }
-  .auth-form__book-lines { display: grid; gap: 0.42rem; margin-bottom: 1.2rem; }
-  .auth-form__book-lines i { height: 1px; background: currentColor; opacity: 0.26; }
-  .auth-form__book-lines i:nth-child(2) { width: 82%; }
-  .auth-form__book-lines i:nth-child(3) { width: 62%; }
-  .auth-form__book-index { justify-content: flex-start; gap: 0.4rem; border-top: 1px solid color-mix(in srgb, var(--theme-accent-text) 28%, transparent); padding-top: 0.8rem; }
-  .auth-form__book-index span:nth-child(2) { margin-right: auto; }
-  .auth-form__story-note { max-width: 32ch; margin: 1.5rem 0 0; font-size: 0.92rem; line-height: 1.55; opacity: 0.88; }
-  .auth-form__back { align-self: flex-start; margin-top: 2rem; color: inherit; font-size: 0.8rem; text-decoration: none; opacity: 0.86; }
-  .auth-form__back:hover { opacity: 1; text-decoration: underline; }
-  .auth-form__account { min-width: 0; padding-bottom: clamp(1.5rem, 4vw, 2.5rem); }
-  .auth-form__header { padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 4vw, 2.75rem) 1.25rem; }
-  .auth-form__eyebrow { margin: 0 0 0.8rem; color: var(--theme-text-muted); font-family: var(--theme-font-code); font-size: 0.68rem; letter-spacing: 0.1em; }
-  .auth-form h1 { margin: 0; color: var(--theme-text); font-size: clamp(1.65rem, 3vw, 2.1rem); font-weight: 600; letter-spacing: -0.045em; line-height: 1.08; }
-  .auth-form__intro { max-width: 31ch; margin: 0.85rem 0 0; color: var(--theme-text-muted); font-size: 0.95rem; line-height: 1.5; }
-  .auth-form__switch { display: grid; grid-template-columns: repeat(2, 1fr); margin: 0 clamp(1.5rem, 4vw, 2.75rem); border-bottom: 1px solid var(--auth-rule); }
-  .auth-form__mode, .auth-form__submit { min-height: 2.75rem; border: 0; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-  .auth-form__mode { border-bottom: 2px solid transparent; color: var(--theme-text-muted); background: transparent; }
-  .auth-form__mode[aria-pressed="true"] { border-bottom-color: var(--theme-accent); color: var(--theme-text); }
-  .auth-form__fields { display: grid; gap: 1rem; padding: 1.5rem clamp(1.5rem, 4vw, 2.75rem); }
-  .auth-form__provider { display: grid; gap: 0.75rem; padding: 0 clamp(1.5rem, 4vw, 2.75rem); }
-  .auth-form__provider > span { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem; color: var(--theme-text-muted); font-size: 0.8rem; }
-  .auth-form__provider > span::before, .auth-form__provider > span::after { height: 1px; background: var(--auth-rule); content: ""; }
-  .auth-form__fields > div { display: grid; gap: 0.5rem; }
-  .auth-form label { color: var(--theme-text); font-size: 0.82rem; font-weight: 550; }
-  .auth-form input { width: 100%; min-height: 2.75rem; border: 1px solid var(--auth-rule); border-radius: var(--theme-control-radius); outline: none; padding: 0.6rem 0.75rem; color: var(--theme-text); background: var(--theme-page-bg); font: inherit; transition: border-color 140ms ease, box-shadow 140ms ease; }
-  .auth-form input:focus { border-color: var(--theme-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent) 18%, transparent); }
-  .auth-form input:focus-visible, .auth-form__mode:focus-visible, .auth-form__submit:focus-visible, .auth-form__github:focus-visible, .auth-form__back:focus-visible { outline: 2px solid var(--theme-accent); outline-offset: 3px; }
-  .auth-form__submit { margin-top: 0.25rem; border-radius: var(--theme-control-radius); color: var(--theme-accent-text); background: var(--theme-accent); }
-  .auth-form__submit:hover { filter: brightness(0.94); }
-  .auth-form__github { min-height: 2.75rem; border: 1px solid var(--auth-rule); border-radius: var(--theme-control-radius); color: var(--theme-text); background: transparent; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-  .auth-form__github:hover:not(:disabled) { background: color-mix(in srgb, var(--theme-text) 8%, transparent); }
-  @media (max-width: 760px) { .auth-form { min-height: auto; padding: 1rem 0; } .auth-form__frame { grid-template-columns: 1fr; width: min(100%, 34rem); } .auth-form__story { min-height: 0; padding: 1.25rem 1.5rem; } .auth-form__book, .auth-form__story-note { display: none; } .auth-form__back { margin-top: 0.8rem; } .auth-form__account { padding-bottom: 1.25rem; } .auth-form__header { padding-top: 1.75rem; } }
-  @media (prefers-reduced-motion: reduce) { .auth-form input { transition: none; } }
+  .auth-form {
+    --auth-rule: var(--theme-border);
+    display: grid;
+    min-height: min(42rem, calc(100vh - 8rem));
+    place-items: center;
+    padding: clamp(1rem, 4vw, 3rem);
+  }
+  .auth-form__frame {
+    display: grid;
+    grid-template-columns: minmax(16rem, 0.88fr) minmax(20rem, 1.12fr);
+    width: min(100%, 58rem);
+    border: 1px solid var(--auth-rule);
+    border-radius: var(--theme-panel-radius);
+    background: var(--theme-surface-bg);
+    box-shadow: var(--theme-decoration-shadow);
+    overflow: hidden;
+  }
+  .auth-form__story {
+    display: flex;
+    min-height: 39rem;
+    flex-direction: column;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    color: var(--theme-accent-text);
+    background: var(--theme-accent);
+  }
+  .auth-form__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+  .auth-form__brand span {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+  }
+  .auth-form__book {
+    position: relative;
+    margin-top: auto;
+    padding: 1.25rem 1.3rem 1.1rem;
+    border: 1px solid
+      color-mix(in srgb, var(--theme-accent-text) 28%, transparent);
+    border-left: 5px solid
+      color-mix(in srgb, var(--theme-accent-text) 68%, var(--theme-accent));
+    border-radius: var(--theme-cover-radius);
+    background: color-mix(
+      in srgb,
+      var(--theme-accent) 88%,
+      var(--theme-accent-text)
+    );
+  }
+  .auth-form__book-top,
+  .auth-form__book-index {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    font-family: var(--theme-font-code);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    opacity: 0.8;
+  }
+  .auth-form__book-title {
+    margin: 1.6rem 0 1.1rem;
+    font-family: var(--theme-font-heading);
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+  }
+  .auth-form__book-lines {
+    display: grid;
+    gap: 0.42rem;
+    margin-bottom: 1.2rem;
+  }
+  .auth-form__book-lines i {
+    height: 1px;
+    background: currentColor;
+    opacity: 0.26;
+  }
+  .auth-form__book-lines i:nth-child(2) {
+    width: 82%;
+  }
+  .auth-form__book-lines i:nth-child(3) {
+    width: 62%;
+  }
+  .auth-form__book-index {
+    justify-content: flex-start;
+    gap: 0.4rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--theme-accent-text) 28%, transparent);
+    padding-top: 0.8rem;
+  }
+  .auth-form__book-index span:nth-child(2) {
+    margin-right: auto;
+  }
+  .auth-form__story-note {
+    max-width: 32ch;
+    margin: 1.5rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    opacity: 0.88;
+  }
+  .auth-form__back {
+    align-self: flex-start;
+    margin-top: 2rem;
+    color: inherit;
+    font-size: 0.8rem;
+    text-decoration: none;
+    opacity: 0.86;
+  }
+  .auth-form__back:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+  .auth-form__account {
+    min-width: 0;
+    padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  .auth-form__header {
+    padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 4vw, 2.75rem) 1.25rem;
+  }
+  .auth-form__eyebrow {
+    margin: 0 0 0.8rem;
+    color: var(--theme-text-muted);
+    font-family: var(--theme-font-code);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+  .auth-form h1 {
+    margin: 0;
+    color: var(--theme-text);
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: 1.08;
+  }
+  .auth-form__intro {
+    max-width: 31ch;
+    margin: 0.85rem 0 0;
+    color: var(--theme-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .auth-form__switch {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin: 0 clamp(1.5rem, 4vw, 2.75rem);
+  }
+  .auth-form__mode,
+  .auth-form__submit {
+    min-height: 2.75rem;
+    border: 0;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .auth-form__mode {
+    border-bottom: 2px solid transparent;
+    color: var(--theme-text-muted);
+    background: transparent;
+  }
+  .auth-form__mode[aria-pressed="true"] {
+    background-color: var(--theme-accent);
+    color: var(--theme-accent-text);
+  }
+  .auth-form__fields {
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem clamp(1.5rem, 4vw, 2.75rem);
+  }
+  .auth-form__provider {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0 clamp(1.5rem, 4vw, 2.75rem);
+  }
+  .auth-form__provider > span {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--theme-text-muted);
+    font-size: 0.8rem;
+  }
+  .auth-form__provider > span::before,
+  .auth-form__provider > span::after {
+    height: 1px;
+    background: var(--auth-rule);
+    content: "";
+  }
+  .auth-form__fields > div {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .auth-form label {
+    color: var(--theme-text);
+    font-size: 0.82rem;
+    font-weight: 550;
+  }
+  .auth-form input {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid var(--auth-rule);
+    border-radius: var(--theme-control-radius);
+    outline: none;
+    padding: 0.6rem 0.75rem;
+    color: var(--theme-text);
+    background: var(--theme-page-bg);
+    font: inherit;
+    transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease;
+  }
+  .auth-form input:focus {
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--theme-accent) 18%, transparent);
+  }
+  .auth-form input:focus-visible,
+  .auth-form__mode:focus-visible,
+  .auth-form__submit:focus-visible,
+  .auth-form__github:focus-visible,
+  .auth-form__back:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 3px;
+  }
+  .auth-form__submit {
+    margin-top: 0.25rem;
+    border-radius: var(--theme-control-radius);
+    color: var(--theme-accent-text);
+    background: var(--theme-accent);
+  }
+  .auth-form__submit:hover {
+    filter: brightness(0.94);
+  }
+  .auth-form__github {
+    min-height: 2.75rem;
+    border: 1px solid var(--auth-rule);
+    border-radius: var(--theme-control-radius);
+    color: var(--theme-text);
+    background: transparent;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .auth-form__github:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--theme-text) 8%, transparent);
+  }
+  @media (max-width: 760px) {
+    .auth-form {
+      min-height: auto;
+      padding: 1rem 0;
+    }
+    .auth-form__frame {
+      grid-template-columns: 1fr;
+      width: min(100%, 34rem);
+    }
+    .auth-form__story {
+      min-height: 0;
+      padding: 1.25rem 1.5rem;
+    }
+    .auth-form__book,
+    .auth-form__story-note {
+      display: none;
+    }
+    .auth-form__back {
+      margin-top: 0.8rem;
+    }
+    .auth-form__account {
+      padding-bottom: 1.25rem;
+    }
+    .auth-form__header {
+      padding-top: 1.75rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .auth-form input {
+      transition: none;
+    }
+  }
 </style>

@@ -12,7 +12,7 @@ export type CacheBackend = "filesystem" | "memory" | "redis";
  * entorno. El backend por defecto es filesystem para mantener compatibilidad
  * con el comportamiento previo y con entornos de desarrollo local.
  */
-const backend = CACHE_BACKEND || "filesystem";
+const backend = CACHE_BACKEND || (process.env.VERCEL === "1" ? "memory" : "filesystem");
 const url = REDIS_URL;
 
 export async function createRenderedPageCache(): Promise<RenderedPageCache> {

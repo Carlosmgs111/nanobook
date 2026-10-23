@@ -7,6 +7,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Documentado el procedimiento de conexión y migración de Turso para la base SQL de producción.
+
+- Preparado el bundle SSR de Vercel para usar `VERCEL=1`, con rechazo de SQLite local y caché de memoria por defecto en funciones.
+- Limitadas las sesiones de Better Auth a 12 horas absolutas, con revalidación del estado en el navegador cada minuto, rate limiting compartido en SQL y migración correspondiente.
+- Protegidas las mutaciones autenticadas propias mediante comprobación de origen y respuestas privadas sin caché; documentados los requisitos de despliegue y acceso agéntico.
+
 - Reorganizado el editor de temas en secciones con etiquetas y ayuda contextual, revisión de contraste junto a la paleta, acciones de guardado persistentes y vista previa adaptada al espacio disponible.
 
 - Reemplazados los desplegables de acciones del gestor de nanobooks por acciones visibles; cada formulario aparece en un panel flotante bajo su tarjeta, con botón de cierre, y la selección de tema usa opciones de radio comparables.

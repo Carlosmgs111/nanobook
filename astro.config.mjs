@@ -5,7 +5,7 @@ import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import rehypeSlug from "rehype-slug";
 
-const isVercelDeploy = Boolean(process.env.VERCEL_DEPLOY);
+const isVercelDeploy = process.env.VERCEL === "1" || process.env.VERCEL_DEPLOY === "true";
 
 const adapter = isVercelDeploy ? vercel({}) : node({ mode: "standalone" });
 
@@ -59,6 +59,11 @@ export default defineConfig({
         optional: true,
       }),
       BETTER_AUTH_URL: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      BETTER_AUTH_SECRET: envField.string({
         context: "server",
         access: "secret",
         optional: true,

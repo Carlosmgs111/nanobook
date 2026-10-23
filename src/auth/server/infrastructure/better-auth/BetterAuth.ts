@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import {
   BETTER_AUTH_URL,
+  BETTER_AUTH_SECRET,
   EMAIL_FROM,
   GITHUB_OAUTH_CLIENT_ID,
   GITHUB_OAUTH_CLIENT_SECRET,
@@ -14,6 +15,23 @@ import { createGitHubOAuthProvider } from "./GitHubOAuth";
 import { ResendEmailSender } from "./ResendEmailSender";
 
 export function createBetterAuth() {
+  if (process.env.VERCEL === "1") {
+    let authURL: URL;
+    try {
+      authURL = new URL(BETTER_AUTH_URL ?? "");
+    } catch {
+      throw new Error("BETTER_AUTH_URL must be an HTTPS origin on Vercel.");
+    }
+    if (authURL.protocol !== "https:" || authURL.pathname !== "/" || authURL.search || authURL.hash) {
+      throw new Error("BETTER_AUTH_URL must be an HTTPS origin on Vercel.");
+    }
+    if (!BETTER_AUTH_SECRET || BETTER_AUTH_SECRET.length < 32) {
+      throw new Error("BETTER_AUTH_SECRET must contain at least 32 characters on Vercel.");
+    }
+    if (!RESEND_API_KEY || !EMAIL_FROM) {
+      throw new Error("RESEND_API_KEY and EMAIL_FROM are required on Vercel.");
+    }
+  }
   const github = createGitHubOAuthProvider({
     clientId: GITHUB_OAUTH_CLIENT_ID,
     clientSecret: GITHUB_OAUTH_CLIENT_SECRET,
@@ -25,10 +43,23 @@ export function createBetterAuth() {
 
   return betterAuth({
     baseURL: BETTER_AUTH_URL,
+    secret: BETTER_AUTH_SECRET,
     database: drizzleAdapter(db, {
       provider: "sqlite",
       schema: authSchema,
     }),
+    session: {
+      expiresIn: 60 * 60 * 12,
+      disableSessionRefresh: true,
+    },
+    rateLimit: {
+      enabled: true,
+      storage: "database",
+    },
+    advanced: process.env.VERCEL === "1" ? {
+      useSecureCookies: true,
+      ipAddress: { ipAddressHeaders: ["x-vercel-forwarded-for"] },
+    } : undefined,
 
     emailAndPassword: {
       enabled: true,
