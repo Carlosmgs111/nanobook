@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Normalizados los enlaces de verificación de correo en Vercel para conservar el token de Better Auth y usar el origen HTTPS de producción.
 - Documentado el procedimiento de conexión y migración de Turso para la base SQL de producción.
 
 - Preparado el bundle SSR de Vercel para usar `VERCEL=1`, con rechazo de SQLite local y caché de memoria por defecto en funciones.

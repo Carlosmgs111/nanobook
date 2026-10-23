@@ -36,6 +36,8 @@ Better Auth conserva sesiones en SQL con caducidad absoluta de 12 horas. La lect
 
 La sesión recordada en el navegador se vuelve a consultar cada minuto; las operaciones del servidor consultan la sesión real en cada petición.
 
+En Vercel, los enlaces de verificación de correo se normalizan al origen `BETTER_AUTH_URL`, conservando su ruta y token. Así no se envían enlaces con el host de desarrollo si el URL generado por el adaptador trae un origen local.
+
 En Vercel se fuerzan cookies `Secure` y el límite de solicitudes toma la IP de `x-vercel-forwarded-for`, cabecera emitida por la plataforma. Si el despliegue usa un proxy anterior a Vercel, revisar cómo se conserva la IP real antes de depender de límites por IP.
 
 El despliegue debe usar HTTPS, backup y restauración probada de la base, y monitoreo de errores de login, correo, migración y límites `429`. Las páginas y APIs privadas deben probarse en Production tras el despliegue. Antes de abrir el registro público conviene definir quién puede crear cuentas y nanobooks; hoy el registro está abierto para cualquier correo verificable.
