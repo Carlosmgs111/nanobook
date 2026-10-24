@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregido el esquema de Better Auth para incluir `jwks`, requerido por el plugin JWT del servidor MCP.
+
 - Añadido un servidor MCP con OAuth 2.1 para que Codex gestione los nanobooks y documentos del usuario autorizado con scopes de lectura y escritura, PKCE, consentimiento y auditoría de mutaciones.
 
 - Protegidas las mutaciones de documentos por autorización de escritura del nanobook, impidiendo crear, editar o eliminar contenido en colecciones ajenas.

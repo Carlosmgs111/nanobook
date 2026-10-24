@@ -23,8 +23,8 @@ El comando aplica las migraciones Drizzle de usuarios, nanobooks, documentos, re
 
 ### Servidor MCP para agentes
 
-Las migraciones `0011` y `0012` añaden las tablas de OAuth y el registro de
-auditoría del servidor MCP. Deben estar aplicadas antes de desplegar código que
+Las migraciones `0011`, `0012` y `0013` añaden las tablas de OAuth, JWKS y el
+registro de auditoría del servidor MCP. Deben estar aplicadas antes de desplegar código que
 publique `POST /mcp`; el mismo comando anterior cubre todos los entornos:
 
 ```bash
