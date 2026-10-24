@@ -39,6 +39,7 @@ export { DrizzleContentOutboxDispatcher } from "./infraestructure/database/Drizz
 export class DocumentModule {
   constructor(
     public readonly createDocument: CreateDocument,
+    public readonly updateDocument: UpdateDocument,
     public readonly createDocumentController: CreateDocumentController,
     public readonly updateDocumentController: UpdateDocumentController,
     public readonly deleteDocumentController: DeleteDocumentController,
@@ -95,6 +96,7 @@ export class DocumentModule {
     });
     return new DocumentModule(
       createDocument,
+      updateDocument,
       createDocumentController,
       updateDocumentController,
       deleteDocumentController,

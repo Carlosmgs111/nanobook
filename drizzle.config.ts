@@ -10,6 +10,7 @@ export default defineConfig({
     "./src/documents/server/infraestructure/database/DrizzleDocumentSchema.ts",
     "./src/documents/server/infraestructure/database/DrizzleDocumentRevisionSchema.ts",
     "./src/theme/server/infraestructure/database/DrizzleThemeSchema.ts",
+    "./src/agents/server/infrastructure/database/DrizzleAgentAuditSchema.ts",
   ],
 
   out: "./drizzle",

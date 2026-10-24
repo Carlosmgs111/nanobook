@@ -30,8 +30,8 @@ permisos por documento, transferencia de contenido ni acceso directo a SQL.
   cookies, secretos ni detalles de Drizzle al modelo.
 - Las mutaciones conservan validación de dominio, revisiones optimistas y
   autorización del nanobook.
-- El usuario puede revocar una conexión; la siguiente llamada del agente deja
-  de ser válida.
+- El usuario puede revocar una conexión; la renovación deja de ser válida de
+  inmediato y un access token ya emitido expira como máximo en 15 minutos.
 
 ## No objetivos de la primera entrega
 
@@ -74,7 +74,7 @@ Nanobook se convierte en proveedor OAuth 2.1 y recurso protegido para el
 endpoint MCP. Better Auth mantiene la sesión de navegador para el login y la
 pantalla de consentimiento, pero esa cookie no viaja al agente.
 
-El host MCP es el cliente OAuth. La primera vez que se conecta:
+Codex es el cliente OAuth inicial. La primera vez que se conecta:
 
 1. El host descubre que el endpoint MCP requiere autorización.
 2. Abre el navegador en Nanobook y el usuario inicia sesión o reutiliza su
@@ -91,9 +91,8 @@ El refresh token permite obtener uno nuevo sin mostrar el navegador mientras la
 conexión siga autorizada. Su duración es de 30 días y rota en cada uso. Una
 revocación en Nanobook invalida el grant y los refresh tokens asociados; los
 access tokens emitidos expiran como máximo en 15 minutos. Esta ventana es un
-compromiso explícito entre desconexión inmediata y no consultar persistencia en
-cada llamada; el recurso MCP sí consulta el estado activo del grant antes de
-aceptar cada token para conseguir revocación inmediata.
+compromiso explícito: el recurso MCP valida el JWT de forma local y no consulta
+persistencia en cada llamada.
 
 Cada llamada MCP HTTP incluye `Authorization: Bearer <access-token>`. El
 recurso verifica firma, emisor, audiencia del endpoint MCP, vencimiento, grant
@@ -142,10 +141,12 @@ módulo `agents`.
 El endpoint también expone los metadatos OAuth de recurso protegido requeridos
 para que clientes compatibles descubran el servidor de autorización. Better
 Auth expone la metadata del servidor de autorización. La primera integración
-usa Client ID Metadata Documents (CIMD) para identificar al único cliente MCP
-admitido y PKCE para la autorización; no habilita Dynamic Client Registration.
-El perfil de metadata, la URL del documento del cliente y sus redirect URIs se
-declaran explícitamente para desarrollo y producción.
+usa Client ID Metadata Documents (CIMD) y PKCE; no habilita Dynamic Client
+Registration. Codex proporciona por conexión un documento de cliente alojado
+en `https://chatgpt.com/oauth/codex/<callback_id>/client.json`; el proveedor
+solo acepta ese origen y patrón de ruta. El documento declara un redirect
+loopback cuyo puerto Codex elige al iniciar sesión; la validación conserva host
+y ruta y permite ese puerto según RFC 8252.
 
 ## Persistencia y auditoría
 
@@ -194,7 +195,8 @@ activar el endpoint.
   nanobook ajeno, aunque conozca sus identificadores.
 - Una actualización con revisión obsoleta devuelve conflicto, sin sobrescribir
   contenido.
-- Revocar la conexión impide nuevas llamadas y la renovación de tokens.
+- Revocar la conexión impide renovar tokens de inmediato; los access tokens
+  emitidos dejan de servir al expirar, como máximo 15 minutos después.
 - Cada mutación exitosa genera una entrada de auditoría sin contenido ni
   secretos.
 - La suite completa y `npm run build` pasan tras aplicar las migraciones en una
@@ -204,10 +206,9 @@ activar el endpoint.
 
 ## Decisiones adoptadas
 
-- La primera integración soporta un único cliente MCP público identificado con
-  un Client ID Metadata Document, PKCE y redirect URIs explícitas para
-  desarrollo y producción. El registro dinámico de clientes queda fuera de
-  alcance.
+- La primera integración admite Codex mediante sus Client ID Metadata Documents
+  de `chatgpt.com`, PKCE y redirects loopback validados por el proveedor. El
+  registro dinámico de clientes y otros orígenes CIMD quedan fuera de alcance.
 - `list_*` usa un orden estable y no pagina en esta primera entrega.
   `get_*` devuelve los DTO de aplicación vigentes. `update_document` recibe el
   estado completo del documento y `expectedRevision` opcional.

@@ -1,0 +1,24 @@
+---
+import { verifyOAuthQueryParams } from "@better-auth/oauth-provider";
+import { getApp } from "../application/server/Application";
+
+const app = await getApp();
+const oauthQuery = Astro.url.search.slice(1);
+const { secret } = await app.authServerModule.auth.$context;
+const isValid = await verifyOAuthQueryParams(oauthQuery, secret);
+if (!isValid) return new Response("Solicitud OAuth inválida o vencida", { status: 400 });
+
+const clientId = Astro.url.searchParams.get("client_id") ?? "Cliente desconocido";
+const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boolean);
+---
+<main>
+  <h1>Autorizar conexión de Codex</h1>
+  <p><strong>{clientId}</strong> solicita acceso a Nanobook.</p>
+  <ul>{scopes.map((scope) => <li>{scope}</li>)}</ul>
+  <form method="post" action="/api/auth/oauth2/consent">
+    <input type="hidden" name="oauth_query" value={oauthQuery} />
+    <input type="hidden" name="scope" value={scopes.join(" ")} />
+    <button name="accept" value="true" type="submit">Autorizar</button>
+    <button name="accept" value="false" type="submit">Rechazar</button>
+  </form>
+</main>

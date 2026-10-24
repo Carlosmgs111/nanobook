@@ -1,10 +1,11 @@
 import type { APIRoute } from "astro";
 
-import { AuthorizeNanobook } from "../../application/AuthorizeNanobook";
-import type { GetNanobookById } from "../../application/GetNanobookById";
+import { NanobookAccessDeniedError } from "../../application/AuthorizeNanobook";
+import { NanobookNotFoundError } from "../../application/errors";
+import type { RequireNanobookAccess } from "../../application/RequireNanobookAccess";
 
 export function withNanobookWriteAccess(
-  nanobookReader: Pick<GetNanobookById, "execute">,
+  nanobookAccess: Pick<RequireNanobookAccess, "execute">,
   handler: APIRoute,
 ): APIRoute {
   return async (context) => {
@@ -14,14 +15,12 @@ export function withNanobookWriteAccess(
     const nanobookId = context.params.nanobookId;
     if (!nanobookId) return jsonError("Nanobook no encontrado", 404);
 
-    const result = await nanobookReader.execute(nanobookId);
-    if (!result.isSuccess || !result.getValue()) {
-      return jsonError("Nanobook no encontrado", 404);
-    }
-
-    const nanobook = result.getValue();
-    if (!new AuthorizeNanobook().canWrite(nanobook, userId)) {
-      return jsonError("No tienes permiso de edición sobre el nanobook", 403);
+    const result = await nanobookAccess.execute(userId, nanobookId, "write");
+    if (!result.isSuccess) {
+      const error = result.getError();
+      if (error instanceof NanobookNotFoundError) return jsonError("Nanobook no encontrado", 404);
+      if (error instanceof NanobookAccessDeniedError) return jsonError("No tienes permiso de edición sobre el nanobook", 403);
+      return jsonError("No fue posible comprobar el permiso sobre el nanobook", 500);
     }
 
     return handler(context);

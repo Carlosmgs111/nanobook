@@ -11,6 +11,7 @@ import { GetNanobookById } from "./application/GetNanobookById";
 import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
+import { RequireNanobookAccess } from "./application/RequireNanobookAccess";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 import { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
 import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
@@ -20,10 +21,12 @@ export type { NanobookSettings, NanobookSetupStatus, NanobookVisibility } from "
 export { AuthorizeNanobook, NanobookAccessDeniedError } from "./application/AuthorizeNanobook";
 export type { NanobookPermission } from "./application/AuthorizeNanobook";
 export { NanobookNotFoundError } from "./application/errors";
+export { RequireNanobookAccess } from "./application/RequireNanobookAccess";
 
 export class NanobookModule {
   private constructor(
     public readonly createNanobook: CreateNanobook,
+    public readonly updateNanobook: UpdateNanobook,
     public readonly createNanobookController: CreateNanobookController,
     public readonly getNanobookById: GetNanobookById,
     public readonly getNanobookBySlug: GetNanobookBySlug,
@@ -33,6 +36,7 @@ export class NanobookModule {
     public readonly lifecycleController: NanobookLifecycleController,
     public readonly listPublicNanobooks: ListPublicNanobooks,
     public readonly setNanobookTheme: SetNanobookTheme,
+    public readonly requireNanobookAccess: RequireNanobookAccess,
   ) {}
 
   static async create(routeProtector: RouteProtector, eventBus: EventBus): Promise<NanobookModule> {
@@ -48,6 +52,7 @@ export class NanobookModule {
 
     return new NanobookModule(
       createNanobook,
+      new UpdateNanobook(repository),
       new CreateNanobookController(createNanobook),
       getNanobookById,
       getNanobookBySlug,
@@ -57,6 +62,7 @@ export class NanobookModule {
       new NanobookLifecycleController(new UpdateNanobook(repository), new DeleteNanobook(repository)),
       new ListPublicNanobooks(repository),
       new SetNanobookTheme(repository),
+      new RequireNanobookAccess(repository),
     );
   }
 }

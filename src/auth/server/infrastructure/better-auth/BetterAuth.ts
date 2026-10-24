@@ -1,5 +1,9 @@
 import { betterAuth } from "better-auth";
+import { jwt } from "better-auth/plugins";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { cimd } from "@better-auth/cimd";
+import { fetchClientMetadataResource } from "@better-auth/cimd/node";
+import { mcp } from "@better-auth/mcp";
 import {
   BETTER_AUTH_URL,
   BETTER_AUTH_SECRET,
@@ -12,9 +16,16 @@ import {
 import { db } from "../../../../shared/infrastructure/database/drizzleDatabase";
 import * as authSchema from "./DrizzleAuthSchema";
 import { createGitHubOAuthProvider } from "./GitHubOAuth";
+import {
+  getMcpOAuthConfig,
+  isCodexClientMetadataUrlAllowed,
+} from "./McpOAuthConfig";
 import { ResendEmailSender } from "./ResendEmailSender";
 
 export function createBetterAuth() {
+  const baseURL = BETTER_AUTH_URL ?? "http://127.0.0.1:4322";
+  const mcpOAuth = getMcpOAuthConfig(baseURL);
+
   if (process.env.VERCEL === "1") {
     let authURL: URL;
     try {
@@ -42,7 +53,7 @@ export function createBetterAuth() {
   });
 
   return betterAuth({
-    baseURL: BETTER_AUTH_URL,
+    baseURL,
     secret: BETTER_AUTH_SECRET,
     database: drizzleAdapter(db, {
       provider: "sqlite",
@@ -79,6 +90,21 @@ export function createBetterAuth() {
     },
 
     socialProviders: github ? { github } : undefined,
+    plugins: [
+      jwt(),
+      mcp({
+        ...mcpOAuth,
+        scopes: ["nanobooks:read", "nanobooks:write", "offline_access"],
+        accessTokenExpiresIn: 60 * 15,
+        refreshTokenExpiresIn: 60 * 60 * 24 * 30,
+        refreshTokenReuseInterval: 0,
+      }),
+      cimd({
+        fetchClientMetadataResource,
+        metadataProfile: "mcp-2026-07-28",
+        isMetadataDocumentUrlAllowed: isCodexClientMetadataUrlAllowed,
+      }),
+    ],
   });
 }
 
