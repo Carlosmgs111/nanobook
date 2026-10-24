@@ -13,7 +13,7 @@ describe("CreateDocumentController", () => {
     const controller = new CreateDocumentController({ execute } as unknown as CreateDocument);
 
     await controller.handle({
-      params: { slug: "new-doc", nanobookId: "book-a" },
+      params: { id: "new-doc", nanobookId: "book-a" },
       request: new Request("https://nanobook.test/api/me/documents/new-doc", {
         method: "POST",
         body: JSON.stringify({

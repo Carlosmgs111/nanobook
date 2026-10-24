@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Protegidas las mutaciones de documentos por autorización de escritura del nanobook, impidiendo crear, editar o eliminar contenido en colecciones ajenas.
+- Alineado el contrato de las mutaciones de documentos con el parámetro `id` de sus rutas, eliminando la conversión interna heredada entre `id` y `slug`.
+
 - Normalizados los enlaces de verificación de correo en Vercel para conservar el token de Better Auth y usar el origen HTTPS de producción.
 - Documentado el procedimiento de conexión y migración de Turso para la base SQL de producción.
 

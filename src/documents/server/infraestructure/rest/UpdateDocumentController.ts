@@ -10,7 +10,7 @@ export class UpdateDocumentController {
   constructor(private updateDocument: UpdateDocument) {}
   handle: APIRoute = async ({ params, request, locals }) => {
     try {
-      const { slug: id, nanobookId } = params;
+      const { id, nanobookId } = params;
       if (!id) {
         return jsonResponse({ error: "Falta el parámetro id" }, 400);
       }

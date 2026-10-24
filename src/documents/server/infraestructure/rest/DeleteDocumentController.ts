@@ -7,7 +7,7 @@ export class DeleteDocumentController {
 
   handle: APIRoute = async ({ params, locals }) => {
     try {
-      const { slug: documentId, nanobookId } = params;
+      const { id: documentId, nanobookId } = params;
       if (!documentId) return jsonResponse({ error: "Falta el parámetro id" }, 400);
       if (!nanobookId) return jsonResponse({ error: "Falta el parámetro nanobookId" }, 400);
       if (!locals.currentUserId) {
