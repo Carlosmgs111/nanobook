@@ -90,6 +90,16 @@ export const rateLimit = sqliteTable("rateLimit", {
   lastRequest: integer("lastRequest").notNull(),
 });
 
+export const jwks = sqliteTable("jwks", {
+  id: text("id").primaryKey(),
+  publicKey: text("public_key").notNull(),
+  privateKey: text("private_key").notNull(),
+  alg: text("alg"),
+  crv: text("crv"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+});
+
 const stringArray = () => text({ mode: "json" }).$type<string[]>();
 const jsonValue = () => text({ mode: "json" }).$type<Record<string, unknown>>();
 const timestamp = () => integer({ mode: "timestamp_ms" });

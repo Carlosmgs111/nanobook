@@ -21,7 +21,7 @@ Las respuestas de herramientas usan códigos estables: `403` para scope o permis
 
 ## Operación
 
-Antes de habilitar el endpoint en un entorno se aplican las migraciones, incluyendo `0011` (OAuth) y `0012` (auditoría):
+Antes de habilitar el endpoint en un entorno se aplican las migraciones, incluyendo `0011` (OAuth), `0012` (auditoría) y `0013` (JWKS para la firma JWT):
 
 ```bash
 npm run database:migrate
