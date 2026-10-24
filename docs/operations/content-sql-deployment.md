@@ -21,6 +21,32 @@ npm run database:migrate
 
 El comando aplica las migraciones Drizzle de usuarios, nanobooks, documentos, revisiones y outbox. Es idempotente.
 
+### Servidor MCP para agentes
+
+Las migraciones `0011` y `0012` añaden las tablas de OAuth y el registro de
+auditoría del servidor MCP. Deben estar aplicadas antes de desplegar código que
+publique `POST /mcp`; el mismo comando anterior cubre todos los entornos:
+
+```bash
+npm run database:migrate
+```
+
+Configura `BETTER_AUTH_URL` con el origen HTTPS canónico sin una ruta. El
+recurso que se registra para OAuth es `${BETTER_AUTH_URL}/mcp`. En desarrollo
+se permite loopback; fuera de él no se activa una URL HTTP. El primer cliente
+admitido es Codex y descubre su metadata de cliente de forma dinámica durante
+la conexión, por lo que no se debe copiar un `client_id`, secreto, cookie o
+token a variables de entorno.
+
+Prueba manualmente después de desplegar: añade el recurso MCP en Codex, inicia
+sesión en Nanobook, concede `nanobooks:read` y `nanobooks:write`, lista los
+nanobooks y crea un documento de prueba. Confirma que una actualización con
+revisión obsoleta devuelve conflicto y que el registro
+`agent_operation_audit` contiene la mutación sin contenido ni tokens. Para
+desconectar el cliente, revoca la concesión OAuth desde la gestión de sesiones
+o autorizaciones de Better Auth; el refresh token queda inválido de inmediato
+y cualquier access token existente caduca en como máximo quince minutos.
+
 ## 2. Crear el primer nanobook
 
 Inicia la aplicación, crea o registra el primer usuario y usa `/nanobooks` para crear su colección. La operación crea el nanobook y su documento raíz `index` en una sola transacción.

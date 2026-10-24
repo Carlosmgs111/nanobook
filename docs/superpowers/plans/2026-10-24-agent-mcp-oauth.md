@@ -16,7 +16,8 @@
 - Use Better Auth `mcp()`, `jwt()` and `cimd()`; never register a second OAuth provider.
 - The MCP endpoint is `POST /mcp`; all requests use HTTPS outside loopback development.
 - Keep the model away from cookies, passwords, database credentials, access tokens and refresh tokens.
-- The first client uses CIMD and PKCE; do not enable Dynamic Client Registration.
+- The first client is Codex. Accept only its `chatgpt.com/oauth/codex/.../client.json`
+  CIMD documents and PKCE; do not enable Dynamic Client Registration.
 - Use `nanobooks:read` and `nanobooks:write` OAuth scopes; omit all destructive tools.
 - Agent writes must retain nanobook authorization, document ownership rules and optimistic revision behavior.
 - Apply generated Drizzle migrations explicitly with `npm run database:migrate` in local and production environments.
@@ -72,15 +73,17 @@ separate OAuth schema with overlapping tables.
 - Create: `drizzle/0011_*.sql` and matching `drizzle/meta/*` files
 
 **Interfaces:**
-- Produces `getMcpOAuthConfig(environment): { resource: string; clientMetadataUrl: string; loginPage: string; consentPage: string }`.
+- Produces `getMcpOAuthConfig(environment): { resource: string; loginPage: string; consentPage: string }`.
+- Produces `isCodexClientMetadataUrlAllowed(clientId: string): boolean` for the
+  HTTPS `chatgpt.com/oauth/codex/<callback_id>/client.json` pattern.
 - Produces a Better Auth instance composed with `jwt()`, `mcp()` and `cimd()`.
 - Consumes the public HTTPS origin in production and loopback origin in local development.
 
 - [ ] **Step 1: Write failing configuration tests**
 
 Test that production rejects a non-HTTPS MCP resource, accepts an explicit
-`https://<origin>/mcp` resource, and that the configured client metadata URL
-is absolute HTTPS outside development.
+`https://<origin>/mcp` resource, accepts only Codex's HTTPS CIMD URL pattern,
+and rejects all other origins, paths, credentials and query strings.
 
 - [ ] **Step 2: Run the focused test to verify it fails**
 
@@ -93,9 +96,10 @@ Expected: FAIL because the MCP OAuth configuration does not exist.
 Update Better Auth to a version that supports `@better-auth/mcp` and
 `@better-auth/cimd`; add the official MCP server SDK v2. Configure `jwt()`,
 `mcp({ resource, loginPage, consentPage, scopes })` and `cimd()` in
-`createBetterAuth()`. Do not add `oauthProvider()` separately. Generate the
-provider schema and Drizzle migration through the supported Better Auth/Drizzle
-workflow.
+`createBetterAuth()`, with the Node secure metadata fetcher, MCP 2026-07-28
+metadata profile and the Codex-only CIMD allow predicate. Do not add
+`oauthProvider()` separately. Generate the provider schema and Drizzle
+migration through the supported Better Auth/Drizzle workflow.
 
 - [ ] **Step 4: Add schema migration characterization coverage**
 
@@ -112,7 +116,7 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add package.json package-lock.json src/auth/server drizzle astro.config.mjs
+git add package.json pnpm-lock.yaml src/auth/server drizzle astro.config.mjs
 git commit -m "feat(auth): add MCP OAuth provider"
 ```
 

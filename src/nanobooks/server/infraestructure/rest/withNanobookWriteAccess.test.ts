@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Result } from "../../../../shared/domain/Result";
 import { Nanobook } from "../../domain/Nanobook";
+import { NanobookAccessDeniedError } from "../../application/AuthorizeNanobook";
+import { NanobookNotFoundError } from "../../application/errors";
 import { withNanobookWriteAccess } from "./withNanobookWriteAccess";
 
 const ownedNanobook = Nanobook.create({
@@ -26,7 +28,7 @@ describe("withNanobookWriteAccess", () => {
   it("rejects a signed-in non-owner before the document mutation runs", async () => {
     const mutation = vi.fn<APIRoute>().mockResolvedValue(new Response(null, { status: 201 }));
     const route = withNanobookWriteAccess(
-      { execute: vi.fn().mockResolvedValue(Result.ok(ownedNanobook)) },
+      { execute: vi.fn().mockResolvedValue(Result.fail(new NanobookAccessDeniedError("book-1", "write"))) },
       mutation,
     );
 
@@ -53,7 +55,7 @@ describe("withNanobookWriteAccess", () => {
   it("does not expose a missing nanobook to a document mutation", async () => {
     const mutation = vi.fn<APIRoute>().mockResolvedValue(new Response(null, { status: 201 }));
     const route = withNanobookWriteAccess(
-      { execute: vi.fn().mockResolvedValue(Result.ok(null)) },
+      { execute: vi.fn().mockResolvedValue(Result.fail(new NanobookNotFoundError("missing"))) },
       mutation,
     );
 
