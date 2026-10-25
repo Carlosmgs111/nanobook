@@ -1,6 +1,7 @@
 ---
 import { verifyOAuthQueryParams } from "@better-auth/oauth-provider";
 import { getApp } from "../application/server/Application";
+import { getSignedOAuthQuery } from "../auth/browser/OAuthSignedQuery";
 
 const app = await getApp();
 const oauthQuery = Astro.url.search.slice(1);
@@ -22,12 +23,19 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
   <p data-oauth-consent-error hidden role="alert"></p>
 </main>
 
-<script define:vars={{ oauthQuery, scope: scopes.join(" ") }}>
+<script define:vars={{ scope: scopes.join(" ") }}>
   const form = document.querySelector("[data-oauth-consent]");
   const error = document.querySelector("[data-oauth-consent-error]");
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    const signedQuery = getSignedOAuthQuery(window.location.search);
+    if (!signedQuery) {
+      error.textContent = "La solicitud OAuth ya no es válida. Vuelve a iniciar la conexión desde Codex.";
+      error.hidden = false;
+      return;
+    }
 
     const submitter = event.submitter;
     const accept = submitter instanceof HTMLButtonElement && submitter.value === "true";
@@ -42,7 +50,7 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ accept, scope, oauth_query: oauthQuery }),
+        body: JSON.stringify({ accept, scope, oauth_query: signedQuery }),
       });
       const result = await response.json() as { redirect?: boolean; url?: string; message?: string };
 
