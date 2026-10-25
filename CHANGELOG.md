@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Expuesta la ruta RFC 8414 de metadata del servidor de autorización OAuth bajo `/.well-known/oauth-authorization-server/api/auth`, para que clientes MCP resuelvan el issuer con ruta.
+
 - Expuesta la metadata OAuth del recurso MCP en `/.well-known/oauth-protected-resource/mcp`, permitiendo a clientes descubrir el servidor de autorización.
 
 - Corregido el esquema de Better Auth para incluir `jwks`, requerido por el plugin JWT del servidor MCP.
