@@ -26,11 +26,13 @@ describe("MCP OAuth configuration", () => {
     );
   });
 
-  it("allows only Codex's CIMD client metadata URL", () => {
+  it.each([
+    "https://chatgpt.com/oauth/client.json",
+    "https://chatgpt.com/oauth/a-safe-callback-id/client.json",
+    "https://chatgpt.com/oauth/codex/a-safe-callback-id/client.json",
+  ])("allows a documented Codex CIMD client metadata URL: %s", (clientId) => {
     expect(
-      isCodexClientMetadataUrlAllowed(
-        "https://chatgpt.com/oauth/codex/a-safe-callback-id/client.json",
-      ),
+      isCodexClientMetadataUrlAllowed(clientId),
     ).toBe(true);
   });
 
