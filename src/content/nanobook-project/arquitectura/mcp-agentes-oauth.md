@@ -11,6 +11,8 @@ draft: false
 
 Nanobook expone `POST /mcp` como servidor MCP remoto. El transporte usa JSON-RPC del protocolo MCP; no reutiliza las rutas HTTP de la interfaz como herramientas del agente. Las herramientas disponibles son `list_nanobooks`, `get_nanobook`, `create_nanobook`, `update_nanobook`, `list_documents`, `get_document`, `create_document` y `update_document`. No se exponen eliminaciones.
 
+La ruta pública `/.well-known/oauth-protected-resource/mcp` delega en Better Auth y anuncia el recurso, su servidor de autorización y los scopes disponibles. Es necesaria para que un cliente MCP pueda pasar del desafío `401` a la autorización OAuth.
+
 ## Identidad y autorización
 
 La conexión comienza en Codex mediante OAuth 2.1. Codex descubre dinámicamente su metadata de cliente y usa PKCE; Nanobook no admite registro dinámico de clientes. El usuario inicia sesión y acepta los scopes solicitados. Better Auth emite un access token JWT de quince minutos y un refresh token rotatorio de treinta días. Revocar la concesión invalida el refresh token de inmediato; el access token deja de servir al expirar.
