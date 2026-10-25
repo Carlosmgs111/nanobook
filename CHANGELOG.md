@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Expuesta la metadata OAuth del recurso MCP en `/.well-known/oauth-protected-resource/mcp`, permitiendo a clientes descubrir el servidor de autorización.
+
 - Corregido el esquema de Better Auth para incluir `jwks`, requerido por el plugin JWT del servidor MCP.
 
 - Añadido un servidor MCP con OAuth 2.1 para que Codex gestione los nanobooks y documentos del usuario autorizado con scopes de lectura y escritura, PKCE, consentimiento y auditoría de mutaciones.
