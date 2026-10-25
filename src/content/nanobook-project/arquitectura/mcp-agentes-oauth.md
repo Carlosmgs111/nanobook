@@ -11,7 +11,7 @@ draft: false
 
 Nanobook expone `POST /mcp` como servidor MCP remoto. El transporte usa JSON-RPC del protocolo MCP; no reutiliza las rutas HTTP de la interfaz como herramientas del agente. Las herramientas disponibles son `list_nanobooks`, `get_nanobook`, `create_nanobook`, `update_nanobook`, `list_documents`, `get_document`, `create_document` y `update_document`. No se exponen eliminaciones.
 
-La ruta pública `/.well-known/oauth-protected-resource/mcp` delega en Better Auth y anuncia el recurso, su servidor de autorización y los scopes disponibles. Es necesaria para que un cliente MCP pueda pasar del desafío `401` a la autorización OAuth.
+La ruta pública `/.well-known/oauth-protected-resource/mcp` delega en Better Auth y anuncia el recurso, su servidor de autorización y los scopes disponibles. Es necesaria para que un cliente MCP pueda pasar del desafío `401` a la autorización OAuth. Como el issuer incluye la ruta `/api/auth`, también se publica la variante RFC 8414 `/.well-known/oauth-authorization-server/api/auth`; algunos clientes la derivan desde el issuer en vez de consultar `/api/auth/.well-known/oauth-authorization-server`.
 
 ## Identidad y autorización
 
