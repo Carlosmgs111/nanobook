@@ -15,10 +15,46 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
   <h1>Autorizar conexión de Codex</h1>
   <p><strong>{clientId}</strong> solicita acceso a Nanobook.</p>
   <ul>{scopes.map((scope) => <li>{scope}</li>)}</ul>
-  <form method="post" action="/api/auth/oauth2/consent">
-    <input type="hidden" name="oauth_query" value={oauthQuery} />
-    <input type="hidden" name="scope" value={scopes.join(" ")} />
+  <form data-oauth-consent>
     <button name="accept" value="true" type="submit">Autorizar</button>
     <button name="accept" value="false" type="submit">Rechazar</button>
   </form>
+  <p data-oauth-consent-error hidden role="alert"></p>
 </main>
+
+<script define:vars={{ oauthQuery, scope: scopes.join(" ") }}>
+  const form = document.querySelector("[data-oauth-consent]");
+  const error = document.querySelector("[data-oauth-consent-error]");
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const submitter = event.submitter;
+    const accept = submitter instanceof HTMLButtonElement && submitter.value === "true";
+    const buttons = form.querySelectorAll("button");
+    buttons.forEach((button) => { button.disabled = true; });
+
+    try {
+      const response = await fetch("/api/auth/oauth2/consent", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ accept, scope, oauth_query: oauthQuery }),
+      });
+      const result = await response.json() as { redirect?: boolean; url?: string; message?: string };
+
+      if (!response.ok || result.redirect !== true || typeof result.url !== "string") {
+        throw new Error(result.message ?? "No fue posible procesar el consentimiento.");
+      }
+
+      window.location.assign(result.url);
+    } catch (cause) {
+      error.textContent = cause instanceof Error ? cause.message : "No fue posible procesar el consentimiento.";
+      error.hidden = false;
+      buttons.forEach((button) => { button.disabled = false; });
+    }
+  });
+</script>
