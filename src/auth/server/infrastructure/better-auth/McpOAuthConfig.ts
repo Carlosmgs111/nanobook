@@ -1,5 +1,5 @@
 const CODEX_CIMD_HOST = "chatgpt.com";
-const CODEX_CIMD_PATH = /^\/oauth\/codex\/[^/]+\/client\.json$/;
+const CODEX_CIMD_PATH = /^\/oauth\/(?:client\.json|[^/]+\/client\.json|codex\/[^/]+\/client\.json)$/;
 
 export interface McpOAuthConfig {
   resource: string;
