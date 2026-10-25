@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregido el formulario de consentimiento OAuth para enviar JSON a Better Auth y continuar hacia el callback devuelto, en lugar de publicar un formulario URL-encoded incompatible.
+
 - Corregida la allowlist CIMD para aceptar las URLs de metadata estables y por callback que Codex publica en `chatgpt.com`, manteniendo la validación estricta de origen y formato.
 
 - Expuesta la ruta RFC 8414 de metadata del servidor de autorización OAuth bajo `/.well-known/oauth-authorization-server/api/auth`, para que clientes MCP resuelvan el issuer con ruta.
