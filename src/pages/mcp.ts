@@ -18,7 +18,7 @@ export const POST: APIRoute = ({ request }) => requireMcpAuth(
     const actor = readMcpActor(claims);
     const handler = createMcpHandler(
       () => createNanobookMcpServer(actor, app.agentModule.tools),
-      { legacy: "reject", responseMode: "json" },
+      { legacy: "stateless", responseMode: "json" },
     );
     return handler.fetch(protectedRequest);
   },
