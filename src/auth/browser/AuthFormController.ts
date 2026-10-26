@@ -7,7 +7,7 @@ type AuthFormMode = "login" | "signup";
 
 export interface AuthFormControllerOptions {
   authApi: AuthApi;
-  notifier: Pick<ToastNotifier, "show">;
+  notifier: ToastNotifier;
   root?: HTMLElement;
   navigate?: (destination: string) => void;
 }

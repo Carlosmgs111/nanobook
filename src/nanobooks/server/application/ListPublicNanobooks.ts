@@ -3,8 +3,12 @@ import type { NanobookRepository } from "../domain/ports/NanobookRepository";
 
 export interface PublicNanobook { name: string; slug: string }
 
+interface PublicNanobookReader {
+  listPublic: NanobookRepository["listPublic"];
+}
+
 export class ListPublicNanobooks {
-  constructor(private readonly repository: Pick<NanobookRepository, "listPublic">) {}
+  constructor(private readonly repository: PublicNanobookReader) {}
 
   async execute() {
     const result = await this.repository.listPublic();

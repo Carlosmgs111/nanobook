@@ -3,10 +3,18 @@ import type { CreateTheme } from "../../application/CreateTheme";
 import type { ListThemes } from "../../application/ListThemes";
 import { json, responseForError } from "./responses";
 
+interface ThemeLister {
+  execute: ListThemes["execute"];
+}
+
+interface ThemeCreator {
+  execute: CreateTheme["execute"];
+}
+
 export class ThemeCollectionController {
   constructor(
-    private readonly listThemes: Pick<ListThemes, "execute">,
-    private readonly createTheme: Pick<CreateTheme, "execute">,
+    private readonly listThemes: ThemeLister,
+    private readonly createTheme: ThemeCreator,
   ) {}
 
   get: APIRoute = async ({ locals }) => {

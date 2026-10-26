@@ -15,11 +15,6 @@ import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
-import {
-  protectDocumentMutationRoutes,
-  type DocumentMutationRoutes,
-} from "./infraestructure/rest/protectDocumentMutationRoutes";
-import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 
 export type { Document } from "./domain/Document";
@@ -46,17 +41,13 @@ export class DocumentModule {
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
     public readonly eventBus: EventBus,
-    public readonly mutationRoutes: DocumentMutationRoutes,
   ) {}
 
   async refreshDocuments(nanobookId: string) {
     return this.getAllDocuments.refresh(nanobookId);
   }
 
-  static async create(
-    eventBus: EventBus,
-    routeProtector: RouteProtector,
-  ) {
+  static async create(eventBus: EventBus) {
     const contentRepository = new DrizzleContentRepository(
       db,
       new UnifiedDocumentParser(),
@@ -89,11 +80,6 @@ export class DocumentModule {
     const createDocumentController = new CreateDocumentController(
       createDocument
     );
-    const mutationRoutes = protectDocumentMutationRoutes(routeProtector, {
-      POST: createDocumentController.handle,
-      PATCH: updateDocumentController.handle,
-      DELETE: deleteDocumentController.handle,
-    });
     return new DocumentModule(
       createDocument,
       updateDocument,
@@ -103,7 +89,6 @@ export class DocumentModule {
       getAllDocuments,
       getDocument,
       eventBus,
-      mutationRoutes,
     );
   }
 }

@@ -2,10 +2,11 @@ import type { APIRoute } from "astro";
 
 import { NanobookAccessDeniedError } from "../../application/AuthorizeNanobook";
 import { NanobookNotFoundError } from "../../application/errors";
-import type { RequireNanobookAccess } from "../../application/RequireNanobookAccess";
+import type { NanobookAccessRequirement } from "../../application/RequireNanobookAccess";
+import type { RouteProtector } from "../../../../shared/server/capabilities/RouteProtector";
 
 export function withNanobookWriteAccess(
-  nanobookAccess: Pick<RequireNanobookAccess, "execute">,
+  nanobookAccess: NanobookAccessRequirement,
   handler: APIRoute,
 ): APIRoute {
   return async (context) => {
@@ -25,6 +26,14 @@ export function withNanobookWriteAccess(
 
     return handler(context);
   };
+}
+
+export function protectNanobookWriteMutation(
+  routeProtector: RouteProtector,
+  nanobookAccess: NanobookAccessRequirement,
+  handler: APIRoute,
+): APIRoute {
+  return routeProtector.protect(withNanobookWriteAccess(nanobookAccess, handler));
 }
 
 function jsonError(error: string, status: number) {

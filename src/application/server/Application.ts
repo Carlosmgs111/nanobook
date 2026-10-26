@@ -26,7 +26,7 @@ export class Application {
     const routeProtector: RouteProtector = authServerModule;
     const profileModule = ProfileModule.create(routeProtector);
     const eventBus = new InMemoryEventBus();
-    const nanobookModule = await NanobookModule.create(routeProtector, eventBus);
+    const nanobookModule = await NanobookModule.create(eventBus);
     const navigationModule = await NavigationModule.create(
       new DocumentModuleDocumentProvider(nanobookModule.documentModule),
       eventBus,
