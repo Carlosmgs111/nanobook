@@ -19,6 +19,14 @@ La conexión comienza en Codex mediante OAuth 2.1. Codex descubre dinámicamente
 
 Cada invocación verifica el JWT y convierte sus claims `sub`, `client_id` y `scope` en el actor interno. `nanobooks:read` permite lecturas autorizadas; `nanobooks:write` permite cambios constructivos. La autorización por nanobook sigue siendo la misma regla de dominio que usa la aplicación: un libro público puede leerse, pero solo su propietario puede escribir. La propiedad individual del documento se conserva al actualizarlo.
 
+Las mutaciones HTTP de documentos aplican el mismo orden de frontera:
+autenticación de sesión, autorización de escritura del nanobook y, por último,
+el controlador documental. La composición entrega los controladores crudos a
+esa frontera; no vuelve a envolverlos con una segunda comprobación de sesión.
+Las dependencias de las capacidades se tipan directamente con sus casos de uso
+o con contratos que declaran una firma propia, sin alias decorativos de
+`Pick<...>` o `Clase["execute"]`.
+
 Las respuestas de herramientas usan códigos estables: `403` para scope o permiso insuficiente, `404` para recursos ausentes y `409` para conflictos de revisión o de identidad. Los errores inesperados no revelan detalles de infraestructura.
 
 ## Operación
@@ -30,3 +38,6 @@ npm run database:migrate
 ```
 
 El origen configurado en `BETTER_AUTH_URL` debe ser HTTPS fuera de loopback. En Codex se agrega ese origen como servidor MCP remoto; el cliente obtiene por sí mismo la metadata de cliente de Codex y completa el consentimiento web. Las mutaciones exitosas se registran en `agent_operation_audit` con usuario, cliente OAuth, herramienta, recurso afectado, correlación y fecha; no se almacenan tokens ni contenido de documentos.
+
+El procedimiento de desarrollo, conexión y diagnóstico se mantiene en
+[Operación local de Nanobook MCP con Codex](./operacion-local-mcp-codex).

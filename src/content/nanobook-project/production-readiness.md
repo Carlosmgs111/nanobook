@@ -44,11 +44,18 @@ El despliegue debe usar HTTPS, backup y restauración probada de la base, y moni
 
 ## Administración desde un entorno agéntico
 
-Actualmente las APIs de nanobooks, documentos, perfiles y temas aceptan sesiones de navegador. Un agente remoto no dispone de un conector ni de una credencial propia, y no debe reutilizar la cookie personal del navegador. Para habilitarlo hacen falta:
+Nanobook ya expone un servidor MCP OAuth 2.1 para Codex. El usuario autoriza
+scopes de lectura y escritura sobre sus propios nanobooks; las ocho herramientas
+iniciales cubren consulta y mutaciones constructivas de nanobooks y documentos.
+Las operaciones mutantes se auditan y no se exponen borrados.
 
-1. Una instancia desplegada y accesible con base y correo operativos.
-2. Credenciales para máquinas con propietario, permisos por operación y nanobook, vencimiento, revocación y rotación. El plugin API Key de Better Auth es una opción, pero necesita instalarse, migrar su esquema y conectar la verificación a los controladores propios. Agregar el plugin por sí solo no autoriza las APIs de Nanobook.
-3. Un servidor MCP o conector que exponga herramientas tipadas (`list_nanobooks`, `get_document`, `create_document`, `update_document`, `publish_document`, etc.) sobre las APIs existentes, sin compartir secretos con el modelo. Debe incluir confirmación para borrados, registros de auditoría e idempotencia para escrituras reintentadas.
-4. Configurar el conector en el entorno agéntico, guardar su credencial como secreto y probar permisos de lectura y escritura con un nanobook de prueba.
+Antes de habilitarlo en producción siguen pendientes estas condiciones:
 
-La integración agéntica queda como trabajo pendiente: no hay servidor MCP ni autenticación de máquina en este cambio.
+1. Aplicar las migraciones `0011` a `0013` junto con el resto del esquema.
+2. Restaurar la comprobación de origen de Astro aislando el token endpoint OAuth; hoy está desactivada temporalmente para validar el intercambio local.
+3. Probar login, refresh, revocación y autorización de lectura/escritura en el origen HTTPS definitivo.
+4. Definir idempotencia y confirmación explícita antes de exponer borrados u otras mutaciones irreversibles.
+
+La arquitectura y el runbook local están en [Acceso de agentes mediante MCP y
+OAuth](./arquitectura/mcp-agentes-oauth) y [Operación local de Nanobook MCP con
+Codex](./arquitectura/operacion-local-mcp-codex).
