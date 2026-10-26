@@ -1,9 +1,13 @@
 import type { APIRoute } from "astro";
 import type { CreateNanobook } from "../../application/CreateNanobook";
 
+interface CreateNanobookCapability {
+  execute: CreateNanobook["execute"];
+}
+
 export class CreateNanobookController {
   constructor(
-    private readonly createNanobook: Pick<CreateNanobook, "execute">
+    private readonly createNanobook: CreateNanobookCapability
   ) {}
 
   handle: APIRoute = async ({ request, locals }) => {

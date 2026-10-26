@@ -9,7 +9,15 @@ export type RequireNanobookAccessError =
   | NanobookNotFoundError
   | NanobookAccessDeniedError;
 
-export class RequireNanobookAccess {
+export interface NanobookAccessRequirement {
+  execute(
+    actorId: string | undefined,
+    nanobookId: string,
+    permission: NanobookPermission,
+  ): Promise<Result<RequireNanobookAccessError, Nanobook>>;
+}
+
+export class RequireNanobookAccess implements NanobookAccessRequirement {
   constructor(
     private readonly repository: NanobookRepository,
     private readonly authorizer = new AuthorizeNanobook(),

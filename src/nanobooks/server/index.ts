@@ -1,5 +1,4 @@
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
-import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { DocumentModule } from "../../documents/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { CreateNanobook } from "./application/CreateNanobook";
@@ -39,15 +38,12 @@ export class NanobookModule {
     public readonly requireNanobookAccess: RequireNanobookAccess,
   ) {}
 
-  static async create(routeProtector: RouteProtector, eventBus: EventBus): Promise<NanobookModule> {
+  static async create(eventBus: EventBus): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(db);
     const listNanobooks = new ListNanobooks(repository);
     const getNanobookById = new GetNanobookById(repository);
     const getNanobookBySlug = new GetNanobookBySlug(repository);
-    const documentModule = await DocumentModule.create(
-      eventBus,
-      routeProtector,
-    );
+    const documentModule = await DocumentModule.create(eventBus);
     const createNanobook = new CreateNanobook(repository, documentModule);
 
     return new NanobookModule(

@@ -1,21 +1,25 @@
 import type { APIRoute } from "astro";
 import { getApp } from "../../../../../application/server/Application";
-import { withNanobookWriteAccess } from "../../../../../nanobooks/server/infraestructure/rest/withNanobookWriteAccess";
+import { protectNanobookWriteMutation } from "../../../../../nanobooks/server/infraestructure/rest/withNanobookWriteAccess";
 
 export const prerender = false;
 
 const app = await getApp();
 
-async function dispatch(
-  method: "POST" | "PATCH" | "DELETE",
-  requestContext: Parameters<APIRoute>[0],
-) {
-  return withNanobookWriteAccess(
-    app.nanobookModule.getNanobookById,
-    app.nanobookModule.documentModule.mutationRoutes[method],
-  )(requestContext);
+const documentMutations = {
+  POST: app.nanobookModule.documentModule.createDocumentController.handle,
+  PATCH: app.nanobookModule.documentModule.updateDocumentController.handle,
+  DELETE: app.nanobookModule.documentModule.deleteDocumentController.handle,
+};
+
+function dispatch(method: keyof typeof documentMutations): APIRoute {
+  return protectNanobookWriteMutation(
+    app.routeProtector,
+    app.nanobookModule.requireNanobookAccess,
+    documentMutations[method],
+  );
 }
 
-export const POST: APIRoute = (context) => dispatch("POST", context);
-export const PATCH: APIRoute = (context) => dispatch("PATCH", context);
-export const DELETE: APIRoute = (context) => dispatch("DELETE", context);
+export const POST = dispatch("POST");
+export const PATCH = dispatch("PATCH");
+export const DELETE = dispatch("DELETE");

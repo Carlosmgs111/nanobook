@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregida la composición de las mutaciones HTTP de documentos: la sesión se valida antes del permiso de escritura del nanobook y los controladores reciben contratos de capacidad explícitos.
+
 - El endpoint MCP admite también el formato stateless de protocolo anterior, para que clientes como Codex puedan descubrir las herramientas tras completar OAuth sin debilitar la verificación de cada solicitud.
 
 - Desactivada temporalmente la comprobación global de origen de Astro para verificar el intercambio OAuth 2.1 URL-encoded de Codex; Better Auth conserva la validación de cliente, código, PKCE, recurso y scopes.
