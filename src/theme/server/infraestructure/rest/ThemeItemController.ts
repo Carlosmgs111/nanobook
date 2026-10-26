@@ -3,18 +3,10 @@ import type { GetTheme } from "../../application/GetTheme";
 import type { UpdateTheme } from "../../application/UpdateTheme";
 import { json, responseForError } from "./responses";
 
-interface ThemeReader {
-  execute: GetTheme["execute"];
-}
-
-interface ThemeUpdater {
-  execute: UpdateTheme["execute"];
-}
-
 export class ThemeItemController {
   constructor(
-    private readonly getTheme: ThemeReader,
-    private readonly updateTheme: ThemeUpdater,
+    private readonly getTheme: GetTheme,
+    private readonly updateTheme: UpdateTheme,
   ) {}
 
   get: APIRoute = async ({ locals, params }) => {

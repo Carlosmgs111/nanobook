@@ -2,13 +2,9 @@ import type { APIRoute } from "astro";
 import type { PagePublisher } from "../../application/PagePublisher";
 import { INVALIDATE_TOKEN } from "astro:env/server";
 
-interface PageInvalidator {
-  invalidate: PagePublisher["invalidate"];
-}
-
 export class InvalidatePagesController {
   constructor(
-    private pagePublisher: PageInvalidator,
+    private pagePublisher: PagePublisher,
   ) {}
 
   handle: APIRoute = async ({ request }) => {
