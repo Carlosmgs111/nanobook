@@ -3,13 +3,8 @@ import { cornerImage, coverValues, patternImage, patternStep, patternContrast, s
 import { colorInputValue, raisedColorInputValue } from "../shared/ColorPreview";
 import { analyzeThemeContrast } from "../shared/ThemeContrast";
 
-interface ThemeEditorApi {
-  create: HttpThemeApi["create"];
-  update: HttpThemeApi["update"];
-}
-
 interface Options {
-  api: ThemeEditorApi;
+  api: HttpThemeApi;
   root?: HTMLElement;
 }
 
