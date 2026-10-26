@@ -3,6 +3,7 @@ import type { DocumentModule } from "../../../documents/server";
 import { serializeEntry } from "../../../documents/server/application/dto/SerializedEntry";
 import { DocumentNotFoundError } from "../../../documents/server/domain/errors";
 import type { NanobookModule } from "../../../nanobooks/server";
+import type { CreateNanobookData } from "../../../nanobooks/server/domain/types";
 import type { AgentActor, CreateDocumentInput, UpdateDocumentInput } from "./dto";
 import { AgentScopeDeniedError } from "./errors";
 import type { AgentAuditWriter } from "./ports/AgentAuditWriter";
@@ -20,7 +21,7 @@ export class AgentToolService {
     return this.nanobooks.requireNanobookAccess.execute(actor.actorId, nanobookId, "read");
   }
 
-  async createNanobook(actor: AgentActor, input: Parameters<NanobookModule["createNanobook"]["execute"]>[1]) {
+  async createNanobook(actor: AgentActor, input: Omit<CreateNanobookData, "id" | "ownerId"> & { id?: string }) {
     if (!this.has(actor, "nanobooks:write")) return Result.fail(new AgentScopeDeniedError("nanobooks:write"));
     const result = await this.nanobooks.createNanobook.execute(actor.actorId, input);
     if (result.isSuccess) await this.audit.write({ actorId: actor.actorId, oauthClientId: actor.oauthClientId, toolName: "create_nanobook", nanobookId: result.getValue().getId(), requestId: crypto.randomUUID() });
