@@ -4,7 +4,7 @@ import { colorInputValue, raisedColorInputValue } from "../shared/ColorPreview";
 import { analyzeThemeContrast } from "../shared/ThemeContrast";
 
 interface Options {
-  api: Pick<HttpThemeApi, "create" | "update">;
+  api: HttpThemeApi;
   root?: HTMLElement;
 }
 

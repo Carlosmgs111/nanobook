@@ -7,6 +7,7 @@ import { PublishingModule } from "../../publishing/server";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { ThemeModule } from "../../theme/server";
+import { AgentModule } from "../../agents/server";
 
 export class Application {
   private constructor(
@@ -17,6 +18,7 @@ export class Application {
     public readonly navigationModule: NavigationModule,
     public readonly publishingModule: PublishingModule,
     public readonly themeModule: ThemeModule,
+    public readonly agentModule: AgentModule,
   ) {}
 
   static async create(): Promise<Application> {
@@ -24,7 +26,7 @@ export class Application {
     const routeProtector: RouteProtector = authServerModule;
     const profileModule = ProfileModule.create(routeProtector);
     const eventBus = new InMemoryEventBus();
-    const nanobookModule = await NanobookModule.create(routeProtector, eventBus);
+    const nanobookModule = await NanobookModule.create(eventBus);
     const navigationModule = await NavigationModule.create(
       new DocumentModuleDocumentProvider(nanobookModule.documentModule),
       eventBus,
@@ -34,6 +36,7 @@ export class Application {
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
+    const agentModule = AgentModule.create(nanobookModule, nanobookModule.documentModule);
     return new Application(
       authServerModule,
       routeProtector,
@@ -42,6 +45,7 @@ export class Application {
       navigationModule,
       publishingModule,
       themeModule,
+      agentModule,
     );
   }
 }

@@ -7,6 +7,29 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregida la composición de las mutaciones HTTP de documentos: la sesión se valida antes del permiso de escritura del nanobook y los controladores reciben contratos de capacidad explícitos.
+
+- El endpoint MCP admite también el formato stateless de protocolo anterior, para que clientes como Codex puedan descubrir las herramientas tras completar OAuth sin debilitar la verificación de cada solicitud.
+
+- Desactivada temporalmente la comprobación global de origen de Astro para verificar el intercambio OAuth 2.1 URL-encoded de Codex; Better Auth conserva la validación de cliente, código, PKCE, recurso y scopes.
+
+- La página de consentimiento OAuth ahora reenvía exclusivamente los parámetros cubiertos por la firma de Better Auth, evitando que parámetros añadidos por la navegación invaliden la autorización.
+
+- Corregido el formulario de consentimiento OAuth para enviar JSON a Better Auth y continuar hacia el callback devuelto, en lugar de publicar un formulario URL-encoded incompatible.
+
+- Corregida la allowlist CIMD para aceptar las URLs de metadata estables y por callback que Codex publica en `chatgpt.com`, manteniendo la validación estricta de origen y formato.
+
+- Expuesta la ruta RFC 8414 de metadata del servidor de autorización OAuth bajo `/.well-known/oauth-authorization-server/api/auth`, para que clientes MCP resuelvan el issuer con ruta.
+
+- Expuesta la metadata OAuth del recurso MCP en `/.well-known/oauth-protected-resource/mcp`, permitiendo a clientes descubrir el servidor de autorización.
+
+- Corregido el esquema de Better Auth para incluir `jwks`, requerido por el plugin JWT del servidor MCP.
+
+- Añadido un servidor MCP con OAuth 2.1 para que Codex gestione los nanobooks y documentos del usuario autorizado con scopes de lectura y escritura, PKCE, consentimiento y auditoría de mutaciones.
+
+- Protegidas las mutaciones de documentos por autorización de escritura del nanobook, impidiendo crear, editar o eliminar contenido en colecciones ajenas.
+- Alineado el contrato de las mutaciones de documentos con el parámetro `id` de sus rutas, eliminando la conversión interna heredada entre `id` y `slug`.
+
 - Normalizados los enlaces de verificación de correo en Vercel para conservar el token de Better Auth y usar el origen HTTPS de producción.
 - Documentado el procedimiento de conexión y migración de Turso para la base SQL de producción.
 

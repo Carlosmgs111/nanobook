@@ -4,12 +4,13 @@
     ProfileApiError,
     type CreateProfileInput,
     type Profile,
+    type UpdateProfileInput,
   } from "./HttpProfileApi";
 
   export interface ProfileApi {
     getCurrent(): Promise<Profile>;
     create(input: CreateProfileInput): Promise<Profile>;
-    update(input: Pick<Profile, "displayName">): Promise<Profile>;
+    update(input: UpdateProfileInput): Promise<Profile>;
   }
 
   export class ProfileFormController {

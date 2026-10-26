@@ -8,6 +8,7 @@ import { withAuthenticatedSession } from "./infrastructure/http/withAuthenticate
 
 export class AuthServerModule implements RouteProtector {
   private constructor(
+    public readonly auth: ReturnType<typeof createBetterAuth>,
     private readonly sessionReader: BetterAuthSessionReader,
     public readonly authController: APIRoute
   ) {}
@@ -17,6 +18,7 @@ export class AuthServerModule implements RouteProtector {
     const sessionReader = new BetterAuthSessionReader(auth);
 
     return new AuthServerModule(
+      auth,
       sessionReader,
       createAuthController(auth)
     );

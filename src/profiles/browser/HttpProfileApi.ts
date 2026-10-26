@@ -8,6 +8,10 @@ export interface CreateProfileInput {
   displayName: string;
 }
 
+export interface UpdateProfileInput {
+  displayName: string;
+}
+
 export class ProfileApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
@@ -24,7 +28,7 @@ export class HttpProfileApi {
     return this.request("POST", input);
   }
 
-  async update(input: Pick<Profile, "displayName">): Promise<Profile> {
+  async update(input: UpdateProfileInput): Promise<Profile> {
     return this.request("PATCH", input);
   }
 
