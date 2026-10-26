@@ -4,7 +4,7 @@ import { INVALIDATE_TOKEN } from "astro:env/server";
 
 export class InvalidatePagesController {
   constructor(
-    private pagePublisher: Pick<PagePublisher, "invalidate">,
+    private pagePublisher: PagePublisher,
   ) {}
 
   handle: APIRoute = async ({ request }) => {

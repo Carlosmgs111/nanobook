@@ -1,30 +1,25 @@
 import type { APIRoute } from "astro";
 import { getApp } from "../../../../../application/server/Application";
+import { protectNanobookWriteMutation } from "../../../../../nanobooks/server/infraestructure/rest/withNanobookWriteAccess";
 
 export const prerender = false;
 
 const app = await getApp();
 
-function withDocumentId(handler: APIRoute): APIRoute {
-  return async (requestContext) => handler({
-    ...requestContext,
-    params: { ...requestContext.params, slug: requestContext.params.id },
-  });
+const documentMutations = {
+  POST: app.nanobookModule.documentModule.createDocumentController.handle,
+  PATCH: app.nanobookModule.documentModule.updateDocumentController.handle,
+  DELETE: app.nanobookModule.documentModule.deleteDocumentController.handle,
+};
+
+function dispatch(method: keyof typeof documentMutations): APIRoute {
+  return protectNanobookWriteMutation(
+    app.routeProtector,
+    app.nanobookModule.requireNanobookAccess,
+    documentMutations[method],
+  );
 }
 
-async function dispatch(
-  method: "POST" | "PATCH" | "DELETE",
-  requestContext: Parameters<APIRoute>[0],
-) {
-  const nanobookId = requestContext.params.nanobookId;
-  if (!nanobookId) return new Response(JSON.stringify({ error: "Nanobook no encontrado" }), { status: 404 });
-  const result = await app.nanobookModule.getNanobookById.execute(nanobookId);
-  if (!result.isSuccess) {
-    return new Response(JSON.stringify({ error: "Nanobook no encontrado" }), { status: 404 });
-  }
-  return withDocumentId(app.nanobookModule.documentModule.mutationRoutes[method])(requestContext);
-}
-
-export const POST: APIRoute = (context) => dispatch("POST", context);
-export const PATCH: APIRoute = (context) => dispatch("PATCH", context);
-export const DELETE: APIRoute = (context) => dispatch("DELETE", context);
+export const POST = dispatch("POST");
+export const PATCH = dispatch("PATCH");
+export const DELETE = dispatch("DELETE");

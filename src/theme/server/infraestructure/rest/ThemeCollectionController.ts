@@ -5,8 +5,8 @@ import { json, responseForError } from "./responses";
 
 export class ThemeCollectionController {
   constructor(
-    private readonly listThemes: Pick<ListThemes, "execute">,
-    private readonly createTheme: Pick<CreateTheme, "execute">,
+    private readonly listThemes: ListThemes,
+    private readonly createTheme: CreateTheme,
   ) {}
 
   get: APIRoute = async ({ locals }) => {

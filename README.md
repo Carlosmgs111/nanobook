@@ -122,6 +122,10 @@ instancia. Cada nanobook delimita el alcance de sus documentos mediante su
 `nanobookId`; no se configura un repositorio de archivos ni una fuente remota
 por nanobook.
 
+### Acceso desde agentes
+
+Nanobook expone un servidor MCP remoto en `POST /mcp` para gestionar nanobooks y documentos con la identidad delegada del usuario. La conexión usa OAuth 2.1, PKCE y los scopes `nanobooks:read` y `nanobooks:write`; no comparte cookies de sesión con el agente. Antes de desplegar una versión con MCP, aplica las migraciones con `npm run database:migrate` y configura `BETTER_AUTH_URL` con el origen HTTPS canónico. La guía de arquitectura incluye el flujo de Codex, los límites de autorización y la auditoría de operaciones en [MCP y OAuth](src/content/nanobook-project/arquitectura/mcp-agentes-oauth.md).
+
 ## Estructura de contenido
 
 El contenido se ubica en `src/content/` y sigue una jerarquía basada en carpetas:

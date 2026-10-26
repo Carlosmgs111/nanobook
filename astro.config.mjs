@@ -13,6 +13,12 @@ export default defineConfig({
   prefetch: true,
   output: "server",
   adapter: adapter,
+  // Temporalmente permite el intercambio OAuth 2.1 de Codex: el token
+  // endpoint requiere application/x-www-form-urlencoded y Better Auth valida
+  // código, PKCE, cliente, recurso y scopes antes de emitir tokens.
+  security: {
+    checkOrigin: false,
+  },
   vite: {
     resolve: {
       conditions: ["worker"],
