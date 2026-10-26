@@ -1,7 +1,6 @@
 ---
 import { verifyOAuthQueryParams } from "@better-auth/oauth-provider";
 import { getApp } from "../application/server/Application";
-import { getSignedOAuthQuery } from "../auth/browser/OAuthSignedQuery";
 
 const app = await getApp();
 const oauthQuery = Astro.url.search.slice(1);
@@ -16,19 +15,23 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
   <h1>Autorizar conexión de Codex</h1>
   <p><strong>{clientId}</strong> solicita acceso a Nanobook.</p>
   <ul>{scopes.map((scope) => <li>{scope}</li>)}</ul>
-  <form data-oauth-consent>
+  <form data-oauth-consent data-scope={scopes.join(" ")}>
     <button name="accept" value="true" type="submit">Autorizar</button>
     <button name="accept" value="false" type="submit">Rechazar</button>
   </form>
   <p data-oauth-consent-error hidden role="alert"></p>
 </main>
 
-<script define:vars={{ scope: scopes.join(" ") }}>
+<script>
+  import { getSignedOAuthQuery } from "../auth/browser/OAuthSignedQuery";
+
   const form = document.querySelector("[data-oauth-consent]");
   const error = document.querySelector("[data-oauth-consent-error]");
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    if (!(form instanceof HTMLFormElement) || !(error instanceof HTMLElement)) return;
 
     const signedQuery = getSignedOAuthQuery(window.location.search);
     if (!signedQuery) {
@@ -50,7 +53,11 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ accept, scope, oauth_query: signedQuery }),
+        body: JSON.stringify({
+          accept,
+          scope: form.dataset.scope,
+          oauth_query: signedQuery,
+        }),
       });
       const result = await response.json() as { redirect?: boolean; url?: string; message?: string };
 
