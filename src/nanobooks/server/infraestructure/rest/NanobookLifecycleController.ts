@@ -2,18 +2,11 @@ import type { APIRoute } from "astro";
 import type { UpdateNanobook } from "../../application/UpdateNanobook";
 import type { DeleteNanobook } from "../../application/DeleteNanobook";
 
-interface UpdateNanobookCapability {
-  execute: UpdateNanobook["execute"];
-}
-
-interface DeleteNanobookCapability {
-  execute: DeleteNanobook["execute"];
-}
 
 export class NanobookLifecycleController {
   constructor(
-    private readonly updateNanobook: UpdateNanobookCapability,
-    private readonly deleteNanobook: DeleteNanobookCapability
+    private readonly updateNanobook: UpdateNanobook,
+    private readonly deleteNanobook: DeleteNanobook
   ) {}
 
   update: APIRoute = async ({ request, locals, params }) => {
