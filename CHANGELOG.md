@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Desactivada temporalmente la comprobación global de origen de Astro para verificar el intercambio OAuth 2.1 URL-encoded de Codex; Better Auth conserva la validación de cliente, código, PKCE, recurso y scopes.
+
 - La página de consentimiento OAuth ahora reenvía exclusivamente los parámetros cubiertos por la firma de Better Auth, evitando que parámetros añadidos por la navegación invaliden la autorización.
 
 - Corregido el formulario de consentimiento OAuth para enviar JSON a Better Auth y continuar hacia el callback devuelto, en lugar de publicar un formulario URL-encoded incompatible.
