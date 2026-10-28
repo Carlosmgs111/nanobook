@@ -9,19 +9,16 @@ export function createNanobookMcpServer(
   tools: AgentToolService
 ) {
   const server = new McpServer({ name: "nanobook", version: "0.5.1" });
-  const respond = async (
-    result: Awaited<ReturnType<AgentToolService["listNanobooks"]>>
-  ) => toMcpToolResult(result);
   server.registerTool(
     "list_nanobooks",
     { inputSchema: z.object({}) },
-    async () => respond(await tools.listNanobooks(actor))
+    async () => toMcpToolResult(await tools.listNanobooks(actor))
   );
   server.registerTool(
     "get_nanobook",
     { inputSchema: z.object({ nanobookId: z.string().min(1) }) },
     async ({ nanobookId }) =>
-      respond(await tools.getNanobook(actor, nanobookId))
+      toMcpToolResult(await tools.getNanobook(actor, nanobookId))
   );
   server.registerTool(
     "create_nanobook",
@@ -32,7 +29,7 @@ export function createNanobookMcpServer(
         visibility: z.enum(["public", "private"]).optional(),
       }),
     },
-    async (input) => respond(await tools.createNanobook(actor, input))
+    async (input) => toMcpToolResult(await tools.createNanobook(actor, input))
   );
   server.registerTool(
     "update_nanobook",
@@ -45,13 +42,13 @@ export function createNanobookMcpServer(
       }),
     },
     async ({ nanobookId, ...input }) =>
-      respond(await tools.updateNanobook(actor, nanobookId, input))
+      toMcpToolResult(await tools.updateNanobook(actor, nanobookId, input))
   );
   server.registerTool(
     "list_documents",
     { inputSchema: z.object({ nanobookId: z.string().min(1) }) },
     async ({ nanobookId }) =>
-      respond(await tools.listDocuments(actor, nanobookId))
+      toMcpToolResult(await tools.listDocuments(actor, nanobookId))
   );
   server.registerTool(
     "get_document",
@@ -62,7 +59,7 @@ export function createNanobookMcpServer(
       }),
     },
     async ({ nanobookId, path }) =>
-      respond(await tools.getDocument(actor, nanobookId, path))
+      toMcpToolResult(await tools.getDocument(actor, nanobookId, path))
   );
   const documentInput = z.object({
     nanobookId: z.string().min(1),
@@ -80,7 +77,7 @@ export function createNanobookMcpServer(
     "create_document",
     { inputSchema: documentInput },
     async ({ nanobookId, ...input }) =>
-      respond(await tools.createDocument(actor, nanobookId, input))
+      toMcpToolResult(await tools.createDocument(actor, nanobookId, input))
   );
   server.registerTool(
     "update_document",
@@ -91,7 +88,7 @@ export function createNanobookMcpServer(
       }),
     },
     async ({ nanobookId, ...input }) =>
-      respond(await tools.updateDocument(actor, nanobookId, input))
+      toMcpToolResult(await tools.updateDocument(actor, nanobookId, input))
   );
   return server;
 }
