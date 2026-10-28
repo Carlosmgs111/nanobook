@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { Nanobook } from "../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
-import { NanobookAccessDeniedError } from "./AuthorizeNanobook";
+import { AuthorizeNanobook, NanobookAccessDeniedError } from "./AuthorizeNanobook";
 import { NanobookNotFoundError } from "./errors";
 import { RequireNanobookAccess } from "./RequireNanobookAccess";
 
@@ -14,7 +14,10 @@ const publicBook = Nanobook.create({
 }).getValue();
 
 describe("RequireNanobookAccess", () => {
-  const access = () => new RequireNanobookAccess(new InMemoryNanobookRepository([privateBook, publicBook]));
+  const access = () => new RequireNanobookAccess(
+    new InMemoryNanobookRepository([privateBook, publicBook]),
+    new AuthorizeNanobook(),
+  );
 
   it("allows the owner to write", async () => {
     const result = await access().execute("owner", "private-book", "write");

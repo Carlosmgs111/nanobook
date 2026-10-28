@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Evitado el registro en consola de la identidad y los scopes de actores MCP.
+
 - Documentados el runbook local de Codex MCP, el estado de las migraciones, la composición de autorización documental y la deuda temporal de comprobación de origen.
 
 - Corregida la composición de las mutaciones HTTP de documentos: la sesión se valida antes del permiso de escritura del nanobook y los controladores reciben contratos de capacidad explícitos.

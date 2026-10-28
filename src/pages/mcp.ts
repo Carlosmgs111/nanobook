@@ -10,17 +10,20 @@ import { createNanobookMcpServer } from "../agents/server/infrastructure/mcp/cre
 export const prerender = false;
 
 const app = await getApp();
-const resource = getMcpOAuthConfig(BETTER_AUTH_URL ?? "http://127.0.0.1:4322").resource;
+const resource = getMcpOAuthConfig(
+  BETTER_AUTH_URL ?? "http://127.0.0.1:4322"
+).resource;
 
-export const POST: APIRoute = ({ request }) => requireMcpAuth(
-  app.authServerModule.auth,
-  async (protectedRequest, claims) => {
-    const actor = readMcpActor(claims);
-    const handler = createMcpHandler(
-      () => createNanobookMcpServer(actor, app.agentModule.tools),
-      { legacy: "stateless", responseMode: "json" },
-    );
-    return handler.fetch(protectedRequest);
-  },
-  { resource, challengeScopes: ["nanobooks:read"] },
-)(request);
+export const POST: APIRoute = ({ request }) =>
+  requireMcpAuth(
+    app.authServerModule.auth,
+    async (protectedRequest, claims) => {
+      const actor = readMcpActor(claims);
+      const handler = createMcpHandler(
+        () => createNanobookMcpServer(actor, app.agentModule.tools),
+        { legacy: "stateless", responseMode: "json" }
+      );
+      return handler.fetch(protectedRequest);
+    },
+    { resource, challengeScopes: ["nanobooks:read"] }
+  )(request);

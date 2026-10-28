@@ -37,7 +37,7 @@ export class AgentToolService {
 
   async createNanobook(
     actor: AgentActor,
-    input: Omit<CreateNanobookData, "id" | "ownerId"> & { id?: string },
+    input: Omit<CreateNanobookData, "id" | "ownerId"> & { id?: string }
   ) {
     if (!this.has(actor, "nanobooks:write"))
       return Result.fail(new AgentScopeDeniedError("nanobooks:write"));

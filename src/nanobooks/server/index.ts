@@ -11,13 +11,21 @@ import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
 import { RequireNanobookAccess } from "./application/RequireNanobookAccess";
+import { AuthorizeNanobook } from "./application/AuthorizeNanobook";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 import { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
 import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
 
 export { Nanobook } from "./domain/Nanobook";
-export type { NanobookSettings, NanobookSetupStatus, NanobookVisibility } from "./domain/types";
-export { AuthorizeNanobook, NanobookAccessDeniedError } from "./application/AuthorizeNanobook";
+export type {
+  NanobookSettings,
+  NanobookSetupStatus,
+  NanobookVisibility,
+} from "./domain/types";
+export {
+  AuthorizeNanobook,
+  NanobookAccessDeniedError,
+} from "./application/AuthorizeNanobook";
 export type { NanobookPermission } from "./application/AuthorizeNanobook";
 export { NanobookNotFoundError } from "./application/errors";
 export { RequireNanobookAccess } from "./application/RequireNanobookAccess";
@@ -35,7 +43,7 @@ export class NanobookModule {
     public readonly lifecycleController: NanobookLifecycleController,
     public readonly listPublicNanobooks: ListPublicNanobooks,
     public readonly setNanobookTheme: SetNanobookTheme,
-    public readonly requireNanobookAccess: RequireNanobookAccess,
+    public readonly requireNanobookAccess: RequireNanobookAccess
   ) {}
 
   static async create(eventBus: EventBus): Promise<NanobookModule> {
@@ -45,20 +53,23 @@ export class NanobookModule {
     const getNanobookBySlug = new GetNanobookBySlug(repository);
     const documentModule = await DocumentModule.create(eventBus);
     const createNanobook = new CreateNanobook(repository, documentModule);
+    const updateNanobook = new UpdateNanobook(repository);
+    const deleteNanobook = new DeleteNanobook(repository);
+    const authorizeNanobook = new AuthorizeNanobook();
 
     return new NanobookModule(
       createNanobook,
-      new UpdateNanobook(repository),
+      updateNanobook,
       new CreateNanobookController(createNanobook),
       getNanobookById,
       getNanobookBySlug,
       listNanobooks,
       new ListNanobooksController(listNanobooks),
       documentModule,
-      new NanobookLifecycleController(new UpdateNanobook(repository), new DeleteNanobook(repository)),
+      new NanobookLifecycleController(updateNanobook, deleteNanobook),
       new ListPublicNanobooks(repository),
       new SetNanobookTheme(repository),
-      new RequireNanobookAccess(repository),
+      new RequireNanobookAccess(repository, authorizeNanobook)
     );
   }
 }
