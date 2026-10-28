@@ -8,16 +8,25 @@ import rehypeSlug from "rehype-slug";
 const isVercelDeploy = process.env.VERCEL === "1" || process.env.VERCEL_DEPLOY === "true";
 
 const adapter = isVercelDeploy ? vercel({}) : node({ mode: "standalone" });
+const betterAuthUrl = process.env.BETTER_AUTH_URL;
+const allowedDomains = betterAuthUrl
+  ? (() => {
+      const origin = new URL(betterAuthUrl);
+      return [{
+        protocol: origin.protocol.slice(0, -1),
+        hostname: origin.hostname,
+        port: origin.port,
+      }];
+    })()
+  : [];
 
 export default defineConfig({
   prefetch: true,
   output: "server",
   adapter: adapter,
-  // Temporalmente permite el intercambio OAuth 2.1 de Codex: el token
-  // endpoint requiere application/x-www-form-urlencoded y Better Auth valida
-  // código, PKCE, cliente, recurso y scopes antes de emitir tokens.
   security: {
     checkOrigin: false,
+    allowedDomains,
   },
   vite: {
     resolve: {
