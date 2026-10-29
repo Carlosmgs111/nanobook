@@ -46,11 +46,11 @@ export class HttpAuthApi implements AuthApi {
   }
 
   async signInWithGitHub(): Promise<SocialAuthorization> {
-    const { payload, status } = await this.postJson("/sign-in/social", {
+    const { payload, status } = await this.postJson("/sign-in/social", withOAuthQuery({
       provider: "github",
       callbackURL: "/",
       disableRedirect: true,
-    });
+    }));
 
     return readAuthorizationUrl(payload, status);
   }

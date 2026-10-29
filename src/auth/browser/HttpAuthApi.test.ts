@@ -178,6 +178,11 @@ describe("HttpAuthApi", () => {
 
   it("returns Better Auth's GitHub authorization URL when the client handles the redirect", async () => {
     const requests: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    vi.stubGlobal("window", {
+      location: {
+        search: "?client_id=codex&ba_param=client_id&sig=signed",
+      },
+    });
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       requests.push({ input, init });
       return new Response(
@@ -205,6 +210,7 @@ describe("HttpAuthApi", () => {
             provider: "github",
             callbackURL: "/",
             disableRedirect: true,
+          oauth_query: "client_id=codex&ba_param=client_id&sig=signed",
           }),
         },
       },

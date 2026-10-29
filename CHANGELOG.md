@@ -7,7 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-- Corregida la continuación OAuth desde el formulario de acceso: las solicitudes de inicio de sesión y registro conservan únicamente la consulta firmada de Better Auth, y el navegador sigue el callback de autorización de Codex.
+- Corregida la continuación OAuth desde el formulario de acceso: los flujos de contraseña, registro y GitHub conservan únicamente la consulta firmada de Better Auth, y el navegador sigue el callback de autorización de Codex.
 
 - Evitado el registro en consola de la identidad y los scopes de actores MCP.
 
