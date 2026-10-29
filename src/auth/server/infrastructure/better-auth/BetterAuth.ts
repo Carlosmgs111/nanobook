@@ -18,6 +18,7 @@ import * as authSchema from "./DrizzleAuthSchema";
 import { createGitHubOAuthProvider } from "./GitHubOAuth";
 import {
   getMcpOAuthConfig,
+  getTrustedApplicationOrigins,
   isCodexClientMetadataUrlAllowed,
 } from "./McpOAuthConfig";
 import { ResendEmailSender } from "./ResendEmailSender";
@@ -54,6 +55,7 @@ export function createBetterAuth() {
 
   return betterAuth({
     baseURL,
+    trustedOrigins: getTrustedApplicationOrigins(baseURL),
     secret: BETTER_AUTH_SECRET,
     database: drizzleAdapter(db, {
       provider: "sqlite",

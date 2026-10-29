@@ -1,4 +1,5 @@
 import type { AuthenticatedUser } from "./model/AuthSession";
+import { getSignedOAuthQuery } from "./OAuthSignedQuery";
 
 export type { AuthenticatedUser } from "./model/AuthSession";
 
@@ -12,11 +13,13 @@ export interface SignUpRequest extends SignInRequest {
 }
 
 export interface AuthApi {
-  signIn(request: SignInRequest): Promise<AuthenticatedUser>;
+  signIn(request: SignInRequest): Promise<SignInResult>;
   signUp(request: SignUpRequest): Promise<AuthenticatedUser>;
   signInWithGitHub(): Promise<SocialAuthorization>;
   signOut(): Promise<void>;
 }
+
+export type SignInResult = AuthenticatedUser | { redirectUrl: string };
 
 export interface SocialAuthorization {
   authorizationUrl: string;
@@ -33,13 +36,13 @@ export class AuthApiError extends Error {
 export class HttpAuthApi implements AuthApi {
   private readonly baseUrl = "/api/auth";
 
-  async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
-    const { payload, status } = await this.postJson("/sign-in/email", request);
-    return readUser(payload, status);
+  async signIn(request: SignInRequest): Promise<SignInResult> {
+    const { payload, status } = await this.postJson("/sign-in/email", withOAuthQuery(request));
+    return readSignInResult(payload, status);
   }
 
   signUp(request: SignUpRequest): Promise<AuthenticatedUser> {
-    return this.postUser("/sign-up/email", { ...request, callbackURL: "/" });
+    return this.postUser("/sign-up/email", withOAuthQuery({ ...request, callbackURL: "/" }));
   }
 
   async signInWithGitHub(): Promise<SocialAuthorization> {
@@ -123,6 +126,21 @@ function readUser(payload: unknown, status: number): AuthenticatedUser {
   }
 
   return { id, name, email };
+}
+
+function readSignInResult(payload: unknown, status: number): SignInResult {
+  if (isRecord(payload) && payload.redirect === true && typeof payload.url === "string") {
+    return { redirectUrl: payload.url };
+  }
+
+  return readUser(payload, status);
+}
+
+function withOAuthQuery<T extends Record<string, string>>(body: T): T | (T & { oauth_query: string }) {
+  if (typeof window === "undefined") return body;
+
+  const oauthQuery = getSignedOAuthQuery(window.location.search);
+  return oauthQuery ? { ...body, oauth_query: oauthQuery } : body;
 }
 
 function readAuthorizationUrl(

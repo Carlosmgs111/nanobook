@@ -26,10 +26,12 @@ class FakeAuthApi implements AuthApi {
   readonly signUpRequests: SignUpRequest[] = [];
   error: Error | undefined;
   githubAuthorizationUrl = "https://github.com/login/oauth/authorize?state=signed";
+  signInRedirectUrl: string | undefined;
 
   async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     this.signInRequests.push(request);
     if (this.error) throw this.error;
+    if (this.signInRedirectUrl) return { redirectUrl: this.signInRedirectUrl };
     return authenticatedUser;
   }
 
@@ -188,6 +190,21 @@ describe("AuthFormController", () => {
 
     expect(authApi.signInRequests).toHaveLength(1);
     expect(navigate).toHaveBeenCalledWith("/");
+  });
+
+  it("continues an OAuth sign-in through the authorization callback", async () => {
+    const view = createForm();
+    const authApi = new FakeAuthApi();
+    authApi.signInRedirectUrl = "http://127.0.0.1:60522/callback?code=issued";
+    const assign = vi.fn();
+    vi.stubGlobal("window", { location: { assign } });
+    const composer = new AuthFormController({ authApi, notifier: { show() {} } });
+
+    composer.mount();
+    await view.form.trigger("submit");
+
+    expect(assign).toHaveBeenCalledWith("http://127.0.0.1:60522/callback?code=issued");
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("submits registration data after the user changes to signup", async () => {
