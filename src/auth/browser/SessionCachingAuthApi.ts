@@ -2,6 +2,7 @@ import type {
   AuthApi,
   AuthSignOutApi,
   SignInRequest,
+  SignInResult,
   SignUpRequest,
   SocialAuthorization,
 } from "./HttpAuthApi";
@@ -14,10 +15,15 @@ export class SessionCachingAuthApi implements AuthApi, AuthSignOutApi {
     private readonly session: CachedAuthSessionReader,
   ) {}
 
-  async signIn(request: SignInRequest): Promise<AuthenticatedUser> {
-    const user = await this.source.signIn(request);
-    this.session.setCurrentUser(user);
-    return user;
+  async signIn(request: SignInRequest): Promise<SignInResult> {
+    const result = await this.source.signIn(request);
+    if ("redirectUrl" in result) {
+      this.session.clearCurrentUser();
+      return result;
+    }
+
+    this.session.setCurrentUser(result);
+    return result;
   }
 
   async signUp(request: SignUpRequest): Promise<AuthenticatedUser> {

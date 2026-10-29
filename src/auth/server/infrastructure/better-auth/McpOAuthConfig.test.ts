@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getTrustedApplicationOrigins,
   getMcpOAuthConfig,
   isCodexClientMetadataUrlAllowed,
 } from "./McpOAuthConfig";
@@ -23,6 +24,24 @@ describe("MCP OAuth configuration", () => {
   it("allows loopback development", () => {
     expect(getMcpOAuthConfig("http://127.0.0.1:4322").resource).toBe(
       "http://127.0.0.1:4322/mcp",
+    );
+  });
+
+  it.each([
+    ["https://nanobook.example.com", "https://nanobook.example.com"],
+    ["http://127.0.0.1:4322", "http://127.0.0.1:4322"],
+  ])("uses only the canonical origin as a Better Auth trusted origin", (baseURL, expectedOrigin) => {
+    expect(getTrustedApplicationOrigins(baseURL)).toEqual([expectedOrigin]);
+  });
+
+  it.each([
+    "https://nanobook.example.com/auth",
+    "https://user:password@nanobook.example.com",
+    "https://nanobook.example.com?unexpected=value",
+    "https://nanobook.example.com#fragment",
+  ])("rejects a trusted origin URL with non-origin components: %s", (baseURL) => {
+    expect(() => getTrustedApplicationOrigins(baseURL)).toThrow(
+      "MCP resource requires an application origin without a path, credentials, query or hash.",
     );
   });
 

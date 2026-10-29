@@ -24,6 +24,12 @@ export function getMcpOAuthConfig(baseURL: string): McpOAuthConfig {
   };
 }
 
+export function getTrustedApplicationOrigins(
+  baseURL: string,
+): readonly [string] {
+  return [parseOrigin(baseURL).origin];
+}
+
 export function isCodexClientMetadataUrlAllowed(clientId: string): boolean {
   let url: URL;
   try {

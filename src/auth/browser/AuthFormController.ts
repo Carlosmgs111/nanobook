@@ -139,7 +139,11 @@ export class AuthFormController {
         return;
       }
 
-      await this.options.authApi.signIn({ email, password });
+      const result = await this.options.authApi.signIn({ email, password });
+      if ("redirectUrl" in result) {
+        window.location.assign(result.redirectUrl);
+        return;
+      }
       this.options.notifier.show("Sesión iniciada. Redirigiendo…", "success");
       this.navigate("/");
     } catch (error) {
