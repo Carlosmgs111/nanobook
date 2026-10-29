@@ -17,4 +17,23 @@ describe("createAuthController", () => {
 
     expect(response).toBe(expected);
   });
+
+  it("turns an OAuth redirect instruction into a browser navigation", async () => {
+    const request = new Request("https://nanobook.test/api/auth/oauth2/authorize", {
+      headers: { "Sec-Fetch-Mode": "navigate" },
+    });
+    const controller = createAuthController({
+      handler: () => new Response(
+        JSON.stringify({ redirect: true, url: "/consent?client_id=codex" }),
+        { headers: { "Content-Type": "application/json" } },
+      ),
+    });
+
+    const response = await controller({ request } as never);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("Location")).toBe(
+      "https://nanobook.test/consent?client_id=codex",
+    );
+  });
 });

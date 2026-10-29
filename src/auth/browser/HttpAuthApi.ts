@@ -48,7 +48,7 @@ export class HttpAuthApi implements AuthApi {
   async signInWithGitHub(): Promise<SocialAuthorization> {
     const { payload, status } = await this.postJson("/sign-in/social", withOAuthQuery({
       provider: "github",
-      callbackURL: "/",
+      callbackURL: socialSignInCallbackURL(),
       disableRedirect: true,
     }));
 
@@ -141,6 +141,13 @@ function withOAuthQuery<T extends Record<string, string>>(body: T): T | (T & { o
 
   const oauthQuery = getSignedOAuthQuery(window.location.search);
   return oauthQuery ? { ...body, oauth_query: oauthQuery } : body;
+}
+
+function socialSignInCallbackURL(): string {
+  if (typeof window === "undefined") return "/";
+
+  const oauthQuery = getSignedOAuthQuery(window.location.search);
+  return oauthQuery ? `/api/auth/oauth2/authorize?${oauthQuery}` : "/";
 }
 
 function readAuthorizationUrl(
