@@ -208,7 +208,7 @@ describe("HttpAuthApi", () => {
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({
             provider: "github",
-            callbackURL: "/",
+          callbackURL: "/api/auth/oauth2/authorize?client_id=codex&ba_param=client_id&sig=signed",
             disableRedirect: true,
           oauth_query: "client_id=codex&ba_param=client_id&sig=signed",
           }),

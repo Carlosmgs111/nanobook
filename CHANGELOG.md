@@ -9,6 +9,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - Corregida la continuación OAuth desde el formulario de acceso: los flujos de contraseña, registro y GitHub conservan únicamente la consulta firmada de Better Auth, y el navegador sigue el callback de autorización de Codex.
 
+- Las instrucciones OAuth de Better Auth ahora se transforman en redirecciones HTTP para navegaciones del navegador; al volver de GitHub, el flujo reanuda la autorización MCP en vez de aterrizar en la portada.
+
 - Evitado el registro en consola de la identidad y los scopes de actores MCP.
 
 - Documentados el runbook local de Codex MCP, el estado de las migraciones, la composición de autorización documental y la deuda temporal de comprobación de origen.
