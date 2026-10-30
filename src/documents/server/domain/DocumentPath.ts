@@ -31,10 +31,6 @@ export class DocumentPath {
     );
   }
 
-  static fromLegacyId(id: string): Result<InvalidDocumentIdError, DocumentPath> {
-    return DocumentPath.create(id);
-  }
-
   /** Ruta interna, incluyendo `/index` cuando representa un índice. */
   getInternalValue(): string {
     return this.internalValue;

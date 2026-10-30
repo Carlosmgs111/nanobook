@@ -51,20 +51,6 @@ export class DocumentAccessDeniedError extends Error {
   }
 }
 
-export class DocumentDeletionPartialError extends InfrastructureError {
-  constructor(
-    public readonly deletedDocumentIds: string[],
-    public readonly failedDocumentId: string,
-    options?: { cause?: unknown }
-  ) {
-    super(
-      `La eliminación quedó incompleta. Se eliminaron ${deletedDocumentIds.length} documento(s) y falló "${failedDocumentId}"`,
-      options
-    );
-    this.name = "DocumentDeletionPartialError";
-  }
-}
-
 export class InvalidDocumentIdError extends Error {
   constructor(public readonly documentId: string) {
     super(`Id de documento inválido: ${documentId}`);
@@ -91,7 +77,6 @@ export type DocumentServiceError =
   | DocumentAccessDeniedError
   | DocumentNotFoundError
   | DocumentRevisionConflictError
-  | DocumentDeletionPartialError
   | InvalidDocumentIdError
   | ParentNotFoundError
   | InvalidDocumentError;

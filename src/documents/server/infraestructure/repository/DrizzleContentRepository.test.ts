@@ -6,7 +6,6 @@ import { createDatabase } from "../../../../shared/infrastructure/database/creat
 import { Document } from "../../domain/Document";
 import type { DocumentMetadata } from "../../domain/types";
 import { DrizzleContentRepository } from "./DrizzleContentRepository";
-import { DocumentRevisionConflictError } from "../../domain/errors";
 
 const metadata = (id: string, ownerId: string): DocumentMetadata => ({
   id,
@@ -28,7 +27,7 @@ describe("DrizzleContentRepository", () => {
     connection = createDatabase({ url: ":memory:" });
     await connection.db.run(sql`PRAGMA foreign_keys = ON`);
     await connection.db.run(sql`CREATE TABLE user (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, email_verified INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL DEFAULT 0)`);
-    await connection.db.run(sql`CREATE TABLE nanobook (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, visibility TEXT NOT NULL DEFAULT 'private', settings_json TEXT NOT NULL DEFAULT '{}', content_version INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
+    await connection.db.run(sql`CREATE TABLE nanobook (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, visibility TEXT NOT NULL DEFAULT 'private', settings_json TEXT NOT NULL DEFAULT '{}', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
     await connection.db.run(sql`CREATE TABLE document (id TEXT PRIMARY KEY, nanobook_id TEXT NOT NULL REFERENCES nanobook(id) ON DELETE RESTRICT, path TEXT NOT NULL, public_path TEXT NOT NULL, parent_path TEXT, title TEXT NOT NULL, description TEXT NOT NULL, body TEXT NOT NULL, metadata_json TEXT NOT NULL, raw_frontmatter TEXT NOT NULL, owner_id TEXT REFERENCES user(id) ON DELETE RESTRICT, revision INTEGER NOT NULL DEFAULT 1, content_hash TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted_at INTEGER)`);
     await connection.db.run(sql`CREATE UNIQUE INDEX document_live_path_unique ON document (nanobook_id, path)`);
     await connection.db.run(sql`CREATE UNIQUE INDEX document_live_public_path_unique ON document (nanobook_id, public_path)`);
@@ -36,8 +35,6 @@ describe("DrizzleContentRepository", () => {
     for (const statement of migration.split("--> statement-breakpoint")) {
       await connection.client.execute(statement.trim());
     }
-    await connection.db.run(sql`CREATE TABLE document_revision (document_id TEXT NOT NULL REFERENCES document(id) ON DELETE RESTRICT, revision INTEGER NOT NULL, snapshot_json TEXT NOT NULL, actor_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT, operation TEXT NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (document_id, revision))`);
-    await connection.db.run(sql`CREATE TABLE content_outbox (id TEXT PRIMARY KEY NOT NULL, nanobook_id TEXT NOT NULL REFERENCES nanobook(id) ON DELETE RESTRICT, content_version INTEGER NOT NULL, event_type TEXT NOT NULL, payload_json TEXT NOT NULL, created_at INTEGER NOT NULL, delivered_at INTEGER)`);
     await connection.db.run(sql`INSERT INTO user (id, name, email) VALUES ('owner-1', 'Owner', 'owner@example.com')`);
     await connection.db.run(sql`INSERT INTO user (id, name, email) VALUES ('owner-2', 'Owner 2', 'owner2@example.com')`);
     await connection.db.run(sql`INSERT INTO nanobook (id, owner_id, slug, name, created_at, updated_at) VALUES ('book-a', 'owner-1', 'a', 'A', 0, 0)`);
@@ -57,7 +54,21 @@ describe("DrizzleContentRepository", () => {
     expect((await first.getByPublicPath("book-a", "guide")).getValue()?.getContent()).toBe("# A");
     expect((await second.getByPublicPath("book-b", "guide")).getValue()?.getContent()).toBe("# B");
     expect((await first.getById("book-a", "doc-b")).getValue()).toBeNull();
-    expect((await connection.client.execute("SELECT COUNT(*) AS count FROM document_revision")).rows[0]?.count).toBe(2);
+  });
+
+  it("persists a document without mutating nanobook metadata", async () => {
+    const value = Document.create(
+      "guide/index",
+      metadata("history-only", "owner-1"),
+      "# Guide",
+    ).getValue();
+
+    expect((await first.create("book-a", value)).isSuccess).toBe(true);
+
+    const book = (await connection.client.execute(
+      "SELECT updated_at FROM nanobook WHERE id = 'book-a'",
+    )).rows[0];
+    expect(book?.updated_at).toBe(0);
   });
 
   it("does not persist the historical nanobook marker in SQL metadata", async () => {
@@ -87,50 +98,16 @@ describe("DrizzleContentRepository", () => {
     expect(children.getValue().map((value) => value.getDocumentId().getValue())).toEqual(["child"]);
   });
 
-  it("updates only when the expected revision is current", async () => {
-    const original = Document.create("guide/revisioned", metadata("revisioned", "owner-1"), "# A").getValue();
-    await first.create("book-a", original);
-
-    const changed = Document.create(
-      "guide/revisioned",
-      { ...metadata("revisioned", "owner-1"), updatedAt: new Date("2026-01-02T00:00:00.000Z") },
-      "# B",
-      undefined,
-      undefined,
-      "revisioned",
-    ).getValue();
-    const update = await first.updateWithRevision?.("book-a", changed, 1);
-    expect(update?.isSuccess).toBe(true);
-
-    const stale = Document.create(
-      "guide/revisioned",
-      { ...metadata("revisioned", "owner-1"), updatedAt: new Date("2026-01-03T00:00:00.000Z") },
-      "# C",
-      undefined,
-      undefined,
-      "revisioned",
-    ).getValue();
-    const conflict = await first.updateWithRevision?.("book-a", stale, 1);
-    expect(conflict?.isSuccess).toBe(false);
-    expect(conflict?.getError()).toBeInstanceOf(DocumentRevisionConflictError);
-    expect((await first.getById("book-a", "revisioned")).getValue()?.getContent()).toBe("# B");
-    expect((await connection.client.execute("SELECT revision, operation FROM document_revision WHERE document_id = 'revisioned' ORDER BY revision")).rows).toEqual([
-      { revision: 1, operation: "create" },
-      { revision: 2, operation: "update" },
-    ]);
-  });
-
   it("deletes a SQL subtree in one transaction", async () => {
     const root = Document.create("guide/index", metadata("delete-root", "owner-1"), "# Guide").getValue();
     const child = Document.create("guide/intro", metadata("delete-child", "owner-1"), "# Intro").getValue();
     await first.create("book-a", root);
     await first.create("book-a", child);
 
-    const result = await first.deleteMany?.("book-a", [root, child]);
+    const result = await first.deleteMany("book-a", [root, child]);
 
-    expect(result?.isSuccess).toBe(true);
+    expect(result.isSuccess).toBe(true);
     expect((await first.list("book-a")).getValue()).toHaveLength(0);
-    expect((await connection.client.execute("SELECT operation FROM document_revision WHERE operation = 'delete' ORDER BY document_id")).rows).toHaveLength(2);
   });
 
   it("moves a SQL subtree in one transaction", async () => {
@@ -141,32 +118,14 @@ describe("DrizzleContentRepository", () => {
     const movedRoot = root.moveTo("reference/index").getValue();
     const movedChild = child.moveTo("reference/intro").getValue();
 
-    const result = await first.updateMany?.("book-a", [
-      { document: movedRoot, previousPath: "guide/index" },
-      { document: movedChild, previousPath: "guide/intro" },
+    const result = await first.updateMany("book-a", [
+      { document: movedRoot },
+      { document: movedChild },
     ]);
 
-    expect(result?.isSuccess).toBe(true);
+    expect(result.isSuccess).toBe(true);
     expect((await first.getByPath("book-a", "reference/index")).getValue()?.getDocumentId().getValue()).toBe("move-root");
     expect((await first.getByPath("book-a", "reference/intro")).getValue()?.getDocumentId().getValue()).toBe("move-child");
   });
 
-  it.each(["folder/subfolder/index", "folder/subfolder"])("reuses deleted path %s while preserving history and rejecting live duplicates", async (path) => {
-    const original = Document.create(path, metadata("old", "owner-1"), "Original").getValue();
-    expect((await first.create("book-a", original)).isSuccess).toBe(true);
-    expect((await first.delete("book-a", original)).isSuccess).toBe(true);
-    expect((await first.getByPath("book-a", path)).getValue()).toBeNull();
-
-    const replacement = Document.create(path, metadata("replacement", "owner-1"), "Replacement").getValue();
-    expect((await first.create("book-a", replacement)).isSuccess).toBe(true);
-    expect((await first.getByPublicPath("book-a", replacement.getPublicPath())).getValue()?.getDocumentId().getValue()).toBe("replacement");
-    expect((await connection.client.execute("SELECT operation FROM document_revision WHERE document_id = 'old' ORDER BY revision")).rows).toEqual([
-      { operation: "create" }, { operation: "delete" },
-    ]);
-    const duplicate = Document.create(path, metadata("duplicate", "owner-1"), "Duplicate").getValue();
-    expect((await first.create("book-a", duplicate)).isSuccess).toBe(false);
-    const conflictingPath = path.endsWith("/index") ? path.slice(0, -6) : `${path}/index`;
-    const publicDuplicate = Document.create(conflictingPath, metadata("public-duplicate", "owner-1"), "Duplicate").getValue();
-    expect((await first.create("book-a", publicDuplicate)).isSuccess).toBe(false);
-  });
 });

@@ -91,31 +91,4 @@ describe("Document", () => {
     expect(result.isSuccess).toBe(false);
     expect(result.getError().message).toContain("only be marked on an index");
   });
-
-  it("does not let the historical marker change the document version", async () => {
-    const marked = Document.create(
-      "index",
-      {
-        id: "same-version",
-        title: "Root",
-        description: "Root",
-        createdAt: new Date("2026-01-01T00:00:00.000Z"),
-        nanobook: true,
-      },
-      "# Root",
-    ).getValue();
-    const plain = Document.create(
-      "index",
-      {
-        id: "same-version",
-        title: "Root",
-        description: "Root",
-        createdAt: new Date("2026-01-01T00:00:00.000Z"),
-        nanobook: false,
-      },
-      "# Root",
-    ).getValue();
-
-    await expect(marked.getDocumentVersion()).resolves.toBe(await plain.getDocumentVersion());
-  });
 });

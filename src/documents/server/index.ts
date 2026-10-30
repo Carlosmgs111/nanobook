@@ -19,7 +19,6 @@ import type { EventBus } from "../../shared/domain/bus/EventBus";
 
 export type { Document } from "./domain/Document";
 export type { Heading } from "./domain/Heading";
-export type { DocumentHash } from "./domain/DocumentHash";
 export type { CreateDocumentRequest } from "./application/dto/CreateDocumentRequest";
 export type { UpdateDocumentRequest } from "./application/dto/UpdateDocumentRequest";
 export type { SerializedEntry } from "./application/dto/SerializedEntry";
@@ -29,8 +28,6 @@ export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentDeleted } from "./domain/events/DocumentDeleted";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
-export { DrizzleContentOutboxDispatcher } from "./infraestructure/database/DrizzleContentOutboxDispatcher";
-
 export class DocumentModule {
   constructor(
     public readonly createDocument: CreateDocument,
@@ -40,7 +37,6 @@ export class DocumentModule {
     public readonly deleteDocumentController: DeleteDocumentController,
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
-    public readonly eventBus: EventBus,
   ) {}
 
   async refreshDocuments(nanobookId: string) {
@@ -88,7 +84,6 @@ export class DocumentModule {
       deleteDocumentController,
       getAllDocuments,
       getDocument,
-      eventBus,
     );
   }
 }

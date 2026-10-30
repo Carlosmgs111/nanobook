@@ -22,7 +22,6 @@ export class Nanobook {
     private readonly name: string,
     private readonly visibility: NanobookVisibility,
     private readonly settings: NanobookSettings,
-    private readonly contentVersion: number,
     private readonly setupStatus: NanobookSetupStatus,
     private readonly createdAt: Date,
     private readonly updatedAt: Date,
@@ -51,12 +50,6 @@ export class Nanobook {
       return Result.fail(new InvalidNanobookError("visibility es inválida"));
     }
     if (
-      data.contentVersion !== undefined &&
-      (!Number.isInteger(data.contentVersion) || data.contentVersion < 0)
-    ) {
-      return Result.fail(new InvalidNanobookError("contentVersion es inválida"));
-    }
-    if (
       data.setupStatus !== undefined &&
       !["pending", "ready", "failed"].includes(data.setupStatus)
     ) {
@@ -82,7 +75,6 @@ export class Nanobook {
         name,
         data.visibility ?? "private",
         { ...settings },
-        data.contentVersion ?? 0,
         data.setupStatus ?? "ready",
         createdAt,
         updatedAt,
@@ -95,7 +87,6 @@ export class Nanobook {
   getSlug(): string { return this.slug; }
   getName(): string { return this.name; }
   getVisibility(): NanobookVisibility { return this.visibility; }
-  getContentVersion(): number { return this.contentVersion; }
   getSetupStatus(): NanobookSetupStatus { return this.setupStatus; }
   getSettings(): NanobookSettings { return { ...this.settings }; }
 
@@ -107,7 +98,6 @@ export class Nanobook {
       this.name,
       this.visibility,
       this.getSettings(),
-      this.contentVersion,
       setupStatus,
       this.createdAt,
       this.updatedAt,
@@ -122,7 +112,6 @@ export class Nanobook {
       name: this.name,
       visibility: this.visibility,
       settings: this.getSettings(),
-      contentVersion: this.contentVersion,
       setupStatus: this.setupStatus,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

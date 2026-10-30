@@ -3,52 +3,7 @@ import { Document } from "./Document";
 import { DocumentId } from "./DocumentId";
 import { InvalidDocumentIdError } from "./errors";
 
-describe("Document identity and version", () => {
-  it("keeps stable identity separate from mutable path", async () => {
-    const result = Document.create(
-      "guides/cache",
-      {
-        id: "doc-cache-01",
-        title: "Cache",
-        description: "Cache guide",
-        createdAt: new Date("2026-01-01"),
-      },
-      "# Cache"
-    );
-
-    expect(result.isSuccess).toBe(true);
-    const document = result.getValue();
-    expect(document.getDocumentId().getValue()).toBe("doc-cache-01");
-    expect(document.getPath()).toBe("guides/cache");
-    expect(document.parse().id).toBe("doc-cache-01");
-
-    const hash = await document.hashDocument();
-    expect(hash.documentId).toBe("doc-cache-01");
-    expect(hash.path).toBe("guides/cache");
-    expect(hash.version).toMatch(/^[a-f0-9]{64}$/);
-  });
-
-  it("preserves identity and version when the document moves", async () => {
-    const result = Document.create(
-      "guides/cache",
-      {
-        id: "doc-cache-01",
-        title: "Cache",
-        description: "Cache guide",
-        createdAt: new Date("2026-01-01"),
-      },
-      "# Cache"
-    );
-    const document = result.getValue();
-    const before = await document.getDocumentVersion();
-    const moved = document.moveTo("architecture/cache");
-
-    expect(moved.isSuccess).toBe(true);
-    expect(moved.getValue().getDocumentId().getValue()).toBe("doc-cache-01");
-    expect(moved.getValue().getPath()).toBe("architecture/cache");
-    await expect(moved.getValue().getDocumentVersion()).resolves.toBe(before);
-  });
-
+describe("Document identity", () => {
   it("keeps the internal index path and exposes its public path separately", () => {
     const result = Document.create(
       "new-dir/index",

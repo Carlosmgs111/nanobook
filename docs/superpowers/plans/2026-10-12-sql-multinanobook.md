@@ -1,5 +1,7 @@
 # Migración de documentos a SQL y múltiples nanobooks — Implementation Plan
 
+> **Estado (2026-10-30):** las secciones sobre `contentVersion`, `content_outbox` y snapshots persistidos en `document_revision` son históricas y quedaron sustituidas por la decisión [Identidad, ruta, versión y revisión de los documentos](../../../src/content/nanobook-project/arquitectura/identidad-ruta-version-documento.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Implementación secuencial; este plan no autoriza cambios sobre producción.
 
 **Goal:** Persistir documentos en la misma base SQL que usuarios y perfiles, con nanobooks independientes, cada uno con su árbol lógico y configuración propia, sin configuración de almacenamiento por parte del usuario.
