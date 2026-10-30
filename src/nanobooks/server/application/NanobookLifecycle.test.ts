@@ -5,18 +5,18 @@ import { UpdateNanobook } from "./UpdateNanobook";
 import { DeleteNanobook } from "./DeleteNanobook";
 
 function setup() {
-  const book = Nanobook.create({ id: "one", ownerId: "owner", slug: "first", name: "First", contentVersion: 7 }).getValue();
+  const book = Nanobook.create({ id: "one", ownerId: "owner", slug: "first", name: "First" }).getValue();
   const other = Nanobook.create({ id: "two", ownerId: "other", slug: "second", name: "Second" }).getValue();
   const repository = new InMemoryNanobookRepository([book, other]);
   return { repository, update: new UpdateNanobook(repository), remove: new DeleteNanobook(repository) };
 }
 
 describe("nanobook lifecycle", () => {
-  it("edits metadata while preserving identity and content version", async () => {
+  it("edits metadata while preserving identity", async () => {
     const { update, repository } = setup();
     const result = await update.execute("owner", "one", { name: "Renamed", slug: "renamed", visibility: "public" });
     expect(result.isSuccess).toBe(true);
-    expect(result.getValue().toPersistence()).toMatchObject({ id: "one", ownerId: "owner", name: "Renamed", slug: "renamed", visibility: "public", contentVersion: 7 });
+    expect(result.getValue().toPersistence()).toMatchObject({ id: "one", ownerId: "owner", name: "Renamed", slug: "renamed", visibility: "public" });
     expect((await repository.findBySlug("first")).getValue()).toBeNull();
   });
 

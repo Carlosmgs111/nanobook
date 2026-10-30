@@ -7,6 +7,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregido el tipado de `deleteMany`: el helper de borrado acepta la transacción LibSQL real y el manejo de errores ya no referencia una variable limitada al bucle.
+
+- Retiradas de `documents` las capacidades sin consumidores: el hash/versionado público de la entidad, la conversión de rutas legacy, el repositorio en memoria, el cierre no compuesto del renderer, la exposición redundante del bus y el adaptador de errores conservado solo por compatibilidad. El repositorio SQL ya no ofrece mutaciones individuales ni un `clearCache` vacío: actualización y borrado usan exclusivamente sus operaciones atómicas por conjunto. Sus pruebas específicas se eliminaron en lugar de adaptarse.
+
 - Corregida la continuación OAuth desde el formulario de acceso: los flujos de contraseña, registro y GitHub conservan únicamente la consulta firmada de Better Auth, y el navegador sigue el callback de autorización de Codex.
 
 - Las instrucciones OAuth de Better Auth ahora se transforman en redirecciones HTTP para navegaciones del navegador; al volver de GitHub, el flujo reanuda la autorización MCP en vez de aterrizar en la portada.
@@ -125,7 +129,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Restaurada la inclusión de `EditorController` en `DocumentEditor`: el editor vuelve a cargar CodeMirror, inicializar el contenido del documento y conectar los controles de edición.
 - Corregidas las rutas generadas por `NavigationModule`: breadcrumbs, sidebar e índices usan la ruta canónica `/n/{nanobookSlug}/...` y dejan de enlazar con las páginas legacy.
 - Adelgazado `DrizzleContentRepository`: centralizado el alcance por `nanobookId`, unificado el listado, reutilizada la serialización de metadatos del dominio y eliminado un prechequeo redundante en actualizaciones con revisión.
-- Retirados `GitHubRepository` y `FileSystemRepository`, junto con sus adaptadores de escritura/lectura y configuración de fuente; la persistencia activa de documentos queda en SQL por nanobook y `InMemoryRepository` se conserva solo para pruebas.
+- Retirados `GitHubRepository` y `FileSystemRepository`, junto con sus adaptadores de escritura/lectura y configuración de fuente; la persistencia activa de documentos queda en SQL por nanobook.
 - Movida la composición de navegación y publicación a `Application.createNanobookCapabilities()`: cada solicitud construye sus capacidades con `nanobookId` explícito y se eliminaron el mapa por tenant, el bus acotado y el ciclo de cierre de `NanobookModule`.
 - Simplificado el alta de nanobooks: `CreateNanobook` crea el nanobook, asegura el documento raíz y actualiza `setupStatus`; `Application` ya no coordina pasos entre módulos y un fallo del documento deja el nanobook disponible para un reintento posterior.
 - Ajustado el cableado de módulos: `DocumentModule` instancia directamente `DrizzleContentRepository` y sus capacidades desde su propio compositor; cada operación recibe el `nanobookId` explícito y ningún compositor fija ese valor en la instancia.
@@ -144,24 +148,24 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Mejorado el diagnóstico cuando la tabla `nanobook_alias` aún no tiene aplicada su migración; ahora se indica ejecutar `npm run database:migrate`.
 - Cerrada la frontera de mutaciones de documentos: los DTO, el editor y el mapper HTTP ya no aceptan ni reenvían `metadata.nanobook`, `ownerId` u otros campos desconocidos; la marca histórica solo se conserva al leer/importar contenido legado.
 - Cerrada temporalmente la configuración de nanobooks en un contrato vacío y validado: los manifiestos y la API rechazan proveedores, credenciales y campos arbitrarios hasta que exista una capacidad editorial explícita.
-- La creación de nanobooks usa una transacción compartida para insertar la colección, su raíz `index`, la revisión inicial, la versión de contenido y el evento outbox; un fallo al inicializar la raíz revierte toda la operación.
+- La creación de nanobooks inicializa la colección, su raíz `index` y la revisión documental inicial, y registra el estado de preparación de la colección.
 - La API de creación ya no acepta IDs de nanobook enviados por el cliente; la identidad se genera en el servidor.
 - Con `NANOBOOK_SQL_CUTOVER=true`, la composición global usa un repositorio de memoria inerte y el webhook de contenido de GitHub responde `410`, evitando acceso accidental al proveedor legacy.
 - La API pública de creación tampoco transporta configuraciones del cliente; los settings quedan reservados a manifiestos internos validados por el dominio.
 - La persistencia SQL ya no serializa `metadata.nanobook` ni lo usa para calcular versiones; el marcador histórico queda fuera del modelo activo.
 
-- Implementado el primer corte de persistencia SQL para nanobooks y documentos: conexión/migraciones Drizzle compartidas, repositorios acotados por `nanobookId`, revisiones optimistas, outbox transaccional y unidad de trabajo para versionar cambios.
+- Implementado el primer corte de persistencia SQL para nanobooks y documentos: conexión/migraciones Drizzle compartidas, repositorios acotados por `nanobookId` y revisiones optimistas por documento.
 - Añadido `NanobookContext` para aislar repositorio, navegación, eventos y caché por colección. Las rutas canónicas `/n/<slug>/...` validan visibilidad y propietario antes de resolver documentos; las respuestas de edición transportan la revisión esperada y los conflictos devuelven `409`.
 - Añadidos el validador de manifiestos y los comandos `content:import-sql`/`content:verify-sql`. La importación parte de un snapshot filesystem, exige clasificar las fronteras históricas y ofrece un informe JSON antes de aplicar cambios.
 - Añadida la creación autenticada de nanobooks en `POST /api/nanobooks`, con slug único, visibilidad y configuración inicial persistidas junto al propietario Better Auth.
-- Añadidos dispatcher de outbox con reintento seguro, exportación Markdown desde SQL y verificación de asignación de documentos por destino.
-- Los cambios del repositorio SQL incrementan `contentVersion` del nanobook, permitiendo invalidar contextos cacheados entre procesos.
+- Eliminados `contentVersion`, `content_outbox` y su dispatcher al no existir un consumidor ni una invariancia de dominio que justificara versionar globalmente el contenido del nanobook.
+- Eliminados `document_revision` y los snapshots históricos sin consumidor; la revisión actual del documento queda exclusivamente como token de concurrencia optimista y las operaciones individuales ya no abren transacciones explícitas.
 - El editor SSR pasa `nanobookId` al writer y selecciona el endpoint `/api/nanobooks/:id/documents/:documentId`, evitando que las mutaciones de una colección terminen en el API heredado.
 - Los errores `409` del editor conservan la revisión esperada y actual y muestran un mensaje de conflicto sin descartar el contenido staged local.
-- La importación SQL agrupa por destino la creación del nanobook, documentos, revisiones, versión de contenido y outbox en una sola transacción; la verificación compara hashes y detecta documentos inesperados.
+- La importación SQL agrupa por destino la creación del nanobook, documentos y revisiones; la verificación compara hashes y detecta documentos inesperados.
 - La migración registra alias de las rutas históricas y las rutas legacy pueden redirigir al nanobook canónico conservando autorización.
 - Añadido listado autenticado `GET /api/nanobooks` y la pantalla `/nanobooks` para crear y abrir las colecciones gestionadas por la instancia.
-- Las mutaciones SQL de documentos registran revisiones y eventos outbox junto con la escritura y actualizan la revisión expuesta al editor.
+- Las mutaciones SQL de documentos actualizan atómicamente la revisión expuesta al editor.
 - Añadido el interruptor reversible `NANOBOOK_SQL_CUTOVER=true`: las rutas legacy sin alias responden `410` y su API mutante queda bloqueado durante el corte.
 - El borrado de subárboles SQL se ejecuta en una única transacción, con revisiones y eventos outbox para todos sus documentos.
 - El renombrado SQL de directorios y sus descendientes también se aplica en una única transacción, evitando árboles parcialmente movidos.

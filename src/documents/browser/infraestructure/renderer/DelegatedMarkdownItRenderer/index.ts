@@ -54,10 +54,4 @@ export class DelegatedMarkdownItRenderer implements PreviewRenderer {
 
     pending.resolve(Result.fail(new EditionRenderError(response.error)));
   };
-
-  dispose(): void {
-    this.worker.removeEventListener("message", this.handleMessage);
-    this.worker.terminate();
-    this.pending.clear();
-  }
 }

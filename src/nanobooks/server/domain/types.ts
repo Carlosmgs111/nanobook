@@ -18,7 +18,6 @@ export interface CreateNanobookData {
   name: string;
   visibility?: NanobookVisibility;
   settings?: NanobookSettings;
-  contentVersion?: number;
   setupStatus?: NanobookSetupStatus;
   createdAt?: Date;
   updatedAt?: Date;
@@ -31,7 +30,6 @@ export interface PersistedNanobook {
   name: string;
   visibility: NanobookVisibility;
   settings: NanobookSettings;
-  contentVersion: number;
   setupStatus?: NanobookSetupStatus;
   createdAt: Date;
   updatedAt: Date;

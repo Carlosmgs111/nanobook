@@ -16,8 +16,8 @@ export function createRepository(
     getByPublicPath: vi.fn().mockResolvedValue(Result.ok(null)),
     listChildren: vi.fn().mockResolvedValue(Result.ok([])),
     create: vi.fn().mockResolvedValue(Result.ok()),
-    update: vi.fn().mockResolvedValue(Result.ok()),
-    delete: vi.fn().mockResolvedValue(Result.ok()),
+    updateMany: vi.fn().mockResolvedValue(Result.ok()),
+    deleteMany: vi.fn().mockResolvedValue(Result.ok()),
     ...overrides,
   };
 }

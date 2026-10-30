@@ -12,15 +12,18 @@ describe("Nanobook", () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.getValue().toPersistence()).toMatchObject({
+    const persisted = result.getValue().toPersistence();
+    const { createdAt, updatedAt, ...data } = persisted;
+    expect(data).toEqual({
       id: "book-1",
       ownerId: "user-1",
       slug: "manual-equipo",
+      name: "Manual del equipo",
       visibility: "private",
       settings: {},
-      contentVersion: 0,
       setupStatus: "ready",
     });
+    expect(createdAt).toEqual(updatedAt);
   });
 
   it("keeps legacy empty settings valid and accepts a closed theme reference", () => {

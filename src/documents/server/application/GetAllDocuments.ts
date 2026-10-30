@@ -19,7 +19,6 @@ export class GetAllDocuments {
   }
 
   async refresh(nanobookId: string): Promise<Document[]> {
-    await this.repository.clearCache?.(nanobookId);
     return this.execute(nanobookId);
   }
 }

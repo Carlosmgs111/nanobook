@@ -15,7 +15,6 @@ export const nanobook = sqliteTable(
       .notNull()
       .default("private"),
     settingsJson: text("settings_json").notNull().default("{}"),
-    contentVersion: integer("content_version").notNull().default(0),
     setupStatus: text("setup_status", { enum: ["pending", "ready", "failed"] })
       .notNull()
       .default("ready"),

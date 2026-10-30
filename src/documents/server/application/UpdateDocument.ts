@@ -93,7 +93,6 @@ export class UpdateDocument {
 
     const unauthorizedDocument = documentsToUpdate
       .getValue()
-      .map(({ document }) => document)
       .find((document) => document.getMetadata().ownerId !== actorId);
     if (unauthorizedDocument) {
       return Result.fail(
@@ -103,48 +102,27 @@ export class UpdateDocument {
       );
     }
 
-    const updates = documentsToUpdate.getValue().map((item, index) => ({
-      document: item.document,
-      previousPath: item.previousPath && item.previousPath !== item.document.getPath()
-        ? item.previousPath
-        : undefined,
+    const updates = documentsToUpdate.getValue().map((document, index) => ({
+      document,
       expectedRevision: expectedRevision !== undefined && index === 0
         ? expectedRevision
         : undefined,
     }));
-    if (this.contentRepository.updateMany) {
-      const updateResult = await this.contentRepository.updateMany(
-        nanobookId,
-        updates,
-      );
-      if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
-    } else {
-      for (const [index, item] of updates.entries()) {
-        const updateResult = item.expectedRevision !== undefined && index === 0 && this.contentRepository.updateWithRevision
-          ? await this.contentRepository.updateWithRevision(
-              nanobookId,
-              item.document,
-              item.expectedRevision,
-              item.previousPath,
-            )
-          : await this.contentRepository.update(
-              nanobookId,
-              item.document,
-              ...(item.previousPath ? [item.previousPath] : []),
-            );
-        if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
-      }
-    }
+    const updateResult = await this.contentRepository.updateMany(
+      nanobookId,
+      updates,
+    );
+    if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
 
-    for (const item of documentsToUpdate.getValue()) {
+    for (const document of documentsToUpdate.getValue()) {
       const eventResult = await this.eventBus.publish(
-        new DocumentUpdated(item.document.getDocumentId().getValue(), nanobookId)
+        new DocumentUpdated(document.getDocumentId().getValue(), nanobookId)
       );
       if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
     }
 
-    const persistedResult = documentsToUpdate.getValue()[0].document.withRevision(
-      documentsToUpdate.getValue()[0].document.getRevision() + 1,
+    const persistedResult = documentsToUpdate.getValue()[0].withRevision(
+      documentsToUpdate.getValue()[0].getRevision() + 1,
     );
     if (!persistedResult.isSuccess) return Result.fail(persistedResult.getError());
     return Result.ok(persistedResult.getValue());
@@ -154,15 +132,13 @@ export class UpdateDocument {
     nanobookId: string,
     existingDocument: Document,
     updatedDocument: Document
-  ): Promise<Result<UpdateDocumentError, Array<{ document: Document; previousPath?: string }>>> {
+  ): Promise<Result<UpdateDocumentError, Document[]>> {
     const rootChanged = existingDocument.getPath() !== updatedDocument.getPath();
     if (!rootChanged || !existingDocument.isIndex() || !updatedDocument.isIndex()) {
-      return Result.ok([
-        { document: updatedDocument, previousPath: existingDocument.getPath() },
-      ]);
+      return Result.ok([updatedDocument]);
     }
 
-      const documentsResult = await this.contentRepository.list(nanobookId);
+    const documentsResult = await this.contentRepository.list(nanobookId);
     if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
 
     const oldPublicPath = existingDocument.getPublicPath();
@@ -176,9 +152,7 @@ export class UpdateDocument {
       ...descendants.map((document) => document.getDocumentId().getValue()),
     ]);
     const targetPaths = new Set<string>([updatedDocument.getPath()]);
-    const moveSet: Array<{ document: Document; previousPath: string }> = [
-      { document: updatedDocument, previousPath: existingDocument.getPath() },
-    ];
+    const moveSet: Document[] = [updatedDocument];
 
     for (const descendant of descendants) {
       const nextPath = `${newPublicPath}${descendant.getPath().slice(oldPublicPath.length)}`;
@@ -186,7 +160,7 @@ export class UpdateDocument {
       if (!movedResult.isSuccess) return Result.fail(movedResult.getError());
       const moved = movedResult.getValue();
       targetPaths.add(moved.getPath());
-      moveSet.push({ document: moved, previousPath: descendant.getPath() });
+      moveSet.push(moved);
     }
 
     const collision = documents.find(

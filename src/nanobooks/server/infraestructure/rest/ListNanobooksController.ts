@@ -17,7 +17,6 @@ export class ListNanobooksController {
       slug: nanobook.getSlug(),
       name: nanobook.getName(),
       visibility: nanobook.getVisibility(),
-      contentVersion: nanobook.getContentVersion(),
     }))), {
       status: 200,
       headers: { "Content-Type": "application/json" },

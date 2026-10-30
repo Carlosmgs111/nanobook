@@ -2,7 +2,6 @@ import type { Result } from "../../../../shared/domain/Result";
 import type { Document } from "../Document";
 import type {
   DocumentAlreadyExistsError,
-  DocumentNotFoundError,
   InvalidDocumentError,
   InvalidDocumentIdError,
   DocumentRepositoryError,
@@ -19,7 +18,6 @@ export type ContentRepositoryListError =
 export type ContentRepositoryError =
   | DocumentRepositoryError
   | DocumentAlreadyExistsError
-  | DocumentNotFoundError
   | DocumentRevisionConflictError;
 
 export interface ContentRepository {
@@ -41,22 +39,9 @@ export interface ContentRepository {
     parentPath: string | null
   ): Promise<Result<ContentRepositoryListError, Document[]>>;
   create(nanobookId: string, document: Document): Promise<Result<ContentRepositoryError, void>>;
-  update(
+  updateMany(
     nanobookId: string,
-    document: Document,
-    previousPath?: string
+    updates: Array<{ document: Document; expectedRevision?: number }>,
   ): Promise<Result<ContentRepositoryError, void>>;
-  updateWithRevision?(
-    nanobookId: string,
-    document: Document,
-    expectedRevision: number,
-    previousPath?: string,
-  ): Promise<Result<ContentRepositoryError, void>>;
-  updateMany?(
-    nanobookId: string,
-    updates: Array<{ document: Document; previousPath?: string; expectedRevision?: number }>,
-  ): Promise<Result<ContentRepositoryError, void>>;
-  delete(nanobookId: string, document: Document): Promise<Result<ContentRepositoryError, void>>;
-  deleteMany?(nanobookId: string, documents: Document[]): Promise<Result<ContentRepositoryError, void>>;
-  clearCache?(nanobookId: string): Promise<void> | void;
+  deleteMany(nanobookId: string, documents: Document[]): Promise<Result<ContentRepositoryError, void>>;
 }

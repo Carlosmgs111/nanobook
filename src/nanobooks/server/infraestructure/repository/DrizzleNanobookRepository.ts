@@ -1,9 +1,5 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { document } from "../../../../documents/server/infraestructure/database/DrizzleDocumentSchema";
-import {
-  documentRevision,
-  contentOutbox,
-} from "../../../../documents/server/infraestructure/database/DrizzleDocumentRevisionSchema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 
 import { Result } from "../../../../shared/domain/Result";
@@ -31,7 +27,6 @@ export class DrizzleNanobookRepository implements NanobookRepository {
         name: data.name,
         visibility: data.visibility,
         settingsJson: JSON.stringify(data.settings),
-        contentVersion: data.contentVersion,
         setupStatus: data.setupStatus ?? "ready",
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
@@ -99,16 +94,6 @@ export class DrizzleNanobookRepository implements NanobookRepository {
           .from(nanobook)
           .where(condition);
         if (!current) throw new Error("El nanobook cambió; recarga la página");
-        const documentIds = tx
-          .select({ id: document.id })
-          .from(document)
-          .where(eq(document.nanobookId, book.getId()));
-        await tx
-          .delete(documentRevision)
-          .where(inArray(documentRevision.documentId, documentIds));
-        await tx
-          .delete(contentOutbox)
-          .where(eq(contentOutbox.nanobookId, book.getId()));
         await tx.delete(document).where(eq(document.nanobookId, book.getId()));
         await tx.delete(nanobook).where(condition);
       });
@@ -224,7 +209,6 @@ export class DrizzleNanobookRepository implements NanobookRepository {
       name: row.name,
       visibility: row.visibility,
       settings,
-      contentVersion: row.contentVersion,
       setupStatus: row.setupStatus,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

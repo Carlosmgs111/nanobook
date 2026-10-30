@@ -41,7 +41,7 @@ Nanobook es un sitio de documentación técnica construido con Astro. Organiza e
 ### Arquitectura y despliegue
 
 - **SSR puro con Astro**: todas las rutas se renderizan bajo demanda (`output: "server"`) y se cachean con `Cache-Control`.
-- **Persistencia SQL aislada por nanobook**: cada contexto crea su repositorio de documentos con el `nanobookId`, evitando mezclar contenido entre colecciones. `InMemoryRepository` queda disponible únicamente para pruebas.
+- **Persistencia SQL aislada por nanobook**: cada operación delimita el repositorio de documentos mediante el `nanobookId`, evitando mezclar contenido entre colecciones.
 - **Capa de dominio desacoplada** en `src/document/`, `src/navigation/`, `src/rendering/`, `src/edition/` y `src/theme/`.
 - **Adapters de rendering** pluggables: `MarkdownItRenderer` (activo), `AstroMarkdownRenderer` y `UnifiedMarkdownRenderer`.
 
@@ -217,9 +217,8 @@ Campos:
 ## Extensibilidad
 
 El sistema usa `ContentRepository` como contrato. En producción, el compositor
-de `DocumentModule` crea el repositorio SQL acotado al nanobook actual. Las
-implementaciones alternativas se mantienen fuera del runtime y
-`InMemoryRepository` se reserva para pruebas aisladas.
+de `DocumentModule` crea la implementación SQL y cada operación recibe el
+`nanobookId` que delimita su colección.
 
 ## Versionado
 

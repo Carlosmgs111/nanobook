@@ -2,14 +2,13 @@ import { Result } from "../../../shared/domain/Result";
 import { DocumentId } from "./DocumentId";
 import { DocumentReference } from "./DocumentReference";
 import type { DocumentMetadata, Entry } from "./types";
-import { hashString, serializeMetadata } from "./hash";
+import { hashString } from "./hash";
 import type { DocumentParser } from "./ports/DocumentParser";
 import {
   InvalidDocumentError,
   InvalidDocumentIdError,
 } from "./errors";
 import type { Heading } from "./Heading";
-import type { DocumentHash } from "./DocumentHash";
 import { DocumentPath } from "./DocumentPath";
 
 const NEW_DOCUMENT_TEMPLATE = `---
@@ -157,23 +156,6 @@ export class Document {
     return await hashString(this.content);
   }
 
-  async hashDocument(): Promise<DocumentHash> {
-    const contentHash = await this.computeContentHash();
-    const metadataHash = await hashString(serializeMetadata(this.metadata));
-    // A path move must not create a new document version. Version identifies
-    // the document state, while path identifies its current location.
-    const version = await hashString(`${contentHash}\n${metadataHash}`);
-    return {
-      documentId: this.getDocumentId().getValue(),
-      revision: this.revision,
-      path: this.getPath(),
-      id: this.getDocumentId().getValue(),
-      version,
-      contentHash,
-      metadataHash,
-    };
-  }
-
   getId(): DocumentId {
     return this.documentId;
   }
@@ -194,9 +176,6 @@ export class Document {
   }
   getDocumentPath(): DocumentPath {
     return this.path;
-  }
-  getDocumentVersion(): Promise<string> {
-    return this.hashDocument().then((hash) => hash.version);
   }
   moveTo(pathValue: string): Result<InvalidDocumentError | InvalidDocumentIdError, Document> {
     return Document.create(

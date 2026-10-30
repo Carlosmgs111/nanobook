@@ -5,7 +5,6 @@ import type { Document } from "../domain/Document";
 import { DocumentDeleted } from "../domain/events/DocumentDeleted";
 import {
   DocumentNotFoundError,
-  DocumentDeletionPartialError,
   type DocumentServiceError,
   DocumentRepositoryError,
   DocumentParseError,
@@ -70,45 +69,13 @@ export class DeleteDocument {
       );
     }
 
-    const deletedDocuments = documentsToDelete;
-    if (this.repository.deleteMany) {
-      const deleteResult = await this.repository.deleteMany(
-        nanobookId,
-        documentsToDelete,
-      );
-      if (!deleteResult.isSuccess) return Result.fail(deleteResult.getError());
-    } else {
-      const deletedOneByOne = [] as typeof documentsToDelete;
-      for (const documentToDelete of documentsToDelete) {
-        const deleteResult = await this.repository.delete(
-          nanobookId,
-          documentToDelete,
-        );
-        if (!deleteResult.isSuccess) {
-          if (deletedOneByOne.length === 0)
-            return Result.fail(deleteResult.getError());
+    const deleteResult = await this.repository.deleteMany(
+      nanobookId,
+      documentsToDelete,
+    );
+    if (!deleteResult.isSuccess) return Result.fail(deleteResult.getError());
 
-          const eventResult = await this.publishDeletedEvents(
-            nanobookId,
-            deletedOneByOne,
-          );
-          if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
-
-          return Result.fail(
-            new DocumentDeletionPartialError(
-              deletedOneByOne.map((deleted) =>
-                deleted.getDocumentId().getValue()
-              ),
-              documentToDelete.getDocumentId().getValue(),
-              { cause: deleteResult.getError() }
-            )
-          );
-        }
-        deletedOneByOne.push(documentToDelete);
-      }
-    }
-
-    const eventResult = await this.publishDeletedEvents(nanobookId, deletedDocuments);
+    const eventResult = await this.publishDeletedEvents(nanobookId, documentsToDelete);
     if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
 
     return Result.ok();
