@@ -26,7 +26,7 @@ describe("navigation shell", () => {
     const index = read("src/navigation/browser/ui/components/IndexList/index.astro");
     const editor = read("src/documents/browser/ui/pages/EditPage.astro");
 
-    expect(page).toContain("new AuthorizeNanobook().canWrite(nanobook, user?.id)");
+    expect(page).toContain("new AuthorizeNanobook().canWrite(nanobook, actorId)");
     expect(page).toContain('canEdit && <DocumentActionLink href={editHref} label="Editar" />');
     expect(page).toContain("canEdit && entry.isIndex");
     expect(index).toContain('label="Nuevo en esta sección"');

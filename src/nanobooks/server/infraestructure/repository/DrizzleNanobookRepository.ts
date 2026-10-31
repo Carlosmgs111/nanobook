@@ -176,8 +176,8 @@ export class DrizzleNanobookRepository implements NanobookRepository {
         .from(nanobook)
         .where(condition)
         .limit(1);
-      const bookResult = this.toDomain(row);
-      return Result.ok(row ? bookResult.getValue() : null);
+      if (!row) return Result.ok(null);
+      return this.toDomain(row);
     } catch (error) {
       return Result.fail(
         new NanobookRepositoryError("No fue posible consultar el nanobook", {

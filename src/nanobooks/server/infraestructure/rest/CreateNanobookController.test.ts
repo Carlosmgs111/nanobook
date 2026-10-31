@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Result } from "../../../../shared/domain/Result";
 import { Nanobook } from "../../domain/Nanobook";
+import { NanobookRepositoryError } from "../../domain/errors";
 import { CreateNanobookController } from "./CreateNanobookController";
 
 describe("CreateNanobookController", () => {
@@ -36,5 +37,23 @@ describe("CreateNanobookController", () => {
     });
     expect(execute.mock.calls[0]?.[1]).not.toHaveProperty("id");
     expect(execute.mock.calls[0]?.[1]).not.toHaveProperty("settings");
+  });
+
+  it("returns 500 when creation fails because the repository is unavailable", async () => {
+    const controller = new CreateNanobookController({
+      execute: vi.fn().mockResolvedValue(
+        Result.fail(new NanobookRepositoryError("database unavailable")),
+      ),
+    } as never);
+
+    const response = await controller.handle({
+      request: new Request("https://nanobook.test/api/nanobooks", {
+        method: "POST",
+        body: JSON.stringify({ slug: "manual", name: "Manual" }),
+      }),
+      locals: { currentUserId: "owner-1" },
+    } as never);
+
+    expect(response.status).toBe(500);
   });
 });

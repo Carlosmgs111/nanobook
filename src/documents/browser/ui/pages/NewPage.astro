@@ -2,24 +2,16 @@
 import Layout from "../../../../layouts/Layout.astro";
 import NewDocumentPageController from "../NewDocumentPageController.astro";
 import { getApp } from "../../../../application/server/Application";
+import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 
 const app = await getApp();
 
 interface Props {
-  nanobookSlug?: string;
+  nanobook: Nanobook;
 }
 
-const { nanobookSlug } = Astro.props;
-if (!nanobookSlug) {
-  return new Response("Nanobook not found", { status: 404 });
-}
-const nanobookResult = await app.nanobookModule.getNanobookBySlug.execute(nanobookSlug);
-if (!nanobookResult.isSuccess) throw nanobookResult.getError();
-const nanobook = nanobookResult.getValue();
-if (!nanobook) {
-  return new Response("Nanobook not found", { status: 404 });
-}
+const { nanobook } = Astro.props;
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
@@ -47,7 +39,7 @@ if (!renderedPage) throw new Error("Page not found");
 const { rendered } = renderedPage;
 const { entry } = rendered;
 const basePath = slug === "index" ? "" : `${slug}/`;
-const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
+const baseHref = `/n/${nanobook.getSlug()}`;
 ---
 
 <Layout

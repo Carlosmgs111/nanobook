@@ -21,9 +21,12 @@ export class CreateNanobookController {
         visibility: body.visibility,
       });
       if (!result.isSuccess) {
-        const status = result.getError().name.includes("Slug") ? 409 : 400;
+        const error = result.getError();
+        const status = statusForCreateError(error);
         return new Response(
-          JSON.stringify({ error: result.getError().message }),
+          JSON.stringify({
+            error: status === 500 ? "No fue posible crear el nanobook" : error.message,
+          }),
           { status }
         );
       }
@@ -46,4 +49,15 @@ export class CreateNanobookController {
       );
     }
   };
+}
+
+function statusForCreateError(error: Error): number {
+  if (error.name === "NanobookSlugAlreadyTakenError") return 409;
+  if (
+    error.name === "InvalidNanobookError" ||
+    error.name === "InvalidNanobookSlugError"
+  ) {
+    return 400;
+  }
+  return 500;
 }
