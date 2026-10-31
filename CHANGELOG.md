@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Simplificada la composición de navegación: `NavigationModule` usa directamente las capacidades públicas de `DocumentModule` y se retiraron el adaptador y puerto de traducción sin implementaciones alternativas.
+
 - Retirado el caso de uso sin consumidores para buscar nanobooks por ID; las rutas SSR reutilizan el nanobook y actor ya autorizados, evitando consultas y lecturas de sesión duplicadas. El alta distingue correctamente entre errores de validación, conflictos de slug e infraestructura, y se amplió la cobertura de autorización y listado HTTP.
 
 - Corregido el tipado de `deleteMany`: el helper de borrado acepta la transacción LibSQL real y el manejo de errores ya no referencia una variable limitada al bucle.

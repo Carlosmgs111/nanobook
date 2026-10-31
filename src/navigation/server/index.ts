@@ -5,7 +5,7 @@ export type {
   ParentEntry,
   InvalidationResult,
 } from "./domain/types";
-export type { DocumentProvider } from "./domain/ports/DocumentProvider";
+import type { DocumentModule } from "../../documents/server";
 import { DocumentCreated } from "../../documents/server/domain/events/DocumentCreated";
 import { DocumentUpdated } from "../../documents/server/domain/events/DocumentUpdated";
 import { DocumentDeleted } from "../../documents/server/domain/events/DocumentDeleted";
@@ -14,13 +14,17 @@ import { EventBusError } from "../../shared/domain/bus/errors";
 import type { EventBus, EventHandler } from "../../shared/domain/bus/EventBus";
 import { NavigationService } from "./application/NavigationService";
 import { DocumentsGraph } from "./infraestructure/DocumentsGraph";
-import type { DocumentProvider } from "./domain/ports/DocumentProvider";
+
+type NavigationDocuments = Pick<
+  DocumentModule,
+  "getAllDocuments" | "refreshDocuments"
+>;
 
 export class NavigationModule {
-  private constructor(private readonly documentProvider: DocumentProvider) {}
+  private constructor(private readonly documents: NavigationDocuments) {}
 
-  static async create(documentProvider: DocumentProvider, eventBus: EventBus) {
-    const module = new NavigationModule(documentProvider);
+  static async create(documents: NavigationDocuments, eventBus: EventBus) {
+    const module = new NavigationModule(documents);
     const handler:
       & EventHandler<DocumentCreated>
       & EventHandler<DocumentUpdated>
@@ -28,7 +32,7 @@ export class NavigationModule {
       handle: async (event) => {
         if (!event.nanobookId) return Result.ok();
         try {
-          await documentProvider.refresh(event.nanobookId);
+          await documents.refreshDocuments(event.nanobookId);
           return Result.ok();
         } catch (error) {
           return Result.fail(new EventBusError("Failed to refresh navigation documents", {
@@ -47,7 +51,7 @@ export class NavigationModule {
     nanobookId: string,
     options: { rootPath?: string; basePath?: string } = {},
   ): Promise<NavigationService> {
-    const documents = await this.documentProvider.getAll(nanobookId);
-    return new NavigationService(new DocumentsGraph(documents), options);
+    const entries = await this.documents.getAllDocuments.execute(nanobookId);
+    return new NavigationService(new DocumentsGraph(entries), options);
   }
 }

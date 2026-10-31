@@ -1,7 +1,6 @@
 import { AuthServerModule } from "../../auth/server";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
-import { DocumentModuleDocumentProvider } from "../../documents/server/infraestructure/navigation/DocumentModuleDocumentProvider";
 import { NavigationModule } from "../../navigation/server";
 import { PublishingModule } from "../../publishing/server";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
@@ -28,7 +27,7 @@ export class Application {
     const eventBus = new InMemoryEventBus();
     const nanobookModule = await NanobookModule.create(eventBus);
     const navigationModule = await NavigationModule.create(
-      new DocumentModuleDocumentProvider(nanobookModule.documentModule),
+      nanobookModule.documentModule,
       eventBus,
     );
     const publishingModule = await PublishingModule.create(eventBus);
