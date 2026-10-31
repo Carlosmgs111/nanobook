@@ -6,7 +6,6 @@ import { UpdateNanobook } from "./application/UpdateNanobook";
 import { SetNanobookTheme } from "./application/SetNanobookTheme";
 import { DeleteNanobook } from "./application/DeleteNanobook";
 import { NanobookLifecycleController } from "./infraestructure/rest/NanobookLifecycleController";
-import { GetNanobookById } from "./application/GetNanobookById";
 import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
@@ -35,7 +34,6 @@ export class NanobookModule {
     public readonly createNanobook: CreateNanobook,
     public readonly updateNanobook: UpdateNanobook,
     public readonly createNanobookController: CreateNanobookController,
-    public readonly getNanobookById: GetNanobookById,
     public readonly getNanobookBySlug: GetNanobookBySlug,
     public readonly listNanobooks: ListNanobooks,
     public readonly listNanobooksController: ListNanobooksController,
@@ -49,7 +47,6 @@ export class NanobookModule {
   static async create(eventBus: EventBus): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(db);
     const listNanobooks = new ListNanobooks(repository);
-    const getNanobookById = new GetNanobookById(repository);
     const getNanobookBySlug = new GetNanobookBySlug(repository);
     const documentModule = await DocumentModule.create(eventBus);
     const createNanobook = new CreateNanobook(repository, documentModule);
@@ -61,7 +58,6 @@ export class NanobookModule {
       createNanobook,
       updateNanobook,
       new CreateNanobookController(createNanobook),
-      getNanobookById,
       getNanobookBySlug,
       listNanobooks,
       new ListNanobooksController(listNanobooks),

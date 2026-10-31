@@ -3,29 +3,21 @@ import IndexList from "../../../../navigation/browser/ui/components/IndexList/in
 import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
+import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 
 const app = await getApp();
 
 interface Props {
-  nanobookSlug?: string;
+  nanobook: Nanobook;
+  actorId?: string;
 }
 
-const { nanobookSlug } = Astro.props;
-if (!nanobookSlug) {
-  return new Response("Nanobook not found", { status: 404 });
-}
-const nanobookResult = await app.nanobookModule.getNanobookBySlug.execute(nanobookSlug);
-if (!nanobookResult.isSuccess) throw nanobookResult.getError();
-const nanobook = nanobookResult.getValue();
-if (!nanobook) {
-  return new Response("Nanobook not found", { status: 404 });
-}
+const { nanobook, actorId } = Astro.props;
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
-const user = await app.authServerModule.getSession(Astro.request);
-const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
+const canEdit = new AuthorizeNanobook().canWrite(nanobook, actorId);
 const navigationContext = { section: "read" as const, book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` } };
 const theme = await app.themeModule.resolveTheme.execute(
   nanobook.getSettings().theme,
@@ -49,7 +41,7 @@ if (!renderedPage) throw new Error("Page not found");
 const { rendered, headings } = renderedPage;
 const { entry, renderedBody } = rendered;
 
-const baseHref = nanobookSlug ? `/n/${nanobookSlug}` : "";
+const baseHref = `/n/${nanobook.getSlug()}`;
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
 const newHref = canEdit && entry.isIndex

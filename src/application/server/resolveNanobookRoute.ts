@@ -1,13 +1,18 @@
-import { AuthorizeNanobook } from "../../nanobooks/server";
+import { AuthorizeNanobook } from "../../nanobooks/server/application/AuthorizeNanobook";
 import type { Application } from "./Application";
-import type { Nanobook } from "../../nanobooks/server";
+import type { Nanobook } from "../../nanobooks/server/domain/Nanobook";
+
+export interface ResolvedNanobookRoute {
+  nanobook: Nanobook;
+  userId: string | undefined;
+}
 
 export async function resolveNanobookRoute(
   app: Application,
   request: Request,
   slug: string | undefined,
   permission: "read" | "write",
-): Promise<Nanobook | Response> {
+): Promise<ResolvedNanobookRoute | Response> {
   if (!slug) return new Response("Nanobook not found", { status: 404 });
 
   const result = await app.nanobookModule.getNanobookBySlug.execute(slug);
@@ -18,10 +23,10 @@ export async function resolveNanobookRoute(
   const user = await app.authServerModule.getSession(request);
   const authorization = new AuthorizeNanobook();
   if (permission === "read" && authorization.canRead(nanobook, user?.id)) {
-    return nanobook;
+    return { nanobook, userId: user?.id };
   }
   if (permission === "write" && authorization.canWrite(nanobook, user?.id)) {
-    return nanobook;
+    return { nanobook, userId: user?.id };
   }
 
   return new Response(

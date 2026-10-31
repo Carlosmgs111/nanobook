@@ -55,7 +55,6 @@ describe("Application", () => {
 
     expect(app.nanobookModule).toBeDefined();
     expect("repository" in app.nanobookModule).toBe(false);
-    expect(app.nanobookModule.getNanobookById).toBeDefined();
     expect(app.nanobookModule.getNanobookBySlug).toBeDefined();
     expect(app.nanobookModule.listNanobooks).toBeDefined();
   });
