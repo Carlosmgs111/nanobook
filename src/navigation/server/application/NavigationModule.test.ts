@@ -4,8 +4,13 @@ import { DocumentCreated } from "../../../documents/server/domain/events/Documen
 import { DocumentUpdated } from "../../../documents/server/domain/events/DocumentUpdated";
 import { DocumentDeleted } from "../../../documents/server/domain/events/DocumentDeleted";
 import { InMemoryEventBus } from "../../../shared/infrastructure/InMemoryEventBus";
-import type { DocumentProvider } from "../domain/ports/DocumentProvider";
+import type { DocumentModule } from "../../../documents/server";
 import { NavigationModule } from "../index";
+
+type NavigationDocuments = Pick<
+  DocumentModule,
+  "getAllDocuments" | "refreshDocuments"
+>;
 
 function document(path: string, id: string, title = path) {
   return Document.create(
@@ -25,24 +30,26 @@ describe("NavigationModule", () => {
   it.each([DocumentCreated, DocumentUpdated, DocumentDeleted])(
     "refreshes the affected nanobook on %s",
     async (Event) => {
-      const provider: DocumentProvider = {
-        getAll: vi.fn(async () => []),
-        refresh: vi.fn(async () => []),
+      const documents: NavigationDocuments = {
+        getAllDocuments: { execute: vi.fn(async () => []) },
+        refreshDocuments: vi.fn(async () => []),
       };
       const eventBus = new InMemoryEventBus();
-      await NavigationModule.create(provider, eventBus);
+      await NavigationModule.create(documents, eventBus);
       const result = await eventBus.publish(new Event("doc-1", "book-a"));
       expect(result.isSuccess).toBe(true);
-      expect(provider.refresh).toHaveBeenCalledExactlyOnceWith("book-a");
+      expect(documents.refreshDocuments).toHaveBeenCalledExactlyOnceWith("book-a");
     },
   );
 
   it("keeps concurrent navigation queries isolated without retaining a tenant graph", async () => {
-    const provider: DocumentProvider = {
-      getAll: async (id) => [document("index", `${id}-root`, id)],
-      refresh: async () => [],
+    const documents: NavigationDocuments = {
+      getAllDocuments: {
+        execute: async (id) => [document("index", `${id}-root`, id)],
+      },
+      refreshDocuments: async () => [],
     };
-    const module = await NavigationModule.create(provider, new InMemoryEventBus());
+    const module = await NavigationModule.create(documents, new InMemoryEventBus());
     const [a, b] = await Promise.all([
       module.getNavigation("a", { rootPath: "index", basePath: "/n/a" }),
       module.getNavigation("b", { rootPath: "index", basePath: "/n/b" }),
@@ -54,12 +61,12 @@ describe("NavigationModule", () => {
   });
 
   it("reports refresh failures through the event bus", async () => {
-    const provider: DocumentProvider = {
-      getAll: async () => [],
-      refresh: async () => { throw new Error("unavailable"); },
+    const documents: NavigationDocuments = {
+      getAllDocuments: { execute: async () => [] },
+      refreshDocuments: async () => { throw new Error("unavailable"); },
     };
     const bus = new InMemoryEventBus();
-    await NavigationModule.create(provider, bus);
+    await NavigationModule.create(documents, bus);
     expect((await bus.publish(new DocumentUpdated("doc", "book"))).isSuccess).toBe(false);
   });
 });
