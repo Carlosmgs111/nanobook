@@ -24,7 +24,7 @@ export class VercelNanobookReadCache implements NanobookReadCache {
   ): Promise<Result<NanobookRepositoryFailure, Nanobook | null>> {
     const key = this.key(slug);
     const cached = await this.read(key);
-    if (cached) return Result.ok(cached);
+    if (cached.hit) return Result.ok(cached.value);
 
     const result = await load();
     if (!result.isSuccess || !result.getValue()) return result;
@@ -42,30 +42,41 @@ export class VercelNanobookReadCache implements NanobookReadCache {
 
   async replace(nanobook: Nanobook, previousSlug?: string): Promise<void> {
     const currentKey = this.key(nanobook.getSlug());
-    if (previousSlug && this.key(previousSlug) !== currentKey) {
-      await this.runtimeCache.delete(this.key(previousSlug));
+    const keys = new Set([currentKey]);
+    if (previousSlug) {
+      keys.add(this.key(previousSlug));
     }
+    await Promise.all([...keys].map((key) => this.runtimeCache.delete(key)));
     await this.runtimeCache.set(currentKey, toNanobookSnapshot(nanobook), {
       name: `nanobook:${nanobook.getSlug()}`,
       ttl: CACHE_TTL_SECONDS,
     });
   }
 
-  remove(slug: string): Promise<void> {
-    return this.runtimeCache.delete(this.key(slug));
-  }
-
-  private async read(key: string): Promise<Nanobook | null> {
+  async remove(slug: string): Promise<void> {
+    const key = this.key(slug);
     try {
-      const value = await this.runtimeCache.get(key);
-      if (value === null) return null;
-      const nanobook = fromNanobookSnapshot(value);
-      if (nanobook) return nanobook;
       await this.runtimeCache.delete(key);
     } catch {
-      return null;
+      await this.runtimeCache.set(key, { deleted: true }, {
+        name: `nanobook-deleted:${this.normalizeSlug(slug)}`,
+        ttl: CACHE_TTL_SECONDS,
+      });
     }
-    return null;
+  }
+
+  private async read(key: string): Promise<{ hit: boolean; value: Nanobook | null }> {
+    try {
+      const value = await this.runtimeCache.get(key);
+      if (value === null) return { hit: false, value: null };
+      if (isDeletionTombstone(value)) return { hit: true, value: null };
+      const nanobook = fromNanobookSnapshot(value);
+      if (nanobook) return { hit: true, value: nanobook };
+      await this.runtimeCache.delete(key);
+    } catch {
+      return { hit: false, value: null };
+    }
+    return { hit: false, value: null };
   }
 
   private key(slug: string): string {
@@ -75,4 +86,8 @@ export class VercelNanobookReadCache implements NanobookReadCache {
   private normalizeSlug(slug: string): string {
     return slug.trim().toLowerCase();
   }
+}
+
+function isDeletionTombstone(value: unknown): value is { deleted: true } {
+  return !!value && typeof value === "object" && (value as { deleted?: unknown }).deleted === true;
 }

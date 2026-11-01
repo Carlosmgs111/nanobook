@@ -51,4 +51,11 @@ describe("DocumentSnapshot", () => {
 
     expect(fromDocumentSnapshot(snapshot, parser)).toBeNull();
   });
+
+  it("rejects a snapshot whose metadata identity differs from its document identity", () => {
+    const snapshot = toDocumentSnapshot(document);
+    snapshot.metadata.id = "other-document";
+
+    expect(fromDocumentSnapshot(snapshot, parser)).toBeNull();
+  });
 });
