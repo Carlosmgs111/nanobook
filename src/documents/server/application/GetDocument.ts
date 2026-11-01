@@ -2,6 +2,7 @@ import type { Document } from "../domain/Document";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { ProxyParser } from "./ProxyParser";
 import { DocumentPath } from "../domain/DocumentPath";
+import type { DocumentSourceCache } from "./DocumentSourceCache";
 
 export type DocumentTimingObserver = (
   name: "document-lookup" | "document-proxy",
@@ -11,7 +12,8 @@ export type DocumentTimingObserver = (
 export class GetDocument {
   constructor(
     private contentRepository: ContentRepository,
-    private parseProxy: ProxyParser
+    private parseProxy: ProxyParser,
+    private readonly sourceCache: DocumentSourceCache,
   ) {}
 
   async execute(
@@ -34,9 +36,11 @@ export class GetDocument {
     const pathResult = DocumentPath.create(documentPathValue);
     if (!pathResult.isSuccess) return null;
 
-    const documentResult = await this.contentRepository.getByPublicPath(
+    const publicPath = pathResult.getValue().getPublicValue();
+    const documentResult = await this.sourceCache.getOrLoad(
       nanobookId,
-      pathResult.getValue().getPublicValue()
+      publicPath,
+      () => this.contentRepository.getByPublicPath(nanobookId, publicPath),
     );
     if (!documentResult.isSuccess) {
       return null;

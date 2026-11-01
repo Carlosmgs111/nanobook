@@ -16,6 +16,11 @@ import { InternalReferenceResolver } from "./infraestructure/reference/InternalR
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
+import { DocumentCreated } from "./domain/events/DocumentCreated";
+import { DocumentUpdated } from "./domain/events/DocumentUpdated";
+import { DocumentDeleted } from "./domain/events/DocumentDeleted";
+import { createDocumentSourceCache } from "./infraestructure/cache/createDocumentSourceCache";
+import { InvalidateDocumentSourceCache } from "./application/event-handlers/InvalidateDocumentSourceCache";
 
 export type { Document } from "./domain/Document";
 export type { Heading } from "./domain/Heading";
@@ -58,11 +63,16 @@ export class DocumentModule {
 
     const referenceResolver = new CompositeReferenceResolver(plugins);
     const proxyParser = new ProxyParser(referenceResolver);
+    const sourceCache = createDocumentSourceCache();
     const createDocument = new CreateDocument(contentRepository, eventBus);
     const updateDocument = new UpdateDocument(contentRepository, eventBus);
     const deleteDocument = new DeleteDocument(contentRepository, eventBus);
     const getAllDocuments = new GetAllDocuments(contentRepository, proxyParser);
-    const getDocument = new GetDocument(contentRepository, proxyParser);
+    const getDocument = new GetDocument(contentRepository, proxyParser, sourceCache);
+    const invalidateDocumentSourceCache = new InvalidateDocumentSourceCache(sourceCache);
+    eventBus.subscribe(DocumentCreated, invalidateDocumentSourceCache);
+    eventBus.subscribe(DocumentUpdated, invalidateDocumentSourceCache);
+    eventBus.subscribe(DocumentDeleted, invalidateDocumentSourceCache);
     const updateDocumentController = new UpdateDocumentController(
       updateDocument
     );
