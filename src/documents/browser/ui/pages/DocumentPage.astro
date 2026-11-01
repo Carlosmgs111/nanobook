@@ -6,8 +6,20 @@ import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 import DocumentPageController from "../DocumentPageController.astro";
+import { formatServerTiming } from "../../../../shared/server/http/ServerTiming";
 
-const app = await getApp();
+const timings: Record<string, number> = {};
+
+async function measure<T>(name: string, operation: () => Promise<T>): Promise<T> {
+  const startedAt = performance.now();
+  try {
+    return await operation();
+  } finally {
+    timings[name] = performance.now() - startedAt;
+  }
+}
+
+const app = await measure("app", getApp);
 
 interface Props {
   nanobook: Nanobook;
@@ -23,24 +35,29 @@ const navigationContext = {
   section: "read" as const,
   book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` },
 };
-const theme = await app.themeModule.resolveTheme.execute(
-  nanobook.getSettings().theme,
-  Astro.request
+const theme = await measure("theme", () =>
+  app.themeModule.resolveTheme.execute(nanobook.getSettings().theme, Astro.request)
 );
-const navigationService = await navigationModule.getNavigation(nanobookId, {
-  rootPath: "index",
-  basePath: `/n/${nanobook.getSlug()}`,
-});
+const navigationService = await measure("navigation", () =>
+  navigationModule.getNavigation(nanobookId, {
+    rootPath: "index",
+    basePath: `/n/${nanobook.getSlug()}`,
+  })
+);
 
 export const prerender = false;
 
 const slug = Astro.params.slug || "index";
 if (!slug) return new Response("Document not found", { status: 404 });
 
-const document = await documentModule.getDocument.execute(nanobookId, slug);
+const document = await measure("document", () =>
+  documentModule.getDocument.execute(nanobookId, slug)
+);
 
 if (!document) throw new Error("Document not found");
-const renderedPage = await publishingModule.pagePublisher.publish(document);
+const renderedPage = await measure("publish", () =>
+  publishingModule.pagePublisher.publish(document)
+);
 if (!renderedPage) throw new Error("Page not found");
 const { rendered, headings } = renderedPage;
 const { entry, renderedBody } = rendered;
@@ -61,6 +78,7 @@ const canonicalHref = entry.ref
   : undefined;
 
 Astro.response.headers.set("Cache-Control", "no-store");
+Astro.response.headers.set("Server-Timing", formatServerTiming(timings));
 ---
 
 <Layout
