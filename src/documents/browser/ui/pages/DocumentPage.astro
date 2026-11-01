@@ -5,6 +5,7 @@ import { getApp } from "../../../../application/server/Application";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
+import DocumentPageController from "../DocumentPageController.astro";
 
 const app = await getApp();
 
@@ -18,10 +19,13 @@ const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
 const canEdit = new AuthorizeNanobook().canWrite(nanobook, actorId);
-const navigationContext = { section: "read" as const, book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` } };
+const navigationContext = {
+  section: "read" as const,
+  book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` },
+};
 const theme = await app.themeModule.resolveTheme.execute(
   nanobook.getSettings().theme,
-  Astro.request,
+  Astro.request
 );
 const navigationService = await navigationModule.getNavigation(nanobookId, {
   rootPath: "index",
@@ -44,7 +48,8 @@ const { entry, renderedBody } = rendered;
 const baseHref = `/n/${nanobook.getSlug()}`;
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
-const newHref = canEdit && entry.isIndex
+const newHref =
+  canEdit && entry.isIndex
     ? entry.slug === "index"
       ? `${baseHref}/index/new`
       : `${baseHref}/${entry.slug}/new`
@@ -56,7 +61,6 @@ const canonicalHref = entry.ref
   : undefined;
 
 Astro.response.headers.set("Cache-Control", "no-store");
-
 ---
 
 <Layout
@@ -68,74 +72,50 @@ Astro.response.headers.set("Cache-Control", "no-store");
   theme={theme}
   navigationContext={navigationContext}
 >
-{
-  entry.isIndex ? (
-    <IndexList
-      title={entry.title}
-      description={entry.description}
-      label="Índice"
-      navigationService={navigationService}
-      editHref={canEdit ? editHref : undefined}
-      newHref={newHref}
-    />
-  ) : (
-    <Fragment>
-      <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
-        <span class="tech-label mb-3 block">Documento</span>
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">{entry.title}</h1>
-          {canEdit && <DocumentActionLink href={editHref} label="Editar" />}
-        </div>
-      </div>
-
-      <div class="mb-12 flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-[var(--theme-border-subtle)] py-3 text-sm text-[var(--theme-text-muted)]">
-        {entry.metadata.author && <span>{entry.metadata.author}</span>}
-        {entry.metadata.author && entry.metadata.createdAt && <span aria-hidden="true">·</span>}
-        {entry.metadata.createdAt && <time datetime={entry.metadata.createdAt.toISOString()}>{new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(entry.metadata.createdAt)}</time>}
-      </div>
-      <div
-        id="document-body"
-        data-document-id={entry.documentId}
-        data-document-ref={entry.ref ?? ""}
-        set:html={renderedBody}
+  {
+    entry.isIndex ? (
+      <IndexList
+        title={entry.title}
+        description={entry.description}
+        label="Índice"
+        navigationService={navigationService}
+        editHref={canEdit ? editHref : undefined}
+        newHref={newHref}
       />
-    </Fragment>
-  )
-}
+    ) : (
+      <Fragment>
+        <div class="mb-10 border-b border-[var(--theme-border)] pb-8">
+          <span class="tech-label mb-3 block">Documento</span>
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">
+              {entry.title}
+            </h1>
+            {canEdit && <DocumentActionLink href={editHref} label="Editar" />}
+          </div>
+        </div>
 
+        <div class="mb-12 flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-[var(--theme-border-subtle)] py-3 text-sm text-[var(--theme-text-muted)]">
+          {entry.metadata.author && <span>{entry.metadata.author}</span>}
+          {entry.metadata.author && entry.metadata.createdAt && (
+            <span aria-hidden="true">·</span>
+          )}
+          {entry.metadata.createdAt && (
+            <time datetime={entry.metadata.createdAt.toISOString()}>
+              {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(
+                entry.metadata.createdAt
+              )}
+            </time>
+          )}
+        </div>
+        <div
+          id="document-body"
+          data-document-id={entry.documentId}
+          data-document-ref={entry.ref ?? ""}
+          set:html={renderedBody}
+        />
+      </Fragment>
+    )
+  }
 </Layout>
 
-
-<script>
-  import { getApp } from "../../../../application/browser/Application";
-
-  const app = getApp();
-
-  document.addEventListener("astro:page-load", () => {
-    const body = document.querySelector<HTMLElement>("#document-body");
-    const documentId = body?.dataset.documentId;
-    if (!body || !documentId) return;
-
-    // Los proxies ya llegan resueltos desde el servidor. Una preview de
-    // sessionStorage puede pertenecer a una versión anterior del documento
-    // referenciado y ocultar temporalmente el contenido SSR correcto.
-    if (body.dataset.documentRef) return;
-
-    const renderedResult = app.editionModule.getRenderedDocument.execute(
-      documentId,
-      true
-    );
-    if (!renderedResult.isSuccess) return;
-
-    const currentRef = body.dataset.documentRef ?? "";
-    const cachedRef = renderedResult.getValue().source.metadata.ref;
-    const normalizedCachedRef =
-      typeof cachedRef === "string"
-        ? cachedRef
-        : JSON.stringify(cachedRef ?? "");
-    if (normalizedCachedRef !== currentRef) return;
-
-    body.innerHTML = renderedResult.getValue().rendered.Content;
-    body.dataset.renderedFromEdition = "true";
-  });
-</script>
+<DocumentPageController />

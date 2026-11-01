@@ -35,7 +35,7 @@ export class Application {
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
-    const agentModule = AgentModule.create(nanobookModule, nanobookModule.documentModule);
+    const agentModule = AgentModule.create(nanobookModule);
     return new Application(
       authServerModule,
       routeProtector,

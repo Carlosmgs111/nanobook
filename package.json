@@ -37,6 +37,7 @@
     "@shikijs/rehype": "^4.4.3",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
+    "@vercel/functions": "3.9.5",
     "astro": "^7.1.6",
     "better-auth": "^1.7.12",
     "codemirror": "^6.0.2",

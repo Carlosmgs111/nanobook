@@ -17,8 +17,4 @@ export class GetAllDocuments {
     const allDocuments = await this.proxyResolver.parseProxies(nanobookId, documents);
     return allDocuments;
   }
-
-  async refresh(nanobookId: string): Promise<Document[]> {
-    return this.execute(nanobookId);
-  }
 }

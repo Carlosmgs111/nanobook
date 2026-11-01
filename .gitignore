@@ -53,3 +53,6 @@ pnpm-debug.log*
 !/src/content/nanobook-project/meta/index.md
 !/src/content/nanobook-project/historial-codex/
 .superpowers
+
+.vercel
+.env*

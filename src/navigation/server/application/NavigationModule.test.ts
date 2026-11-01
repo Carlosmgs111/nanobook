@@ -9,7 +9,7 @@ import { NavigationModule } from "../index";
 
 type NavigationDocuments = Pick<
   DocumentModule,
-  "getAllDocuments" | "refreshDocuments"
+  "getAllDocuments"
 >;
 
 function document(path: string, id: string, title = path) {
@@ -27,27 +27,81 @@ function document(path: string, id: string, title = path) {
 }
 
 describe("NavigationModule", () => {
+  it("reuses a built graph for repeated queries of the same nanobook", async () => {
+    const execute = vi.fn(async () => [document("index", "book-a-root", "Book A")]);
+    const documents: NavigationDocuments = {
+      getAllDocuments: { execute },
+    };
+    const module = await NavigationModule.create(documents, new InMemoryEventBus());
+
+    const first = await module.getNavigation("book-a", {
+      rootPath: "index",
+      basePath: "/n/book-a",
+    });
+    const second = await module.getNavigation("book-a", {
+      rootPath: "index",
+      basePath: "/n/book-a",
+    });
+
+    expect(first.getBreadcrumbs("index")[0]).toMatchObject({
+      title: "Book A",
+      href: "/n/book-a",
+    });
+    expect(second.getDocumentIdByPath("index")).toBe("book-a-root");
+    expect(execute).toHaveBeenCalledExactlyOnceWith("book-a");
+  });
+
+  it("shares an in-progress graph build between concurrent queries", async () => {
+    let resolveDocuments: (entries: ReturnType<typeof document>[]) => void;
+    const pendingDocuments = new Promise<ReturnType<typeof document>[]>((resolve) => {
+      resolveDocuments = resolve;
+    });
+    const execute = vi.fn(() => pendingDocuments);
+    const documents: NavigationDocuments = {
+      getAllDocuments: { execute },
+    };
+    const module = await NavigationModule.create(documents, new InMemoryEventBus());
+
+    const first = module.getNavigation("book-a");
+    const second = module.getNavigation("book-a");
+
+    await Promise.resolve();
+    expect(execute).toHaveBeenCalledExactlyOnceWith("book-a");
+    resolveDocuments!([document("index", "book-a-root", "Book A")]);
+
+    expect((await first).getDocumentIdByPath("index")).toBe("book-a-root");
+    expect((await second).getDocumentIdByPath("index")).toBe("book-a-root");
+  });
+
   it.each([DocumentCreated, DocumentUpdated, DocumentDeleted])(
-    "refreshes the affected nanobook on %s",
+    "rebuilds the cached graph for the affected nanobook on %s",
     async (Event) => {
+      let title = "Before mutation";
+      const execute = vi.fn(async () => [document("index", "book-a-root", title)]);
       const documents: NavigationDocuments = {
-        getAllDocuments: { execute: vi.fn(async () => []) },
-        refreshDocuments: vi.fn(async () => []),
+        getAllDocuments: { execute },
       };
       const eventBus = new InMemoryEventBus();
-      await NavigationModule.create(documents, eventBus);
+      const module = await NavigationModule.create(documents, eventBus);
+
+      await module.getNavigation("book-a");
+      title = "After mutation";
       const result = await eventBus.publish(new Event("doc-1", "book-a"));
+      const navigation = await module.getNavigation("book-a", { rootPath: "index" });
+
       expect(result.isSuccess).toBe(true);
-      expect(documents.refreshDocuments).toHaveBeenCalledExactlyOnceWith("book-a");
+      expect(navigation.getBreadcrumbs("index")[0]).toMatchObject({
+        title: "After mutation",
+      });
+      expect(execute).toHaveBeenCalledTimes(2);
     },
   );
 
-  it("keeps concurrent navigation queries isolated without retaining a tenant graph", async () => {
+  it("keeps concurrent navigation queries isolated by nanobook", async () => {
     const documents: NavigationDocuments = {
       getAllDocuments: {
         execute: async (id) => [document("index", `${id}-root`, id)],
       },
-      refreshDocuments: async () => [],
     };
     const module = await NavigationModule.create(documents, new InMemoryEventBus());
     const [a, b] = await Promise.all([
@@ -62,8 +116,7 @@ describe("NavigationModule", () => {
 
   it("reports refresh failures through the event bus", async () => {
     const documents: NavigationDocuments = {
-      getAllDocuments: { execute: async () => [] },
-      refreshDocuments: async () => { throw new Error("unavailable"); },
+      getAllDocuments: { execute: async () => { throw new Error("unavailable"); } },
     };
     const bus = new InMemoryEventBus();
     await NavigationModule.create(documents, bus);
