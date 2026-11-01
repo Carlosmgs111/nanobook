@@ -51,7 +51,9 @@ const slug = Astro.params.slug || "index";
 if (!slug) return new Response("Document not found", { status: 404 });
 
 const document = await measure("document", () =>
-  documentModule.getDocument.execute(nanobookId, slug)
+  documentModule.getDocument.execute(nanobookId, slug, (name, duration) => {
+    timings[name] = duration;
+  })
 );
 
 if (!document) throw new Error("Document not found");
