@@ -80,4 +80,37 @@ describe("VercelNanobookReadCache", () => {
       expect.objectContaining({ name: "nanobook:guide", ttl: 300 }),
     );
   });
+
+  it("removes the current entry before a replacement write can fail", async () => {
+    const runtimeCache = createRuntimeCache({
+      "slug:manual": toNanobookSnapshot(book()),
+    });
+    runtimeCache.set = vi.fn(async () => { throw new Error("unavailable"); });
+    const cache = new VercelNanobookReadCache(runtimeCache);
+    const changed = Nanobook.create({
+      ...book().toPersistence(), visibility: "private",
+    }).getValue();
+    const load = vi.fn(async () => Result.ok(changed));
+
+    await expect(cache.replace(changed, "manual")).rejects.toThrow("unavailable");
+    const result = await cache.getOrLoad("manual", load);
+
+    expect(result.getValue()).toBe(changed);
+    expect(load).toHaveBeenCalledOnce();
+  });
+
+  it("writes a deletion tombstone when deleting a cache key fails", async () => {
+    const runtimeCache = createRuntimeCache({
+      "slug:manual": toNanobookSnapshot(book()),
+    });
+    runtimeCache.delete = vi.fn(async () => { throw new Error("delete unavailable"); });
+    const cache = new VercelNanobookReadCache(runtimeCache);
+    const load = vi.fn(async () => Result.ok(book()));
+
+    await cache.remove("manual");
+    const result = await cache.getOrLoad("manual", load);
+
+    expect(result.getValue()).toBeNull();
+    expect(load).not.toHaveBeenCalled();
+  });
 });

@@ -35,6 +35,7 @@ export function fromDocumentSnapshot(
   parser: DocumentParser,
 ): Document | null {
   if (!isDocumentSnapshot(value)) return null;
+  if (value.metadata.id !== undefined && value.metadata.id !== value.id) return null;
   const createdAt = parseDate(value.metadata.createdAt);
   const updatedAt = parseDate(value.metadata.updatedAt);
   if (!createdAt || !updatedAt) return null;
