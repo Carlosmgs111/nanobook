@@ -53,6 +53,13 @@ export interface DocumentsGraph {
   getDependents(id: string): string[];
 }
 
+export type NavigationGraphSnapshotNode = Omit<NavigationNode, "children">;
+
+export interface NavigationGraphSnapshot {
+  nodes: NavigationGraphSnapshotNode[];
+  edges: DependencyEdge[];
+}
+
 export type DependencyKind =
   | "parent-child"
   | "sibling-order"

@@ -27,4 +27,21 @@ describe("DocumentsGraph", () => {
     expect(graph.getNodeByPath("guides/cache")?.id).toBe("doc-cache");
     expect(graph.getParent("doc-cache")?.id).toBe("doc-guides");
   });
+
+  it("restores its navigation and dependency indexes from a cache snapshot", () => {
+    const root = document("index", "doc-root");
+    const section = document("guides/index", "doc-guides");
+    const child = document("guides/cache", "doc-cache");
+    const graph = new DocumentsGraph([root, section, child]);
+
+    const restored = DocumentsGraph.fromSnapshot(graph.toSnapshot());
+
+    expect(restored.getNodeByPath("guides/cache")?.id).toBe("doc-cache");
+    expect(restored.getParent("doc-cache")?.id).toBe("doc-guides");
+    expect(restored.getIncomingEdges("doc-cache")).toContainEqual({
+      sourceId: "doc-guides",
+      targetId: "doc-cache",
+      kind: "parent-child",
+    });
+  });
 });

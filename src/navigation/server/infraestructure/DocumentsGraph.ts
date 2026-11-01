@@ -5,6 +5,7 @@ import type {
   NavigationNode,
   DocumentChange,
   InvalidationResult,
+  NavigationGraphSnapshot,
 } from "../domain/types";
 
 function toNavigationNode(document: Document): NavigationNode {
@@ -90,6 +91,48 @@ export class DocumentsGraph {
     }
 
     this.buildEdges(documents);
+  }
+
+  static fromSnapshot(snapshot: NavigationGraphSnapshot): DocumentsGraph {
+    const graph = Object.create(DocumentsGraph.prototype) as DocumentsGraph;
+    const nodeMap = new Map<string, NavigationNode>();
+    const pathMap = new Map<string, NavigationNode>();
+
+    for (const snapshotNode of snapshot.nodes) {
+      const node: NavigationNode = { ...snapshotNode, children: [] };
+      nodeMap.set(node.id, node);
+      pathMap.set(node.path, node);
+    }
+
+    const rootNodes: NavigationNode[] = [];
+    for (const node of nodeMap.values()) {
+      const parent = node.parentId ? nodeMap.get(node.parentId) : undefined;
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        rootNodes.push(node);
+      }
+    }
+    for (const node of nodeMap.values()) {
+      node.children = sortNodes(node.children);
+    }
+
+    graph.nodeMap = nodeMap;
+    graph.pathMap = pathMap;
+    graph.rootNodes = sortNodes(rootNodes);
+    graph.dependencies = new Map();
+    graph.dependents = new Map();
+    graph.incoming = new Map();
+    for (const id of nodeMap.keys()) {
+      graph.dependencies.set(id, []);
+      graph.dependents.set(id, new Set());
+      graph.incoming.set(id, []);
+    }
+    for (const edge of snapshot.edges) {
+      graph.addEdge(edge.sourceId, edge.targetId, edge.kind);
+    }
+
+    return graph;
   }
 
   private addEdge(sourceId: string, targetId: string, kind: DependencyKind) {
@@ -234,5 +277,12 @@ export class DocumentsGraph {
 
   getIncomingEdges(id: string): DependencyEdge[] {
     return this.incoming.get(id) ?? [];
+  }
+
+  toSnapshot(): NavigationGraphSnapshot {
+    return {
+      nodes: Array.from(this.nodeMap.values()).map(({ children, ...node }) => node),
+      edges: Array.from(this.dependencies.values()).flat(),
+    };
   }
 }

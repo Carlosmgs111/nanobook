@@ -15,7 +15,6 @@ import type { AgentAuditWriter } from "./ports/AgentAuditWriter";
 export class AgentToolService {
   constructor(
     private readonly nanobooks: NanobookModule,
-    private readonly documents: DocumentModule,
     private readonly audit: AgentAuditWriter
   ) {}
 
@@ -79,16 +78,19 @@ export class AgentToolService {
     const access = await this.require(actor, nanobookId, "read");
     if (!access.isSuccess) return access;
     return Result.ok(
-      (await this.documents.getAllDocuments.execute(nanobookId)).map(
-        (document) => serializeEntry(document.parse())
-      )
+      (
+        await this.nanobooks.documentModule.getAllDocuments.execute(nanobookId)
+      ).map((document) => serializeEntry(document.parse()))
     );
   }
 
   async getDocument(actor: AgentActor, nanobookId: string, path: string) {
     const access = await this.require(actor, nanobookId, "read");
     if (!access.isSuccess) return access;
-    const document = await this.documents.getDocument.execute(nanobookId, path);
+    const document = await this.nanobooks.documentModule.getDocument.execute(
+      nanobookId,
+      path
+    );
     return document
       ? Result.ok(serializeEntry(document.parse()))
       : Result.fail(new DocumentNotFoundError(path));
@@ -101,11 +103,14 @@ export class AgentToolService {
   ) {
     const access = await this.require(actor, nanobookId, "write");
     if (!access.isSuccess) return access;
-    const result = await this.documents.createDocument.execute(nanobookId, {
-      ...input,
-      ownerId: actor.actorId,
-      author: input.author ?? actor.actorId,
-    });
+    const result = await this.nanobooks.documentModule.createDocument.execute(
+      nanobookId,
+      {
+        ...input,
+        ownerId: actor.actorId,
+        author: input.author ?? actor.actorId,
+      }
+    );
     if (result.isSuccess)
       await this.audit.write({
         actorId: actor.actorId,
@@ -125,7 +130,7 @@ export class AgentToolService {
   ) {
     const access = await this.require(actor, nanobookId, "write");
     if (!access.isSuccess) return access;
-    const result = await this.documents.updateDocument.execute(
+    const result = await this.nanobooks.documentModule.updateDocument.execute(
       nanobookId,
       input,
       actor.actorId

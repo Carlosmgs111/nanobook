@@ -39,10 +39,6 @@ export class DocumentModule {
     public readonly getDocument: GetDocument,
   ) {}
 
-  async refreshDocuments(nanobookId: string) {
-    return this.getAllDocuments.refresh(nanobookId);
-  }
-
   static async create(eventBus: EventBus) {
     const contentRepository = new DrizzleContentRepository(
       db,

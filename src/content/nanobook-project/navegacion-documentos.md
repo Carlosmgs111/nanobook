@@ -11,6 +11,10 @@ draft: false
 
 `navigation` mantiene una vista derivada de los documentos de cada nanobook: obtiene sus entradas y la invalida ante sus eventos. Por ello depende de la API pública de `DocumentModule`; `documents` no depende de `navigation`.
 
-`NavigationModule.create` recibe las capacidades públicas `getAllDocuments` y `refreshDocuments` de `DocumentModule` mediante la composición de `Application`. Se retiraron el puerto `DocumentProvider` y el adaptador `DocumentModuleDocumentProvider`, porque no representaban una implementación intercambiable: solo traducían uno a uno la misma API.
+`NavigationModule.create` recibe la capacidad pública `getAllDocuments` de `DocumentModule` mediante la composición de `Application`. Se retiraron el puerto `DocumentProvider` y el adaptador `DocumentModuleDocumentProvider`, porque no representaban una implementación intercambiable: solo traducían uno a uno la misma API.
 
-Las pruebas de navegación conservan una doble mínima de esas dos capacidades. Si en el futuro navigation necesita otra fuente de entradas realmente independiente de documents, se reintroducirá un contrato propio en navigation junto con al menos una segunda implementación productiva.
+Los grafos se almacenan por `nanobookId` mediante el contrato asíncrono `NavigationGraphCache`. En desarrollo, `InMemoryNavigationGraphCache` comparte el mismo cálculo en curso entre consultas. En Vercel, `VercelNavigationGraphCache` persiste un snapshot plano del grafo en `getCache`, bajo el namespace versionado `nanobook-navigation-graph-v1` y con TTL de cinco minutos. Esto evita depender de la serialización de `Map` y de instancias de clases.
+
+Cada evento `DocumentCreated`, `DocumentUpdated` o `DocumentDeleted` reemplaza la entrada por un nuevo cálculo: las consultas posteriores esperan el grafo reconstruido. El adaptador de Vercel solo mantiene cálculos en vuelo en la memoria local; las consultas resueltas vuelven a Runtime Cache para observar las actualizaciones hechas por otra instancia. Un fallo elimina el cálculo pendiente para permitir el reintento.
+
+Las pruebas de navegación conservan una doble mínima de esa capacidad. Si en el futuro navigation necesita otra fuente de entradas realmente independiente de documents, se reintroducirá un contrato propio en navigation junto con al menos una segunda implementación productiva.
