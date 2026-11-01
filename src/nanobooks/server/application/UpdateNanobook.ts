@@ -5,6 +5,7 @@ import { InvalidNanobookError } from "../domain/errors";
 import type { NanobookRepository } from "../domain/ports/NanobookRepository";
 import { AuthorizeNanobook, NanobookAccessDeniedError } from "./AuthorizeNanobook";
 import { NanobookNotFoundError } from "./errors";
+import type { NanobookReadCache } from "./NanobookReadCache";
 
 const inputSchema = z.object({
   name: z.string().trim().min(1).optional(),
@@ -13,7 +14,10 @@ const inputSchema = z.object({
 }).strict().refine((value) => Object.keys(value).length > 0);
 
 export class UpdateNanobook {
-  constructor(private readonly repository: NanobookRepository) {}
+  constructor(
+    private readonly repository: NanobookRepository,
+    private readonly cache: NanobookReadCache,
+  ) {}
 
   async execute(userId: string, id: string, input: unknown): Promise<Result<Error, Nanobook>> {
     const found = await this.repository.findById(id);
@@ -29,6 +33,7 @@ export class UpdateNanobook {
     if (!updated.isSuccess) return Result.fail(updated.getError());
     const saved = await this.repository.update(updated.getValue());
     if (!saved.isSuccess) return Result.fail(saved.getError());
+    await this.cache.replace(updated.getValue(), book.getSlug());
     return updated;
   }
 }

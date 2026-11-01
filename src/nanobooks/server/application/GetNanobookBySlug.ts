@@ -4,13 +4,17 @@ import type {
   NanobookRepository,
   NanobookRepositoryFailure,
 } from "../domain/ports/NanobookRepository";
+import type { NanobookReadCache } from "./NanobookReadCache";
 
 export class GetNanobookBySlug {
-  constructor(private readonly repository: NanobookRepository) {}
+  constructor(
+    private readonly repository: NanobookRepository,
+    private readonly cache: NanobookReadCache,
+  ) {}
 
   async execute(
     slug: string,
   ): Promise<Result<NanobookRepositoryFailure, Nanobook | null>> {
-    return this.repository.findBySlug(slug);
+    return this.cache.getOrLoad(slug, () => this.repository.findBySlug(slug));
   }
 }

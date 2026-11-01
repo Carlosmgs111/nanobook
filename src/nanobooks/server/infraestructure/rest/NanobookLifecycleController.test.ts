@@ -3,12 +3,21 @@ import { Nanobook } from "../../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../repository/InMemoryNanobookRepository";
 import { UpdateNanobook } from "../../application/UpdateNanobook";
 import { DeleteNanobook } from "../../application/DeleteNanobook";
+import type { NanobookReadCache } from "../../application/NanobookReadCache";
 import { NanobookLifecycleController } from "./NanobookLifecycleController";
 
 describe("NanobookLifecycleController", () => {
   const create = () => {
     const repository = new InMemoryNanobookRepository([Nanobook.create({ id: "one", ownerId: "owner", slug: "first", name: "First" }).getValue()]);
-    return new NanobookLifecycleController(new UpdateNanobook(repository), new DeleteNanobook(repository));
+    const cache: NanobookReadCache = {
+      getOrLoad: async (_slug, load) => load(),
+      replace: async () => undefined,
+      remove: async () => undefined,
+    };
+    return new NanobookLifecycleController(
+      new UpdateNanobook(repository, cache),
+      new DeleteNanobook(repository, cache),
+    );
   };
   const context = (body: string, user = "owner", id = "one", method = "PATCH") => ({
     request: new Request("http://localhost/api/nanobooks/one", { method, body, headers: { "Content-Type": "application/json" } }),

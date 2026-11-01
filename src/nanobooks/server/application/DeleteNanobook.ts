@@ -3,9 +3,13 @@ import { InvalidNanobookError } from "../domain/errors";
 import type { NanobookRepository } from "../domain/ports/NanobookRepository";
 import { AuthorizeNanobook, NanobookAccessDeniedError } from "./AuthorizeNanobook";
 import { NanobookNotFoundError } from "./errors";
+import type { NanobookReadCache } from "./NanobookReadCache";
 
 export class DeleteNanobook {
-  constructor(private readonly repository: NanobookRepository) {}
+  constructor(
+    private readonly repository: NanobookRepository,
+    private readonly cache: NanobookReadCache,
+  ) {}
 
   async execute(userId: string, id: string, confirmationName: unknown): Promise<Result<Error, void>> {
     const found = await this.repository.findById(id);
@@ -18,6 +22,9 @@ export class DeleteNanobook {
     if (confirmationName !== book.getName()) {
       return Result.fail(new InvalidNanobookError("Escribe el nombre exacto del nanobook para eliminarlo"));
     }
-    return this.repository.delete(book);
+    const deleted = await this.repository.delete(book);
+    if (!deleted.isSuccess) return deleted;
+    await this.cache.remove(book.getSlug());
+    return deleted;
   }
 }
