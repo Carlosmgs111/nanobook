@@ -84,4 +84,19 @@ describe("application origin middleware", () => {
     expect(response.status).toBe(403);
     expect(next).not.toHaveBeenCalled();
   });
+
+  it("appends the elapsed application time after the downstream response", async () => {
+    const responseFromNext = new Response("ok", {
+      headers: { "Server-Timing": "route;dur=5.0" },
+    });
+
+    const response = await onRequest(
+      context("/n/book", new Request(`${APP_ORIGIN}/n/book`)),
+      async () => responseFromNext,
+    );
+
+    expect(response.headers.get("Server-Timing")).toMatch(
+      /^route;dur=5\.0, app-total;dur=\d+\.\d$/,
+    );
+  });
 });
