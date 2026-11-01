@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadidas métricas `Server-Timing` en la lectura SSR para separar composición de aplicación, resolución y autorización de ruta, tema, navegación, consulta documental y publicación.
+
 - Añadida caché de grafos de navegación por nanobook: desarrollo usa memoria y Vercel usa Runtime Cache mediante `getCache`. Las consultas deduplican la construcción en curso y los eventos documentales reconstruyen el grafo antes de atender las siguientes consultas.
 
 - Simplificada la composición de navegación: `NavigationModule` usa directamente las capacidades públicas de `DocumentModule` y se retiraron el adaptador y puerto de traducción sin implementaciones alternativas.

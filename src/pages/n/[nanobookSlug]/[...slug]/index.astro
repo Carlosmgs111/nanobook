@@ -2,12 +2,27 @@
 import DocumentPage from "../../../../documents/browser/ui/pages/DocumentPage.astro";
 import { getApp } from "../../../../application/server/Application";
 import { resolveNanobookRoute } from "../../../../application/server/resolveNanobookRoute";
+import { formatServerTiming } from "../../../../shared/server/http/ServerTiming";
 
 export const prerender = false;
 
-const app = await getApp();
-const access = await resolveNanobookRoute(app, Astro.request, Astro.params.nanobookSlug, "read");
+const timings: Record<string, number> = {};
+
+async function measure<T>(name: string, operation: () => Promise<T>): Promise<T> {
+  const startedAt = performance.now();
+  try {
+    return await operation();
+  } finally {
+    timings[name] = performance.now() - startedAt;
+  }
+}
+
+const app = await measure("route-app", getApp);
+const access = await measure("route-access", () =>
+  resolveNanobookRoute(app, Astro.request, Astro.params.nanobookSlug, "read")
+);
 if (access instanceof Response) return access;
+Astro.response.headers.set("Server-Timing", formatServerTiming(timings));
 ---
 
 <DocumentPage nanobook={access.nanobook} actorId={access.userId} />
