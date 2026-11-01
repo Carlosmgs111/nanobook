@@ -7,6 +7,7 @@ import type {
   NanobookRepositoryFailure,
 } from "../domain/ports/NanobookRepository";
 import type { CreateNanobookData } from "../domain/types";
+import type { NanobookReadCache } from "./NanobookReadCache";
 
 export type CreateNanobookError = NanobookRepositoryFailure | Error;
 
@@ -14,6 +15,7 @@ export class CreateNanobook {
   constructor(
     private readonly repository: NanobookRepository,
     private readonly documentModule: DocumentModule,
+    private readonly cache: NanobookReadCache,
   ) {}
 
   async execute(
@@ -73,7 +75,9 @@ export class CreateNanobook {
 
     const statusResult = await this.updateSetupStatus(nanobook, "ready");
     if (!statusResult.isSuccess) return Result.fail(statusResult.getError());
-    return Result.ok(nanobook.withSetupStatus("ready"));
+    const readyNanobook = nanobook.withSetupStatus("ready");
+    await this.cache.replace(readyNanobook);
+    return Result.ok(readyNanobook);
   }
 
   private async updateSetupStatus(
