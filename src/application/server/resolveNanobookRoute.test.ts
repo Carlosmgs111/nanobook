@@ -41,6 +41,84 @@ describe("resolveNanobookRoute", () => {
     expect(result).toEqual({ nanobook, userId: "owner-1" });
   });
 
+  it("starts reading the session before the nanobook lookup completes", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+    }).getValue();
+    const started: string[] = [];
+    let resolveNanobook: ((result: Result<never, Nanobook>) => void) | undefined;
+    let resolveSession: ((session: { id: string }) => void) | undefined;
+    const app = {
+      nanobookModule: {
+        getNanobookBySlug: {
+          execute: () =>
+            new Promise<Result<never, Nanobook>>((resolve) => {
+              started.push("nanobook");
+              resolveNanobook = resolve;
+            }),
+        },
+      },
+      authServerModule: {
+        getSession: () =>
+          new Promise<{ id: string }>((resolve) => {
+            started.push("session");
+            resolveSession = resolve;
+          }),
+      },
+    } as never;
+
+    const pending = resolveNanobookRoute(
+      app,
+      new Request("https://nanobook.test/n/manual"),
+      "manual",
+      "read",
+    );
+
+    await Promise.resolve();
+
+    expect(started).toEqual(["nanobook", "session"]);
+
+    resolveNanobook?.(Result.ok(nanobook));
+    resolveSession?.({ id: "owner-1" });
+    await expect(pending).resolves.toEqual({ nanobook, userId: "owner-1" });
+  });
+
+  it("reports nanobook and session durations independently", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+    }).getValue();
+    const timings: Record<string, number> = {};
+    const app = {
+      nanobookModule: {
+        getNanobookBySlug: {
+          execute: async () => Result.ok(nanobook),
+        },
+      },
+      authServerModule: {
+        getSession: async () => ({ id: "owner-1" }),
+      },
+    } as never;
+
+    await resolveNanobookRoute(
+      app,
+      new Request("https://nanobook.test/n/manual"),
+      "manual",
+      "read",
+      (name, duration) => {
+        timings[name] = duration;
+      },
+    );
+
+    expect(timings["route-nanobook"]).toEqual(expect.any(Number));
+    expect(timings["route-session"]).toEqual(expect.any(Number));
+  });
+
   it("allows an anonymous read of a public nanobook", async () => {
     const nanobook = Nanobook.create({
       id: "book-1",

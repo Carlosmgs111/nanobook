@@ -60,4 +60,36 @@ describe("GetDocument", () => {
     expect(getByPublicPath).toHaveBeenCalledWith("book-a", "new-dir/newfile3");
     expect(parseProxies).not.toHaveBeenCalled();
   });
+
+  it("reports lookup and proxy resolution durations separately", async () => {
+    const document = Document.create(
+      "guide",
+      {
+        id: "doc-guide",
+        title: "Guide",
+        description: "Guide",
+        createdAt: new Date("2026-01-01"),
+      },
+      "# Guide"
+    ).getValue();
+    const repository = {
+      getByPublicPath: vi.fn().mockResolvedValue(Result.ok(document)),
+    } as unknown as ContentRepository;
+    const proxyParser = {
+      parseProxies: vi.fn().mockResolvedValue([document]),
+    } as unknown as ProxyParser;
+    const timings: Record<string, number> = {};
+
+    const result = await new GetDocument(repository, proxyParser).execute(
+      "book-a",
+      "guide",
+      (name, duration) => {
+        timings[name] = duration;
+      },
+    );
+
+    expect(result).toBe(document);
+    expect(timings["document-lookup"]).toEqual(expect.any(Number));
+    expect(timings["document-proxy"]).toEqual(expect.any(Number));
+  });
 });

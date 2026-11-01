@@ -7,7 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-- Añadidas métricas `Server-Timing` en la lectura SSR para separar composición de aplicación, resolución y autorización de ruta, tema, navegación, consulta documental y publicación.
+- Añadidas métricas `Server-Timing` en la lectura SSR para separar composición de aplicación, consulta del nanobook, sesión, autorización de ruta, tema, navegación, búsqueda y resolución de proxy documental y publicación. La consulta del nanobook y la lectura de sesión ahora se inician en paralelo.
 
 - Añadida caché de grafos de navegación por nanobook: desarrollo usa memoria y Vercel usa Runtime Cache mediante `getCache`. Las consultas deduplican la construcción en curso y los eventos documentales reconstruyen el grafo antes de atender las siguientes consultas.
 
