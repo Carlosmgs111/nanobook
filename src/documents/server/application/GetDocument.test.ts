@@ -3,7 +3,13 @@ import { Result } from "../../../shared/domain/Result";
 import { Document } from "../domain/Document";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { ProxyParser } from "./ProxyParser";
+import type { DocumentSourceCache } from "./DocumentSourceCache";
 import { GetDocument } from "./GetDocument";
+
+const passthroughCache = (): DocumentSourceCache => ({
+  getOrLoad: (_nanobookId, _path, load) => load(),
+  invalidateNanobook: vi.fn(),
+});
 
 describe("GetDocument", () => {
   it("normalizes URL paths before looking up a document", async () => {
@@ -25,7 +31,7 @@ describe("GetDocument", () => {
       parseProxies: vi.fn().mockResolvedValue([document]),
     } as unknown as ProxyParser;
 
-    const result = await new GetDocument(repository, proxyParser).execute(
+    const result = await new GetDocument(repository, proxyParser, passthroughCache()).execute(
       "book-a",
       "guides/index.md"
     );
@@ -51,7 +57,7 @@ describe("GetDocument", () => {
     const parseProxies = vi.fn();
     const proxyParser = { parseProxies } as unknown as ProxyParser;
 
-    const result = await new GetDocument(repository, proxyParser).executeRaw(
+    const result = await new GetDocument(repository, proxyParser, passthroughCache()).executeRaw(
       "book-a",
       "new-dir/newfile3"
     );
@@ -80,7 +86,7 @@ describe("GetDocument", () => {
     } as unknown as ProxyParser;
     const timings: Record<string, number> = {};
 
-    const result = await new GetDocument(repository, proxyParser).execute(
+    const result = await new GetDocument(repository, proxyParser, passthroughCache()).execute(
       "book-a",
       "guide",
       (name, duration) => {
@@ -91,5 +97,30 @@ describe("GetDocument", () => {
     expect(result).toBe(document);
     expect(timings["document-lookup"]).toEqual(expect.any(Number));
     expect(timings["document-proxy"]).toEqual(expect.any(Number));
+  });
+
+  it("resolves a proxy after retrieving its source from the document cache", async () => {
+    const source = Document.create("proxy", {
+      id: "doc-proxy", title: "Proxy", description: "Proxy",
+      createdAt: new Date("2026-01-01"), ref: "./target.md",
+    }, "").getValue();
+    const resolved = Document.create("proxy", {
+      id: "doc-proxy", title: "Resolved", description: "Resolved",
+      createdAt: new Date("2026-01-01"), ref: "./target.md",
+    }, "# Current target").getValue();
+    const repository = { getByPublicPath: vi.fn() } as unknown as ContentRepository;
+    const cache: DocumentSourceCache = {
+      getOrLoad: vi.fn(async () => Result.ok(source)),
+      invalidateNanobook: vi.fn(),
+    };
+    const proxyParser = {
+      parseProxies: vi.fn().mockResolvedValue([resolved]),
+    } as unknown as ProxyParser;
+
+    const result = await new GetDocument(repository, proxyParser, cache).execute("book-a", "proxy");
+
+    expect(result).toBe(resolved);
+    expect(proxyParser.parseProxies).toHaveBeenCalledWith("book-a", [source]);
+    expect(repository.getByPublicPath).not.toHaveBeenCalled();
   });
 });
