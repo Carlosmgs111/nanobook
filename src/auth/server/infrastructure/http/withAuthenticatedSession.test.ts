@@ -61,6 +61,38 @@ describe("withAuthenticatedSession", () => {
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
   });
 
+  it("uses the authoritative session for an authenticated mutation", async () => {
+    const handler = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    const route = withAuthenticatedSession(
+      new BetterAuthSessionReader({
+        api: {
+          getSession: async ({ query }: { headers: Headers; query?: { disableCookieCache: true } }) => {
+            expect(query).toEqual({ disableCookieCache: true });
+            return {
+              user: {
+                id: "user-1",
+                name: "Ada Lovelace",
+                email: "ada@example.com",
+              },
+            };
+          },
+        },
+      }),
+      handler,
+    );
+
+    const response = await route({
+      request: new Request("https://nanobook.test/api/me/profile", {
+        method: "PATCH",
+        headers: { Origin: "https://nanobook.test" },
+      }),
+      locals: {},
+    } as never);
+
+    expect(response.status).toBe(204);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
   it("rejects cross-origin and originless authenticated mutations", async () => {
     const handler = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     const route = withAuthenticatedSession(
