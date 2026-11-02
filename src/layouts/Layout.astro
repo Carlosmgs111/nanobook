@@ -27,6 +27,7 @@ interface Props {
   navigationService?: NavigationService;
   theme?: AppliedTheme;
   navigationContext?: NavigationContext;
+  deferSessionUi?: boolean;
   session?: AuthenticatedUser | null;
 }
 
@@ -40,12 +41,13 @@ const {
   navigationService,
   theme: suppliedTheme,
   navigationContext = { section: "project" },
+  deferSessionUi = false,
 } = Astro.props;
 const app = await getApp();
 const hasSuppliedSession = Object.hasOwn(Astro.props, "session");
 const session = hasSuppliedSession
   ? Astro.props.session ?? null
-  : await app.authServerModule.getSession(Astro.request);
+  : await app.authServerModule.getSession(Astro.request, Astro.response.headers);
 const theme =
   suppliedTheme ??
   (await app.themeModule.resolveTheme.execute({
@@ -91,6 +93,7 @@ const colorModePreference = normalizeColorModePreference(storedMode);
     navigationContext={navigationContext}
     userName={session?.name}
     signedIn={Boolean(session)}
+    deferSessionUi={deferSessionUi}
   >
     <slot />
   </LayoutShell>

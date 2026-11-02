@@ -42,7 +42,7 @@ describe("resolveNanobookRoute", () => {
     expect(result).toEqual({ nanobook, user });
   });
 
-  it("starts reading the session before the nanobook lookup completes", async () => {
+  it("reads a session only after resolving that a private nanobook needs it", async () => {
     const nanobook = Nanobook.create({
       id: "book-1",
       ownerId: "owner-1",
@@ -80,9 +80,13 @@ describe("resolveNanobookRoute", () => {
 
     await Promise.resolve();
 
-    expect(started).toEqual(["nanobook", "session"]);
+    expect(started).toEqual(["nanobook"]);
 
     resolveNanobook?.(Result.ok(nanobook));
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(started).toEqual(["nanobook", "session"]);
+
     const user = { id: "owner-1", name: "Ada", email: "ada@example.com" };
     resolveSession?.(user);
     await expect(pending).resolves.toEqual({ nanobook, user });
@@ -133,6 +137,33 @@ describe("resolveNanobookRoute", () => {
     const result = await route(nanobook, null, "read");
 
     expect(result).toEqual({ nanobook, user: null });
+  });
+
+  it("does not read a session before serving a public nanobook", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+      visibility: "public",
+    }).getValue();
+    const getSession = vi.fn().mockResolvedValue({ id: "owner-1" });
+    const app = {
+      nanobookModule: {
+        getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(nanobook)) },
+      },
+      authServerModule: { getSession },
+    } as never;
+
+    const result = await resolveNanobookRoute(
+      app,
+      new Request("https://nanobook.test/n/manual"),
+      "manual",
+      "read",
+    );
+
+    expect(result).toEqual({ nanobook, user: null });
+    expect(getSession).not.toHaveBeenCalled();
   });
 
   it("hides a private nanobook from a non-owner", async () => {

@@ -26,8 +26,8 @@ const { loginHref, navigationService, navigationContext, userName, signedIn } = 
 
     <nav class="hidden items-center gap-4 text-sm md:flex" aria-label="Proyecto">
       <a href="/#nanobooks-publicos" class="hover:text-[var(--theme-accent)] hover:underline">Explorar</a>
-      {signedIn && <a href="/nanobooks" class="hover:text-[var(--theme-accent)] hover:underline" aria-current={Astro.url.pathname === "/nanobooks" ? "page" : undefined}>Mis nanobooks</a>}
-      {signedIn && <a href="/themes" class="hover:text-[var(--theme-accent)] hover:underline" aria-current={Astro.url.pathname === "/themes" ? "page" : undefined}>Temas</a>}
+      <a href="/nanobooks" class="hover:text-[var(--theme-accent)] hover:underline" aria-current={Astro.url.pathname === "/nanobooks" ? "page" : undefined} data-auth-required hidden={!signedIn}>Mis nanobooks</a>
+      <a href="/themes" class="hover:text-[var(--theme-accent)] hover:underline" aria-current={Astro.url.pathname === "/themes" ? "page" : undefined} data-auth-required hidden={!signedIn}>Temas</a>
     </nav>
 
     <div class="header-actions md:ml-auto md:flex md:items-center md:gap-2">
@@ -35,8 +35,8 @@ const { loginHref, navigationService, navigationContext, userName, signedIn } = 
         <summary class="menu-trigger">Proyecto</summary>
         <nav class="menu-panel" aria-label="Proyecto móvil">
           <a href="/#nanobooks-publicos">Explorar</a>
-          {signedIn && <a href="/nanobooks" aria-current={Astro.url.pathname === "/nanobooks" ? "page" : undefined}>Mis nanobooks</a>}
-          {signedIn && <a href="/themes" aria-current={Astro.url.pathname === "/themes" ? "page" : undefined}>Temas</a>}
+          <a href="/nanobooks" aria-current={Astro.url.pathname === "/nanobooks" ? "page" : undefined} data-auth-required hidden={!signedIn}>Mis nanobooks</a>
+          <a href="/themes" aria-current={Astro.url.pathname === "/themes" ? "page" : undefined} data-auth-required hidden={!signedIn}>Temas</a>
         </nav>
       </details>
 
@@ -48,17 +48,14 @@ const { loginHref, navigationService, navigationContext, userName, signedIn } = 
         </div>
       </details>
 
-      {signedIn ? (
-        <details class="menu-root account-menu" data-header-menu>
-          <summary class="menu-trigger max-w-36 truncate">{userName || "Cuenta"}</summary>
+      <details class="menu-root account-menu" data-header-menu data-auth-required hidden={!signedIn}>
+          <summary class="menu-trigger max-w-36 truncate" data-auth-user-name>{userName || "Cuenta"}</summary>
           <div class="menu-panel" aria-label="Cuenta">
             <a href="/profile" aria-current={Astro.url.pathname === "/profile" ? "page" : undefined}>Perfil</a>
             <button type="button" data-sign-out>Cerrar sesión</button>
           </div>
-        </details>
-      ) : loginHref && (
-        <a href={loginHref} class="menu-trigger account-menu">Ingresar</a>
-      )}
+      </details>
+      {loginHref && <a href={loginHref} class="menu-trigger account-menu" data-auth-anonymous hidden={signedIn}>Ingresar</a>}
     </div>
 
     {navigationContext.book && (

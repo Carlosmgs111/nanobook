@@ -52,6 +52,7 @@ const display = Boolean(crumbs.length);
               href={crumb.href}
               class="block truncate transition-colors hover:text-[var(--theme-navigation-breadcrumb-hover)]"
               title={crumb.title}
+              data-astro-prefetch="hover"
             >
               {crumb.title}
             </a>

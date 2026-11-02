@@ -11,10 +11,11 @@ interface Props {
   navigationService: NavigationService;
   editHref?: string;
   newHref?: string;
+  ownerId?: string;
 }
 const slug = Astro.params.slug || "index";
 
-const { title, description, label = "Index", navigationService, editHref, newHref } = Astro.props;
+const { title, description, label = "Index", navigationService, editHref, newHref, ownerId } = Astro.props;
 
 const sortedEntries = navigationService.getImmediateChildren(slug)
   .filter((page) => !page.metadata.draft)
@@ -31,8 +32,8 @@ const sortedEntries = navigationService.getImmediateChildren(slug)
   <div class="flex flex-wrap items-start justify-between gap-4">
     <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">{title}</h1>
     {(editHref || newHref) && <div class="flex flex-wrap gap-2">
-      {editHref && <DocumentActionLink href={editHref} label="Editar" />}
-      {newHref && <DocumentActionLink href={newHref} label="Nuevo en esta sección" primary />}
+      {editHref && <DocumentActionLink href={editHref} label="Editar" ownerId={ownerId} />}
+      {newHref && <DocumentActionLink href={newHref} label="Nuevo en esta sección" primary ownerId={ownerId} />}
     </div>}
   </div>
   {description && <p class="mt-4 text-[var(--theme-text-muted)]">{description}</p>}

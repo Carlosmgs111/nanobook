@@ -3,7 +3,7 @@ import { getApp } from "../application/server/Application";
 import ThemesPage from "../theme/browser/ui/ThemesPage.astro";
 export const prerender = false;
 const app = await getApp();
-const session = await app.authServerModule.getSession(Astro.request);
+const session = await app.authServerModule.getSession(Astro.request, Astro.response.headers);
 if (!session) return Astro.redirect(`/login?callbackURL=${encodeURIComponent("/themes")}`);
 const listed = await app.themeModule.listThemes.execute(session.id);
 if (!listed.isSuccess) return new Response("No fue posible cargar los temas", { status: 500 });

@@ -1,0 +1,41 @@
+---
+---
+
+<script type="module">
+  import { getApp } from "../../application/browser/Application";
+
+  type AuthenticatedUser = { id: string; name: string } | null;
+
+  function updateAuthenticationUi(user: AuthenticatedUser): void {
+    const signedIn = Boolean(user);
+    document.querySelectorAll<HTMLElement>("[data-auth-required]").forEach((element) => {
+      element.hidden = !signedIn;
+    });
+    document.querySelectorAll<HTMLElement>("[data-auth-anonymous]").forEach((element) => {
+      element.hidden = signedIn;
+    });
+    document.querySelectorAll<HTMLElement>("[data-auth-user-name]").forEach((element) => {
+      element.textContent = user?.name || "Cuenta";
+    });
+    document.querySelectorAll<HTMLElement>("[data-auth-owner-only]").forEach((element) => {
+      element.hidden = !user || element.dataset.authOwnerId !== user.id;
+    });
+  }
+
+  async function refreshAuthenticationUi(): Promise<void> {
+    if (document.body.dataset.authDeferred !== "true") return;
+
+    try {
+      updateAuthenticationUi(await getApp().authModule.getAuthenticatedSession.execute());
+    } catch {
+      updateAuthenticationUi(null);
+    }
+  }
+
+  const state = window as typeof window & { __nanobookAuthStatusController?: true };
+  if (!state.__nanobookAuthStatusController) {
+    state.__nanobookAuthStatusController = true;
+    document.addEventListener("astro:page-load", () => void refreshAuthenticationUi());
+  }
+  void refreshAuthenticationUi();
+</script>

@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Mejorada la navegación autenticada SSR: al renovar una sesión, la respuesta de Better Auth reenvía sus cookies al navegador; las lecturas de nanobooks públicos ya no esperan autenticación y el header se sincroniza en segundo plano. Sidebar, breadcrumbs e índices ahora precargan el documento al pasar el cursor.
+
 - Activada una caché de sesión cifrada de sesenta segundos para las lecturas y navegación SSR. Las mutaciones HTTP fuerzan la consulta autoritativa de Better Auth para aplicar revocaciones de inmediato.
 
 - Corregida la composición SSR de páginas autenticadas: las rutas de nanobooks, documentos y temas reutilizan la sesión ya validada al renderizar el layout, evitando una segunda consulta a Better Auth por página sin cachear sesiones entre peticiones.

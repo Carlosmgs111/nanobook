@@ -15,6 +15,7 @@ const path = `/${page.path}${page.isIndex ? "/" : ""}`;
   class={`index-card ${page.isIndex ? "index-card-folder" : "index-card-document"}`}
   data-cover={page.metadata.cover ? "true" : undefined}
   data-draft={String(page.metadata.draft)}
+  data-astro-prefetch="hover"
   style={coverVar ? `--card-cover: ${coverVar}` : undefined}
 >
   <span class="index-card-media" aria-hidden="true">

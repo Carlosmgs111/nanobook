@@ -1,9 +1,9 @@
 ---
-interface Props { href: string; label: string; primary?: boolean }
-const { href, label, primary = false } = Astro.props;
+interface Props { href: string; label: string; primary?: boolean; ownerId?: string }
+const { href, label, primary = false, ownerId } = Astro.props;
 ---
 
-<a href={href} data-primary={primary} class:list={["document-action-link inline-flex min-h-10 shrink-0 items-center justify-center border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--theme-accent)]", primary ? "border-[var(--theme-accent)] bg-[var(--theme-accent)] hover:opacity-80" : "border-[var(--theme-border)] hover:border-[var(--theme-accent)]"]}>{label}</a>
+<a href={href} data-primary={primary} data-auth-owner-only={ownerId ? "true" : undefined} data-auth-owner-id={ownerId} hidden={Boolean(ownerId)} class:list={["document-action-link inline-flex min-h-10 shrink-0 items-center justify-center border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--theme-accent)]", primary ? "border-[var(--theme-accent)] bg-[var(--theme-accent)] hover:opacity-80" : "border-[var(--theme-border)] hover:border-[var(--theme-accent)]"]}>{label}</a>
 
 <style>
   .document-action-link[data-primary="true"] {
