@@ -1,15 +1,18 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
 import type { ThemeDetailsDto, ThemeSummaryDto } from "../HttpThemeApi";
+import type { AuthenticatedUser } from "../../../auth/browser/model/AuthSession";
 import ThemeEditor from "./ThemeEditor.astro";
 interface Props {
   themes: ThemeSummaryDto[];
   selected?: ThemeDetailsDto;
+  session: AuthenticatedUser;
 }
-const { themes, selected } = Astro.props;
+const { themes, selected, session } = Astro.props;
 ---
 
 <Layout
+  session={session}
   title="Temas"
   description="Personaliza y reutiliza la apariencia de tus nanobooks"
 >

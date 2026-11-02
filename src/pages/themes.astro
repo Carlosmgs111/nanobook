@@ -11,4 +11,8 @@ const selectedId = Astro.url.searchParams.get("theme");
 const selectedResult = selectedId ? await app.themeModule.getTheme.execute(session.id, selectedId) : null;
 if (selectedResult && !selectedResult.isSuccess) return new Response(selectedResult.getError().message, { status: selectedResult.getError().name === "ThemeAccessDeniedError" ? 403 : 404 });
 ---
-<ThemesPage themes={listed.getValue()} selected={selectedResult?.getValue()} />
+<ThemesPage
+  themes={listed.getValue()}
+  selected={selectedResult?.getValue()}
+  session={session}
+/>

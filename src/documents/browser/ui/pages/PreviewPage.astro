@@ -2,6 +2,7 @@
 import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
+import type { AuthenticatedUser } from "../../../../auth/browser/model/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 
 export const prerender = false;
@@ -11,9 +12,10 @@ const app = await getApp();
 
 interface Props {
   nanobook: Nanobook;
+  user: AuthenticatedUser | null;
 }
 
-const { nanobook } = Astro.props;
+const { nanobook, user } = Astro.props;
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
@@ -39,6 +41,7 @@ const viewHref = slug === "index" ? baseHref : `${baseHref}/${slug}/`;
 ---
 
 <Layout
+  session={user}
   navigationService={navigationService}
   theme={theme}
   navigationContext={{ section: "preview", book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` } }}

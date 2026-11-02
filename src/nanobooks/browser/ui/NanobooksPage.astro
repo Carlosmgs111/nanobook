@@ -3,12 +3,17 @@ import Layout from "../../../layouts/Layout.astro";
 import type { Nanobook } from "../../server/domain/Nanobook";
 import NanobookCard from "./NanobookCard.astro";
 import type { ThemeSummaryDto } from "../../../theme/browser/HttpThemeApi";
+import type { AuthenticatedUser } from "../../../auth/browser/model/AuthSession";
 
-interface Props { nanobooks: Nanobook[]; themes: ThemeSummaryDto[] }
-const { nanobooks, themes } = Astro.props;
+interface Props {
+  nanobooks: Nanobook[];
+  themes: ThemeSummaryDto[];
+  session: AuthenticatedUser;
+}
+const { nanobooks, themes, session } = Astro.props;
 ---
 
-<Layout title="Nanobooks" description="Gestiona tus nanobooks">
+<Layout session={session} title="Nanobooks" description="Gestiona tus nanobooks">
   <div class="mx-auto max-w-4xl space-y-8">
     <div class="border-b border-[var(--theme-border)] pb-6">
       <span class="tech-label mb-2 block">Workspace</span>

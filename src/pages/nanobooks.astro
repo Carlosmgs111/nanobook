@@ -10,4 +10,8 @@ if (!result.isSuccess) return new Response("No fue posible cargar los nanobooks"
 const themes = await app.themeModule.listThemes.execute(session.id);
 if (!themes.isSuccess) return new Response("No fue posible cargar los temas", { status: 500 });
 ---
-<NanobooksPage nanobooks={result.getValue()} themes={themes.getValue()} />
+<NanobooksPage
+  nanobooks={result.getValue()}
+  themes={themes.getValue()}
+  session={session}
+/>

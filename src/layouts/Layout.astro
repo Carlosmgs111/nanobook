@@ -9,6 +9,7 @@ import {
   normalizeColorModePreference,
   type AppliedTheme,
 } from "../theme/server";
+import type { AuthenticatedUser } from "../auth/browser/model/AuthSession";
 
 interface Heading {
   depth: number;
@@ -26,6 +27,7 @@ interface Props {
   navigationService?: NavigationService;
   theme?: AppliedTheme;
   navigationContext?: NavigationContext;
+  session?: AuthenticatedUser | null;
 }
 
 const {
@@ -40,7 +42,10 @@ const {
   navigationContext = { section: "project" },
 } = Astro.props;
 const app = await getApp();
-const session = await app.authServerModule.getSession(Astro.request);
+const hasSuppliedSession = Object.hasOwn(Astro.props, "session");
+const session = hasSuppliedSession
+  ? Astro.props.session ?? null
+  : await app.authServerModule.getSession(Astro.request);
 const theme =
   suppliedTheme ??
   (await app.themeModule.resolveTheme.execute({
