@@ -4,6 +4,7 @@ import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
+import type { AuthenticatedUser } from "../../../../auth/browser/model/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 import DocumentPageController from "../DocumentPageController.astro";
 import { appendServerTiming } from "../../../../shared/server/http/ServerTiming";
@@ -23,14 +24,14 @@ const app = await measure("app", getApp);
 
 interface Props {
   nanobook: Nanobook;
-  actorId?: string;
+  user: AuthenticatedUser | null;
 }
 
-const { nanobook, actorId } = Astro.props;
+const { nanobook, user } = Astro.props;
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
-const canEdit = new AuthorizeNanobook().canWrite(nanobook, actorId);
+const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
 const navigationContext = {
   section: "read" as const,
   book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` },
@@ -87,6 +88,7 @@ Astro.response.headers.set(
 ---
 
 <Layout
+  session={user}
   title={entry.title}
   description={entry.description}
   headings={headings}

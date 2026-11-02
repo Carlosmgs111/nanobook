@@ -33,4 +33,4 @@ if (access instanceof Response) return access;
 Astro.response.headers.set("Server-Timing", formatServerTiming(timings));
 ---
 
-<DocumentPage nanobook={access.nanobook} actorId={access.userId} />
+<DocumentPage nanobook={access.nanobook} user={access.user} />

@@ -10,4 +10,4 @@ const access = await resolveNanobookRoute(app, Astro.request, Astro.params.nanob
 if (access instanceof Response) return access;
 ---
 
-<PreviewPage nanobook={access.nanobook} />
+<PreviewPage nanobook={access.nanobook} user={access.user} />

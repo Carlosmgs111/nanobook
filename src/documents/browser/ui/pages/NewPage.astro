@@ -3,15 +3,17 @@ import Layout from "../../../../layouts/Layout.astro";
 import NewDocumentPageController from "../NewDocumentPageController.astro";
 import { getApp } from "../../../../application/server/Application";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
+import type { AuthenticatedUser } from "../../../../auth/browser/model/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 
 const app = await getApp();
 
 interface Props {
   nanobook: Nanobook;
+  user: AuthenticatedUser | null;
 }
 
-const { nanobook } = Astro.props;
+const { nanobook, user } = Astro.props;
 const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
@@ -43,6 +45,7 @@ const baseHref = `/n/${nanobook.getSlug()}`;
 ---
 
 <Layout
+  session={user}
   title={`Nuevo documento en ${entry.title}`}
   description="Crear un nuevo documento"
   hideToc={true}

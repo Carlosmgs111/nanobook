@@ -1,10 +1,11 @@
 import { AuthorizeNanobook } from "../../nanobooks/server/application/AuthorizeNanobook";
 import type { Application } from "./Application";
 import type { Nanobook } from "../../nanobooks/server/domain/Nanobook";
+import type { AuthenticatedUser } from "../../auth/browser/model/AuthSession";
 
 export interface ResolvedNanobookRoute {
   nanobook: Nanobook;
-  userId: string | undefined;
+  user: AuthenticatedUser | null;
 }
 
 export type NanobookRouteTimingObserver = (
@@ -33,10 +34,10 @@ export async function resolveNanobookRoute(
 
   const authorization = new AuthorizeNanobook();
   if (permission === "read" && authorization.canRead(nanobook, user?.id)) {
-    return { nanobook, userId: user?.id };
+    return { nanobook, user };
   }
   if (permission === "write" && authorization.canWrite(nanobook, user?.id)) {
-    return { nanobook, userId: user?.id };
+    return { nanobook, user };
   }
 
   return new Response(

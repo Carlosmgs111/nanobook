@@ -36,9 +36,10 @@ describe("resolveNanobookRoute", () => {
       slug: "manual",
       name: "Manual",
     }).getValue();
-    const result = await route(nanobook, { id: "owner-1" }, "read");
+    const user = { id: "owner-1", name: "Ada", email: "ada@example.com" };
+    const result = await route(nanobook, user, "read");
 
-    expect(result).toEqual({ nanobook, userId: "owner-1" });
+    expect(result).toEqual({ nanobook, user });
   });
 
   it("starts reading the session before the nanobook lookup completes", async () => {
@@ -82,8 +83,9 @@ describe("resolveNanobookRoute", () => {
     expect(started).toEqual(["nanobook", "session"]);
 
     resolveNanobook?.(Result.ok(nanobook));
-    resolveSession?.({ id: "owner-1" });
-    await expect(pending).resolves.toEqual({ nanobook, userId: "owner-1" });
+    const user = { id: "owner-1", name: "Ada", email: "ada@example.com" };
+    resolveSession?.(user);
+    await expect(pending).resolves.toEqual({ nanobook, user });
   });
 
   it("reports nanobook and session durations independently", async () => {
@@ -130,7 +132,7 @@ describe("resolveNanobookRoute", () => {
 
     const result = await route(nanobook, null, "read");
 
-    expect(result).toEqual({ nanobook, userId: undefined });
+    expect(result).toEqual({ nanobook, user: null });
   });
 
   it("hides a private nanobook from a non-owner", async () => {
