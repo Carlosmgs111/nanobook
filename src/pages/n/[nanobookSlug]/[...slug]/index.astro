@@ -27,6 +27,7 @@ const access = await measure("route-access", () =>
     (name, duration) => {
       timings[name] = duration;
     },
+    Astro.response.headers,
   )
 );
 if (access instanceof Response) return access;

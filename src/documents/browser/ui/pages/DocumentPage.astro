@@ -32,6 +32,7 @@ const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
 const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
+const deferOwnerActions = nanobook.getVisibility() === "public" && !canEdit;
 const navigationContext = {
   section: "read" as const,
   book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` },
@@ -69,7 +70,7 @@ const baseHref = `/n/${nanobook.getSlug()}`;
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
 const newHref =
-  canEdit && entry.isIndex
+  entry.isIndex
     ? entry.slug === "index"
       ? `${baseHref}/index/new`
       : `${baseHref}/${entry.slug}/new`
@@ -89,6 +90,7 @@ Astro.response.headers.set(
 
 <Layout
   session={user}
+  deferSessionUi={deferOwnerActions}
   title={entry.title}
   description={entry.description}
   headings={headings}
@@ -104,8 +106,9 @@ Astro.response.headers.set(
         description={entry.description}
         label="Índice"
         navigationService={navigationService}
-        editHref={canEdit ? editHref : undefined}
-        newHref={newHref}
+        editHref={canEdit || deferOwnerActions ? editHref : undefined}
+        newHref={canEdit || deferOwnerActions ? newHref : undefined}
+        ownerId={deferOwnerActions ? nanobook.getOwnerId() : undefined}
       />
     ) : (
       <Fragment>
@@ -115,7 +118,7 @@ Astro.response.headers.set(
             <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">
               {entry.title}
             </h1>
-            {canEdit && <DocumentActionLink href={editHref} label="Editar" />}
+            {(canEdit || deferOwnerActions) && <DocumentActionLink href={editHref} label="Editar" ownerId={deferOwnerActions ? nanobook.getOwnerId() : undefined} />}
           </div>
         </div>
 

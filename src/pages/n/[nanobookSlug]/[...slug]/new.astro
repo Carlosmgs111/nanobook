@@ -6,7 +6,14 @@ import { resolveNanobookRoute } from "../../../../application/server/resolveNano
 export const prerender = false;
 
 const app = await getApp();
-const access = await resolveNanobookRoute(app, Astro.request, Astro.params.nanobookSlug, "write");
+const access = await resolveNanobookRoute(
+  app,
+  Astro.request,
+  Astro.params.nanobookSlug,
+  "write",
+  undefined,
+  Astro.response.headers,
+);
 if (access instanceof Response) return access;
 ---
 

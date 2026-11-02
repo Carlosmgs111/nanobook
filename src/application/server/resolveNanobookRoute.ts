@@ -19,18 +19,24 @@ export async function resolveNanobookRoute(
   slug: string | undefined,
   permission: "read" | "write",
   observeTiming?: NanobookRouteTimingObserver,
+  responseHeaders?: Headers,
 ): Promise<ResolvedNanobookRoute | Response> {
   if (!slug) return new Response("Nanobook not found", { status: 404 });
 
-  const [result, user] = await Promise.all([
-    measure("route-nanobook", observeTiming, () =>
-      app.nanobookModule.getNanobookBySlug.execute(slug),
-    ),
-    measure("route-session", observeTiming, () => app.authServerModule.getSession(request)),
-  ]);
+  const result = await measure("route-nanobook", observeTiming, () =>
+    app.nanobookModule.getNanobookBySlug.execute(slug),
+  );
   if (!result.isSuccess) throw result.getError();
   const nanobook = result.getValue();
   if (!nanobook) return new Response("Nanobook not found", { status: 404 });
+
+  if (permission === "read" && nanobook.getVisibility() === "public") {
+    return { nanobook, user: null };
+  }
+
+  const user = await measure("route-session", observeTiming, () =>
+    app.authServerModule.getSession(request, responseHeaders),
+  );
 
   const authorization = new AuthorizeNanobook();
   if (permission === "read" && authorization.canRead(nanobook, user?.id)) {

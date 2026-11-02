@@ -64,4 +64,32 @@ describe("BetterAuthSessionReader", () => {
 
     expect(user).toMatchObject({ id: "user-1" });
   });
+
+  it("forwards the refreshed session cookie from a page read to the browser", async () => {
+    const reader = new BetterAuthSessionReader({
+      api: { getSession: async () => null },
+      handler: async (request: Request) => {
+        expect(request.url).toBe("https://nanobook.test/api/auth/get-session");
+        return new Response(
+          JSON.stringify({
+            user: { id: "user-1", name: "Ada Lovelace", email: "ada@example.com" },
+          }),
+          { headers: { "Set-Cookie": "better-auth.session_data=renewed; Path=/; HttpOnly" } },
+        );
+      },
+    });
+    const responseHeaders = new Headers();
+
+    const user = await (
+      reader as BetterAuthSessionReader & {
+        getSessionForPage(request: Request, responseHeaders: Headers): Promise<unknown>;
+      }
+    ).getSessionForPage(
+      new Request("https://nanobook.test/n/manual"),
+      responseHeaders,
+    );
+
+    expect(user).toEqual({ id: "user-1", name: "Ada Lovelace", email: "ada@example.com" });
+    expect(responseHeaders.get("Set-Cookie")).toContain("better-auth.session_data=renewed");
+  });
 });

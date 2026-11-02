@@ -22,6 +22,7 @@ const { entries, navigationService } = Astro.props;
           class="sidebar-link"
           aria-current={page.current ? "page" : undefined}
           data-tooltip={page.title}
+          data-astro-prefetch="hover"
         >
           <ToolTip id={"tooltip-" + page.id}>
             <i class="sidebar-icon" slot="icon">

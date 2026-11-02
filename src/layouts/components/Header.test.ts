@@ -18,6 +18,9 @@ describe("navigation shell", () => {
     expect(header).toContain('href="/themes"');
     expect(header).toContain('href="/profile"');
     expect(header).toContain("Ingresar");
+    expect(header).toContain("data-auth-required");
+    expect(header).toContain("data-auth-anonymous");
+    expect(shell).toContain("AuthStatusController");
     expect(header).not.toContain("editHref");
     expect(header).not.toContain("newHref");
   });
@@ -26,11 +29,13 @@ describe("navigation shell", () => {
     const page = read("src/documents/browser/ui/pages/DocumentPage.astro");
     const index = read("src/navigation/browser/ui/components/IndexList/index.astro");
     const editor = read("src/documents/browser/ui/pages/EditPage.astro");
+    const action = read("src/documents/browser/ui/components/DocumentActionLink.astro");
 
     expect(page).toContain("new AuthorizeNanobook().canWrite(nanobook, user?.id)");
     expect(page).toContain("session={user}");
-    expect(page).toContain('canEdit && <DocumentActionLink href={editHref} label="Editar" />');
-    expect(page).toContain("canEdit && entry.isIndex");
+    expect(page).toContain("canEdit || deferOwnerActions");
+    expect(page).toContain("deferSessionUi={deferOwnerActions}");
+    expect(action).toContain("data-auth-owner-only");
     expect(index).toContain('label="Nuevo en esta sección"');
     expect(editor).toContain('label="Volver al documento"');
   });

@@ -28,7 +28,9 @@ export class AuthServerModule implements RouteProtector {
     return withAuthenticatedSession(this.sessionReader, handler);
   }
 
-  getSession(request: Request) {
-    return this.sessionReader.getSession(request.headers);
+  getSession(request: Request, responseHeaders?: Headers) {
+    return responseHeaders
+      ? this.sessionReader.getSessionForPage(request, responseHeaders)
+      : this.sessionReader.getSession(request.headers);
   }
 }
