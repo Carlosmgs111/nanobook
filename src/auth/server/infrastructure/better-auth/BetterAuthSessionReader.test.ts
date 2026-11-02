@@ -4,8 +4,15 @@ import { BetterAuthSessionReader } from "./BetterAuthSessionReader";
 
 describe("BetterAuthSessionReader", () => {
   it("maps a Better Auth session to the application's authenticated user", async () => {
-    const getSession = async ({ headers }: { headers: Headers }) => {
+    const getSession = async ({
+      headers,
+      query,
+    }: {
+      headers: Headers;
+      query?: { disableCookieCache: true };
+    }) => {
       expect(headers.get("cookie")).toBe("session=token");
+      expect(query).toBeUndefined();
       return {
         user: {
           id: "user-1",
@@ -32,5 +39,29 @@ describe("BetterAuthSessionReader", () => {
     }).getSession(new Headers());
 
     expect(user).toBeNull();
+  });
+
+  it("bypasses the cookie cache when a read requires the authoritative session", async () => {
+    const reader = new BetterAuthSessionReader({
+      api: {
+        getSession: async ({ query }: { headers: Headers; query?: { disableCookieCache: true } }) => {
+          expect(query).toEqual({ disableCookieCache: true });
+          return {
+            user: {
+              id: "user-1",
+              name: "Ada Lovelace",
+              email: "ada@example.com",
+            },
+          };
+        },
+      },
+    });
+
+    const user = await reader.getSession(
+      new Headers({ cookie: "session=token" }),
+      { forceDatabase: true },
+    );
+
+    expect(user).toMatchObject({ id: "user-1" });
   });
 });

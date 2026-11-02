@@ -2,15 +2,29 @@ import type { AuthenticatedUser } from "../../../browser/model/AuthSession";
 
 interface BetterAuthSessionApi {
   api: {
-    getSession(input: { headers: Headers }): Promise<unknown>;
+    getSession(input: {
+      headers: Headers;
+      query?: { disableCookieCache: true };
+    }): Promise<unknown>;
   };
+}
+
+interface SessionReadOptions {
+  forceDatabase?: boolean;
 }
 
 export class BetterAuthSessionReader {
   constructor(private readonly auth: BetterAuthSessionApi) {}
 
-  async getSession(headers: Headers): Promise<AuthenticatedUser | null> {
-    const session = await this.auth.api.getSession({ headers });
+  async getSession(
+    headers: Headers,
+    { forceDatabase = false }: SessionReadOptions = {},
+  ): Promise<AuthenticatedUser | null> {
+    const session = await this.auth.api.getSession(
+      forceDatabase
+        ? { headers, query: { disableCookieCache: true } }
+        : { headers },
+    );
     if (!isRecord(session) || !isAuthenticatedUser(session.user)) return null;
 
     return session.user;

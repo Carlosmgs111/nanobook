@@ -7,7 +7,10 @@ export function withAuthenticatedSession(
   handler: APIRoute
 ): APIRoute {
   return async (context) => {
-    const user = await sessionReader.getSession(context.request.headers);
+    const isMutation = !["GET", "HEAD", "OPTIONS"].includes(context.request.method);
+    const user = await sessionReader.getSession(context.request.headers, {
+      forceDatabase: isMutation,
+    });
     if (!user) {
       return new Response(
         JSON.stringify({ error: "Autenticación requerida" }),
@@ -18,7 +21,7 @@ export function withAuthenticatedSession(
       );
     }
 
-    if (!["GET", "HEAD", "OPTIONS"].includes(context.request.method)) {
+    if (isMutation) {
       const origin = context.request.headers.get("Origin");
       const expectedOrigin = new URL(context.request.url).origin;
       if (origin !== expectedOrigin) {

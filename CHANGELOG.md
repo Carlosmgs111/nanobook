@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Activada una caché de sesión cifrada de sesenta segundos para las lecturas y navegación SSR. Las mutaciones HTTP fuerzan la consulta autoritativa de Better Auth para aplicar revocaciones de inmediato.
+
 - Corregida la composición SSR de páginas autenticadas: las rutas de nanobooks, documentos y temas reutilizan la sesión ya validada al renderizar el layout, evitando una segunda consulta a Better Auth por página sin cachear sesiones entre peticiones.
 
 - Añadida caché de lectura SSR en Vercel Runtime Cache para nanobooks por slug y documentos fuente versionados por nanobook. Las mutaciones reemplazan o eliminan snapshots de nanobook y los eventos documentales cambian una versión compartida, sin cachear sesiones, autorización, HTML ni resultados de proxy. Las entradas documentales de 2 MB o más vuelven a LibSQL. El middleware ahora publica `app-total` en `Server-Timing` para separar trabajo de aplicación de plataforma/red.

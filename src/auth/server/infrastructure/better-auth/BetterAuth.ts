@@ -64,6 +64,11 @@ export function createBetterAuth() {
     session: {
       expiresIn: 60 * 60 * 12,
       disableSessionRefresh: true,
+      cookieCache: {
+        enabled: true,
+        maxAge: 60,
+        strategy: "jwe",
+      },
     },
     rateLimit: {
       enabled: true,
