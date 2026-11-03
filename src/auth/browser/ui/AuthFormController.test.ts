@@ -6,7 +6,7 @@ import type {
   SignInRequest,
   SignUpRequest,
   SocialAuthorization,
-} from "./HttpAuthApi";
+} from "../infrastructure/http/HttpAuthApi";
 import {
   AuthFormController,
 } from "./AuthFormController";

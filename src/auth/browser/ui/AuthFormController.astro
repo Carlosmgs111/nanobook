@@ -1,0 +1,22 @@
+<script>
+  import { CachedAuthSessionReader } from "../infrastructure/session/CachedAuthSessionReader";
+  import { HttpAuthApi } from "../infrastructure/http/HttpAuthApi";
+  import { HttpAuthSessionReader } from "../infrastructure/http/HttpAuthSessionReader";
+  import { SessionCachingAuthApi } from "../infrastructure/session/SessionCachingAuthApi";
+  import { AuthFormController } from "./AuthFormController";
+  import { BrowserToastNotifier } from "../../../toast/browser/BrowserToastNotifier";
+  import { navigate } from "astro:transitions/client";
+
+  const sessionReader = new CachedAuthSessionReader(
+    new HttpAuthSessionReader()
+  );
+  const authApi = new SessionCachingAuthApi(new HttpAuthApi(), sessionReader);
+  const controller = new AuthFormController({
+    authApi,
+    notifier: new BrowserToastNotifier("auth-flow"),
+    navigate,
+  });
+
+  document.addEventListener("astro:page-load", () => controller.mount());
+  controller.mount();
+</script>

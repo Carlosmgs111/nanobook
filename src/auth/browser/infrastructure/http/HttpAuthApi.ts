@@ -1,7 +1,7 @@
-import type { AuthenticatedUser } from "./model/AuthSession";
+import type { AuthenticatedUser } from "../../../shared/AuthSession";
 import { getSignedOAuthQuery } from "./OAuthSignedQuery";
 
-export type { AuthenticatedUser } from "./model/AuthSession";
+export type { AuthenticatedUser } from "../../../shared/AuthSession";
 
 export interface SignInRequest {
   email: string;

@@ -23,7 +23,7 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
 </main>
 
 <script>
-  import { getSignedOAuthQuery } from "../auth/browser/OAuthSignedQuery";
+  import { getSignedOAuthQuery } from "../auth/browser/infrastructure/http/OAuthSignedQuery";
 
   const form = document.querySelector("[data-oauth-consent]");
   const error = document.querySelector("[data-oauth-consent-error]");

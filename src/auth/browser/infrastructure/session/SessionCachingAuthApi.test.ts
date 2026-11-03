@@ -2,11 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import type {
   AuthApi,
-  AuthSignOutApi,
   SignInRequest,
   SignUpRequest,
   SocialAuthorization,
-} from "./HttpAuthApi";
+} from "../http/HttpAuthApi";
 import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
 import { SessionCachingAuthApi } from "./SessionCachingAuthApi";
 
@@ -16,7 +15,7 @@ const ada = {
   email: "ada@example.com",
 };
 
-class FakeAuthApi implements AuthApi, AuthSignOutApi {
+class FakeAuthApi implements AuthApi {
   readonly sessionReader = { getCurrentUser: vi.fn().mockResolvedValue(null) };
 
   async signIn(_request: SignInRequest) {

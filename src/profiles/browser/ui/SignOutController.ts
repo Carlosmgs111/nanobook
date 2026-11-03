@@ -1,4 +1,4 @@
-import type { ToastNotifier } from "../../toast/browser/BrowserToastNotifier";
+import type { ToastNotifier } from "../../../toast/browser/BrowserToastNotifier";
 
 export class SignOutController {
   constructor(

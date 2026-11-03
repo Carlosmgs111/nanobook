@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { AuthenticatedSessionReader } from "./model/AuthSession";
+import type { AuthenticatedSessionReader } from "../../../shared/AuthSession";
 import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
 
 const ada = {

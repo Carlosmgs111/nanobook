@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HttpThemeApi } from "./HttpThemeApi";
+import { HttpThemeApi } from "../infrastructure/HttpThemeApi";
 
 const details = { reference: { kind: "custom", id: "one" }, name: "One", baseThemeId: "classic", editable: true, tokens: {} };
 

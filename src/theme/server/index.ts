@@ -6,7 +6,7 @@ import { UpdateTheme } from "./application/UpdateTheme";
 import { ListThemes } from "./application/ListThemes";
 import { GetTheme } from "./application/GetTheme";
 import { GetAssignableTheme } from "./application/GetAssignableTheme";
-import { OfficialThemeCatalog } from "./infraestructure/OfficialThemeCatalog";
+import { OfficialThemeCatalog } from "../shared/OfficialThemeCatalog";
 import { DrizzleThemeRepository } from "./infraestructure/repository/DrizzleThemeRepository";
 import { ThemeCollectionController } from "./infraestructure/rest/ThemeCollectionController";
 import { ThemeItemController } from "./infraestructure/rest/ThemeItemController";

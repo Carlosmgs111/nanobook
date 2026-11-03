@@ -1,4 +1,4 @@
-import { serializeThemeCss } from "../shared/ThemeCss";
+import { serializeThemeCss } from "../../shared/ThemeCss";
 
 export interface ThemeNavigationState {
   theme: string;

@@ -1,7 +1,7 @@
 import { navigate as defaultNavigate } from "astro:transitions/client";
 
-import type { AuthApi } from "./HttpAuthApi";
-import type { ToastNotifier } from "../../toast/browser/BrowserToastNotifier";
+import type { AuthApi } from "../infrastructure/http/HttpAuthApi";
+import type { ToastNotifier } from "../../../toast/browser/BrowserToastNotifier";
 
 type AuthFormMode = "login" | "signup";
 

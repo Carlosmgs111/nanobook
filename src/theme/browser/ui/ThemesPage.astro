@@ -1,7 +1,7 @@
 ---
 import Layout from "../../../layouts/Layout.astro";
-import type { ThemeDetailsDto, ThemeSummaryDto } from "../HttpThemeApi";
-import type { AuthenticatedUser } from "../../../auth/browser/model/AuthSession";
+import type { ThemeDetailsDto, ThemeSummaryDto } from "../infrastructure/HttpThemeApi";
+import type { AuthenticatedUser } from "../../../auth/shared/AuthSession";
 import ThemeEditor from "./ThemeEditor.astro";
 interface Props {
   themes: ThemeSummaryDto[];

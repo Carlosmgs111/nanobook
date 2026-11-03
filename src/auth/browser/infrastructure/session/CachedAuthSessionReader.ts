@@ -1,7 +1,7 @@
 import type {
   AuthenticatedSessionReader,
   AuthenticatedUser,
-} from "./model/AuthSession";
+} from "../../../shared/AuthSession";
 
 export class CachedAuthSessionReader implements AuthenticatedSessionReader {
   private static readonly maxCacheAgeMs = 60_000;

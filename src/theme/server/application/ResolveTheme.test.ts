@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { OfficialThemeCatalog } from "../infraestructure/OfficialThemeCatalog";
+import { OfficialThemeCatalog } from "../../shared/OfficialThemeCatalog";
 import { Theme } from "../domain/Theme";
 import { InMemoryThemeRepository } from "../infraestructure/repository/InMemoryThemeRepository";
 import { ResolveTheme } from "./ResolveTheme";

@@ -2,7 +2,7 @@ import { Result } from "../../../../shared/domain/Result";
 import type { Theme } from "../../domain/Theme";
 import { InvalidThemeError } from "../../domain/errors";
 import type { ThemeTokens } from "../../domain/ThemeTokens";
-import type { OfficialThemeId } from "../../infraestructure/OfficialThemeCatalog";
+import type { OfficialThemeId } from "../../../shared/OfficialThemeCatalog";
 
 export interface ThemePaletteDto {
   pageBackground?: string;

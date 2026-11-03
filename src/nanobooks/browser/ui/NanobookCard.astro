@@ -1,6 +1,7 @@
 ---
+import NanobookCardsController from "./NanobookCardsController.astro";
 import type { Nanobook } from "../../server/domain/Nanobook";
-import type { ThemeSummaryDto } from "../../../theme/browser/HttpThemeApi";
+import type { ThemeSummaryDto } from "../../../theme/browser/infrastructure/HttpThemeApi";
 
 interface Props { nanobook: Nanobook; themes: ThemeSummaryDto[] }
 const { nanobook, themes } = Astro.props;
@@ -106,11 +107,7 @@ const panelId = (name: string) => `nanobook-${id}-${name}`;
   </section>
 </article>
 
-<script>
-  import { initNanobookCards } from "../nanobookCards";
-  document.addEventListener("astro:page-load", initNanobookCards);
-  initNanobookCards();
-</script>
+<NanobookCardsController />
 
 <style>
   [data-nanobook-card] {

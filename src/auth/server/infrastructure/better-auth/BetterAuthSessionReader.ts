@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from "../../../browser/model/AuthSession";
+import type { AuthenticatedUser } from "../../../shared/AuthSession";
 
 interface BetterAuthSessionApi {
   api: {

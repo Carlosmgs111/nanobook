@@ -1,4 +1,4 @@
-import type { OfficialThemeId } from "../server/infraestructure/OfficialThemeCatalog";
+import type { OfficialThemeId } from "../../shared/OfficialThemeCatalog";
 
 export interface ThemePaletteDto {
   pageBackground?: string;

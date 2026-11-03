@@ -1,7 +1,7 @@
 ---
-import type { ThemeDetailsDto } from "../HttpThemeApi";
-import ThemeEditorController from "../ThemeEditorController.astro";
-import { OfficialThemeCatalog } from "../../server/infraestructure/OfficialThemeCatalog";
+import type { ThemeDetailsDto } from "../infrastructure/HttpThemeApi";
+import ThemeEditorController from "./ThemeEditorController.astro";
+import { OfficialThemeCatalog } from "../../shared/OfficialThemeCatalog";
 import { colorInputValue, raisedColorInputValue } from "../../shared/ColorPreview";
 interface Props {
   theme?: ThemeDetailsDto;

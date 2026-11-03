@@ -1,5 +1,5 @@
 import { Result } from "../../../shared/domain/Result";
-import type { OfficialThemeId } from "../infraestructure/OfficialThemeCatalog";
+import type { OfficialThemeId } from "../../shared/OfficialThemeCatalog";
 import { InvalidThemeError } from "./errors";
 import { validateThemeTokens, type ThemeTokens } from "./ThemeTokens";
 
