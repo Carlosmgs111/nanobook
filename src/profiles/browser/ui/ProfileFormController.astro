@@ -5,7 +5,7 @@
     type CreateProfileInput,
     type Profile,
     type UpdateProfileInput,
-  } from "./HttpProfileApi";
+  } from "../infrastructure/HttpProfileApi";
 
   export interface ProfileApi {
     getCurrent(): Promise<Profile>;
@@ -119,9 +119,11 @@
       );
     }
   }
-  
 
   const profileFormController = new ProfileFormController(new HttpProfileApi());
-  document.addEventListener("astro:page-load", () => void profileFormController.mount());
+  document.addEventListener(
+    "astro:page-load",
+    () => void profileFormController.mount()
+  );
   void profileFormController.mount();
 </script>

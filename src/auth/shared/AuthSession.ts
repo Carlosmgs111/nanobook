@@ -1,7 +1,7 @@
 export interface AuthenticatedUser {
   id: string;
-  name: string;
   email: string;
+  name?: string | null;
 }
 
 export interface AuthenticatedSessionReader {

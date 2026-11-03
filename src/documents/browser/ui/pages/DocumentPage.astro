@@ -4,7 +4,7 @@ import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
-import type { AuthenticatedUser } from "../../../../auth/browser/model/AuthSession";
+import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 import DocumentPageController from "../DocumentPageController.astro";
 import { appendServerTiming } from "../../../../shared/server/http/ServerTiming";

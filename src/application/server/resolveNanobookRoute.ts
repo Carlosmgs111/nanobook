@@ -1,7 +1,7 @@
 import { AuthorizeNanobook } from "../../nanobooks/server/application/AuthorizeNanobook";
 import type { Application } from "./Application";
 import type { Nanobook } from "../../nanobooks/server/domain/Nanobook";
-import type { AuthenticatedUser } from "../../auth/browser/model/AuthSession";
+import type { AuthenticatedUser } from "../../auth/shared/AuthSession";
 
 export interface ResolvedNanobookRoute {
   nanobook: Nanobook;

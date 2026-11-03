@@ -3,7 +3,7 @@ import {
   densityValues,
   patternValues,
   shadowValue,
-} from "../../shared/ThemePresets";
+} from "./ThemePresets";
 
 export type OfficialThemeId =
   | "classic"

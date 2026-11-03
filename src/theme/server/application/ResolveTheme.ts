@@ -1,7 +1,7 @@
 import {
   OfficialThemeCatalog,
   type OfficialThemeId,
-} from "../infraestructure/OfficialThemeCatalog";
+} from "../../shared/OfficialThemeCatalog";
 import { cornerImage, coverValues, patternImage, patternStep, patternContrast, shadowValue, rhythmValues, readingMeasureValue, densityValues } from "../../shared/ThemePresets";
 import type { ThemeTokens } from "../domain/ThemeTokens";
 import type { ThemeRepository } from "../domain/ports/ThemeRepository";

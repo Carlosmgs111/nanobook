@@ -1,7 +1,7 @@
 import type {
   AuthenticatedSessionReader,
   AuthenticatedUser,
-} from "./model/AuthSession";
+} from "../../../shared/AuthSession";
 
 export class HttpAuthSessionReader implements AuthenticatedSessionReader {
   async getCurrentUser(): Promise<AuthenticatedUser | null> {

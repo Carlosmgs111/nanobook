@@ -1,11 +1,11 @@
-import { HttpAuthApi, type AuthApi } from "./HttpAuthApi";
-import { HttpAuthSessionReader } from "./HttpAuthSessionReader";
-import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
-import { SessionCachingAuthApi } from "./SessionCachingAuthApi";
+import { HttpAuthApi, type AuthApi } from "./infrastructure/http/HttpAuthApi";
+import { HttpAuthSessionReader } from "./infrastructure/http/HttpAuthSessionReader";
+import { CachedAuthSessionReader } from "./infrastructure/session/CachedAuthSessionReader";
+import { SessionCachingAuthApi } from "./infrastructure/session/SessionCachingAuthApi";
 import type {
   AuthenticatedSessionReader,
   AuthenticatedUser,
-} from "./model/AuthSession";
+} from "../shared/AuthSession";
 
 export class GetAuthenticatedSession {
   constructor(private readonly sessionReader: AuthenticatedSessionReader) {}
@@ -36,15 +36,15 @@ export class AuthModule {
     public readonly signOut: Signout
   ) {}
   static create() {
-    const sessionReader = new CachedAuthSessionReader(
-      new HttpAuthSessionReader()
-    );
+    const authReader = new HttpAuthSessionReader();
+    const sessionReader = new CachedAuthSessionReader(authReader);
     const authApi = new SessionCachingAuthApi(new HttpAuthApi(), sessionReader);
     const signOut = new Signout(
       authApi,
       () => globalThis.confirm("¿Seguro que deseas cerrar sesión?"),
       // A fresh URL bypasses redirects cached for /; reload clears client state.
-      (destination) => globalThis.location.replace(`${destination}?signed-out=${Date.now()}`)
+      (destination) =>
+        globalThis.location.replace(`${destination}?signed-out=${Date.now()}`)
     );
     const getAuthenticatedSession = new GetAuthenticatedSession(sessionReader);
     return new AuthModule(getAuthenticatedSession, signOut);

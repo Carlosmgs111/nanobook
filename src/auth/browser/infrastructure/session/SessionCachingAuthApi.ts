@@ -1,17 +1,16 @@
 import type {
   AuthApi,
-  AuthSignOutApi,
   SignInRequest,
   SignInResult,
   SignUpRequest,
   SocialAuthorization,
-} from "./HttpAuthApi";
-import type { AuthenticatedUser } from "./model/AuthSession";
+} from "../http/HttpAuthApi";
+import type { AuthenticatedUser } from "../../../shared/AuthSession";
 import { CachedAuthSessionReader } from "./CachedAuthSessionReader";
 
-export class SessionCachingAuthApi implements AuthApi, AuthSignOutApi {
+export class SessionCachingAuthApi implements AuthApi {
   constructor(
-    private readonly source: AuthApi & AuthSignOutApi,
+    private readonly source: AuthApi,
     private readonly session: CachedAuthSessionReader,
   ) {}
 

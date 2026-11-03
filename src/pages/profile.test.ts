@@ -11,19 +11,19 @@ describe("profile page", () => {
       'import ProfilePage from "../profiles/browser/ui/ProfilePage.astro"'
     );
     expect(profile).toContain(
-      'import ProfileFormController from "../profiles/browser/ProfileFormController.astro"'
+      'import ProfileFormController from "../profiles/browser/ui/ProfileFormController.astro"'
     );
     expect(profile).toContain("<ProfilePage />");
     expect(profile).toContain("<ProfileFormController />");
     const shell = read("src/layouts/components/LayoutShell.astro");
-    expect(shell).toContain('import SignOutController from "../../profiles/browser/SignOutController.astro"');
+    expect(shell).toContain('import SignOutController from "../../profiles/browser/ui/SignOutController.astro"');
     expect(shell).toContain("<SignOutController />");
     expect(profile).not.toContain("<Layout");
   });
 
   it("offers sign-out from the shared account menu", () => {
     const header = read("src/layouts/components/Header.astro");
-    const controller = read("src/profiles/browser/ProfileFormController.astro");
+    const controller = read("src/profiles/browser/ui/ProfileFormController.astro");
 
     expect(header).toContain("Cerrar sesión");
     expect(header).toContain("data-sign-out");

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { OfficialThemeCatalog } from "../../server/infraestructure/OfficialThemeCatalog";
-import { InMemoryThemeRepository } from "../../server/infraestructure/repository/InMemoryThemeRepository";
-import { ResolveTheme } from "../../server/application/ResolveTheme";
-import { CompileTheme } from "../../server/application/CompileTheme";
+import { OfficialThemeCatalog } from "../../../shared/OfficialThemeCatalog";
+import { InMemoryThemeRepository } from "../../../server/infraestructure/repository/InMemoryThemeRepository";
+import { ResolveTheme } from "../../../server/application/ResolveTheme";
+import { CompileTheme } from "../../../server/application/CompileTheme";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -39,7 +39,7 @@ const businessPresentationFiles = [
 
 describe("official theme styles", () => {
   it("provides semantic interaction states and applies focus and selection", () => {
-    const contract = read("src/theme/browser/styles/contract.css");
+    const contract = read("src/theme/browser/ui/styles/contract.css");
     const base = read("src/shared/styles/base.css");
     expect(contract).toContain("--theme-action-hover:");
     expect(contract).toContain("--theme-action-active:");
@@ -121,8 +121,8 @@ describe("official theme styles", () => {
       "src/documents/browser/ui/components/DocumentActionLink.astro",
       "src/layouts/components/ContentWidthToggle.astro",
       "src/layouts/components/StateRestoreScripts.astro",
-      "src/theme/browser/components/ColorModeToggle.astro",
-      "src/theme/browser/styles/contract.css",
+      "src/theme/browser/ui/components/ColorModeToggle.astro",
+      "src/theme/browser/ui/styles/contract.css",
     ];
 
     for (const file of files) {
@@ -133,7 +133,7 @@ describe("official theme styles", () => {
       expect(source, file).not.toMatch(/\.light\b|classList\.toggle\(["']light["']/);
     }
 
-    const contract = read("src/theme/browser/styles/contract.css");
+    const contract = read("src/theme/browser/ui/styles/contract.css");
     const prose = read("src/shared/styles/prose.css");
     expect(contract).toContain("--theme-content-inline-code-bg");
     expect(contract).toContain("--theme-content-block-code-bg");
@@ -155,7 +155,7 @@ describe("official theme styles", () => {
   });
 
   it("uses identity presets across the book shell and document components", () => {
-    const contract = read("src/theme/browser/styles/contract.css");
+    const contract = read("src/theme/browser/ui/styles/contract.css");
     const utilities = read("src/shared/styles/utilities.css");
     const hatch = read("src/shared/styles/components/hatch.css");
     const cards = read("src/shared/styles/components/index-card.css");
@@ -231,7 +231,7 @@ describe("official theme styles", () => {
   });
 
   it("stores the color mode in a cookie and only migrates legacy storage", () => {
-    const toggle = read("src/theme/browser/components/ColorModeToggle.astro");
+    const toggle = read("src/theme/browser/ui/components/ColorModeToggle.astro");
     const restore = read("src/layouts/components/StateRestoreScripts.astro");
     expect(toggle).toContain("nanobook-color-mode=${next}");
     expect(toggle).toContain("root.dataset.colorMode = next");
@@ -243,8 +243,8 @@ describe("official theme styles", () => {
 
   it("keeps color mode deterministic and excludes the removed system mode", () => {
     const preference = read("src/theme/server/application/ColorModePreference.ts");
-    const toggle = read("src/theme/browser/components/ColorModeToggle.astro");
-    const contract = read("src/theme/browser/styles/contract.css");
+    const toggle = read("src/theme/browser/ui/components/ColorModeToggle.astro");
+    const contract = read("src/theme/browser/ui/styles/contract.css");
     const prose = read("src/shared/styles/prose.css");
 
     expect(preference).toContain('ColorModePreference = "light" | "dark"');
@@ -282,7 +282,7 @@ describe("official theme styles", () => {
   });
 
   it("keeps status colors and control geometry on the active theme contract", () => {
-    const contract = read("src/theme/browser/styles/contract.css");
+    const contract = read("src/theme/browser/ui/styles/contract.css");
     const base = read("src/shared/styles/base.css");
     const landing = read("src/application/browser/ui/LandingPage.astro");
     const status = read("src/documents/browser/ui/components/EditorStatus.astro");
