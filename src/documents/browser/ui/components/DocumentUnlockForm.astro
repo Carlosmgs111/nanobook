@@ -1,0 +1,104 @@
+---
+interface Props {
+  nanobookId: string;
+  documentPath: string;
+  title: string;
+  indexHref: string;
+}
+
+const { nanobookId, documentPath, title, indexHref } = Astro.props;
+---
+
+<section
+  class="document-unlock mx-auto max-w-md border border-[var(--theme-border)] p-8"
+  data-nanobook-id={nanobookId}
+  data-document-path={documentPath}
+>
+  <span class="tech-label mb-3 block">Documento protegido</span>
+  <h1 class="mb-4 text-3xl font-semibold tracking-tight">{title}</h1>
+  <p class="mb-6 text-[var(--theme-text-muted)]">
+    Escribe la contraseña para ver este documento.
+  </p>
+
+  <form data-unlock-form novalidate>
+    <label for="unlock-password" class="mb-2 block text-sm font-medium">Contraseña</label>
+    <input
+      id="unlock-password"
+      name="password"
+      type="password"
+      required
+      autocomplete="off"
+      class="mb-4 w-full border border-[var(--theme-border)] bg-transparent px-3 py-2"
+    />
+    <p data-unlock-error role="alert" aria-live="polite" hidden class="mb-4 text-sm text-[var(--theme-error, #b3261e)]"></p>
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="submit"
+        class="inline-flex min-h-10 items-center border border-[var(--theme-accent)] bg-[var(--theme-accent)] px-4 py-2 text-sm font-medium text-[var(--theme-accent-text)]"
+      >
+        Desbloquear
+      </button>
+      <a href={indexHref} class="text-sm underline">Volver al índice</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  function setup() {
+    const root = document.querySelector<HTMLElement>(".document-unlock");
+    if (!root || root.dataset.ready === "true") return;
+    root.dataset.ready = "true";
+
+    const form = root.querySelector<HTMLFormElement>("[data-unlock-form]");
+    const error = root.querySelector<HTMLElement>("[data-unlock-error]");
+    const input = root.querySelector<HTMLInputElement>("#unlock-password");
+    const submit = root.querySelector<HTMLButtonElement>("button[type=submit]");
+    if (!form || !error || !input || !submit) return;
+
+    const show = (message: string) => {
+      error.textContent = message;
+      error.hidden = false;
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      error.hidden = true;
+      if (!input.value) {
+        show("Escribe la contraseña.");
+        input.focus();
+        return;
+      }
+
+      submit.disabled = true;
+      try {
+        const response = await fetch(
+          `/api/nanobooks/${encodeURIComponent(root.dataset.nanobookId ?? "")}/document-access/unlock`,
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ path: root.dataset.documentPath, password: input.value }),
+          },
+        );
+        if (response.ok) {
+          window.location.reload();
+          return;
+        }
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        if (response.status === 429) {
+          const wait = Number(response.headers.get("Retry-After") ?? 0);
+          show(wait > 0 ? `Demasiados intentos. Prueba de nuevo en ${Math.ceil(wait / 60)} min.` : "Demasiados intentos.");
+        } else {
+          show(payload.error ?? "No fue posible desbloquear el documento.");
+        }
+        input.select();
+      } catch {
+        show("No fue posible conectar. Revisa tu conexión y que las cookies estén habilitadas.");
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+
+  document.addEventListener("astro:page-load", setup);
+</script>

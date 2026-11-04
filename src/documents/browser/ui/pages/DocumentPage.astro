@@ -4,9 +4,12 @@ import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
+import type { Document } from "../../../server";
 import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 import DocumentPageController from "../DocumentPageController.astro";
+import DocumentUnlockForm from "../components/DocumentUnlockForm.astro";
+import { restrictSecuredNavigation } from "../../../../navigation/server";
 import { appendServerTiming } from "../../../../shared/server/http/ServerTiming";
 
 const timings: Record<string, number> = {};
@@ -25,6 +28,10 @@ const app = await measure("app", getApp);
 interface Props {
   nanobook: Nanobook;
   user: AuthenticatedUser | null;
+  /** The (proxy-resolved) document, already fetched by the route. */
+  document: Document;
+  /** The viewer must pass the password challenge before seeing any content. */
+  challenged: boolean;
 }
 
 const { nanobook, user } = Astro.props;
@@ -40,31 +47,32 @@ const navigationContext = {
 const theme = await measure("theme", () =>
   app.themeModule.resolveTheme.execute(nanobook.getSettings().theme, Astro.request)
 );
-const navigationService = await measure("navigation", () =>
+const sharedNavigation = await measure("navigation", () =>
   navigationModule.getNavigation(nanobookId, {
     rootPath: "index",
     basePath: `/n/${nanobook.getSlug()}`,
   })
 );
+// Writers see the whole book; everyone else sees protected documents redacted.
+const navigationService = canEdit ? sharedNavigation : restrictSecuredNavigation(sharedNavigation);
 
 export const prerender = false;
 
 const slug = Astro.params.slug || "index";
 if (!slug) return new Response("Document not found", { status: 404 });
 
-const document = await measure("document", () =>
-  documentModule.getDocument.execute(nanobookId, slug, (name, duration) => {
-    timings[name] = duration;
-  })
-);
+// The route resolved the document and the access decision (status and headers
+// can only be set before rendering starts, so the guard lives in the page).
+const { document, challenged } = Astro.props;
 
-if (!document) throw new Error("Document not found");
-const renderedPage = await measure("publish", () =>
-  publishingModule.pagePublisher.publish(document)
-);
-if (!renderedPage) throw new Error("Page not found");
-const { rendered, headings } = renderedPage;
-const { entry, renderedBody } = rendered;
+const renderedPage = challenged
+  ? null
+  : await measure("publish", () => publishingModule.pagePublisher.publish(document));
+if (!challenged && !renderedPage) throw new Error("Page not found");
+const headings = renderedPage?.headings ?? [];
+// When challenged, only the title is used; no content reaches the response.
+const entry = renderedPage?.rendered.entry ?? document.parse();
+const renderedBody = renderedPage?.rendered.renderedBody ?? "";
 
 const baseHref = `/n/${nanobook.getSlug()}`;
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
@@ -75,7 +83,7 @@ const newHref =
       ? `${baseHref}/index/new`
       : `${baseHref}/${entry.slug}/new`
     : undefined;
-const canonicalHref = entry.ref
+const canonicalHref = !challenged && entry.ref
   ? entry.ref === "index"
     ? `${baseHref || "/"}`
     : `${baseHref}/${entry.ref}/`
@@ -92,15 +100,23 @@ Astro.response.headers.set(
   session={user}
   deferSessionUi={deferOwnerActions}
   title={entry.title}
-  description={entry.description}
-  headings={headings}
+  description={challenged ? undefined : entry.description}
+  headings={challenged ? [] : headings}
+  hideToc={challenged}
   canonicalHref={canonicalHref}
   navigationService={navigationService}
   theme={theme}
   navigationContext={navigationContext}
 >
   {
-    entry.isIndex ? (
+    challenged ? (
+      <DocumentUnlockForm
+        nanobookId={nanobookId}
+        documentPath={slug}
+        title={document.getTitle()}
+        indexHref={baseHref}
+      />
+    ) : entry.isIndex ? (
       <IndexList
         title={entry.title}
         description={entry.description}
