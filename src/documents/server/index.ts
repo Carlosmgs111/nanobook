@@ -1,4 +1,16 @@
-import { GITHUB_TOKEN } from "astro:env/server";
+import { BETTER_AUTH_SECRET, GITHUB_TOKEN } from "astro:env/server";
+import { AuthorizeDocumentAccess } from "./application/access/AuthorizeDocumentAccess";
+import { ClearDocumentPassword } from "./application/access/ClearDocumentPassword";
+import { SetDocumentPassword } from "./application/access/SetDocumentPassword";
+import { UnlockDocument } from "./application/access/UnlockDocument";
+import { DEFAULT_ACCESS_GRANT_POLICY } from "./domain/access/AccessGrantPolicy";
+import { PasswordAccessPolicy } from "./domain/access/DocumentAccessPolicy";
+import { DrizzleDocumentAccessRepository } from "./infraestructure/access/DrizzleDocumentAccessRepository";
+import { DrizzleUnlockAttemptLimiter } from "./infraestructure/access/DrizzleUnlockAttemptLimiter";
+import { HmacAccessGrantCodec } from "./infraestructure/access/HmacAccessGrantCodec";
+import { ScryptPasswordHasher } from "./infraestructure/access/ScryptPasswordHasher";
+import { DocumentAccessAdminController } from "./infraestructure/rest/DocumentAccessAdminController";
+import { UnlockDocumentController } from "./infraestructure/rest/UnlockDocumentController";
 import { ProxyParser } from "./application/ProxyParser";
 import { CreateDocument } from "./application/CreateDocument";
 import { UpdateDocument } from "./application/UpdateDocument";
@@ -42,6 +54,9 @@ export class DocumentModule {
     public readonly deleteDocumentController: DeleteDocumentController,
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
+    public readonly authorizeDocumentAccess: AuthorizeDocumentAccess,
+    public readonly documentAccessAdminController: DocumentAccessAdminController,
+    public readonly unlockDocumentController: UnlockDocumentController,
   ) {}
 
   static async create(eventBus: EventBus) {
@@ -82,6 +97,30 @@ export class DocumentModule {
     const createDocumentController = new CreateDocumentController(
       createDocument
     );
+    const accessRepository = new DrizzleDocumentAccessRepository(db);
+    const grantCodec = new HmacAccessGrantCodec(
+      BETTER_AUTH_SECRET ?? "nanobook-development-secret",
+    );
+    const hasher = new ScryptPasswordHasher();
+    const unlockLimiter = new DrizzleUnlockAttemptLimiter(db, DEFAULT_ACCESS_GRANT_POLICY);
+    const authorizeDocumentAccess = new AuthorizeDocumentAccess(
+      accessRepository,
+      grantCodec,
+      new PasswordAccessPolicy(),
+    );
+    const unlockDocument = new UnlockDocument(
+      getDocument,
+      accessRepository,
+      hasher,
+      unlockLimiter,
+      grantCodec,
+      DEFAULT_ACCESS_GRANT_POLICY,
+    );
+    const documentAccessAdminController = new DocumentAccessAdminController(
+      new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus),
+      new ClearDocumentPassword(contentRepository, accessRepository, eventBus),
+    );
+    const unlockDocumentController = new UnlockDocumentController(unlockDocument);
     return new DocumentModule(
       createDocument,
       updateDocument,
@@ -90,6 +129,9 @@ export class DocumentModule {
       deleteDocumentController,
       getAllDocuments,
       getDocument,
+      authorizeDocumentAccess,
+      documentAccessAdminController,
+      unlockDocumentController,
     );
   }
 }
