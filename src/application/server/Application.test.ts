@@ -19,6 +19,7 @@ vi.mock(
     GITHUB_OAUTH_CLIENT_ID: undefined,
     GITHUB_OAUTH_CLIENT_SECRET: undefined,
     BETTER_AUTH_URL: undefined,
+    BETTER_AUTH_SECRET: undefined,
     EMAIL_FROM: undefined,
     RESEND_API_KEY: undefined,
   }),
