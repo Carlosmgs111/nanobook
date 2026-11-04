@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { isNull } from "drizzle-orm";
 
 import { nanobook } from "../../../../nanobooks/server/infraestructure/database/DrizzleNanobookSchema";
@@ -32,4 +32,27 @@ export const document = sqliteTable(
     index("document_children_idx").on(table.nanobookId, table.parentPath, table.deletedAt),
     index("document_owner_idx").on(table.ownerId, table.nanobookId),
   ],
+);
+
+export const documentAccess = sqliteTable("document_access", {
+  documentId: text("document_id")
+    .primaryKey()
+    .references(() => document.id, { onDelete: "cascade" }),
+  /** Null after the protection is removed: nobody can unlock. */
+  passwordHash: text("password_hash"),
+  passwordVersion: integer("password_version").notNull().default(1),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export const documentUnlockAttempt = sqliteTable(
+  "document_unlock_attempt",
+  {
+    documentId: text("document_id")
+      .notNull()
+      .references(() => document.id, { onDelete: "cascade" }),
+    clientKey: text("client_key").notNull(),
+    windowStartedAt: integer("window_started_at", { mode: "timestamp_ms" }).notNull(),
+    failures: integer("failures").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.documentId, table.clientKey] })],
 );
