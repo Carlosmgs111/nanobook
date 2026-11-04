@@ -25,5 +25,5 @@ export const POST: APIRoute = ({ request }) =>
       );
       return handler.fetch(protectedRequest);
     },
-    { resource, challengeScopes: ["nanobooks:read"] }
+    { resource, challengeScopes: ["nanobooks:read", "nanobooks:write"] }
   )(request);
