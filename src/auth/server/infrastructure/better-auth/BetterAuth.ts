@@ -19,7 +19,7 @@ import { createGitHubOAuthProvider } from "./GitHubOAuth";
 import {
   getMcpOAuthConfig,
   getTrustedApplicationOrigins,
-  isCodexClientMetadataUrlAllowed,
+  isAgentClientMetadataUrlAllowed,
 } from "./McpOAuthConfig";
 import { ResendEmailSender } from "./ResendEmailSender";
 
@@ -109,7 +109,7 @@ export function createBetterAuth() {
       cimd({
         fetchClientMetadataResource,
         metadataProfile: "mcp-2026-07-28",
-        isMetadataDocumentUrlAllowed: isCodexClientMetadataUrlAllowed,
+        isMetadataDocumentUrlAllowed: isAgentClientMetadataUrlAllowed,
       }),
     ],
   });
