@@ -15,6 +15,11 @@ export interface DocumentMetadata {
   cover?: string;
   tags?: string[];
   draft?: boolean | undefined;
+  /**
+   * Server-managed flag. Readers without write access must pass a password
+   * challenge before the document is rendered. Never accepted from clients.
+   */
+  secured?: boolean;
   /** Declares an index document as the root of an independently navigable Nanobook. */
   nanobook?: boolean;
   position?: number;

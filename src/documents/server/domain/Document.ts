@@ -81,6 +81,7 @@ export class Document {
         tags: overrides.tags ?? [],
         cover: overrides.cover,
         draft: overrides.draft ?? false,
+        secured: overrides.secured,
         nanobook: overrides.nanobook ?? false,
         position: overrides.position ?? 0,
         ref: overrides.ref,
@@ -200,6 +201,20 @@ export class Document {
       revision,
     );
   }
+  withSecured(
+    secured: boolean,
+    updatedAt: Date,
+  ): Result<InvalidDocumentError | InvalidDocumentIdError, Document> {
+    return Document.create(
+      this.getPath(),
+      { ...this.metadata, secured: secured ? true : undefined, updatedAt },
+      this.content,
+      this.parser,
+      undefined,
+      this.getDocumentId().getValue(),
+      this.revision,
+    );
+  }
   getTitle(): string {
     return this.title;
   }
@@ -305,6 +320,7 @@ export class Document {
       tags: (data.tags as string[]) ?? [],
       cover: data.cover as string | undefined,
       draft: (data.draft as boolean) ?? false,
+      secured: data.secured === true ? true : undefined,
       nanobook: (data.nanobook as boolean) ?? false,
       position: (data.position as number) ?? 0,
       ref: data.ref as DocumentMetadata["ref"],
