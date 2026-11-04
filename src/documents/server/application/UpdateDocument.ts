@@ -70,6 +70,8 @@ export class UpdateDocument {
         id: existingDocument.getDocumentId().getValue(),
         author: existingMetadata.author,
         ownerId: existingMetadata.ownerId,
+        // Server-managed: clients can never change the protection flag.
+        secured: existingMetadata.secured,
         createdAt: existingMetadata.createdAt,
         updatedAt: new Date(),
       },
