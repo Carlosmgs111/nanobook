@@ -72,6 +72,27 @@ export class InvalidDocumentError extends Error {
   }
 }
 
+export class InvalidDocumentPasswordError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidDocumentPasswordError";
+  }
+}
+
+export class DocumentUnlockFailedError extends Error {
+  constructor() {
+    super("Contraseña incorrecta");
+    this.name = "DocumentUnlockFailedError";
+  }
+}
+
+export class DocumentUnlockRateLimitedError extends Error {
+  constructor(public readonly retryAfterSeconds: number) {
+    super("Demasiados intentos. Inténtalo de nuevo más tarde.");
+    this.name = "DocumentUnlockRateLimitedError";
+  }
+}
+
 export type DocumentServiceError =
   | DocumentAlreadyExistsError
   | DocumentAccessDeniedError
