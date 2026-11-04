@@ -1,4 +1,5 @@
 export type { NavigationService };
+export { restrictSecuredNavigation } from "./application/restrictSecuredNavigation";
 export type {
   Crumb,
   NavigationNode,
