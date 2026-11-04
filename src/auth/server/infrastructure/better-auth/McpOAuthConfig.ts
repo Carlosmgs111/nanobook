@@ -2,6 +2,8 @@ const CODEX_CIMD_HOST = "chatgpt.com";
 const CODEX_CIMD_PATH =
   /^\/oauth\/(?:client\.json|[^/]+\/client\.json|codex\/[^/]+\/client\.json)$/;
 
+const CLAUDE_CIMD_URL = "https://claude.ai/oauth/mcp-oauth-client-metadata";
+
 export interface McpOAuthConfig {
   resource: string;
   loginPage: string;
@@ -28,6 +30,17 @@ export function getTrustedApplicationOrigins(
   baseURL: string,
 ): readonly [string] {
   return [parseOrigin(baseURL).origin];
+}
+
+export function isAgentClientMetadataUrlAllowed(clientId: string): boolean {
+  return (
+    isCodexClientMetadataUrlAllowed(clientId) ||
+    isClaudeClientMetadataUrlAllowed(clientId)
+  );
+}
+
+export function isClaudeClientMetadataUrlAllowed(clientId: string): boolean {
+  return clientId === CLAUDE_CIMD_URL;
 }
 
 export function isCodexClientMetadataUrlAllowed(clientId: string): boolean {

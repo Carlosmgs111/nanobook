@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getTrustedApplicationOrigins,
   getMcpOAuthConfig,
+  isAgentClientMetadataUrlAllowed,
   isCodexClientMetadataUrlAllowed,
 } from "./McpOAuthConfig";
 
@@ -53,6 +54,24 @@ describe("MCP OAuth configuration", () => {
     expect(
       isCodexClientMetadataUrlAllowed(clientId),
     ).toBe(true);
+  });
+
+  it("allows the documented Claude CIMD client metadata URL", () => {
+    expect(
+      isAgentClientMetadataUrlAllowed(
+        "https://claude.ai/oauth/mcp-oauth-client-metadata",
+      ),
+    ).toBe(true);
+  });
+
+  it.each([
+    "http://claude.ai/oauth/mcp-oauth-client-metadata",
+    "https://claude.ai/oauth/other.json",
+    "https://claude.ai/oauth/mcp-oauth-client-metadata?x=1",
+    "https://evil.example.com/oauth/mcp-oauth-client-metadata",
+    "https://user:pw@claude.ai/oauth/mcp-oauth-client-metadata",
+  ])("rejects an untrusted Claude-like CIMD URL: %s", (clientId) => {
+    expect(isAgentClientMetadataUrlAllowed(clientId)).toBe(false);
   });
 
   it.each([

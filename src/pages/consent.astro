@@ -12,7 +12,7 @@ const clientId = Astro.url.searchParams.get("client_id") ?? "Cliente desconocido
 const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boolean);
 ---
 <main>
-  <h1>Autorizar conexión de Codex</h1>
+  <h1>Autorizar conexión de agente</h1>
   <p><strong>{clientId}</strong> solicita acceso a Nanobook.</p>
   <ul>{scopes.map((scope) => <li>{scope}</li>)}</ul>
   <form data-oauth-consent data-scope={scopes.join(" ")}>
@@ -35,7 +35,7 @@ const scopes = (Astro.url.searchParams.get("scope") ?? "").split(" ").filter(Boo
 
     const signedQuery = getSignedOAuthQuery(window.location.search);
     if (!signedQuery) {
-      error.textContent = "La solicitud OAuth ya no es válida. Vuelve a iniciar la conexión desde Codex.";
+      error.textContent = "La solicitud OAuth ya no es válida. Vuelve a iniciar la conexión desde tu agente (Codex o Claude).";
       error.hidden = false;
       return;
     }

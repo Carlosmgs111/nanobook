@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- El servidor OAuth MCP ahora acepta también a Claude (claude.ai) además de Codex: la lista de clientes CIMD permitidos incluye `https://claude.ai/oauth/mcp-oauth-client-metadata` y la pantalla de consentimiento es genérica para cualquier agente. Claude Code (CLI) no está confirmado.
+
 - Reorganizado el código de navegador de `auth`, `profiles`, `theme` y `nanobooks`: la presentación reside en `ui/`, los adaptadores HTTP en `infrastructure/` y las pruebas acompañan a la capa que verifican. El contrato de sesión de autenticación pasó a `auth/shared/`, por lo que el servidor ya no depende de `auth/browser/`.
 
 - Mejorada la navegación autenticada SSR: al renovar una sesión, la respuesta de Better Auth reenvía sus cookies al navegador; las lecturas de nanobooks públicos ya no esperan autenticación y el header se sincroniza en segundo plano. Sidebar, breadcrumbs e índices ahora precargan el documento al pasar el cursor.
