@@ -2,6 +2,7 @@
 import "../../../../../shared/styles/components/index-card.css";
 import FolderSvg from "../../../../../shared/icons/folder.svg";
 import FileSvg from "../../../../../shared/icons/file.svg";
+import LockSvg from "../../../../../shared/icons/lock.svg";
 import type { NavigationService } from "../../../../server";
 
 const { page } = Astro.props;
@@ -26,7 +27,10 @@ const path = `/${page.path}${page.isIndex ? "/" : ""}`;
 
   <span class="index-card-content">
     <span class="index-card-kind">{page.isIndex ? "Sección" : "Documento"}</span>
-    <span class="index-card-title">{page.metadata.title}</span>
+    <span class="index-card-title">
+      {page.metadata.title}
+      {page.metadata.secured && <LockSvg />}
+    </span>
     {page.metadata.description && (
       <span class="index-card-desc">{page.metadata.description}</span>
     )}

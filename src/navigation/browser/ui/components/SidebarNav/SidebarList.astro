@@ -1,6 +1,7 @@
 ---
 import FileSVG from "../../../../../shared/icons/file.svg";
 import FolderSVG from "../../../../../shared/icons/folder.svg";
+import LockSVG from "../../../../../shared/icons/lock.svg";
 import ToolTip from "./ToolTip.astro";
 import type { NavigationNode } from "../../../../server/domain/types";
 import type { NavigationService } from "../../../../server";
@@ -30,6 +31,7 @@ const { entries, navigationService } = Astro.props;
             </i>
             <span class="sidebar-text" slot="label" title={page.title}>
               {page.title}
+              {page.metadata.secured && <LockSVG />}
             </span>
           </ToolTip>
         </a>
