@@ -5,6 +5,7 @@ import { getApp } from "../../../../application/server/Application";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
+import DocumentProtectionPanel from "../components/DocumentProtectionPanel.astro";
 
 const app = await getApp();
 
@@ -75,6 +76,12 @@ const parentHref = editableEntry.parentPath
       <DocumentActionLink href={viewHref} label="Volver al documento" />
     </div>
   </div>
+
+  <DocumentProtectionPanel
+    nanobookId={nanobookId}
+    documentPath={editableEntry.slug}
+    secured={editableEntry.metadata.secured === true}
+  />
 
   {
     entry.ref && (

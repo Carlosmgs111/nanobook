@@ -1,0 +1,105 @@
+---
+interface Props {
+  nanobookId: string;
+  documentPath: string;
+  secured: boolean;
+}
+
+const { nanobookId, documentPath, secured } = Astro.props;
+---
+
+<section
+  class="protection-panel mb-8 border border-[var(--theme-border)] p-6"
+  data-protection-panel
+  data-nanobook-id={nanobookId}
+  data-document-path={documentPath}
+  data-secured={secured ? "true" : "false"}
+>
+  <h2 class="mb-2 text-lg font-semibold">Protección</h2>
+  <p class="mb-4 text-sm text-[var(--theme-text-muted)]" data-protection-status>
+    {secured ? "Este documento está protegido con contraseña." : "Este documento es visible para quien pueda leer el nanobook."}
+  </p>
+  <p class="mb-4 text-sm text-[var(--theme-text-muted)]">
+    Guarda tus cambios antes: al aplicar la protección la página se recarga.
+  </p>
+
+  <form data-protection-form novalidate>
+    <label for="protection-password" class="mb-2 block text-sm font-medium">
+      {secured ? "Nueva contraseña" : "Contraseña"} (8 a 128 caracteres)
+    </label>
+    <input
+      id="protection-password"
+      type="password"
+      autocomplete="new-password"
+      minlength="8"
+      maxlength="128"
+      class="mb-3 w-full max-w-sm border border-[var(--theme-border)] bg-transparent px-3 py-2"
+    />
+    <p data-protection-message role="status" aria-live="polite" hidden class="mb-3 text-sm"></p>
+    <div class="flex flex-wrap gap-3">
+      <button type="submit" class="inline-flex min-h-10 items-center border border-[var(--theme-accent)] px-4 py-2 text-sm font-medium">
+        {secured ? "Cambiar contraseña" : "Proteger"}
+      </button>
+      {secured && (
+        <button type="button" data-protection-clear class="inline-flex min-h-10 items-center border border-[var(--theme-border)] px-4 py-2 text-sm font-medium">
+          Quitar protección
+        </button>
+      )}
+    </div>
+  </form>
+</section>
+
+<script>
+  function setup() {
+    const panel = document.querySelector<HTMLElement>("[data-protection-panel]");
+    if (!panel || panel.dataset.ready === "true") return;
+    panel.dataset.ready = "true";
+
+    const form = panel.querySelector<HTMLFormElement>("[data-protection-form]");
+    const input = panel.querySelector<HTMLInputElement>("#protection-password");
+    const message = panel.querySelector<HTMLElement>("[data-protection-message]");
+    const clear = panel.querySelector<HTMLButtonElement>("[data-protection-clear]");
+    if (!form || !input || !message) return;
+
+    const endpoint = `/api/nanobooks/${encodeURIComponent(panel.dataset.nanobookId ?? "")}/document-access`;
+    const path = panel.dataset.documentPath;
+    const say = (text: string) => {
+      message.textContent = text;
+      message.hidden = false;
+    };
+
+    async function send(method: "PUT" | "DELETE", body: Record<string, string>) {
+      const response = await fetch(endpoint, {
+        method,
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        window.location.reload();
+        return;
+      }
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      say(payload.error ?? "No fue posible actualizar la protección.");
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.hidden = true;
+      if (input.value.length < 8 || input.value.length > 128) {
+        say("La contraseña debe tener entre 8 y 128 caracteres.");
+        input.focus();
+        return;
+      }
+      await send("PUT", { path: path ?? "", password: input.value });
+    });
+
+    clear?.addEventListener("click", async () => {
+      if (!window.confirm("¿Quitar la protección? Cualquiera con acceso al nanobook podrá leer el documento.")) return;
+      message.hidden = true;
+      await send("DELETE", { path: path ?? "" });
+    });
+  }
+
+  document.addEventListener("astro:page-load", setup);
+</script>
