@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Añadidos documentos protegidos con contraseña: el propietario marca un documento desde el panel «Protección» del editor y los demás lectores deben resolver un desafío en la misma URL antes de que se renderice (`401` con formulario, `no-store` y `noindex`). La contraseña se guarda como hash scrypt en `document_access` (migración `0016`), el desbloqueo emite una cookie HMAC por documento de 12 h ligada a la versión de la contraseña, los fallos se limitan a 5 por documento e IP cada 15 minutos y el índice y el sidebar muestran solo título y candado. El atributo `secured` lo administra el servidor y `UpdateDocument` lo conserva.
+
 - El desafío `401` del endpoint MCP anuncia ahora los scopes `nanobooks:read` y `nanobooks:write`. Los clientes que solo piden los scopes del desafío, como Claude, ya reciben en el consentimiento la opción de escritura; antes se autorizaban solo con lectura.
 
 - El servidor OAuth MCP ahora acepta también a Claude (claude.ai) además de Codex: la lista de clientes CIMD permitidos incluye `https://claude.ai/oauth/mcp-oauth-client-metadata` y la pantalla de consentimiento es genérica para cualquier agente. Claude Code (CLI) no está confirmado.
