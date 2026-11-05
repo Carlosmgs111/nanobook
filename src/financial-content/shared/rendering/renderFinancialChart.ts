@@ -82,9 +82,8 @@ function formatAxisLabels(ticks: number[], { unit, currency, precision }: AxisQu
   return compactLabels();
 }
 
-function renderAxes(block: FinancialChartBlock, scale: ChartScale): Element {
+function renderAxes(block: FinancialChartBlock, scale: ChartScale, xTicks: number[], yLabels: string[]): Element {
   const { left, top, right, bottom } = CHART_PLOT;
-  const yLabels = formatAxisLabels(scale.ticks, block.series[0]);
   const yTicks = scale.ticks.map((value, index) => {
     const y = scale.y(value);
     const label = yLabels[index];
@@ -98,9 +97,7 @@ function renderAxes(block: FinancialChartBlock, scale: ChartScale): Element {
   });
 
   const last = block.x.length - 1;
-  const count = Math.min(block.x.length, 5);
-  const xTicks = Array.from({ length: count }, (_, tick) => {
-    const index = count === 1 ? 0 : Math.round(tick * last / (count - 1));
+  const categories = xTicks.map((index) => {
     const x = categoryX(index, block.x.length, block.chart);
     const label = Array.from(block.x[index]);
     const tickLabel = label.length > 16 ? `${label.slice(0, 15).join("")}…` : block.x[index];
@@ -115,8 +112,18 @@ function renderAxes(block: FinancialChartBlock, scale: ChartScale): Element {
     element("line", [], { x1: left, x2: left, y1: top, y2: bottom, stroke: "currentColor" }),
     element("line", [], { x1: left, x2: right, y1: bottom, y2: bottom, stroke: "currentColor" }),
     ...yTicks,
-    ...xTicks,
+    ...categories,
   ], { className: ["financial-chart__axes"], fill: "currentColor", fontSize: 11 });
+}
+
+function renderAxisSummary(xLabels: string[], yLabels: string[]): Element {
+  const [min, max] = yLabels;
+  return element("dl", [
+    element("dt", [text("Referencias del eje X")]),
+    element("dd", [text(xLabels.join(" · "))]),
+    element("dt", [text("Eje Y")]),
+    element("dd", [text(max === undefined ? min : `Mínimo ${min} · Máximo ${max}`)]),
+  ], { className: ["financial-chart__axis-summary"] });
 }
 
 function renderSeries(block: FinancialChartBlock, scale: ChartScale): Element[] {
@@ -222,6 +229,11 @@ export function renderFinancialChart(block: FinancialChartBlock, context: Financ
   const values = block.series.flatMap((series) => series.values);
   if (block.chart === "bar") values.push(0);
   const scale = createChartScale(values);
+  const categoryCount = block.x.length;
+  const tickCount = Math.min(categoryCount, 5);
+  const xTicks = Array.from({ length: tickCount }, (_, tick) =>
+    tickCount === 1 ? 0 : Math.round(tick * (categoryCount - 1) / (tickCount - 1)));
+  const yLabels = formatAxisLabels(scale.ticks, block.series[0]);
   const description = [
     block.description,
     block.chart === "bar"
@@ -238,7 +250,7 @@ export function renderFinancialChart(block: FinancialChartBlock, context: Financ
     element("svg", [
       element("title", [text(block.title)], { id: titleId }),
       element("desc", [text(description)], { id: descriptionId }),
-      renderAxes(block, scale),
+      renderAxes(block, scale, xTicks, yLabels),
       ...renderSeries(block, scale),
     ], {
       className: ["financial-chart__plot"],
@@ -246,6 +258,7 @@ export function renderFinancialChart(block: FinancialChartBlock, context: Financ
       role: "img",
       ariaLabelledBy: `${titleId} ${descriptionId}`,
     }),
+    renderAxisSummary(xTicks.map((index) => block.x[index]), yLabels),
     renderLegend(block),
     renderTable(block, headingId),
   ], { className: ["financial-block", "financial-chart"] });

@@ -69,14 +69,17 @@ describe("renderFinancialNews", () => {
     const [firstHeadline] = elements(articles[0], "h3");
     const [secondHeadline] = elements(articles[1], "h3");
     const [link] = elements(firstHeadline, "a");
-    expect(toString(link)).toBe("La empresa publica sus resultados");
+    expect(toString(link)).toBe("La empresa publica sus resultados (enlace externo, abre en otra pestaña)");
+    expect(elements(link, "span")[0].properties).not.toHaveProperty("ariaHidden");
     expect(link.properties).toMatchObject({
       href: "https://example.com/release",
       target: "_blank",
       rel: ["noopener", "noreferrer", "external"],
     });
     expect(toString(articles[0])).toContain("La dirección presentó su balance.");
-    expect(elements(secondHeadline, "a")[0].properties.href).toBe("https://example.com/report");
+    const [secondLink] = elements(secondHeadline, "a");
+    expect(secondLink.properties.href).toBe("https://example.com/report");
+    expect(toString(secondLink)).toBe("Actualización trimestral (enlace externo, abre en otra pestaña)");
     expect(toString(articles[1])).toContain("El informe resume la actividad.");
   });
 
