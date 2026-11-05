@@ -19,4 +19,14 @@ describe("browser application consumers", () => {
     expect(source).toContain("app.editionModule");
     expect(source).not.toContain("import { edition");
   });
+
+  it("composes Worker markdown extensions through the browser application factory", () => {
+    const source = read(
+      "src/documents/browser/infraestructure/renderer/DelegatedMarkdownItRenderer/worker-entry.ts",
+    );
+
+    expect(source).toMatch(/import\s*\{\s*createMarkdownExtensions\s*\}\s*from\s*["'][^"']*\/application\/browser\/createMarkdownExtensions["']/);
+    expect(source).toContain("new UnifiedMarkdownRenderer(createMarkdownExtensions())");
+    expect(source).not.toContain("financial-content");
+  });
 });

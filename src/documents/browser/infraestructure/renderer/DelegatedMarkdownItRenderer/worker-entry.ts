@@ -1,7 +1,8 @@
+import { createMarkdownExtensions } from "../../../../../application/browser/createMarkdownExtensions";
 import { UnifiedMarkdownRenderer } from "../UnifiedMarkdownRenderer";
 import type { RenderRequest, RenderResponse } from "./protocol";
 
-const renderer = new UnifiedMarkdownRenderer();
+const renderer = new UnifiedMarkdownRenderer(createMarkdownExtensions());
 
 self.addEventListener(
   "message",
