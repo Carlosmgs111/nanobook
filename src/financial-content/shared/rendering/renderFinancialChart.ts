@@ -132,17 +132,13 @@ function renderSeries(block: FinancialChartBlock, scale: ChartScale): Element[] 
         }
         return element("rect", [], { ...bar, fill: "currentColor", fillOpacity: 0.25, ...dashPattern(index) });
       })
-      : createLineSegments(values, scale).flatMap((segment) => {
-        const markers = segment.map((point) => renderMarker(point, index));
-        if (segment.length === 1) return markers;
+      : createLineSegments(values, scale).map((segment) => {
+        if (segment.length === 1) return renderMarker(segment[0], index);
         const d = `M ${segment.map(({ x, y }) => `${x} ${y}`).join(" L ")}`;
-        return [
-          element("path", [], {
-            className: ["financial-chart__line"], d, fill: "none",
-            strokeWidth: 2, strokeLinecap: "round", ...dashPattern(index),
-          }),
-          ...markers,
-        ];
+        return element("path", [], {
+          className: ["financial-chart__line"], d, fill: "none",
+          strokeWidth: 2, strokeLinecap: "round", ...dashPattern(index),
+        });
       });
     return element("g", marks, {
       className: ["financial-chart__series"],
