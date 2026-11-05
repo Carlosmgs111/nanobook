@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** publicación y vista previa comparten el pipeline Markdown; la caché de HTML renderizado queda versionada por el núcleo y las extensiones activas.
+
 - El desafío `401` del endpoint MCP anuncia ahora los scopes `nanobooks:read` y `nanobooks:write`. Los clientes que solo piden los scopes del desafío, como Claude, ya reciben en el consentimiento la opción de escritura; antes se autorizaban solo con lectura.
 
 - El servidor OAuth MCP ahora acepta también a Claude (claude.ai) además de Codex: la lista de clientes CIMD permitidos incluye `https://claude.ai/oauth/mcp-oauth-client-metadata` y la pantalla de consentimiento es genérica para cualquier agente. Claude Code (CLI) no está confirmado.
