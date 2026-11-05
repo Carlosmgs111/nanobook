@@ -45,6 +45,8 @@ describe("formatFinancialValue", () => {
     for (const precision of [-1, 1.5, 5] as const) {
       expect(() => formatFinancialValue({ value: 1, unit: "number", precision: precision as 0 })).toThrow();
     }
+    expect(() => formatFinancialValue({ value: 1, unit: "number", precision: null as unknown as 0 })).toThrow();
+    expect(formatFinancialValue({ value: 1, unit: "number", precision: undefined })).toBe("1,00");
   });
 
   it("rejects incompatible or malformed currency and unit arguments", () => {
