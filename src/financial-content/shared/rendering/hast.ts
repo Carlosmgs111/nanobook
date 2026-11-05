@@ -1,6 +1,10 @@
 import type { Element, Properties, Text } from "hast";
 import type { HttpsUrl } from "../model/FinancialSource";
 
+export function financialId(kind: string, blockIndex: number, part: string): string {
+  return `financial:${kind}-${blockIndex}-${part}`;
+}
+
 export function text(value: string): Text {
   return { type: "text", value };
 }

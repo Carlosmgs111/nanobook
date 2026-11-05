@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregida la colisión entre los IDs de fichas financieras y los títulos Markdown; las secciones generadas usan el prefijo `financial:` y conservan sus referencias de accesibilidad.
+
 - **Changed:** publicación y vista previa comparten el pipeline Markdown; la caché de HTML renderizado queda versionada por el núcleo y las extensiones activas.
 
 - El desafío `401` del endpoint MCP anuncia ahora los scopes `nanobooks:read` y `nanobooks:write`. Los clientes que solo piden los scopes del desafío, como Claude, ya reciben en el consentimiento la opción de escritura; antes se autorizaban solo con lectura.
