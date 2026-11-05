@@ -52,14 +52,17 @@ describe("financial content styles", () => {
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 
-  it("switches to readable HTML axis references on narrow viewports", () => {
+  it("switches to readable HTML axis references when the chart itself is narrow", () => {
     const css = stylesheet();
-    const mobile = css.split(/@media\s*\(max-width:[^)]+\)\s*\{/)[1]?.split("@media")[0] ?? "";
+    const chartContainer = css.match(/@container\s+financial-chart\s+\(max-width:\s*36rem\)\s*\{([\s\S]*?)^\}/m)?.[1] ?? "";
+    const viewportRules = [...css.matchAll(/@media[^{]*\{([\s\S]*?)^\}/gm)].map((match) => match[1]).join("\n");
 
+    expect(css).toMatch(/\.financial-chart\s*\{[^}]*container-type:\s*inline-size[^}]*container-name:\s*financial-chart/);
     expect(css).toMatch(/\.financial-chart__axis-summary\s*\{[^}]*display:\s*none/);
-    expect(mobile).toMatch(/\.financial-chart__axis-summary\s*\{[^}]*display:\s*grid/);
-    expect(mobile).toMatch(/\.financial-chart__axes text\s*\{[^}]*display:\s*none/);
-    expect(mobile).not.toMatch(/\.financial-chart__plot\b[^{}]*\{[^}]*overflow/);
+    expect(chartContainer).toMatch(/\.financial-chart__axis-summary\s*\{[^}]*display:\s*grid/);
+    expect(chartContainer).toMatch(/\.financial-chart__axes text\s*\{[^}]*display:\s*none/);
+    expect(viewportRules).not.toMatch(/\.financial-chart__(?:axis-summary|axes)/);
+    expect(css).not.toMatch(/\.financial-chart__plot\b[^{}]*\{[^}]*overflow/);
   });
 
   it.each(["favorable", "unfavorable", "neutral"])("shows a visible %s comparison indicator", (direction) => {

@@ -129,6 +129,11 @@
   margin-inline-end: 0.4em;
 }
 
+.financial-chart {
+  container-type: inline-size;
+  container-name: financial-chart;
+}
+
 .financial-chart__plot {
   display: block;
   width: 100%;
@@ -144,6 +149,26 @@
 
 .financial-chart__axis-summary {
   display: none;
+}
+
+@container financial-chart (max-width: 36rem) {
+  .financial-chart__axes text {
+    display: none;
+  }
+
+  .financial-chart__axis-summary {
+    display: grid;
+    gap: 0.25rem;
+    padding: var(--theme-space-block);
+    border: 1px solid var(--theme-border);
+    border-radius: var(--theme-panel-radius);
+    background: var(--theme-surface-raised);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .financial-chart__axis-summary dt {
+    font-weight: 600;
+  }
 }
 
 .financial-chart__series,
@@ -253,24 +278,6 @@
 
   .financial-company dd:not(:last-child) {
     margin-block-end: 0.25rem;
-  }
-
-  .financial-chart__axes text {
-    display: none;
-  }
-
-  .financial-chart__axis-summary {
-    display: grid;
-    gap: 0.25rem;
-    padding: var(--theme-space-block);
-    border: 1px solid var(--theme-border);
-    border-radius: var(--theme-panel-radius);
-    background: var(--theme-surface-raised);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .financial-chart__axis-summary dt {
-    font-weight: 600;
   }
 }
 
