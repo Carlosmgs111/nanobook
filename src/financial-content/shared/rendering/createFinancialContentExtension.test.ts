@@ -131,8 +131,8 @@ describe("createFinancialContentExtension", () => {
     const html = await render([sources, "Sigue la nota.", companyFence].join("\n\n"));
 
     expect(html).toMatch(/^<section class="financial-block /);
-    expect(html).toContain('aria-labelledby="financial:error-0-heading"');
-    expect(html).toContain('<h2 id="financial:error-0-heading">');
+    expect(html).toContain('aria-labelledby="financial:sources-0-heading"');
+    expect(html).toContain('<h2 id="financial:sources-0-heading">Fuentes</h2>');
     expect(html).not.toContain('class="language-financial-sources"');
     expect(html).toContain("<p>Sigue la nota.</p>");
     expect(html).toContain('<h2 id="financial:company-1-heading">Ejemplo S. A.</h2>');
