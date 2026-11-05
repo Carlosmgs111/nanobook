@@ -1,6 +1,8 @@
-import type { Element } from "hast";
+import type { Element, Text } from "hast";
+import { formatFinancialDate } from "../formatting/formatFinancialDate";
 import { formatFinancialValue } from "../formatting/formatFinancialValue";
 import type { FinancialChartBlock } from "../model/FinancialBlock";
+import type { FinancialSource, ISODate } from "../model/FinancialSource";
 import {
   categoryX,
   CHART_HEIGHT,
@@ -10,26 +12,88 @@ import {
   createChartScale,
   createLineSegments,
   type ChartScale,
+  type Point,
 } from "./chart/ChartGeometry";
 import { element, externalLink, financialId, text } from "./hast";
 import type { FinancialRenderContext } from "./renderFinancialBlock";
 
 const DASH_PATTERNS = ["", "8 4", "2 4", "10 4 2 4", "4 4", "12 4 4 4", "2 3 2 7", "8 3 4 3 2 3"];
+const MARKERS = [
+  "m -3 0 a 3 3 0 1 0 6 0 a 3 3 0 1 0 -6 0 z",
+  "m -3 -3 h 6 v 6 h -6 z",
+  "m 0 -4 l 4 4 -4 4 -4 -4 z",
+  "m 0 -4 l 4 7 h -8 z",
+  "m 0 4 l -4 -7 h 8 z",
+  "m -4 0 h 8 m -4 -4 v 8",
+  "m -3 -3 l 6 6 m 0 -6 l -6 6",
+  "m -2 -3 h 4 l 2 3 -2 3 h -4 l -2 -3 z",
+];
+const AXIS_PRECISIONS = [0, 1, 2, 3, 4] as const;
+
+type AxisQuantity = Pick<FinancialChartBlock["series"][number], "unit" | "currency" | "precision">;
 
 function dashPattern(index: number) {
   return index === 0 ? {} : { strokeDashArray: DASH_PATTERNS[index] };
 }
 
+function renderMarker({ x, y }: Point, index: number): Element {
+  return element("path", [], {
+    className: ["financial-chart__marker"],
+    d: `M ${x} ${y} ${MARKERS[index]}`,
+    fill: "none",
+    strokeWidth: 1.5,
+  });
+}
+
+function formatExponentialTick(value: number, { unit, currency }: AxisQuantity, precision?: number): string {
+  const magnitude = value.toExponential(precision).replace(".", ",").replace(/^-/, "−");
+  switch (unit) {
+    case "currency": return `${currency}\u00a0${magnitude}`;
+    case "percent": return `${magnitude}\u00a0%`;
+    case "multiple": return `${magnitude}×`;
+    case "number": return magnitude;
+  }
+}
+
+function formatAxisLabels(ticks: number[], { unit, currency, precision }: AxisQuantity): string[] {
+  const startingPrecision = precision ?? (unit === "percent" || unit === "multiple" ? 1 : 2);
+  let labels: string[] = [];
+  let useExponential: boolean[] = [];
+
+  for (const precision of AXIS_PRECISIONS.slice(startingPrecision)) {
+    const format = (value: number) => formatFinancialValue({ value, unit, currency, precision });
+    const zero = format(0);
+    labels = ticks.map(format);
+    const distinct = new Set(labels).size === ticks.length;
+    const roundsToZero = ticks.map((value, index) => value !== 0 && labels[index] === zero);
+    useExponential = ticks.map((value, index) =>
+      labels[index].length > 11 || (value !== 0 && (!distinct || roundsToZero[index])));
+    if (distinct && !roundsToZero.includes(true)) break;
+  }
+
+  if (!useExponential.includes(true)) return labels;
+  const compactLabels = (precision?: number) => labels.map((label, index) =>
+    useExponential[index] ? formatExponentialTick(ticks[index], { unit, currency }, precision) : label);
+  for (const precision of AXIS_PRECISIONS.slice(1)) {
+    const compact = compactLabels(precision);
+    if (new Set(compact).size === ticks.length) return compact;
+  }
+  // Use the shortest round-trip representation when rounded labels still collide.
+  return compactLabels();
+}
+
 function renderAxes(block: FinancialChartBlock, scale: ChartScale): Element {
   const { left, top, right, bottom } = CHART_PLOT;
-  const yTicks = scale.ticks.map((value) => {
+  const yLabels = formatAxisLabels(scale.ticks, block.series[0]);
+  const yTicks = scale.ticks.map((value, index) => {
     const y = scale.y(value);
-    const label = formatFinancialValue({ ...block.series[0], value });
-    // Compact large values in the plot margin. The table uses the full format.
-    const tickLabel = label.length > 11 ? value.toExponential(1).replace(".", ",") : label;
+    const label = yLabels[index];
     return element("g", [
       element("line", [], { x1: left, x2: right, y1: y, y2: y, stroke: "currentColor", opacity: 0.25 }),
-      element("text", [text(tickLabel)], { x: left - 8, y: y + 4, textAnchor: "end" }),
+      element("text", [text(label)], {
+        x: left - 8, y: y + 4, textAnchor: "end",
+        ...(label.length > 11 ? { textLength: left - 10, lengthAdjust: "spacingAndGlyphs" } : {}),
+      }),
     ]);
   });
 
@@ -58,16 +122,27 @@ function renderAxes(block: FinancialChartBlock, scale: ChartScale): Element {
 function renderSeries(block: FinancialChartBlock, scale: ChartScale): Element[] {
   return block.series.map(({ values }, index) => {
     const marks = block.chart === "bar"
-      ? createBars(values, scale, { index, count: block.series.length }).map((bar) => element("rect", [], {
-        ...bar, fill: "currentColor", fillOpacity: 0.25, ...dashPattern(index),
-      }))
-      : createLineSegments(values, scale).map((segment) => {
-        const points = segment.map(({ x, y }) => `${x} ${y}`);
-        const d = points.length === 1 ? `M ${points[0]} h 0` : `M ${points.join(" L ")}`;
-        return element("path", [], {
-          d, fill: "none", strokeLinecap: "round",
-          ...(points.length === 1 ? { strokeWidth: 5 } : { strokeWidth: 2, ...dashPattern(index) }),
-        });
+      ? createBars(values, scale, { index, count: block.series.length }).map(({ isZero, ...bar }) => {
+        if (isZero) {
+          return element("line", [], {
+            className: ["financial-chart__zero"],
+            x1: bar.x, x2: bar.x + bar.width, y1: bar.y, y2: bar.y,
+            strokeWidth: 3, strokeLinecap: "butt",
+          });
+        }
+        return element("rect", [], { ...bar, fill: "currentColor", fillOpacity: 0.25, ...dashPattern(index) });
+      })
+      : createLineSegments(values, scale).flatMap((segment) => {
+        const markers = segment.map((point) => renderMarker(point, index));
+        if (segment.length === 1) return markers;
+        const d = `M ${segment.map(({ x, y }) => `${x} ${y}`).join(" L ")}`;
+        return [
+          element("path", [], {
+            className: ["financial-chart__line"], d, fill: "none",
+            strokeWidth: 2, strokeLinecap: "round", ...dashPattern(index),
+          }),
+          ...markers,
+        ];
       });
     return element("g", marks, {
       className: ["financial-chart__series"],
@@ -77,22 +152,40 @@ function renderSeries(block: FinancialChartBlock, scale: ChartScale): Element[] 
   });
 }
 
+function renderCitation(source: FinancialSource): Element {
+  const children: Array<Element | Text> = [externalLink(source.label, source.url)];
+  function appendDate(label: string, date: ISODate | undefined): void {
+    if (date) children.push(text(label), element("time", [text(formatFinancialDate(date))], { dateTime: date }));
+  }
+  if (source.period) {
+    children.push(text(` · Periodo ${source.period.label}`));
+    appendDate(" desde ", source.period.from);
+    appendDate(" hasta ", source.period.to);
+  }
+  appendDate(" · Publicado ", source.publishedAt);
+  appendDate(" · Consultado ", source.accessedAt);
+  return element("span", children);
+}
+
 function renderLegend(block: FinancialChartBlock): Element {
   const sources = new Map(block.sources.map((source) => [source.id, source]));
   const items = block.series.map((series, index) => {
     const sourcesForSeries = series.sourceIds.flatMap((id) => {
       const source = sources.get(id);
-      return source ? [externalLink(source.label, source.url)] : [];
+      return source ? [renderCitation(source)] : [];
     });
     const citations = sourcesForSeries.flatMap((link, position) => position === 0 ? [link] : [text(", "), link]);
     const sample = block.chart === "bar"
-      ? element("rect", [], { x: 3, y: 2, width: 26, height: 8, fill: "currentColor", fillOpacity: 0.25 })
-      : element("line", [], { x1: 2, x2: 30, y1: 6, y2: 6, strokeWidth: 2 });
+      ? [element("rect", [], { x: 3, y: 2, width: 26, height: 8, fill: "currentColor", fillOpacity: 0.25, ...dashPattern(index) })]
+      : [
+        element("line", [], { x1: 2, x2: 30, y1: 6, y2: 6, strokeWidth: 2, ...dashPattern(index) }),
+        renderMarker({ x: 16, y: 6 }, index),
+      ];
 
     return element("li", [
-      element("svg", [sample], {
+      element("svg", sample, {
         className: ["financial-chart__key"], viewBox: "0 0 32 12", width: 32, height: 12,
-        ariaHidden: "true", stroke: "currentColor", ...dashPattern(index),
+        ariaHidden: "true", stroke: "currentColor",
       }),
       text(` ${series.name} · Fuentes `),
       ...citations,

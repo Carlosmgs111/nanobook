@@ -23,6 +23,8 @@ export interface Point {
 export interface Bar extends Point {
   width: number;
   height: number;
+  strokeWidth: number;
+  isZero: boolean;
 }
 
 export function createChartScale(values: readonly (number | null)[]): ChartScale {
@@ -81,17 +83,22 @@ export function createBars(
   group = { index: 0, count: 1 },
 ): Bar[] {
   const groupWidth = 0.75 * (PLOT_WIDTH / values.length);
-  const width = groupWidth / group.count;
+  const slotWidth = groupWidth / group.count;
+  const gap = Math.min(2, slotWidth / 4);
+  const width = slotWidth - gap;
   const baseline = scale.y(0);
   const bars: Bar[] = [];
   values.forEach((value, index) => {
     if (value === null) return;
     const y = scale.y(value);
     bars.push({
-      x: categoryX(index, values.length, "bar") - groupWidth / 2 + group.index * width,
+      x: categoryX(index, values.length, "bar") - groupWidth / 2 + group.index * slotWidth + gap / 2,
       y: Math.min(y, baseline),
       width,
       height: Math.abs(y - baseline),
+      // Adjacent strokes consume half the gap, leaving space between their edges.
+      strokeWidth: gap / 2,
+      isZero: value === 0,
     });
   });
   return bars;

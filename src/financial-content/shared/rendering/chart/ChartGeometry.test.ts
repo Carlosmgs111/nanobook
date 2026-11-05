@@ -46,9 +46,9 @@ describe("chart geometry", () => {
     const values = [-10, null, 10, 0];
 
     expect(createBars(values, createChartScale(values))).toEqual([
-      { x: 94, y: 164, width: 132, height: 140 },
-      { x: 446, y: 24, width: 132, height: 140 },
-      { x: 622, y: 164, width: 132, height: 0 },
+      { x: 95, y: 164, width: 130, height: 140, strokeWidth: 1, isZero: false },
+      { x: 447, y: 24, width: 130, height: 140, strokeWidth: 1, isZero: false },
+      { x: 623, y: 164, width: 130, height: 0, strokeWidth: 1, isZero: true },
     ]);
   });
 
@@ -57,10 +57,10 @@ describe("chart geometry", () => {
     const first = createBars([null, 8], scale, { index: 0, count: 2 });
     const second = createBars([2, 2], scale, { index: 1, count: 2 });
 
-    expect(first).toEqual([{ x: 468, y: 24, width: 132, height: 280 }]);
+    expect(first).toEqual([{ x: 469, y: 24, width: 130, height: 280, strokeWidth: 1, isZero: false }]);
     expect(second).toEqual([
-      { x: 248, y: 234, width: 132, height: 70 },
-      { x: 600, y: 234, width: 132, height: 70 },
+      { x: 249, y: 234, width: 130, height: 70, strokeWidth: 1, isZero: false },
+      { x: 601, y: 234, width: 130, height: 70, strokeWidth: 1, isZero: false },
     ]);
   });
 });
