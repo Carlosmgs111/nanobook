@@ -3,6 +3,8 @@ import type { DocumentRenderer, RenderedDocument } from "../../domain/render";
 import type { Document } from "../../../../documents/server/domain/Document";
 
 export class AstroMarkdownRenderer implements DocumentRenderer {
+  readonly fingerprint = "astro-markdown@1";
+
   private processor: Awaited<
     ReturnType<typeof createMarkdownProcessor>
   > | null = null;
