@@ -53,6 +53,7 @@ async function render(value: FinancialMetricsBlock = block): Promise<string> {
 }
 
 describe("renderFinancialMetrics", () => {
+  // The first render initializes Shiki in this test worker.
   it("renders semantic values, periods, descriptions, comparisons and per-metric citations", async () => {
     const html = await render();
 
@@ -83,7 +84,7 @@ describe("renderFinancialMetrics", () => {
     expect(metricGroups[0]).not.toContain("Resultados</a>");
     expect(metricGroups[1]).toContain("Resultados</a>");
     expect(metricGroups[1]).not.toContain("Informe anual");
-  });
+  }, 15_000);
 
   it("keeps metric IDs distinct across repeated blocks and escapes user text", async () => {
     const escaped = { ...block, title: "<script>bad</script>" };

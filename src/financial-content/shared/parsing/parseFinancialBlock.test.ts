@@ -22,6 +22,8 @@ const series = {
   sourceIds: [source.id],
 };
 
+const chart = { title: "ROCE", chart: "line", x: ["2025"], sources: [source] };
+
 const metric = {
   label: "ROCE",
   value: 16.7,
@@ -235,20 +237,61 @@ describe("parseFinancialBlock", () => {
 
   it("enforces collection limits from the v1 contract", () => {
     const sources = Array.from({ length: 31 }, (_, i) => ({ ...source, id: `source-${i}` }));
-    const chart = { title: "ROCE", chart: "line", x: ["2025"], sources: [source] };
     const metrics = Array.from({ length: 13 }, () => ({ ...metric }));
     const items = Array.from({ length: 13 }, () => ({ ...newsItem }));
-    const points = Array.from({ length: 121 }, (_, i) => i);
 
     expectError("financial-sources", stringify({ items: sources }), "collection-limit", ["items"]);
     expectError("financial-metrics", stringify({ metrics, sources: [source] }), "collection-limit", ["metrics"]);
     expectError("financial-news", stringify({ items, sources: [newsSource] }), "collection-limit", ["items"]);
+  });
+
+  it("rejects charts with more than eight series", () => {
     expectError("financial-chart", stringify({
-      ...chart, series: Array.from({ length: 9 }, () => ({ ...series, values: [1], sourceIds: [source.id] })),
+      ...chart, series: Array.from({ length: 9 }, () => series),
     }), "collection-limit", ["series"]);
+  });
+
+  it("rejects charts with more than 120 points", () => {
+    const points = Array.from({ length: 121 }, (_, i) => i);
     expectError("financial-chart", stringify({
       ...chart, x: points.map(String), series: [{ ...series, values: points }],
     }), "collection-limit", ["x"]);
+  });
+
+  it("rejects a chart series with fewer values than categories", () => {
+    expectError("financial-chart", stringify({
+      ...chart, x: ["2024", "2025"], series: [series],
+    }), "series-length", ["series", 0, "values"]);
+  });
+
+  it("rejects an all-null chart series", () => {
+    expectError("financial-chart", stringify({
+      ...chart, series: [{ ...series, values: [null] }],
+    }), "empty-series", ["series", 0, "values"]);
+  });
+
+  it("rejects chart series with incompatible units", () => {
+    expectError("financial-chart", stringify({
+      ...chart, series: [series, { ...series, unit: "multiple" }],
+    }), "incompatible-series", ["series", 1, "unit"]);
+  });
+
+  it("rejects chart series with incompatible currencies", () => {
+    expectError("financial-chart", stringify({
+      ...chart,
+      series: [
+        { ...series, unit: "currency", currency: "USD" },
+        { ...series, unit: "currency", currency: "COP" },
+      ],
+    }), "incompatible-series", ["series", 1, "currency"]);
+  });
+
+  it("preserves null between numeric chart values", () => {
+    const result = parseFinancialBlock("financial-chart", stringify({
+      ...chart, x: ["2023", "2024", "2025"], series: [{ ...series, values: [-2, null, 4] }],
+    }));
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue()).toMatchObject({ series: [{ values: [-2, null, 4] }] });
   });
 
   it("rejects yaml aliases and custom tags", () => {
