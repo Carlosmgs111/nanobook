@@ -204,7 +204,14 @@ function renderTable(block: FinancialChartBlock, headingId: string): Element {
   ]));
   return element("details", [
     element("summary", [text("Ver datos del gráfico")]),
-    element("table", [element("thead", [header]), element("tbody", rows)], { ariaLabelledBy: headingId }),
+    element("div", [
+      element("table", [element("thead", [header]), element("tbody", rows)], { ariaLabelledBy: headingId }),
+    ], {
+      className: ["financial-chart__table"],
+      tabIndex: 0,
+      role: "region",
+      ariaLabel: "Datos del gráfico",
+    }),
   ], { className: ["financial-chart__data"] });
 }
 

@@ -2,8 +2,8 @@ import type { Element } from "hast";
 import type { FinancialBlock } from "../model/FinancialBlock";
 import { renderCompanyProfile } from "./renderCompanyProfile";
 import { renderFinancialChart } from "./renderFinancialChart";
-import { renderUnavailableFinancialBlock } from "./renderFinancialError";
 import { renderFinancialMetrics } from "./renderFinancialMetrics";
+import { renderFinancialNews } from "./renderFinancialNews";
 import { renderFinancialSources } from "./renderFinancialSources";
 
 export interface FinancialRenderContext {
@@ -21,7 +21,7 @@ export function renderFinancialBlock(block: FinancialBlock, context: FinancialRe
     case "financial-chart":
       return renderFinancialChart(block, context);
     case "financial-news":
-      return renderUnavailableFinancialBlock(block.kind, context.blockIndex);
+      return renderFinancialNews(block, context);
     default: {
       const exhaustive: never = block;
       return exhaustive;

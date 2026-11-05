@@ -1,0 +1,254 @@
+.financial-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--theme-space-block);
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  margin: var(--theme-content-gap) 0;
+  padding: var(--theme-space-inline);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-bg);
+  color: var(--theme-content-primary);
+  overflow-wrap: anywhere;
+}
+
+.financial-block :is(h2, h3, p, dl, dd, ul, ol, li, figcaption),
+.financial-block p + p {
+  margin: 0;
+}
+
+.financial-block a {
+  color: var(--theme-link);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 0.2em;
+}
+
+.financial-block :is(a, summary, .financial-chart__table):focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+.financial-block :is(ul, ol) {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.financial-block :is(ul, ol)::after {
+  display: none;
+}
+
+.financial-block ul {
+  list-style-type: disc;
+}
+
+.financial-block ol {
+  list-style-type: decimal;
+}
+
+.financial-company dl {
+  display: grid;
+  grid-template-columns: fit-content(45%) minmax(0, 1fr);
+  gap: 0.25rem var(--theme-space-inline);
+  padding: var(--theme-space-block) var(--theme-space-inline);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-raised);
+}
+
+.financial-company dt,
+.financial-block :is(.financial-metrics__period, .financial-news__meta, .financial-news__references, .financial-sources__meta) {
+  color: var(--theme-content-muted);
+  font-size: 0.875em;
+}
+
+.financial-block :is(.financial-company__links, .financial-company__sources, .financial-metrics__sources, .financial-sources__list) {
+  display: grid;
+  gap: 0.25rem;
+  padding-inline-start: 1.5em;
+}
+
+.financial-metrics > dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--theme-space-block);
+}
+
+.financial-metrics__item {
+  padding: var(--theme-space-block) var(--theme-space-inline);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-raised);
+}
+
+.financial-metrics__item dt {
+  font-weight: 600;
+}
+
+.financial-metrics__item dd {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.financial-block .financial-metrics__value {
+  font-size: 1.5em;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+
+.financial-metrics__comparison {
+  padding-inline-start: 0.5em;
+  border-inline-start: 2px solid var(--theme-border);
+  font-size: 0.875em;
+}
+
+.financial-metrics__comparison[data-direction="favorable"] {
+  border-inline-start-color: var(--theme-status-success);
+}
+
+.financial-metrics__comparison[data-direction="unfavorable"] {
+  border-inline-start-color: var(--theme-status-warning);
+}
+
+.financial-metrics__comparison[data-direction="favorable"]::before {
+  content: "▲" / "";
+}
+
+.financial-metrics__comparison[data-direction="unfavorable"]::before {
+  content: "▼" / "";
+}
+
+.financial-metrics__comparison[data-direction="neutral"]::before {
+  content: "—" / "";
+}
+
+.financial-metrics__comparison[data-direction]::before {
+  margin-inline-end: 0.4em;
+}
+
+.financial-chart__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-raised);
+}
+
+.financial-chart__axes {
+  color: var(--theme-content-muted);
+}
+
+.financial-chart__series,
+.financial-chart__key {
+  color: var(--theme-action-primary);
+}
+
+.financial-chart__legend :is([data-series="1"], [data-series="3"], [data-series="5"], [data-series="7"]) > .financial-chart__key,
+.financial-chart__series:is([data-series="1"], [data-series="3"], [data-series="5"], [data-series="7"]) {
+  color: var(--theme-content-primary);
+}
+
+.financial-chart__series :is(.financial-chart__line, .financial-chart__marker, .financial-chart__zero) {
+  vector-effect: non-scaling-stroke;
+}
+
+.financial-chart .financial-chart__legend {
+  display: grid;
+  gap: 0.375rem;
+  padding-inline-start: 1.5em;
+  font-size: 0.875em;
+}
+
+.financial-chart__key {
+  display: inline-block;
+  inline-size: 2rem;
+  block-size: auto;
+  vertical-align: middle;
+}
+
+.financial-chart .financial-chart__data {
+  padding: var(--theme-space-block) var(--theme-space-inline);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-raised);
+  box-shadow: none;
+}
+
+.financial-chart .financial-chart__data > summary {
+  color: var(--theme-link);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.financial-chart .financial-chart__data > .financial-chart__table {
+  overflow-x: auto;
+  padding: 0;
+  margin-block-start: var(--theme-space-block);
+  border-radius: 0;
+}
+
+.financial-chart__table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.financial-chart__table :is(th, td) {
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--theme-border);
+}
+
+.financial-chart__table td {
+  text-align: end;
+  white-space: nowrap;
+}
+
+.financial-chart__table th {
+  min-inline-size: 8ch;
+  text-align: start;
+}
+
+.financial-news > .financial-news__article,
+.financial-sources .financial-sources__list > li {
+  padding-block-start: var(--theme-space-block);
+  border-block-start: 1px solid var(--theme-border);
+}
+
+.financial-news__article {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.financial-sources .financial-sources__list {
+  gap: var(--theme-space-block);
+}
+
+.financial-block--error {
+  border-inline-start: 3px solid var(--theme-status-error);
+  background: color-mix(in srgb, var(--theme-surface-bg) 96%, var(--theme-status-error));
+}
+
+@media (max-width: 36rem) {
+  .financial-block,
+  .financial-chart .financial-chart__data {
+    padding: var(--theme-space-block);
+  }
+
+  .financial-company dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .financial-company dd:not(:last-child) {
+    margin-block-end: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .financial-block a {
+    transition: none;
+  }
+}
