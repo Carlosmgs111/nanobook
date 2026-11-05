@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import type { MarkdownExtension } from "../../../../rendering/shared/MarkdownExtension";
+import { EditionRenderError } from "../../domain/errors";
 import { UnifiedMarkdownRenderer } from "./UnifiedMarkdownRenderer";
 
 describe("UnifiedMarkdownRenderer", () => {
@@ -20,4 +22,24 @@ describe("UnifiedMarkdownRenderer", () => {
     expect(result.getValue().Content).toContain('<code class="language-graph">');
     expect(result.getValue().Content).toContain("┌───┐");
   }, 15_000);
+
+  it("wraps shared renderer failures as EditionRenderError", async () => {
+    const failure = new Error("extension failed");
+    const throwingExtension: MarkdownExtension = {
+      id: "throwing",
+      version: "1",
+      fenceLanguages: [],
+      transform() {
+        throw failure;
+      },
+    };
+    const renderer = new UnifiedMarkdownRenderer([throwingExtension]);
+
+    const result = await renderer.render("Paragraph");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBeInstanceOf(EditionRenderError);
+    expect(result.getError().message).toBe("extension failed");
+    expect(result.getError().cause).toBe(failure);
+  });
 });
