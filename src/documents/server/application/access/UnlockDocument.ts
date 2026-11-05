@@ -24,7 +24,7 @@ export interface UnlockDocumentInput {
 }
 
 export interface UnlockGrant {
-  cookieName: string;
+  documentId: string;
   token: string;
   maxAgeSeconds: number;
 }
@@ -78,7 +78,7 @@ export class UnlockDocument {
           ttlSeconds: this.policy.ttlSeconds,
         });
         return Result.ok({
-          cookieName: this.codec.cookieName(documentId),
+          documentId,
           token: grant.token,
           maxAgeSeconds: this.policy.ttlSeconds,
         });

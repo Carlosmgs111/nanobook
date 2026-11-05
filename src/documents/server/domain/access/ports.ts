@@ -30,7 +30,6 @@ export interface IssuedGrant {
 }
 
 export interface AccessGrantCodec {
-  cookieName(documentId: string): string;
   issue(input: {
     documentId: string;
     passwordVersion: number;

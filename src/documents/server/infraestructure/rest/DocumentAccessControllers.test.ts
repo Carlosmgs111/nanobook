@@ -12,6 +12,7 @@ import {
   InvalidDocumentPasswordError,
 } from "../../domain/errors";
 import { DocumentAccessAdminController } from "./DocumentAccessAdminController";
+import { grantCookieName } from "./GrantCookie";
 import { UnlockDocumentController } from "./UnlockDocumentController";
 
 function request(method: string, body: unknown, headers: Record<string, string> = {}) {
@@ -108,14 +109,14 @@ describe("UnlockDocumentController", () => {
   });
 
   it("sets an HttpOnly grant cookie on success", async () => {
-    const execute = vi.fn().mockResolvedValue(Result.ok({ cookieName: "nbk-grant-abc", token: "t.s", maxAgeSeconds: 43200 }));
+    const execute = vi.fn().mockResolvedValue(Result.ok({ documentId: "doc-1", token: "t.s", maxAgeSeconds: 43200 }));
 
     const response = await context(execute).call({ path: "guia", password: "clave-correcta" });
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true });
     const cookie = response.headers.get("Set-Cookie") ?? "";
-    expect(cookie).toContain("nbk-grant-abc=t.s");
+    expect(cookie).toContain(`${grantCookieName("doc-1")}=t.s`);
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain("Path=/n");

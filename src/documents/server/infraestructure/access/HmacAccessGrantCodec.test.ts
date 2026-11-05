@@ -40,10 +40,4 @@ describe("HmacAccessGrantCodec", () => {
 
     expect(other.verify(grant.token, { documentId: "doc-1", passwordVersion: 2, now })).toBe(false);
   });
-
-  it("derives a stable, document-specific cookie name", () => {
-    expect(codec.cookieName("doc-1")).toBe(codec.cookieName("doc-1"));
-    expect(codec.cookieName("doc-1")).not.toBe(codec.cookieName("doc-2"));
-    expect(codec.cookieName("doc-1")).toMatch(/^nbk-grant-[0-9a-f]{16}$/);
-  });
 });

@@ -43,6 +43,7 @@ export type { SerializedEntry } from "./application/dto/SerializedEntry";
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentDeleted } from "./domain/events/DocumentDeleted";
+export { grantsFromCookieHeader } from "./infraestructure/rest/GrantCookie";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
 export class DocumentModule {

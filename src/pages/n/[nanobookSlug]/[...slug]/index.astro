@@ -2,6 +2,7 @@
 import DocumentPage from "../../../../documents/browser/ui/pages/DocumentPage.astro";
 import { getApp } from "../../../../application/server/Application";
 import { resolveNanobookRoute } from "../../../../application/server/resolveNanobookRoute";
+import { grantsFromCookieHeader } from "../../../../documents/server";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import { formatServerTiming } from "../../../../shared/server/http/ServerTiming";
 
@@ -62,7 +63,7 @@ const accessDecision = await measure("access", () =>
   documentModule.authorizeDocumentAccess.execute({
     documents: [rawDocument, document],
     canWrite: new AuthorizeNanobook().canWrite(nanobook, accessViewer?.id),
-    cookieHeader: Astro.request.headers.get("cookie"),
+    grantFor: grantsFromCookieHeader(Astro.request.headers.get("cookie")),
   })
 );
 const challenged = accessDecision.kind === "challenge";

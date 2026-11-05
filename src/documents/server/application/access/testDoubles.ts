@@ -33,9 +33,6 @@ export class FakeHasher implements PasswordHasher {
 }
 
 export class FakeCodec implements AccessGrantCodec {
-  cookieName(documentId: string) {
-    return `grant-${documentId}`;
-  }
   issue(input: { documentId: string; passwordVersion: number; now: Date; ttlSeconds: number }) {
     return {
       token: `${input.documentId}:${input.passwordVersion}`,

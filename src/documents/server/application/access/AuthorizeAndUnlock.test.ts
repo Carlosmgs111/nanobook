@@ -9,7 +9,6 @@ import {
   DocumentUnlockRateLimitedError,
 } from "../../domain/errors";
 import { AuthorizeDocumentAccess } from "./AuthorizeDocumentAccess";
-import { readCookie } from "./readCookie";
 import { FakeCodec, FakeHasher, FakeLimiter, InMemoryAccessRepository } from "./testDoubles";
 import { UnlockDocument } from "./UnlockDocument";
 
@@ -32,13 +31,8 @@ function document(id: string, secured: boolean, path = "guia") {
   ).getValue();
 }
 
-describe("readCookie", () => {
-  it("reads a value from a cookie header", () => {
-    expect(readCookie("a=1; b=two; c=3", "b")).toBe("two");
-    expect(readCookie("a=1", "missing")).toBeUndefined();
-    expect(readCookie(null, "a")).toBeUndefined();
-  });
-});
+const none = () => undefined;
+const grants = (tokens: Record<string, string>) => (documentId: string) => tokens[documentId];
 
 describe("AuthorizeDocumentAccess", () => {
   async function setup() {
@@ -51,7 +45,7 @@ describe("AuthorizeDocumentAccess", () => {
   it("allows documents that are not secured", async () => {
     const { authorize } = await setup();
 
-    const decision = await authorize.execute({ documents: [document("doc-2", false)], canWrite: false, cookieHeader: null });
+    const decision = await authorize.execute({ documents: [document("doc-2", false)], canWrite: false, grantFor: none });
 
     expect(decision).toEqual({ kind: "allow" });
   });
@@ -59,7 +53,7 @@ describe("AuthorizeDocumentAccess", () => {
   it("allows writers without a cookie", async () => {
     const { authorize } = await setup();
 
-    const decision = await authorize.execute({ documents: [document("doc-1", true)], canWrite: true, cookieHeader: null });
+    const decision = await authorize.execute({ documents: [document("doc-1", true)], canWrite: true, grantFor: none });
 
     expect(decision.kind).toBe("allow");
   });
@@ -67,7 +61,7 @@ describe("AuthorizeDocumentAccess", () => {
   it("challenges readers without a grant", async () => {
     const { authorize } = await setup();
 
-    const decision = await authorize.execute({ documents: [document("doc-1", true)], canWrite: false, cookieHeader: null });
+    const decision = await authorize.execute({ documents: [document("doc-1", true)], canWrite: false, grantFor: none });
 
     expect(decision).toEqual({ kind: "challenge", method: "password" });
   });
@@ -78,7 +72,7 @@ describe("AuthorizeDocumentAccess", () => {
     const decision = await authorize.execute({
       documents: [document("doc-1", true)],
       canWrite: false,
-      cookieHeader: "x=1; grant-doc-1=doc-1:1",
+      grantFor: grants({ "doc-1": "doc-1:1" }),
     });
 
     expect(decision.kind).toBe("allow");
@@ -91,7 +85,7 @@ describe("AuthorizeDocumentAccess", () => {
     const decision = await authorize.execute({
       documents: [document("doc-1", true)],
       canWrite: false,
-      cookieHeader: "grant-doc-1=doc-1:1",
+      grantFor: grants({ "doc-1": "doc-1:1" }),
     });
 
     expect(decision.kind).toBe("challenge");
@@ -103,7 +97,7 @@ describe("AuthorizeDocumentAccess", () => {
     const decision = await authorize.execute({
       documents: [document("doc-9", true)],
       canWrite: false,
-      cookieHeader: "grant-doc-9=doc-9:1",
+      grantFor: grants({ "doc-9": "doc-9:1" }),
     });
 
     expect(decision.kind).toBe("challenge");
@@ -118,12 +112,12 @@ describe("AuthorizeDocumentAccess", () => {
     const onlySource = await authorize.execute({
       documents: [raw, resolved],
       canWrite: false,
-      cookieHeader: "grant-doc-1=doc-1:1",
+      grantFor: grants({ "doc-1": "doc-1:1" }),
     });
     const both = await authorize.execute({
       documents: [raw, resolved],
       canWrite: false,
-      cookieHeader: "grant-doc-1=doc-1:1; grant-target-1=target-1:1",
+      grantFor: grants({ "doc-1": "doc-1:1", "target-1": "target-1:1" }),
     });
 
     expect(onlySource.kind).toBe("challenge");
@@ -133,7 +127,7 @@ describe("AuthorizeDocumentAccess", () => {
   it("ignores missing documents", async () => {
     const { authorize } = await setup();
 
-    const decision = await authorize.execute({ documents: [null, undefined], canWrite: false, cookieHeader: null });
+    const decision = await authorize.execute({ documents: [null, undefined], canWrite: false, grantFor: none });
 
     expect(decision.kind).toBe("allow");
   });
@@ -172,7 +166,7 @@ describe("UnlockDocument", () => {
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue()).toEqual({
-      cookieName: "grant-doc-1",
+      documentId: "doc-1",
       token: "doc-1:1",
       maxAgeSeconds: DEFAULT_ACCESS_GRANT_POLICY.ttlSeconds,
     });
@@ -236,6 +230,6 @@ describe("UnlockDocument", () => {
 
     const result = await unlock.execute({ ...input, password: "clave-destino" });
 
-    expect(result.getValue().cookieName).toBe("grant-target-1");
+    expect(result.getValue().documentId).toBe("target-1");
   });
 });
