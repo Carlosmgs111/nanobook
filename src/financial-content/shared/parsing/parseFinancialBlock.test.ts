@@ -167,6 +167,22 @@ describe("parseFinancialBlock", () => {
     expectError("financial-sources", yaml, "invalid-url", ["items", 0, "url"]);
   });
 
+  it.each([
+    { variant: "a tab before an extra slash", url: "https://\t/example.com" },
+    { variant: "a newline in the host", url: "https://e\nxample.com" },
+    { variant: "a backslash after the host", url: "https://example.com\\report" },
+  ])("rejects a malformed HTTPS source URL with $variant", ({ url }) => {
+    const yaml = stringify({ items: [{ ...source, url }] });
+    expectError("financial-sources", yaml, "invalid-url", ["items", 0, "url"]);
+  });
+
+  it("preserves an absolute HTTPS URL with an encoded path", () => {
+    const url = "https://example.com/reports/annual%20report?year=2025#results";
+    const yaml = stringify({ items: [{ ...source, url }] });
+    const result = parseFinancialBlock("financial-sources", yaml);
+    expect(result.getValue()).toMatchObject({ items: [{ url }] });
+  });
+
   it("rejects unknown payload fields", () => {
     const { kind, yaml } = validCases[4];
     const error = expectError(kind, `private-test-marker: rejected-value\n${yaml}`, "unknown-field", []);
