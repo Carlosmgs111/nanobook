@@ -209,4 +209,14 @@ describe("renderFinancialChart", () => {
     expect(html).toContain('<tr><th scope="row">2024</th><td>Sin dato</td><td>0,0 %</td></tr>');
     expect(html).toContain('<tr><th scope="row">2025</th><td>10,0 %</td><td>0,0 %</td></tr>');
   });
+
+  it("makes the table separately scrollable by keyboard inside the disclosure", () => {
+    const details = render(block).match(/<details[^>]*>([\s\S]*?)<\/details>/)?.[1];
+    const tableRegion = details?.match(/<\/summary><div([^>]*)><table[\s\S]*?<\/table><\/div>/)?.[1] ?? "";
+
+    expect(tableRegion).toContain('class="financial-chart__table"');
+    expect(tableRegion).toContain('tabindex="0"');
+    expect(tableRegion).toContain('role="region"');
+    expect(tableRegion).toContain('aria-label="Datos del gráfico"');
+  });
 });
