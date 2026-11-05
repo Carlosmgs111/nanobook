@@ -49,7 +49,9 @@ export function formatFinancialValue(input: {
     throw new TypeError("Currency is only valid with the currency unit");
   }
 
-  const precision = input.precision ?? (input.unit === "percent" || input.unit === "multiple" ? 1 : 2);
+  const precision = input.precision === undefined
+    ? (input.unit === "percent" || input.unit === "multiple" ? 1 : 2)
+    : input.precision;
   if (!Number.isInteger(precision) || precision < 0 || precision > 4) {
     throw new RangeError("Precision must be an integer from 0 to 4");
   }

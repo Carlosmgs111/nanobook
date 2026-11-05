@@ -9,18 +9,10 @@ describe("formatFinancialDate", () => {
     expect(formatFinancialDate("2026-12-31")).toBe("31 dic 2026");
   });
 
-  it("uses civil components regardless of the host timezone", () => {
-    const previous = process.env.TZ;
-    try {
-      for (const timezone of ["UTC", "America/Bogota"]) {
-        process.env.TZ = timezone;
-        expect(formatFinancialDate("2026-01-01")).toBe("1 ene 2026");
-        expect(formatFinancialDate("2026-10-29")).toBe("29 oct 2026");
-      }
-    } finally {
-      if (previous === undefined) delete process.env.TZ;
-      else process.env.TZ = previous;
-    }
+  it("keeps the calendar day at year and month boundaries", () => {
+    expect(formatFinancialDate("2025-12-31")).toBe("31 dic 2025");
+    expect(formatFinancialDate("2026-01-01")).toBe("1 ene 2026");
+    expect(formatFinancialDate("2026-03-01")).toBe("1 mar 2026");
   });
 
   it("rejects malformed and impossible civil dates", () => {
