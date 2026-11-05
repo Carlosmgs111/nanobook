@@ -1,10 +1,10 @@
 import type { Element } from "hast";
 import type { FinancialFenceKind } from "../model/FinancialBlock";
 import type { FinancialBlockParseError } from "../parsing/FinancialBlockParseError";
-import { element, text } from "./hast";
+import { element, financialId, text } from "./hast";
 
 function errorSection(kind: FinancialFenceKind, blockIndex: number, detail: Element[]): Element {
-  const headingId = `financial-error-${blockIndex}-heading`;
+  const headingId = financialId("error", blockIndex, "heading");
   return element("section", [
     element("h2", [text(`No se pudo mostrar ${kind} (bloque ${blockIndex + 1})`)], { id: headingId }),
     ...detail,

@@ -106,15 +106,15 @@ describe("createFinancialContentExtension", () => {
     const html = await render([invalid, "Sigue la nota.", companyFence].join("\n\n"));
 
     expect(html).toContain('class="financial-block financial-block--error"');
-    expect(html).toContain('aria-labelledby="financial-error-0-heading"');
-    expect(html).toContain('<h2 id="financial-error-0-heading">');
+    expect(html).toContain('aria-labelledby="financial:error-0-heading"');
+    expect(html).toContain('<h2 id="financial:error-0-heading">');
     expect(html).toContain("company-profile");
     expect(html).toContain("company.links[0].url");
     expect(html).toContain("La URL debe ser absoluta y usar HTTPS.");
     expect(html).not.toContain("private_marker");
     expect(html).not.toContain("Intranet");
     expect(html).toContain("<p>Sigue la nota.</p>");
-    expect(html).toContain('<h2 id="financial-company-1-heading">Ejemplo S. A.</h2>');
+    expect(html).toContain('<h2 id="financial:company-1-heading">Ejemplo S. A.</h2>');
   });
 
   it("keeps malformed YAML and parser diagnostics out of the HTML", async () => {
@@ -131,9 +131,11 @@ describe("createFinancialContentExtension", () => {
     const html = await render([sources, "Sigue la nota.", companyFence].join("\n\n"));
 
     expect(html).toMatch(/^<section class="financial-block /);
+    expect(html).toContain('aria-labelledby="financial:error-0-heading"');
+    expect(html).toContain('<h2 id="financial:error-0-heading">');
     expect(html).not.toContain('class="language-financial-sources"');
     expect(html).toContain("<p>Sigue la nota.</p>");
-    expect(html).toContain('<h2 id="financial-company-1-heading">Ejemplo S. A.</h2>');
+    expect(html).toContain('<h2 id="financial:company-1-heading">Ejemplo S. A.</h2>');
   });
 
   it("identifies an invalid cutoff date without exposing the rejected value", async () => {
@@ -158,8 +160,8 @@ describe("createFinancialContentExtension", () => {
       sources: [filing, { ...filing, id: "unreferenced", label: "Informe sin citar", period: { label: "2024" } }],
     })));
 
-    expect(html).toContain('<section class="financial-block financial-company" aria-labelledby="financial-company-0-heading">');
-    expect(html).toContain('<h2 id="financial-company-0-heading">Ficha de empresa</h2>');
+    expect(html).toContain('<section class="financial-block financial-company" aria-labelledby="financial:company-0-heading">');
+    expect(html).toContain('<h2 id="financial:company-0-heading">Ficha de empresa</h2>');
     expect(html).toContain("<p>Panorama general.</p>");
     expect(html).toContain("<p>Ofrece servicios de tecnología.</p>");
     expect(html).toMatch(/<dl>.*<dd>Ejemplo S\. A\.<\/dd>.*<dt>Ticker<\/dt><dd>EJ<\/dd>.*<dt>Bolsa<\/dt><dd>BVC<\/dd>.*<\/dl>/s);
@@ -172,9 +174,24 @@ describe("createFinancialContentExtension", () => {
   it("gives repeated company sections distinct IDs and preserves Markdown heading anchors", async () => {
     const html = await render([companyFence, companyFence, "## Fuentes"].join("\n\n"));
 
-    expect(html).toContain('<h3 id="financial-company-0-sources">Fuentes</h3>');
-    expect(html).toContain('<h3 id="financial-company-1-sources">Fuentes</h3>');
+    expect(html).toContain('<h3 id="financial:company-0-sources">Fuentes</h3>');
+    expect(html).toContain('<h3 id="financial:company-1-sources">Fuentes</h3>');
     expect(html).toContain('<h2 id="fuentes">Fuentes</h2>');
+  });
+
+  it.each(["before", "after"])("keeps generated IDs distinct from a colliding Markdown heading %s a company", async (position) => {
+    const markdownHeading = "## Financial company 0 heading";
+    const html = await render(position === "before"
+      ? [markdownHeading, companyFence].join("\n\n")
+      : [companyFence, markdownHeading].join("\n\n"));
+    const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+
+    expect(ids).toContain("financial-company-0-heading");
+    expect(ids).toContain("financial:company-0-heading");
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(html).toContain('<section class="financial-block financial-company" aria-labelledby="financial:company-0-heading">');
+    expect(html).toContain('<h2 id="financial:company-0-heading">Ejemplo S. A.</h2>');
+    expect(html).toContain('<h2 id="financial-company-0-heading">Financial company 0 heading</h2>');
   });
 
   it("renders HTML-looking titles, descriptions and link labels as text", async () => {
