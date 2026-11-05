@@ -1,4 +1,4 @@
-import { createHash, createHmac, hkdfSync, timingSafeEqual } from "node:crypto";
+import { createHmac, hkdfSync, timingSafeEqual } from "node:crypto";
 
 import type { AccessGrantCodec, IssuedGrant } from "../../domain/access/ports";
 
@@ -17,10 +17,6 @@ export class HmacAccessGrantCodec implements AccessGrantCodec {
 
   constructor(secret: string) {
     this.key = Buffer.from(hkdfSync("sha256", secret, "nanobook", "document-access-grant:v1", 32));
-  }
-
-  cookieName(documentId: string): string {
-    return `nbk-grant-${createHash("sha256").update(documentId).digest("hex").slice(0, 16)}`;
   }
 
   issue(input: { documentId: string; passwordVersion: number; now: Date; ttlSeconds: number }): IssuedGrant {

@@ -7,16 +7,12 @@ import {
   DocumentUnlockFailedError,
   DocumentUnlockRateLimitedError,
 } from "../../domain/errors";
+import { serializeGrantCookie } from "./GrantCookie";
 import { jsonResponse } from "./utils";
 
 function clientKey(request: Request, clientAddress: string | undefined): string {
   const ip = request.headers.get("x-vercel-forwarded-for") ?? clientAddress ?? "unknown";
   return createHash("sha256").update(ip).digest("hex").slice(0, 32);
-}
-
-function grantCookie(name: string, token: string, maxAgeSeconds: number): string {
-  const secure = process.env.VERCEL === "1" ? "; Secure" : "";
-  return `${name}=${token}; Path=/n; Max-Age=${maxAgeSeconds}; HttpOnly; SameSite=Lax${secure}`;
 }
 
 export class UnlockDocumentController {
@@ -53,7 +49,7 @@ export class UnlockDocumentController {
     if (result.isSuccess) {
       const grant = result.getValue();
       const response = jsonResponse({ ok: true }, 200);
-      response.headers.set("Set-Cookie", grantCookie(grant.cookieName, grant.token, grant.maxAgeSeconds));
+      response.headers.set("Set-Cookie", serializeGrantCookie(grant.documentId, grant.token, grant.maxAgeSeconds));
       response.headers.set("Cache-Control", "no-store");
       return response;
     }

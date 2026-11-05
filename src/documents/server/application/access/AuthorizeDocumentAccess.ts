@@ -1,13 +1,13 @@
 import type { Document } from "../../domain/Document";
 import type { AccessDecision, DocumentAccessPolicy } from "../../domain/access/DocumentAccessPolicy";
 import type { AccessGrantCodec, DocumentAccessRepository } from "../../domain/access/ports";
-import { readCookie } from "./readCookie";
 
 export interface AuthorizeDocumentAccessInput {
   /** The proxy chain: the stored document and, when different, the resolved one. */
   documents: Array<Document | null | undefined>;
   canWrite: boolean;
-  cookieHeader: string | null;
+  /** Token the viewer presented for a document, if any. How it travels is the caller's concern. */
+  grantFor: (documentId: string) => string | undefined;
 }
 
 /** Returns the protected links of a chain, deduplicated by identity. */
@@ -32,22 +32,22 @@ export class AuthorizeDocumentAccess {
     private readonly clock: () => Date = () => new Date(),
   ) {}
 
-  async execute({ documents, canWrite, cookieHeader }: AuthorizeDocumentAccessInput): Promise<AccessDecision> {
+  async execute({ documents, canWrite, grantFor }: AuthorizeDocumentAccessInput): Promise<AccessDecision> {
     const secured = securedDocuments(documents);
     if (secured.length === 0 || canWrite) {
       return this.policy.evaluate({ secured: secured.length > 0, canWrite, hasValidGrant: false });
     }
 
     for (const document of secured) {
-      const hasValidGrant = await this.hasValidGrant(document.getDocumentId().getValue(), cookieHeader);
+      const documentId = document.getDocumentId().getValue();
+      const hasValidGrant = await this.hasValidGrant(documentId, grantFor(documentId));
       const decision = this.policy.evaluate({ secured: true, canWrite: false, hasValidGrant });
       if (decision.kind === "challenge") return decision;
     }
     return { kind: "allow" };
   }
 
-  private async hasValidGrant(documentId: string, cookieHeader: string | null): Promise<boolean> {
-    const token = readCookie(cookieHeader, this.codec.cookieName(documentId));
+  private async hasValidGrant(documentId: string, token: string | undefined): Promise<boolean> {
     if (!token) return false;
 
     const record = await this.accessRepository.get(documentId);
