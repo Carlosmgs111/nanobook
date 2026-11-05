@@ -46,6 +46,38 @@ describe("renderMarkdown", () => {
     expect(html).toContain("<p>Paragraph</p>");
   });
 
+  it("isolates transforms across lists with the same manifest", async () => {
+    const marker = (value: string): MarkdownExtension => ({
+      id: "marker",
+      version: "1",
+      fenceLanguages: [],
+      transform(tree) {
+        tree.children.push({
+          type: "element",
+          tagName: "p",
+          properties: {},
+          children: [{ type: "text", value }],
+        });
+      },
+    });
+    const first = [marker("First")];
+    const second = [marker("Second")];
+
+    const results = await Promise.all([
+      renderMarkdown("# Heading", first),
+      renderMarkdown("# Heading", second),
+      renderMarkdown("# Heading", first),
+      renderMarkdown("# Heading"),
+    ]);
+
+    expect(results).toEqual([
+      '<h1 id="heading">Heading</h1><p>First</p>',
+      '<h1 id="heading">Heading</h1><p>Second</p>',
+      '<h1 id="heading">Heading</h1><p>First</p>',
+      '<h1 id="heading">Heading</h1>',
+    ]);
+  });
+
   it("fingerprints extension identity version and order", () => {
     const firstV1 = extension("first", "1", [], []);
     const firstV2 = extension("first", "2", [], []);
@@ -57,6 +89,20 @@ describe("renderMarkdown", () => {
       .toBe("2|second@3|first@1");
     expect(createRendererFingerprint(RENDERER_VERSION, [firstV2, secondV3]))
       .toBe("2|first@2|second@3");
+  });
+
+  it("distinguishes manifest values containing fingerprint separators", () => {
+    const entry = (id: string, version: string) => extension(id, version, [], []);
+    const fingerprints = [
+      createRendererFingerprint("2", [entry("a", "1"), entry("b", "2")]),
+      createRendererFingerprint("2", [entry("a", "1|b@2")]),
+      createRendererFingerprint("2|a@1", [entry("b", "2")]),
+      createRendererFingerprint("2", [entry("a@b", "2")]),
+      createRendererFingerprint("2", [entry("a", "b@2")]),
+      createRendererFingerprint("2", [entry("a%40b", "2")]),
+    ];
+
+    expect(new Set(fingerprints).size).toBe(fingerprints.length);
   });
 
   it("rejects duplicate extension ids", async () => {
