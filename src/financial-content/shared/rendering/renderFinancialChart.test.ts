@@ -74,7 +74,20 @@ describe("renderFinancialChart", () => {
     expect(svg).toContain('stroke-dasharray="8 4"');
   });
 
-  it("uses the same distinct marker for connected and isolated points and their legend entry", () => {
+  it("preserves the connected path across 120 points without point markers", () => {
+    const values = Array.from({ length: 120 }, (_, index) => index);
+    const svg = plot(render({
+      ...block,
+      x: values.map(String),
+      series: [{ ...block.series[0], values }],
+    }));
+    const path = svg.match(/<path class="financial-chart__line" d="([^"]+)"/)?.[1] ?? "";
+
+    expect(path.split(" L ")).toHaveLength(120);
+    expect(markerShapes(svg)).toHaveLength(0);
+  });
+
+  it("uses the same distinct marker for each isolated point and its legend entry", () => {
     const html = render({
       ...block,
       series: Array.from({ length: 8 }, (_, index) => ({
@@ -85,7 +98,7 @@ describe("renderFinancialChart", () => {
     const legendMarkers = markerShapes(html.slice(html.indexOf('<ol class="financial-chart__legend">')));
 
     expect(new Set(legendMarkers).size).toBe(8);
-    expect(seriesMarkers).toEqual(legendMarkers.flatMap((marker) => [marker, marker, marker]));
+    expect(seriesMarkers).toEqual(legendMarkers);
   });
 
   it("omits missing bars, groups series by category and uses the same zero line", () => {
