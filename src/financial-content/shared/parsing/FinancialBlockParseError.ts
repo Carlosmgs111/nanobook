@@ -10,7 +10,7 @@ const messages = {
   "invalid-url": "La URL debe ser absoluta y usar HTTPS.",
   "invalid-date": "La fecha debe existir en el calendario y usar el formato YYYY-MM-DD.",
   "invalid-number": "El valor debe ser un número finito.",
-  "invalid-currency": "La unidad currency requiere un código de tres letras mayúsculas. Las demás unidades omiten la moneda.",
+  "invalid-currency": "La moneda debe ser un código de tres letras mayúsculas. En series y métricas, la unidad currency requiere ese campo y las demás unidades lo omiten.",
   "collection-limit": "La cantidad de elementos no cumple los límites del bloque.",
   "missing-source-date": "La fuente requiere una fecha de publicación o un periodo.",
   "duplicate-source-id": "Los identificadores de fuente deben ser únicos en el bloque.",

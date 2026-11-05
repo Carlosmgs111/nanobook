@@ -14,7 +14,10 @@ const longText = z.string().trim().min(1).max(2000);
 const sourceId = z.string().trim().max(64).regex(/^[a-z0-9-]+$/);
 const date = z.string().trim().pipe(z.iso.date());
 const url = z.string().trim().max(2048).refine((value) => {
-  if (!/^https:\/\/[^/\\]/i.test(value)) return false;
+  // URL can silently remove controls or reinterpret backslashes as slashes.
+  if (/[\u0000-\u001f\u007f-\u009f\\]/.test(value) || !/^https:\/\/[^/]/i.test(value)) {
+    return false;
+  }
   try {
     return new URL(value).protocol === "https:";
   } catch {
