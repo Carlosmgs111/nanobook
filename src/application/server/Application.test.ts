@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { PublishingModule } from "../../publishing/server";
+import { RENDERER_VERSION } from "../../rendering/shared/rendererFingerprint";
+import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { Application } from "./Application";
 
 const { protect, create } = vi.hoisted(() => {
@@ -29,6 +32,24 @@ vi.mock("../../auth/server", () => ({
   AuthServerModule: { create },
 }));
 
+const financialDocument = {
+  getContent: () => `\`\`\`financial-metrics
+version: 1
+metrics:
+  - label: Margen ilustrativo
+    value: 12
+    unit: percent
+    period: { label: "2024" }
+    sourceIds: [example]
+sources:
+  - id: example
+    label: Fuente de ejemplo
+    url: https://example.com/metrics
+    type: dataset
+    period: { label: "2024" }
+\`\`\``,
+};
+
 describe("Application", () => {
   it("composes profiles without retaining the legacy user module", async () => {
     const app = await Application.create();
@@ -58,4 +79,25 @@ describe("Application", () => {
     expect(app.nanobookModule.getNanobookBySlug).toBeDefined();
     expect(app.nanobookModule.listNanobooks).toBeDefined();
   });
+
+  it("composes financial rendering as an internal publishing capability", async () => {
+    const app = await Application.create();
+    const { pageRenderer } = app.publishingModule;
+    const published = await pageRenderer.render(financialDocument);
+
+    expect(published.Content).toContain('class="financial-block financial-metrics"');
+    expect(published.Content).toContain("Margen ilustrativo");
+    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|financial-content@1`);
+    expect(app).not.toHaveProperty("financialContentModule");
+    expect(app).not.toHaveProperty("financialContentRepository");
+    expect(app).not.toHaveProperty("financialBlockSchemas");
+  }, 15_000);
+
+  it("keeps financial fences as code when publishing receives no extensions", async () => {
+    const { pageRenderer } = await PublishingModule.create(new InMemoryEventBus(), []);
+    const published = await pageRenderer.render(financialDocument);
+
+    expect(published.Content).toContain('<code class="language-financial-metrics">');
+    expect(pageRenderer.fingerprint).toBe(RENDERER_VERSION);
+  }, 15_000);
 });

@@ -1,7 +1,15 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createMarkdownExtensions } from "../../application/browser/createMarkdownExtensions";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
+import { createFinancialContentExtension } from "../../financial-content/shared";
 import { UnifiedMarkdownRenderer as ServerRenderer } from "../../publishing/server/infraestructure/renderer/UnifiedMarkdownRenderer";
 import type { MarkdownExtension } from "./MarkdownExtension";
+
+const financialNote = readFileSync(new URL(
+  "../../financial-content/shared/test/fixtures/alphabet-analysis.md",
+  import.meta.url,
+), "utf8");
 
 const sources = [
   {
@@ -24,11 +32,17 @@ const sources = [
     source: "```ts\nconst value = 1;\n```",
     marker: 'class="shiki github-dark"',
   },
+  {
+    name: "a full financial note",
+    source: financialNote,
+    marker: 'class="financial-block financial-sources"',
+  },
 ];
 
 describe("Markdown renderer parity", () => {
-  const server = new ServerRenderer();
-  const preview = new PreviewRenderer();
+  const server = new ServerRenderer([createFinancialContentExtension()]);
+  const preview = new PreviewRenderer(createMarkdownExtensions());
+  const serverWithoutExtensions = new ServerRenderer();
 
   it.each(sources)("renders identical HTML for $name", async ({ source, marker }) => {
     const published = await server.render({ getContent: () => source });
@@ -37,6 +51,10 @@ describe("Markdown renderer parity", () => {
     expect(result.isSuccess).toBe(true);
     expect(published.Content).toContain(marker);
     expect(result.getValue().Content).toBe(published.Content);
+    if (source !== financialNote) {
+      const baseline = await serverWithoutExtensions.render({ getContent: () => source });
+      expect(published.Content).toBe(baseline.Content);
+    }
   }, 15_000);
 
   it("renders identical HTML with a configured extension", async () => {
