@@ -6,6 +6,7 @@ export interface RenderedDocument {
 }
 
 export interface DocumentRenderer {
+  readonly fingerprint: string;
   render(document: { getContent(): string }): Promise<RenderedDocument>;
 }
 

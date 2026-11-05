@@ -1,40 +1,24 @@
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkRehype from "remark-rehype";
-import rehypeSlug from "rehype-slug";
-import rehypeStringify from "rehype-stringify";
-import rehypeShiki from "@shikijs/rehype";
+import type { MarkdownExtension } from "../../../../rendering/shared/MarkdownExtension";
+import { renderMarkdown } from "../../../../rendering/shared/renderMarkdown";
+import {
+  createRendererFingerprint,
+  RENDERER_VERSION,
+} from "../../../../rendering/shared/rendererFingerprint";
 import type { DocumentRenderer, RenderedDocument } from "../../domain/render";
-import type { Document } from "../../../../documents/server/domain/Document";
 
 // TODO: Hacer que el renderizador estraiga los headings para TOC
 
 export class UnifiedMarkdownRenderer implements DocumentRenderer {
-  private processor: any = null;
+  readonly fingerprint: string;
 
-  private async getProcessor() {
-    if (this.processor) return this.processor;
-
-    this.processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkRehype)
-      .use(rehypeSlug)
-      .use(rehypeShiki, {
-        theme: "github-dark",
-      })
-      .use(rehypeStringify);
-
-    return this.processor;
+  constructor(
+    private readonly extensions: readonly MarkdownExtension[] = [],
+  ) {
+    this.fingerprint = createRendererFingerprint(RENDERER_VERSION, extensions);
   }
 
-  async render(document: Document): Promise<RenderedDocument> {
-    const processor = await this.getProcessor();
-    const result = await processor.process(document.getContent());
-
-    return {
-      Content: String(result),
-    };
+  async render(document: { getContent(): string }): Promise<RenderedDocument> {
+    const html = await renderMarkdown(document.getContent(), this.extensions);
+    return { Content: html };
   }
 }
