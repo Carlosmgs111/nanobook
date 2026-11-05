@@ -4,6 +4,7 @@
   import { DocumentChanged } from "../index";
 
   const app = await getApp();
+  const MAX_RENDER_ATTEMPTS = 3;
 
   async function renderPreview() {
     const container = document.getElementById("preview-container") as
@@ -11,25 +12,42 @@
       | undefined;
 
     if (!container) throw new Error("Missing preview container");
+    const documentId = container.dataset.documentId as string;
 
-    function setRenderedPage(pageId: string, container: HTMLElement) {
+    /** Pinta el preview renderizado; devuelve false si todavía no existe. */
+    function showRenderedPage(pageId: string): boolean {
       const renderedResult =
         app.editionModule.getRenderedDocument.execute(pageId);
-      if (!renderedResult.isSuccess) {
-        console.error(renderedResult.getError());
-        return;
-      }
-      const renderedContent = renderedResult.getValue();
-      const { rendered } = renderedContent;
-      container.innerHTML = rendered.Content;
+      if (!renderedResult.isSuccess) return false;
+      container!.innerHTML = renderedResult.getValue().rendered.Content;
+      return true;
     }
-    setRenderedPage(container.dataset.documentId as string, container);
+
     app.editionModule.eventBus.subscribe(DocumentChanged, {
       async handle(event) {
-        setRenderedPage(event.documentId as string, container);
+        showRenderedPage(event.documentId as string);
         return Result.ok();
       },
     });
+
+    if (showRenderedPage(documentId)) return;
+
+    // Todavía no hay preview renderizado, por ejemplo al abrir el editor y pasar
+    // al preview sin escribir nada. Se renderiza el borrador de este documento;
+    // si tampoco hay borrador, el contenedor conserva el contenido guardado que
+    // entregó el servidor.
+    //
+    // Si el borrador cambia mientras se renderiza (el editor guarda un cambio
+    // reciente), el servicio descarta ese resultado obsoleto y responde sin
+    // preview. Se reintenta para renderizar el borrador actualizado.
+    for (let attempt = 0; attempt < MAX_RENDER_ATTEMPTS; attempt++) {
+      const rendered = await app.editionModule.renderPreview.execute(documentId);
+      if (!rendered.isSuccess) {
+        console.error(rendered.getError());
+        return;
+      }
+      if (showRenderedPage(documentId)) return;
+    }
   }
 
   document.addEventListener("astro:page-load", renderPreview);

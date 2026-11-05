@@ -4,6 +4,7 @@ import { getApp } from "../../../../application/server/Application";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
+import PreviewPageController from "../PreviewPageController.astro";
 
 export const prerender = false;
 
@@ -50,5 +51,12 @@ const viewHref = slug === "index" ? baseHref : `${baseHref}/${slug}/`;
     <h1>Vista previa de {entry.title}</h1>
     <DocumentActionLink href={viewHref} label="Volver al documento" />
   </div>
-  <div id="preview-container" data-document-id={documentId}></div>
+  <div
+    id="preview-container"
+    data-document-id={documentId}
+    set:html={rendered.renderedBody}
+  />
+
 </Layout>
+
+<PreviewPageController />
