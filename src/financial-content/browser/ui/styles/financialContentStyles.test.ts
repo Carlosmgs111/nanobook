@@ -52,6 +52,16 @@ describe("financial content styles", () => {
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
   });
 
+  it("switches to readable HTML axis references on narrow viewports", () => {
+    const css = stylesheet();
+    const mobile = css.split(/@media\s*\(max-width:[^)]+\)\s*\{/)[1]?.split("@media")[0] ?? "";
+
+    expect(css).toMatch(/\.financial-chart__axis-summary\s*\{[^}]*display:\s*none/);
+    expect(mobile).toMatch(/\.financial-chart__axis-summary\s*\{[^}]*display:\s*grid/);
+    expect(mobile).toMatch(/\.financial-chart__axes text\s*\{[^}]*display:\s*none/);
+    expect(mobile).not.toMatch(/\.financial-chart__plot\b[^{}]*\{[^}]*overflow/);
+  });
+
   it.each(["favorable", "unfavorable", "neutral"])("shows a visible %s comparison indicator", (direction) => {
     expect(stylesheet()).toMatch(new RegExp(`\\[data-direction="${direction}"\\]::before[^{}]*\\{[^}]*content:\\s*".+?"`));
   });

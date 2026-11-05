@@ -22,8 +22,15 @@ export function renderFinancialNews(block: FinancialNewsBlock, context: Financia
       metadata.push(text(` · ${source.period.label}`));
     }
 
+    const headline = externalLink(item.title, source.url);
+    headline.children.push(
+      text(" "),
+      element("span", [text("(enlace externo, abre en otra pestaña)")], {
+        className: ["financial-news__external"],
+      }),
+    );
     const article = [
-      element("h3", [externalLink(item.title, source.url)]),
+      element("h3", [headline]),
       element("p", metadata, { className: ["financial-news__meta"] }),
       element("p", [text(item.summary)]),
     ];

@@ -87,6 +87,37 @@ describe("renderFinancialChart", () => {
     expect(markerShapes(svg)).toHaveLength(0);
   });
 
+  it("serializes full mobile axis references outside the SVG with localized currency bounds", () => {
+    const html = render({
+      ...block,
+      x: ["Inicio del periodo <base>", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Cierre del periodo fiscal"],
+      series: [{
+        ...block.series[0],
+        unit: "currency",
+        currency: "COP",
+        values: [-12.5, -4, null, 0, 14, 22, 125.75],
+      }],
+    });
+    const axes = html.match(/<\/svg><dl class="financial-chart__axis-summary">([\s\S]*?)<\/dl>/)?.[1] ?? "";
+
+    expect(axes).toMatch(/<dt>Referencias del eje X<\/dt><dd>Inicio del periodo (?:&#x3C;|&lt;)base> · Marzo · Abril · Junio · Cierre del periodo fiscal<\/dd>/);
+    expect(axes).toContain("<dt>Eje Y</dt><dd>Mínimo COP −12,50 · Máximo COP 125,75</dd>");
+    expect(plot(html)).toContain("Inicio del peri…");
+    expect(html).not.toContain("<base>");
+  });
+
+  it("shows a single Y value and keeps the unit when the domain is constant", () => {
+    const html = render({
+      ...block,
+      x: ["Categoría única"],
+      series: [{ ...block.series[0], values: [0] }],
+    });
+    const axes = html.match(/<\/svg><dl class="financial-chart__axis-summary">([\s\S]*?)<\/dl>/)?.[1] ?? "";
+
+    expect(axes).toContain("<dt>Referencias del eje X</dt><dd>Categoría única</dd>");
+    expect(axes).toContain("<dt>Eje Y</dt><dd>0,0 %</dd>");
+  });
+
   it("uses the same distinct marker for each isolated point and its legend entry", () => {
     const html = render({
       ...block,
