@@ -26,7 +26,7 @@ const block: FinancialChartBlock = {
 
 function fence(value: FinancialChartBlock): string {
   const { kind: _kind, version: _version, ...payload } = value;
-  return `\`\`\`financial-chart\n${stringify(payload)}\`\`\``;
+  return `\`\`\`financial-chart\n${stringify(payload, { aliasDuplicateObjects: false })}\`\`\``;
 }
 
 const processor = unified()
@@ -38,6 +38,15 @@ const processor = unified()
 
 function render(...values: FinancialChartBlock[]): string {
   return String(processor.processSync(values.map(fence).join("\n\n")));
+}
+
+function plot(html: string): string {
+  return html.match(/<svg[^>]* role="img"[^>]*>([\s\S]*?)<\/svg>/)?.[1] ?? "";
+}
+
+function markerShapes(svg: string): string[] {
+  return [...svg.matchAll(/<path class="financial-chart__marker" d="M \S+ \S+ ([^"]+)"/g)]
+    .map((match) => match[1]);
 }
 
 describe("renderFinancialChart", () => {
@@ -54,27 +63,67 @@ describe("renderFinancialChart", () => {
   });
 
   it("breaks paths at missing points and shares the y scale across line series", () => {
-    const html = render(block);
-    const svg = html.match(/<svg[^>]* role="img"[^>]*>([\s\S]*?)<\/svg>/)?.[1] ?? "";
-    const paths = [...svg.matchAll(/<path[^>]* d="([^"]+)"/g)].map((match) => match[1]);
+    const svg = plot(render(block));
+    const paths = [...svg.matchAll(/<path class="financial-chart__line" d="([^"]+)"/g)].map((match) => match[1]);
 
-    expect(paths).toHaveLength(3);
-    expect(paths[0]).toMatch(/^M 72 304 L \S+ 164$/);
-    expect(paths[1]).toMatch(/^M 776 24\b/);
-    expect(paths[2]).toMatch(/^M 72 164 L \S+ 24 L \S+ 164 L 776 164$/);
+    expect(paths).toEqual([
+      expect.stringMatching(/^M 72 304 L \S+ 164$/),
+      expect.stringMatching(/^M 72 164 L \S+ 24 L \S+ 164 L 776 164$/),
+    ]);
+    expect(svg).toContain('<path class="financial-chart__marker" d="M 776 24 ');
     expect(svg).toContain('stroke-dasharray="8 4"');
   });
 
+  it("uses the same distinct marker for connected and isolated points and their legend entry", () => {
+    const html = render({
+      ...block,
+      series: Array.from({ length: 8 }, (_, index) => ({
+        ...block.series[0], name: `Serie ${index + 1}`, values: [index, index + 1, null, index + 2],
+      })),
+    });
+    const seriesMarkers = markerShapes(plot(html));
+    const legendMarkers = markerShapes(html.slice(html.indexOf('<ol class="financial-chart__legend">')));
+
+    expect(new Set(legendMarkers).size).toBe(8);
+    expect(seriesMarkers).toEqual(legendMarkers.flatMap((marker) => [marker, marker, marker]));
+  });
+
   it("omits missing bars, groups series by category and uses the same zero line", () => {
-    const html = render({ ...block, chart: "bar" });
-    const svg = html.match(/<svg[^>]* role="img"[^>]*>([\s\S]*?)<\/svg>/)?.[1] ?? "";
+    const svg = plot(render({ ...block, chart: "bar" }));
     const bars = [...svg.matchAll(/<rect[^>]* x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/g)]
       .map((match) => match.slice(1).map(Number));
 
     expect(bars).toEqual([
-      [94, 164, 66, 140], [270, 164, 66, 0], [622, 24, 66, 140],
-      [160, 164, 66, 0], [336, 24, 66, 140], [512, 164, 66, 0], [688, 164, 66, 0],
+      [95, 164, 64, 140], [623, 24, 64, 140], [337, 24, 64, 140],
     ]);
+    const zeroMarkers = [...svg.matchAll(/<line class="financial-chart__zero" x1="([^"]+)" x2="([^"]+)" y1="([^"]+)" y2="([^"]+)" stroke-width="([^"]+)"/g)]
+      .map((match) => match.slice(1).map(Number));
+    expect(zeroMarkers).toEqual([
+      [271, 335, 164, 164, 3], [161, 225, 164, 164, 3],
+      [513, 577, 164, 164, 3], [689, 753, 164, 164, 3],
+    ]);
+  });
+
+  it("keeps rendered bar strokes separated at eight series by 120 categories", () => {
+    const x = Array.from({ length: 120 }, (_, index) => String(index + 1));
+    const svg = plot(render({
+      ...block, chart: "bar", x,
+      series: Array.from({ length: 8 }, (_, index) => ({
+        ...block.series[0], name: `Serie ${index + 1}`, values: x.map(() => 1),
+      })),
+    }));
+    const extents = [...svg.matchAll(/<rect\b[^>]*>/g)].map(([rect]) => {
+      const start = Number(rect.match(/\bx="([^"]+)"/)?.[1]);
+      const width = Number(rect.match(/\bwidth="([^"]+)"/)?.[1]);
+      const stroke = Number(rect.match(/\bstroke-width="([^"]+)"/)?.[1] ?? 1);
+      expect(width).toBeGreaterThan(0);
+      return { left: start - stroke / 2, right: start + width + stroke / 2 };
+    }).sort((a, b) => a.left - b.left);
+
+    expect(extents).toHaveLength(960);
+    extents.slice(1).forEach(({ left }, index) => {
+      expect(left).toBeGreaterThan(extents[index].right);
+    });
   });
 
   it("includes zero in the scale of a positive-only bar chart", () => {
@@ -82,8 +131,48 @@ describe("renderFinancialChart", () => {
       { ...block.series[0], values: [2, 4, null, 8] },
     ] });
 
-    expect(html).toContain('x="94" y="234" width="132" height="70"');
-    expect(html).toContain('x="622" y="24" width="132" height="280"');
+    expect(html).toContain('x="95" y="234" width="130" height="70"');
+    expect(html).toContain('x="623" y="24" width="130" height="280"');
+  });
+
+  it.each([
+    { values: [0.001, 0.002], unit: "currency", currency: "COP", labels: ["COP 0,001", "COP 0,002"] },
+    { values: [120_000_000, 240_000_000], unit: "currency", currency: "COP", labels: ["COP 1,2e+8", "COP 2,4e+8"] },
+    { values: [120_000_000, 240_000_000], unit: "percent", currency: undefined, labels: ["1,2e+8 %", "2,4e+8 %"] },
+    { values: [120_000_000, 240_000_000], unit: "multiple", currency: undefined, labels: ["1,2e+8×", "2,4e+8×"] },
+    { values: [120_000_000, 120_000_001], unit: "currency", currency: "COP", labels: ["COP 1,2e+8", "COP 1,20000001e+8"] },
+    { values: [0.00001, 0.00002], unit: "currency", currency: "COP", labels: ["COP 1,0e-5", "COP 2,0e-5"] },
+  ] as const)("keeps distinct $unit axis labels for $values", ({ values, unit, currency, labels }) => {
+    const svg = plot(render({
+      ...block, x: ["2024", "2025"],
+      series: [{ ...block.series[0], unit, currency, values: [...values] }],
+    }));
+
+    const ticks = [...svg.matchAll(/<text [^>]* y="(?:308|28)"[^>]*>([^<]+)<\/text>/g)].map((match) => match[1]);
+    expect(ticks).toEqual(labels);
+  });
+
+  it("shows available citation periods and dates next to their safe links", () => {
+    const html = render({
+      ...block,
+      sources: [
+        { ...block.sources[0], period: { label: "Ejercicio 2025", from: "2025-01-01", to: "2025-12-31" }, accessedAt: "2026-03-12" },
+        { ...block.sources[1], period: undefined, publishedAt: "2026-02-09" },
+        { ...block.sources[0], id: "unused", label: "Informe sin citar", accessedAt: "2026-01-06" },
+      ],
+    });
+    const legend = html.match(/<ol class="financial-chart__legend">([\s\S]*?)<\/ol>/)?.[1] ?? "";
+    const [first, second] = [...legend.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((match) => match[1]);
+
+    expect(first).toContain('>Informe anual</a>');
+    expect(first).toContain("Ejercicio 2025");
+    expect(first).toContain('<time datetime="2025-01-01">1 ene 2025</time>');
+    expect(first).toContain('<time datetime="2025-12-31">31 dic 2025</time>');
+    expect(first).toContain('<time datetime="2026-03-12">12 mar 2026</time>');
+    expect(second).toContain('>Datos sectoriales</a>');
+    expect(second).toContain('<time datetime="2026-02-09">9 feb 2026</time>');
+    expect(legend).not.toContain("Informe sin citar");
+    expect(legend).not.toContain("2026-01-06");
   });
 
   it.each(["line", "bar"] as const)("renders a textual legend, per-series citations and the complete %s table", (chart) => {
