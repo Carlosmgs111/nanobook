@@ -1,6 +1,7 @@
 import type { Element } from "hast";
 import type { FinancialBlock } from "../model/FinancialBlock";
 import { renderCompanyProfile } from "./renderCompanyProfile";
+import { renderFinancialChart } from "./renderFinancialChart";
 import { renderUnavailableFinancialBlock } from "./renderFinancialError";
 import { renderFinancialMetrics } from "./renderFinancialMetrics";
 import { renderFinancialSources } from "./renderFinancialSources";
@@ -18,6 +19,7 @@ export function renderFinancialBlock(block: FinancialBlock, context: FinancialRe
     case "financial-sources":
       return renderFinancialSources(block, context);
     case "financial-chart":
+      return renderFinancialChart(block, context);
     case "financial-news":
       return renderUnavailableFinancialBlock(block.kind, context.blockIndex);
     default: {

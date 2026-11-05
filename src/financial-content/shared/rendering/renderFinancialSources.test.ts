@@ -17,6 +17,7 @@ const block: FinancialSourcesBlock = {
 };
 
 describe("renderFinancialSources", () => {
+  // The first render initializes Shiki in this test worker.
   it("renders sources in author order with metadata, dates and safe links", async () => {
     const { kind: _kind, version: _version, ...payload } = block;
     const html = await renderMarkdown(`\`\`\`financial-sources\n${stringify(payload)}\`\`\``, [createFinancialContentExtension()]);
@@ -33,7 +34,7 @@ describe("renderFinancialSources", () => {
     expect(html).toContain('<time datetime="2026-03-01">1 mar 2026</time>');
     expect(html).toContain("Año fiscal 2025");
     expect(html).toContain('<a href="https://example.com/results" target="_blank" rel="noopener noreferrer external">Resultados trimestrales</a>');
-  });
+  }, 15_000);
 
   it("uses distinct IDs and text nodes for repeated bibliography blocks", () => {
     const first = renderFinancialSources({ ...block, title: "<em>Bibliografía</em>" }, { blockIndex: 1 });
