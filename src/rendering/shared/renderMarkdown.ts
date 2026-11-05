@@ -8,13 +8,11 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { assertUniqueExtensionIds, type MarkdownExtension } from "./MarkdownExtension";
 
-export async function renderMarkdown(
-  source: string,
-  extensions: readonly MarkdownExtension[] = [],
-): Promise<string> {
-  assertUniqueExtensionIds(extensions);
+const defaultExtensions: readonly MarkdownExtension[] = [];
+const processors = new WeakMap<readonly MarkdownExtension[], ReturnType<typeof createProcessor>>();
 
-  const result = await unified()
+function createProcessor(extensions: readonly MarkdownExtension[]) {
+  return unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype)
@@ -26,7 +24,20 @@ export async function renderMarkdown(
     .use(rehypeSlug)
     .use(rehypeShiki, { theme: "github-dark" })
     .use(rehypeStringify)
-    .process(source);
+    .freeze();
+}
 
-  return String(result);
+export async function renderMarkdown(
+  source: string,
+  extensions: readonly MarkdownExtension[] = defaultExtensions,
+): Promise<string> {
+  assertUniqueExtensionIds(extensions);
+
+  let processor = processors.get(extensions);
+  if (!processor) {
+    processor = createProcessor(extensions);
+    processors.set(extensions, processor);
+  }
+
+  return String(await processor.process(source));
 }
