@@ -218,6 +218,21 @@ describe("parseFinancialBlock", () => {
     }
   });
 
+  it.each<{ kind: FinancialFenceKind; yaml: string; path: Array<string | number> }>([
+    {
+      kind: "company-profile",
+      yaml: validCases[0].yaml.replace("asOf: 2025-12-31", "asOf: 0000-01-01"),
+      path: ["company", "asOf"],
+    },
+    {
+      kind: "financial-sources",
+      yaml: stringify({ items: [{ ...newsSource, publishedAt: "0000-01-01" }] }),
+      path: ["items", 0, "publishedAt"],
+    },
+  ])("rejects year zero in $kind dates", ({ kind, yaml, path }) => {
+    expectError(kind, yaml, "invalid-date", path);
+  });
+
   it("enforces collection limits from the v1 contract", () => {
     const sources = Array.from({ length: 31 }, (_, i) => ({ ...source, id: `source-${i}` }));
     const chart = { title: "ROCE", chart: "line", x: ["2025"], sources: [source] };

@@ -12,7 +12,9 @@ const MAX_SOURCES = 30;
 const text = z.string().trim().min(1).max(200);
 const longText = z.string().trim().min(1).max(2000);
 const sourceId = z.string().trim().max(64).regex(/^[a-z0-9-]+$/);
-const date = z.string().trim().pipe(z.iso.date());
+const date = z.string().trim().pipe(z.iso.date().refine((value) => !value.startsWith("0000-"), {
+  params: { code: "invalid-date" },
+}));
 const url = z.string().trim().max(2048).refine((value) => {
   // URL can silently remove controls or reinterpret backslashes as slashes.
   if (/[\u0000-\u001f\u007f-\u009f\\]/.test(value) || !/^https:\/\/[^/]/i.test(value)) {
