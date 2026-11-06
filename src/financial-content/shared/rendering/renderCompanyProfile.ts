@@ -1,8 +1,8 @@
 import type { Element } from "hast";
-import { formatFinancialDate } from "../formatting/formatFinancialDate";
 import type { CompanyProfileBlock } from "../model/FinancialBlock";
 import { element, externalLink, financialId, text } from "./hast";
 import type { FinancialRenderContext } from "./renderFinancialBlock";
+import { renderFinancialTime, renderInlineSourceTemporalMetadata } from "./renderFinancialTemporalMetadata";
 
 export function renderCompanyProfile(block: CompanyProfileBlock, context: FinancialRenderContext): Element {
   const { company } = block;
@@ -14,7 +14,7 @@ export function renderCompanyProfile(block: CompanyProfileBlock, context: Financ
     ["País", company.country],
     ["Industria", company.industry],
     ["Moneda de reporte", company.reportingCurrency],
-    ["Fecha de corte", element("time", [text(formatFinancialDate(company.asOf))], { dateTime: company.asOf })],
+    ["Fecha de corte", renderFinancialTime(company.asOf)],
   ];
   if (title !== company.name) fields.unshift(["Empresa", company.name]);
 
@@ -41,7 +41,10 @@ export function renderCompanyProfile(block: CompanyProfileBlock, context: Financ
   const citedSources = block.sources.filter(({ id }) => sourceIds.has(id));
   children.push(
     element("h3", [text("Fuentes")], { id: financialId("company", context.blockIndex, "sources") }),
-    element("ul", citedSources.map(({ label, url }) => element("li", [externalLink(label, url)])), {
+    element("ul", citedSources.map((source) => element("li", [
+      externalLink(source.label, source.url),
+      ...renderInlineSourceTemporalMetadata(source),
+    ])), {
       className: ["financial-company__sources"],
     }),
   );

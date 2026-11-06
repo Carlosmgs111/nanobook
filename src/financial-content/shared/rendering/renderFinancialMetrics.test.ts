@@ -86,6 +86,31 @@ describe("renderFinancialMetrics", () => {
     expect(metricGroups[1]).not.toContain("Informe anual");
   }, 15_000);
 
+  it("renders the metric period boundaries and each temporal field on its citation", async () => {
+    const html = await render({
+      ...block,
+      metrics: [{ ...block.metrics[0], period: { label: "TTM", from: "2025-07-01", to: "2026-06-30" } }],
+      sources: [{
+        ...sources[0],
+        period: { label: "FY", to: "2025-12-31" },
+        publishedAt: "2026-02-10",
+        accessedAt: "2026-03-01",
+      }],
+    });
+    const period = html.match(/<p class="financial-metrics__period">(.*?)<\/p>/)?.[1] ?? "";
+    const citation = html.match(/<ul class="financial-metrics__sources">(.*?)<\/ul>/)?.[1] ?? "";
+
+    expect(period).toContain("TTM");
+    expect([...period.matchAll(/<time datetime="([^"]+)"/g)].map((match) => match[1])).toEqual([
+      "2025-07-01", "2026-06-30",
+    ]);
+    expect(citation).toContain(">Informe anual</a>");
+    expect(citation).toContain("FY");
+    expect([...citation.matchAll(/<time datetime="([^"]+)"/g)].map((match) => match[1]).sort()).toEqual([
+      "2025-12-31", "2026-02-10", "2026-03-01",
+    ]);
+  });
+
   it("keeps metric IDs distinct across repeated blocks and escapes user text", async () => {
     const escaped = { ...block, title: "<script>bad</script>" };
     const { kind: _kind, version: _version, ...payload } = escaped;

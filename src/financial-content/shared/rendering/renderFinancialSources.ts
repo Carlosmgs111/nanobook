@@ -1,9 +1,9 @@
 import type { Element } from "hast";
-import { formatFinancialDate } from "../formatting/formatFinancialDate";
 import type { FinancialSourcesBlock } from "../model/FinancialBlock";
 import type { FinancialSource, FinancialSourceType } from "../model/FinancialSource";
 import { element, externalLink, financialId, text } from "./hast";
 import type { FinancialRenderContext } from "./renderFinancialBlock";
+import { renderSourceTemporalMetadata } from "./renderFinancialTemporalMetadata";
 
 const sourceTypeLabels: Record<FinancialSourceType, string> = {
   filing: "Reporte regulatorio",
@@ -14,27 +14,12 @@ const sourceTypeLabels: Record<FinancialSourceType, string> = {
 };
 
 function renderSource(source: FinancialSource): Element {
-  const details: Element[] = [externalLink(source.label, source.url)];
-  details.push(element("p", [text([
-    source.organization,
-    sourceTypeLabels[source.type],
-  ].filter(Boolean).join(" · "))], { className: ["financial-sources__meta"] }));
-  if (source.publishedAt) {
-    details.push(element("p", [
-      text("Publicado: "),
-      element("time", [text(formatFinancialDate(source.publishedAt))], { dateTime: source.publishedAt }),
-    ]));
-  }
-  if (source.period) {
-    details.push(element("p", [text(`Periodo: ${source.period.label}`)]));
-  }
-  if (source.accessedAt) {
-    details.push(element("p", [
-      text("Consultado: "),
-      element("time", [text(formatFinancialDate(source.accessedAt))], { dateTime: source.accessedAt }),
-    ]));
-  }
-  return element("li", details);
+  const metadata = [source.organization, sourceTypeLabels[source.type]].filter(Boolean).join(" · ");
+  return element("li", [
+    externalLink(source.label, source.url),
+    element("p", [text(metadata)], { className: ["financial-sources__meta"] }),
+    ...renderSourceTemporalMetadata(source).map((field) => element("p", field)),
+  ]);
 }
 
 export function renderFinancialSources(block: FinancialSourcesBlock, context: FinancialRenderContext): Element {

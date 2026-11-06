@@ -157,7 +157,12 @@ describe("createFinancialContentExtension", () => {
       title: "Ficha de empresa",
       description: "Panorama general.",
       company: { ...company, links: [{ label: "Relación con inversionistas", url: "https://example.com/ir" }] },
-      sources: [filing, { ...filing, id: "unreferenced", label: "Informe sin citar", period: { label: "2024" } }],
+      sources: [{
+        ...filing,
+        period: { label: "FY", from: "2025-01-01", to: "2025-12-31" },
+        publishedAt: "2026-02-10",
+        accessedAt: "2026-03-01",
+      }, { ...filing, id: "unreferenced", label: "Informe sin citar", period: { label: "2024" } }],
     })));
 
     expect(html).toContain('<section class="financial-block financial-company" aria-labelledby="financial:company-0-heading">');
@@ -165,9 +170,14 @@ describe("createFinancialContentExtension", () => {
     expect(html).toContain("<p>Panorama general.</p>");
     expect(html).toContain("<p>Ofrece servicios de tecnología.</p>");
     expect(html).toMatch(/<dl>.*<dd>Ejemplo S\. A\.<\/dd>.*<dt>Ticker<\/dt><dd>EJ<\/dd>.*<dt>Bolsa<\/dt><dd>BVC<\/dd>.*<\/dl>/s);
-    expect(html).toContain('<time datetime="2026-09-30">30 sep 2026</time>');
+    expect(html).toContain('<dt>Fecha de corte</dt><dd><time datetime="2026-09-30">30 sep 2026</time></dd>');
     expect(html).toContain('<a href="https://example.com/ir" target="_blank" rel="noopener noreferrer external">Relación con inversionistas</a>');
-    expect(html).toMatch(/<ul[^>]*><li><a href="https:\/\/example\.com\/report" target="_blank" rel="noopener noreferrer external">Informe anual<\/a><\/li><\/ul><\/section>/);
+    const citations = html.match(/<ul class="financial-company__sources">(.*?)<\/ul>/)?.[1] ?? "";
+    expect(citations).toContain('<li><a href="https://example.com/report" target="_blank" rel="noopener noreferrer external">Informe anual</a>');
+    expect(citations).toContain("FY");
+    expect([...citations.matchAll(/<time datetime="([^"]+)"/g)].map((match) => match[1]).sort()).toEqual([
+      "2025-01-01", "2025-12-31", "2026-02-10", "2026-03-01",
+    ]);
     expect(html).not.toContain("Informe sin citar");
   });
 

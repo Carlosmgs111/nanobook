@@ -1,8 +1,8 @@
-import type { Element, Text } from "hast";
-import { formatFinancialDate } from "../formatting/formatFinancialDate";
+import type { Element } from "hast";
 import type { FinancialNewsBlock } from "../model/FinancialBlock";
 import { element, externalLink, financialId, text } from "./hast";
 import type { FinancialRenderContext } from "./renderFinancialBlock";
+import { renderInlineSourceTemporalMetadata } from "./renderFinancialTemporalMetadata";
 
 export function renderFinancialNews(block: FinancialNewsBlock, context: FinancialRenderContext): Element {
   const headingId = financialId("news", context.blockIndex, "heading");
@@ -13,14 +13,7 @@ export function renderFinancialNews(block: FinancialNewsBlock, context: Financia
   for (const item of block.items) {
     // Validation guarantees that each article references a source in the block.
     const source = sources.get(item.sourceId)!;
-    const metadata: Array<Element | Text> = [text(source.organization ?? source.label)];
-    if (source.publishedAt) {
-      metadata.push(text(" · "), element("time", [text(formatFinancialDate(source.publishedAt))], {
-        dateTime: source.publishedAt,
-      }));
-    } else if (source.period) {
-      metadata.push(text(` · ${source.period.label}`));
-    }
+    const metadata = [text(source.organization ?? source.label), ...renderInlineSourceTemporalMetadata(source)];
 
     const headline = externalLink(item.title, source.url);
     headline.children.push(

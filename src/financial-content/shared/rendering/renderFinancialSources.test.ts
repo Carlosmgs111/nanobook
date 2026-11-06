@@ -12,7 +12,11 @@ const block: FinancialSourcesBlock = {
   description: "Documentos consultados.",
   items: [
     { id: "second", label: "Resultados trimestrales", organization: "Acme", url: "https://example.com/results", type: "earnings", publishedAt: "2026-02-10", accessedAt: "2026-03-01" },
-    { id: "first", label: "Informe anual", organization: "Bolsa", url: "https://example.com/annual", type: "filing", period: { label: "Año fiscal 2025", from: "2025-01-01", to: "2025-12-31" } },
+    {
+      id: "first", label: "Informe anual", organization: "Bolsa", url: "https://example.com/annual", type: "filing",
+      period: { label: "FY", from: "2025-01-01", to: "2025-12-31" },
+      publishedAt: "2026-02-12", accessedAt: "2026-03-05",
+    },
   ],
 };
 
@@ -32,8 +36,12 @@ describe("renderFinancialSources", () => {
     expect(html).toContain("Reporte regulatorio");
     expect(html).toContain('<time datetime="2026-02-10">10 feb 2026</time>');
     expect(html).toContain('<time datetime="2026-03-01">1 mar 2026</time>');
-    expect(html).toContain("Año fiscal 2025");
     expect(html).toContain('<a href="https://example.com/results" target="_blank" rel="noopener noreferrer external">Resultados trimestrales</a>');
+    const [, annual] = [...html.matchAll(/<li>(.*?)<\/li>/g)].map((match) => match[1]);
+    expect(annual).toContain("FY");
+    expect([...annual.matchAll(/<time datetime="([^"]+)"/g)].map((match) => match[1]).sort()).toEqual([
+      "2025-01-01", "2025-12-31", "2026-02-12", "2026-03-05",
+    ]);
   }, 15_000);
 
   it("uses distinct IDs and text nodes for repeated bibliography blocks", () => {
