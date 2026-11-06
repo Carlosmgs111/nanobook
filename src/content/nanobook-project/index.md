@@ -15,6 +15,8 @@ draft: false
 
 - [Renderizado Markdown extensible](./arquitectura/renderizado-extensible): núcleo compartido, extensiones opcionales y validez de la caché de publicación.
 
+- [Autoría de contenido financiero](./arquitectura/contenido-financiero): cinco fences v1, trazabilidad de fuentes y composición de preview y publicación.
+
 - [Despliegue y seguridad de producción](./production-readiness): requisitos de Vercel, autenticación y acceso agéntico.
 
 - [Intervenciones verificadas de Codex](./historial-codex): cronología de implementaciones, correcciones y documentación, con referencias a tareas y commits. El registro distingue el trabajo confirmado de los cambios locales sin commit.

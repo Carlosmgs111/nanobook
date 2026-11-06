@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Added:** cinco bloques financieros componibles en Markdown para perfil de empresa, métricas, gráficos, noticias y fuentes, con trazabilidad local, presentación accesible y el mismo resultado en vista previa y publicación SSR.
+
 - Corregida la configuración de extensiones Markdown: publicación y vista previa conservan una copia inmutable de la lista recibida, de modo que cambios posteriores del llamador no alteran el HTML ni invalidan la huella de caché.
 
 - Corregida la colisión entre los IDs de fichas financieras y los títulos Markdown; las secciones generadas usan el prefijo `financial:` y conservan sus referencias de accesibilidad.
