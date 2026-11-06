@@ -32,14 +32,17 @@ debe cambiar cuando cambie su salida.
 
 ## Composición y paridad
 
-`src/application/server/Application.ts` compone `PublishingModule`, que hoy
-construye `UnifiedMarkdownRenderer` con la lista vacía. Ese renderer adapta
-`renderMarkdown` al contrato de publicación. En el navegador,
-`src/application/browser/createMarkdownExtensions.ts` devuelve hoy la lista
-vacía, y el Worker la pasa al renderer de vista previa. Ambos adaptadores usan
-el mismo `renderMarkdown`; con la misma fuente y el mismo conjunto ordenado de
-extensiones producen el mismo HTML. Para activar una extensión futura, la
-composición de servidor y la de navegador deberán suministrar la misma lista.
+`src/application/server/Application.ts` registra hoy `financial-content` y
+entrega la extensión a `PublishingModule`, que construye
+`UnifiedMarkdownRenderer`. Ese renderer adapta `renderMarkdown` al contrato de
+publicación. En el navegador,
+`src/application/browser/createMarkdownExtensions.ts` registra la misma
+extensión; el Worker la pasa al renderer de vista previa. Ambos adaptadores
+usan el mismo `renderMarkdown`; con la misma fuente y el mismo conjunto ordenado
+de extensiones producen el mismo HTML. El registro es explícito en las dos
+raíces de aplicación. `rendering` y `publishing` conservan la posibilidad de
+recibir una lista vacía y siguen siendo independientes de `financial-content`.
+Todavía no existe selección de extensiones por documento o nanobook.
 
 ## Validez de caché
 
