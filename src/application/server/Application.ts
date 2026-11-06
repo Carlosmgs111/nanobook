@@ -1,5 +1,6 @@
 import { AuthServerModule } from "../../auth/server";
 import { createMarkdownExtensions } from "../shared/createMarkdownExtensions";
+import { createMarkdownBlockAdvisor } from "./createMarkdownBlockAdvisor";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
 import { NavigationModule } from "../../navigation/server";
@@ -37,7 +38,7 @@ export class Application {
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
-    const agentModule = AgentModule.create(nanobookModule);
+    const agentModule = AgentModule.create(nanobookModule, createMarkdownBlockAdvisor());
     return new Application(
       authServerModule,
       routeProtector,

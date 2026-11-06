@@ -35,3 +35,13 @@ export class FinancialBlockParseError extends Error {
     this.name = "FinancialBlockParseError";
   }
 }
+
+/** Ruta legible de un campo, por ejemplo `series[0].values`. Vacía si el error afecta a todo el bloque. */
+export function formatFinancialBlockPath(path: FinancialBlockPath): string {
+  return path
+    .map((part, index) => {
+      if (typeof part === "number") return `[${part}]`;
+      return index === 0 ? part : `.${part}`;
+    })
+    .join("");
+}

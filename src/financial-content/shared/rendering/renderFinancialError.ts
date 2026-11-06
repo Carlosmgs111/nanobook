@@ -1,6 +1,6 @@
 import type { Element } from "hast";
 import type { FinancialFenceKind } from "../model/FinancialBlock";
-import type { FinancialBlockParseError } from "../parsing/FinancialBlockParseError";
+import { formatFinancialBlockPath, type FinancialBlockParseError } from "../parsing/FinancialBlockParseError";
 import { element, financialId, text } from "./hast";
 
 function errorSection(kind: FinancialFenceKind, blockIndex: number, detail: Element[]): Element {
@@ -19,10 +19,7 @@ export function renderFinancialError({ kind, blockIndex, error }: {
   blockIndex: number;
   error: FinancialBlockParseError;
 }): Element {
-  const path = error.path.map((part, index) => {
-    if (typeof part === "number") return `[${part}]`;
-    return index === 0 ? part : `.${part}`;
-  }).join("");
+  const path = formatFinancialBlockPath(error.path);
 
   const detail = [element("p", [text(error.message)])];
   if (path) detail.unshift(element("p", [text("Campo "), element("code", [text(path)])]));
