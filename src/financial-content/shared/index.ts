@@ -6,3 +6,6 @@ export { isFinancialFenceKind, parseFinancialBlock } from "./parsing/parseFinanc
 export { createFinancialContentExtension } from "./rendering/createFinancialContentExtension";
 export { createFinancialContentExtensions } from "./rendering/createFinancialContentExtensions";
 export { financialComponentBlockDefinitions } from "./components/priceChart";
+export { validateMarkdownBlocks } from "./validation/validateMarkdownBlocks";
+export type { MarkdownBlockIssue } from "./validation/validateMarkdownBlocks";
+export { financialAuthoringGuide } from "./guide/financialAuthoringGuide";
