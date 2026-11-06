@@ -59,7 +59,7 @@ describe("theme management", () => {
     expect(result.getValue().map((theme) => theme.reference)).toEqual([
       { kind: "official", id: "classic" }, { kind: "official", id: "nanobook" },
       { kind: "official", id: "herbario" }, { kind: "official", id: "plano" },
-      { kind: "official", id: "monocromo" },
+      { kind: "official", id: "monocromo" }, { kind: "official", id: "companio" },
       { kind: "custom", id: "owned" },
     ]);
   });
