@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- Corregida la configuración de extensiones Markdown: publicación y vista previa conservan una copia inmutable de la lista recibida, de modo que cambios posteriores del llamador no alteran el HTML ni invalidan la huella de caché.
+
 - Corregida la colisión entre los IDs de fichas financieras y los títulos Markdown; las secciones generadas usan el prefijo `financial:` y conservan sus referencias de accesibilidad.
 
 - **Changed:** publicación y vista previa comparten el pipeline Markdown; la caché de HTML renderizado queda versionada por el núcleo y las extensiones activas.

@@ -10,11 +10,11 @@ import type { DocumentRenderer, RenderedDocument } from "../../domain/render";
 
 export class UnifiedMarkdownRenderer implements DocumentRenderer {
   readonly fingerprint: string;
+  private readonly extensions: readonly MarkdownExtension[];
 
-  constructor(
-    private readonly extensions: readonly MarkdownExtension[] = [],
-  ) {
-    this.fingerprint = createRendererFingerprint(RENDERER_VERSION, extensions);
+  constructor(extensions: readonly MarkdownExtension[] = []) {
+    this.extensions = Object.freeze([...extensions]);
+    this.fingerprint = createRendererFingerprint(RENDERER_VERSION, this.extensions);
   }
 
   async render(document: { getContent(): string }): Promise<RenderedDocument> {

@@ -7,9 +7,11 @@ import type { PreviewRenderer } from "../../domain/ports/PreviewRenderer";
 // TODO: Hacer que el renderizador estraiga los headings para TOC
 
 export class UnifiedMarkdownRenderer implements PreviewRenderer {
-  constructor(
-    private readonly extensions: readonly MarkdownExtension[] = [],
-  ) {}
+  private readonly extensions: readonly MarkdownExtension[];
+
+  constructor(extensions: readonly MarkdownExtension[] = []) {
+    this.extensions = Object.freeze([...extensions]);
+  }
 
   async render(
     document: string
