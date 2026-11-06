@@ -200,7 +200,10 @@ describe("renderFinancialChart", () => {
     const html = render({
       ...block,
       sources: [
-        { ...block.sources[0], period: { label: "Ejercicio 2025", from: "2025-01-01", to: "2025-12-31" }, accessedAt: "2026-03-12" },
+        {
+          ...block.sources[0], period: { label: "FY", from: "2025-01-01", to: "2025-12-31" },
+          publishedAt: "2026-02-10", accessedAt: "2026-03-12",
+        },
         { ...block.sources[1], period: undefined, publishedAt: "2026-02-09" },
         { ...block.sources[0], id: "unused", label: "Informe sin citar", accessedAt: "2026-01-06" },
       ],
@@ -209,10 +212,13 @@ describe("renderFinancialChart", () => {
     const [first, second] = [...legend.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((match) => match[1]);
 
     expect(first).toContain('>Informe anual</a>');
-    expect(first).toContain("Ejercicio 2025");
-    expect(first).toContain('<time datetime="2025-01-01">1 ene 2025</time>');
-    expect(first).toContain('<time datetime="2025-12-31">31 dic 2025</time>');
-    expect(first).toContain('<time datetime="2026-03-12">12 mar 2026</time>');
+    expect(first).toContain("FY");
+    expect(first.match(/<time datetime="[^"]+">[^<]+<\/time>/g)).toEqual([
+      '<time datetime="2025-01-01">1 ene 2025</time>',
+      '<time datetime="2025-12-31">31 dic 2025</time>',
+      '<time datetime="2026-02-10">10 feb 2026</time>',
+      '<time datetime="2026-03-12">12 mar 2026</time>',
+    ]);
     expect(second).toContain('>Datos sectoriales</a>');
     expect(second).toContain('<time datetime="2026-02-09">9 feb 2026</time>');
     expect(legend).not.toContain("Informe sin citar");

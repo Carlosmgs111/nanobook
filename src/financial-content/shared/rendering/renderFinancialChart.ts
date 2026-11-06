@@ -1,8 +1,7 @@
-import type { Element, Text } from "hast";
-import { formatFinancialDate } from "../formatting/formatFinancialDate";
+import type { Element } from "hast";
 import { formatFinancialValue } from "../formatting/formatFinancialValue";
 import type { FinancialChartBlock } from "../model/FinancialBlock";
-import type { FinancialSource, ISODate } from "../model/FinancialSource";
+import type { FinancialSource } from "../model/FinancialSource";
 import {
   categoryX,
   CHART_HEIGHT,
@@ -16,6 +15,7 @@ import {
 } from "./chart/ChartGeometry";
 import { element, externalLink, financialId, text } from "./hast";
 import type { FinancialRenderContext } from "./renderFinancialBlock";
+import { renderInlineSourceTemporalMetadata } from "./renderFinancialTemporalMetadata";
 
 const DASH_PATTERNS = ["", "8 4", "2 4", "10 4 2 4", "4 4", "12 4 4 4", "2 3 2 7", "8 3 4 3 2 3"];
 const MARKERS = [
@@ -156,18 +156,7 @@ function renderSeries(block: FinancialChartBlock, scale: ChartScale): Element[] 
 }
 
 function renderCitation(source: FinancialSource): Element {
-  const children: Array<Element | Text> = [externalLink(source.label, source.url)];
-  function appendDate(label: string, date: ISODate | undefined): void {
-    if (date) children.push(text(label), element("time", [text(formatFinancialDate(date))], { dateTime: date }));
-  }
-  if (source.period) {
-    children.push(text(` · Periodo ${source.period.label}`));
-    appendDate(" desde ", source.period.from);
-    appendDate(" hasta ", source.period.to);
-  }
-  appendDate(" · Publicado ", source.publishedAt);
-  appendDate(" · Consultado ", source.accessedAt);
-  return element("span", children);
+  return element("span", [externalLink(source.label, source.url), ...renderInlineSourceTemporalMetadata(source)]);
 }
 
 function renderLegend(block: FinancialChartBlock): Element {

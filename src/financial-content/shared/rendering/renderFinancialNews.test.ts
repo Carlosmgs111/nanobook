@@ -31,7 +31,7 @@ const payload = {
       type: "news",
       label: "Boletín del mercado",
       url: "https://example.com/report",
-      period: { label: "Primer trimestre de 2026" },
+      period: { label: "TTM", from: "2025-04-01", to: "2026-03-31" },
     },
     {
       id: "release",
@@ -40,7 +40,8 @@ const payload = {
       organization: "Agencia Financiera",
       url: "https://example.com/release",
       publishedAt: "2026-03-12",
-      period: { label: "Marzo de 2026" },
+      period: { label: "FY", from: "2025-01-01", to: "2025-12-31" },
+      accessedAt: "2026-03-15",
     },
   ],
 };
@@ -83,19 +84,24 @@ describe("renderFinancialNews", () => {
     expect(toString(articles[1])).toContain("El informe resume la actividad.");
   });
 
-  it("uses the source organization and date or falls back to the label and period", () => {
+  it("shows all temporal metadata with the source organization or label", () => {
     const articles = elements(render(), "article");
     expect(articles).toHaveLength(2);
     const [datedArticle, periodArticle] = articles;
-    const dateMetadata = elements(datedArticle, "p").find((child) => elements(child, "time").length > 0);
-    expect(dateMetadata).toBeDefined();
-    expect(toString(dateMetadata!)).toContain("Agencia Financiera");
-    const [time] = elements(dateMetadata!, "time");
-    expect(time.properties.dateTime).toBe("2026-03-12");
-    expect(toString(time)).toBe("12 mar 2026");
-    expect(toString(datedArticle)).not.toContain("Marzo de 2026");
-    expect(toString(periodArticle)).toContain("Boletín del mercado");
-    expect(toString(periodArticle)).toContain("Primer trimestre de 2026");
+    const [dateMetadata] = elements(datedArticle, "p");
+    const [periodMetadata] = elements(periodArticle, "p");
+
+    expect(toString(dateMetadata)).toContain("Agencia Financiera");
+    expect(toString(dateMetadata)).toContain("FY");
+    expect(toString(dateMetadata)).toContain("12 mar 2026");
+    expect(elements(dateMetadata, "time").map((time) => time.properties.dateTime).sort()).toEqual([
+      "2025-01-01", "2025-12-31", "2026-03-12", "2026-03-15",
+    ]);
+    expect(toString(periodMetadata)).toContain("Boletín del mercado");
+    expect(toString(periodMetadata)).toContain("TTM");
+    expect(elements(periodMetadata, "time").map((time) => time.properties.dateTime)).toEqual([
+      "2025-04-01", "2026-03-31",
+    ]);
   });
 
   it("renders supplied text and optional references without interpreting markup or fetching sources", () => {

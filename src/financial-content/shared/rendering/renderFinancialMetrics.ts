@@ -1,9 +1,9 @@
 import type { Element } from "hast";
 import { formatFinancialValue } from "../formatting/formatFinancialValue";
 import type { FinancialMetricsBlock } from "../model/FinancialBlock";
-import type { FinancialSource } from "../model/FinancialSource";
 import { element, externalLink, financialId, text } from "./hast";
 import type { FinancialRenderContext } from "./renderFinancialBlock";
+import { renderFinancialPeriod, renderInlineSourceTemporalMetadata } from "./renderFinancialTemporalMetadata";
 
 const directionLabels = {
   favorable: "Favorable",
@@ -21,7 +21,7 @@ export function renderFinancialMetrics(block: FinancialMetricsBlock, context: Fi
     const descriptionId = financialId("metrics", context.blockIndex, `metric-${index}-description`);
     const details: Element[] = [
       element("p", [text(formatFinancialValue(metric))], { className: ["financial-metrics__value"] }),
-      element("p", [text(metric.period.label)], { className: ["financial-metrics__period"] }),
+      element("p", renderFinancialPeriod(metric.period), { className: ["financial-metrics__period"] }),
     ];
 
     if (metric.description) {
@@ -37,9 +37,9 @@ export function renderFinancialMetrics(block: FinancialMetricsBlock, context: Fi
     }
 
     const citedSources = metric.sourceIds.map((id): Element => {
-      const source: FinancialSource | undefined = sources.get(id);
+      const source = sources.get(id);
       return element("li", source
-        ? [externalLink(source.label, source.url)]
+        ? [externalLink(source.label, source.url), ...renderInlineSourceTemporalMetadata(source)]
         : [text("Fuente no disponible")]);
     });
     details.push(element("ul", citedSources, { className: ["financial-metrics__sources"] }));
