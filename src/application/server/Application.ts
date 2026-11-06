@@ -1,5 +1,5 @@
 import { AuthServerModule } from "../../auth/server";
-import { createFinancialContentExtension } from "../../financial-content/shared";
+import { createMarkdownExtensions } from "../shared/createMarkdownExtensions";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
 import { NavigationModule } from "../../navigation/server";
@@ -31,7 +31,7 @@ export class Application {
       nanobookModule.documentModule,
       eventBus,
     );
-    const markdownExtensions = [createFinancialContentExtension()];
+    const markdownExtensions = createMarkdownExtensions();
     const publishingModule = await PublishingModule.create(eventBus, markdownExtensions);
     const themeModule = ThemeModule.create(
       routeProtector,

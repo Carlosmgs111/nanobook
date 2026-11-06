@@ -286,3 +286,14 @@
     transition: none;
   }
 }
+
+.financial-price-chart {
+  margin: 0;
+  padding: var(--theme-space-inline);
+}
+
+.financial-price-chart > figcaption {
+  margin-block-end: var(--theme-space-block);
+  color: var(--theme-content-muted);
+  font-size: 0.875rem;
+}

@@ -7,6 +7,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Added:** bloques de componentes en Markdown: una fence con el nombre de un componente registrado (`price-chart`, basado en `lightweight-charts` y propiedad de `financial-content`) se valida en servidor y se monta en el navegador mediante un registro cliente con carga diferida, también en la vista previa del editor. `rendering` solo aporta el mecanismo; cada módulo registra sus componentes.
+
+- **Fixed:** los bloques de componentes no se montaban al llegar a una página mediante la navegación del lado del cliente (solo tras una recarga completa): el observador estaba pegado al `<body>`, que Astro sustituye al navegar. Ahora observa `<html>` y reescanea en `astro:page-load`.
+
+- **Changed:** publicación y vista previa obtienen las extensiones Markdown de una única lista (`application/shared/createMarkdownExtensions.ts`).
+
+- **Changed:** `DelegatedMarkdownItRenderer` pasa a llamarse `WorkerMarkdownRenderer` (no usaba `markdown-it`) y se reescribe la documentación de `editor/rendering`.
+
+- **Removed:** `AstroMarkdownRenderer` (sin uso), la sección `markdown` de `astro.config.mjs` (Astro no procesa `.md`) y las dependencias sin importar `markdown-it`, `markdown-it-anchor`, `@shikijs/markdown-it`, `@shikijs/core`, `@shikijs/engine-javascript` y `shiki`; `hast-util-to-string` pasa a `devDependencies`.
+
 - **Added:** tema oficial Companio, inspirado en una interfaz financiera de
   grafito y acentos verdes, disponible como base y tema asignable en Nanobook.
 

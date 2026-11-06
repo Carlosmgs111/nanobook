@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EditionRenderError } from "../../../domain/errors";
-import { DelegatedMarkdownItRenderer } from "./index";
+import { WorkerMarkdownRenderer } from "./index";
 import type { RenderRequest, RenderResponse } from "./protocol";
 
 class FailingWorker extends EventTarget {
@@ -13,9 +13,9 @@ class FailingWorker extends EventTarget {
   }
 }
 
-describe("DelegatedMarkdownItRenderer", () => {
+describe("WorkerMarkdownRenderer", () => {
   it("settles the pending render with EditionRenderError when the Worker reports a failure", async () => {
-    const renderer = new DelegatedMarkdownItRenderer(new FailingWorker());
+    const renderer = new WorkerMarkdownRenderer(new FailingWorker());
 
     const result = await renderer.render("Paragraph");
 

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { createMarkdownExtensions } from "../../application/browser/createMarkdownExtensions";
+import { createMarkdownExtensions } from "../../application/shared/createMarkdownExtensions";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
 import { createFinancialContentExtension } from "../../financial-content/shared";
 import { UnifiedMarkdownRenderer as ServerRenderer } from "../../publishing/server/infraestructure/renderer/UnifiedMarkdownRenderer";

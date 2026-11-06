@@ -1,0 +1,21 @@
+.component-block {
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  margin: var(--theme-content-gap) 0;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-bg);
+  color: var(--theme-content-primary);
+  overflow: hidden;
+}
+
+.component-block > pre {
+  margin: 0;
+  border-radius: 0;
+}
+
+.component-block-error {
+  padding: var(--theme-space-inline);
+  border-color: var(--theme-status-error);
+  color: var(--theme-status-error);
+}

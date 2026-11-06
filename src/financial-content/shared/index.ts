@@ -4,3 +4,5 @@ export { formatFinancialDate } from "./formatting/formatFinancialDate";
 export { formatFinancialValue } from "./formatting/formatFinancialValue";
 export { isFinancialFenceKind, parseFinancialBlock } from "./parsing/parseFinancialBlock";
 export { createFinancialContentExtension } from "./rendering/createFinancialContentExtension";
+export { createFinancialContentExtensions } from "./rendering/createFinancialContentExtensions";
+export { financialComponentBlockDefinitions } from "./components/priceChart";
