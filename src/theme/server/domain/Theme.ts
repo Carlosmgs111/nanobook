@@ -34,7 +34,7 @@ export class Theme {
       return Result.fail(
         new InvalidThemeError("name admite máximo 80 caracteres")
       );
-    if (!["classic", "nanobook", "herbario", "plano", "monocromo"].includes(data.baseThemeId)) {
+    if (!["classic", "nanobook", "herbario", "plano", "monocromo", "companio"].includes(data.baseThemeId)) {
       return Result.fail(new InvalidThemeError("baseThemeId es inválido"));
     }
     const tokens = validateThemeTokens(data.tokens);
