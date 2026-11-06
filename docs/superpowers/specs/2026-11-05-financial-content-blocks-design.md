@@ -5,15 +5,16 @@ createdAt: 2026-11-05T00:00:00.000Z
 updatedAt: 2026-11-05T00:00:00.000Z
 author: "Nanobook"
 tags: [arquitectura, contenido-financiero, renderizado, companio]
-draft: true
+draft: false
 ---
 
 # Bloques financieros componibles para notas de Companio
 
 ## Estado
 
-Diseño aprobado. La implementación avanza de forma incremental: primero el
-renderizado compartido y después los bloques financieros según sus planes.
+Diseño aprobado e implementado en la rama `codex/financial-content`: el núcleo
+compartido, los cinco bloques y su composición en preview y SSR están cubiertos
+por pruebas. La selección de extensiones por nanobook sigue diferida.
 
 ## Intención
 
@@ -122,7 +123,7 @@ Ejemplo abreviado de gráfico:
 title: ROCE de Alphabet
 description: Evolución anual del retorno sobre capital empleado.
 chart: line
-x: [2020, 2021, 2022, 2023, 2024, 2025]
+x: ["2020", "2021", "2022", "2023", "2024", "2025"]
 series:
   - name: ROCE
     unit: percent
@@ -490,8 +491,10 @@ de la zona horaria del host.
 src/
   financial-content/
     shared/
-      model/                 # Tipos y validación puros
+      model/                 # Tipos puros
+      validation/            # Esquemas y límites
       parsing/               # YAML -> FinancialBlock
+      formatting/            # Fechas y valores deterministas
       rendering/             # FinancialBlock -> HTML/SVG semántico
       index.ts               # Superficie pública compartida
     browser/
@@ -501,11 +504,11 @@ src/
   rendering/
     shared/
       MarkdownExtension.ts   # Contrato y manifiesto de extensiones confiables
-      createMarkdownPipeline.ts
+      renderMarkdown.ts
       rendererFingerprint.ts
 
   publishing/server/         # Adapta el pipeline a SSR y caché
-  documents/browser/         # Adapta el mismo pipeline al Worker
+  documents/browser/         # Worker de vista previa
   application/
     server/                  # Compone publicación + financial-content
     browser/                 # Compone preview + financial-content
@@ -613,6 +616,11 @@ El resultado no depende de JavaScript para mostrar títulos, cifras, leyendas,
 fuentes ni la tabla equivalente de un gráfico. Un host del navegador podrá
 añadirse en el futuro para tooltips, selección de series o expansión, siempre
 como mejora progresiva y solo cuando exista comportamiento cliente real.
+
+Los IDs generados para bloques, títulos y referencias accesibles usan el prefijo
+`financial:` para evitar colisiones con los encabezados Markdown. La figura del
+gráfico responde al ancho de su propio contenedor; cuando es estrecho, presenta
+un resumen HTML junto a la tabla de datos.
 
 ## Composición
 
