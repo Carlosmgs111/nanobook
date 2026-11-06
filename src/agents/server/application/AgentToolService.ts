@@ -1,5 +1,4 @@
 import { Result } from "../../../shared/domain/Result";
-import type { DocumentModule } from "../../../documents/server";
 import { serializeEntry } from "../../../documents/server/application/dto/SerializedEntry";
 import { DocumentNotFoundError } from "../../../documents/server/domain/errors";
 import type { NanobookModule } from "../../../nanobooks/server";
@@ -11,12 +10,37 @@ import type {
 } from "./dto";
 import { AgentScopeDeniedError } from "./errors";
 import type { AgentAuditWriter } from "./ports/AgentAuditWriter";
+import type { MarkdownBlockAdvisor, MarkdownBlockIssue } from "./ports/MarkdownBlockAdvisor";
 
 export class AgentToolService {
   constructor(
     private readonly nanobooks: NanobookModule,
-    private readonly audit: AgentAuditWriter
+    private readonly audit: AgentAuditWriter,
+    private readonly blocks: MarkdownBlockAdvisor
   ) {}
+
+  /** Guía de autoría de bloques; texto estático, solo exige poder leer. */
+  async getMarkdownBlocksGuide(actor: AgentActor) {
+    if (!this.has(actor, "nanobooks:read"))
+      return Result.fail(new AgentScopeDeniedError("nanobooks:read"));
+    return Result.ok(this.blocks.guide());
+  }
+
+  /** Valida los bloques de un contenido sin guardarlo. */
+  async validateMarkdownBlocks(actor: AgentActor, content: string) {
+    if (!this.has(actor, "nanobooks:read"))
+      return Result.fail(new AgentScopeDeniedError("nanobooks:read"));
+    const issues = this.blocks.validate(content);
+    return Result.ok({ valid: issues.length === 0, issues });
+  }
+
+  /**
+   * Revisión del contenido que el propio agente acaba de enviar; no accede a
+   * datos del usuario, así que no requiere un permiso adicional.
+   */
+  inspectBlocks(content: string): readonly MarkdownBlockIssue[] {
+    return this.blocks.validate(content);
+  }
 
   async listNanobooks(actor: AgentActor) {
     if (!this.has(actor, "nanobooks:read"))

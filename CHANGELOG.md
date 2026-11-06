@@ -7,6 +7,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** las instrucciones del servidor MCP aclaran que el documento índice (`index` y cualquier `…/index`) no muestra su cuerpo, solo título, descripción y la lista de sus documentos, y que al crear un nanobook se debe crear siempre además un documento propio con la información. La regla figura también en las descripciones de `create_nanobook`, `list_documents`, `create_document` y `update_document`, y en la guía de bloques.
+
+- **Added:** `create_document` y `update_document` avisan, sin bloquear el guardado, cuando se escribe cuerpo en un documento índice; el aviso se combina con el de bloques inválidos en un mismo mensaje.
+
+- **Fixed:** la autenticación local ahora reconoce `https://localhost:3000` como origen confiable adicional de Better Auth, sin ampliar los orígenes permitidos en producción.
+
+- **Added:** el servidor MCP guía al agente para escribir bloques financieros: `instructions` de servidor y descripción en cada herramienta, `get_markdown_blocks_guide` (reglas y plantillas, con ejemplos verificados contra los esquemas reales) y `validate_markdown_blocks` (línea, bloque, campo y motivo de cada problema, incluidas fences mal nombradas). `create_document` y `update_document` siguen guardando, pero añaden un aviso con los bloques inválidos sin alterar el primer elemento de la respuesta.
+
+- **Changed:** el esquema de `price-chart` exige fechas estrictamente ascendentes; `lightweight-charts` falla al montar con datos desordenados o repetidos.
+
 - La ruta `/n/<libro>/<documento>/preview` exige ahora permiso de escritura, igual que `/edit`. Antes bastaba el permiso de lectura y un lector anónimo de un libro público obtenía `200` con el título y el id interno de un documento protegido, sin pasar por el desafío de contraseña.
 
 - Corregida la vista previa del editor, que quedaba vacía: al retirar las rutas legacy (`da19667`) se eliminó la única inclusión de `PreviewPageController`, y `PreviewPage.astro` dibujaba el contenedor sin el script que lo llena. La página ahora incluye su controlador, igual que `DocumentPage` y el editor. Además, el controlador renderiza el borrador cuando todavía no existe un preview (por ejemplo, al abrir el editor y pasar al preview sin escribir) y reintenta si el borrador cambia mientras se renderiza; sin borrador, la página muestra el contenido guardado que entrega el servidor.

@@ -3,9 +3,19 @@ import type { ComponentBlockDefinition } from "../../../rendering/shared/compone
 
 const time = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Usa fechas YYYY-MM-DD");
 
+/** lightweight-charts exige tiempos estrictamente ascendentes y lanza un error al montar si no lo son. */
+function strictlyAscending(points: readonly { time: string }[]): boolean {
+  return points.every((point, index) => index === 0 || points[index - 1].time < point.time);
+}
+const ascendingMessage = "Las fechas deben ir en orden ascendente y sin repetirse.";
+
 const lineSeries = z.object({
   type: z.enum(["line", "area"]),
-  data: z.array(z.object({ time, value: z.number().finite() })).min(1).max(5000),
+  data: z
+    .array(z.object({ time, value: z.number().finite() }))
+    .min(1)
+    .max(5000)
+    .refine(strictlyAscending, ascendingMessage),
 });
 
 const candlestickSeries = z.object({
@@ -21,7 +31,8 @@ const candlestickSeries = z.object({
       }),
     )
     .min(1)
-    .max(5000),
+    .max(5000)
+    .refine(strictlyAscending, ascendingMessage),
 });
 
 export const priceChartProps = z.object({
