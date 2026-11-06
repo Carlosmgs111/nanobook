@@ -15,7 +15,7 @@ function hashPageId(pageId: string): string {
  *
  * Cada entrada se almacena como JSON en `.nanobook/cache/pages/` usando un
  * hash del `pageId` como nombre de archivo. La clave de validez es el
- * `contentHash` del documento.
+ * hash de validez de renderizado/caché recibido como segundo argumento.
  */
 export class FileSystemRenderedPageCache implements RenderedPageCache {
   constructor(private cacheDir: string = ".nanobook/cache/pages") {}

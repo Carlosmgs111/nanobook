@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "node",
-    pool: "threads",
+    pool: "forks",
+    maxWorkers: 4,
     exclude: ["node_modules", ".opencode", "dist", ".astro", "**/*.astro"],
   },
 });

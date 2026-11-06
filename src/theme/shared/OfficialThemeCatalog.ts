@@ -10,7 +10,8 @@ export type OfficialThemeId =
   | "nanobook"
   | "herbario"
   | "plano"
-  | "monocromo";
+  | "monocromo"
+  | "companio";
 
 type ThemeValues = Readonly<Record<string, string>>;
 
@@ -273,6 +274,62 @@ const plano: OfficialThemeDefinition = {
   },
 };
 
+const companio: OfficialThemeDefinition = {
+  id: "companio",
+  light: {
+    ...classic.light,
+    "page-bg": "#f3f7f4",
+    "surface-bg": "#ffffff",
+    text: "#101914",
+    "text-muted": "#516158",
+    accent: "#078b4b",
+    "accent-text": "#f5fff8",
+    "status-error": "#b9382d",
+    "status-warning": "#8a6300",
+    "status-success": "#087a43",
+    "status-info": "#176b7d",
+    border: "#c8d5cc",
+    "border-subtle": "#e1e9e3",
+    "font-heading": "system-ui, sans-serif",
+    "control-radius": "8px",
+    "panel-radius": "10px",
+    "content-gap": "1.5rem",
+    "decoration-pattern-image": "none",
+    "decoration-pattern-step": patternValues("none", "fine", "subtle").step,
+    "decoration-pattern-contrast": patternValues("none", "fine", "subtle").contrast,
+    "cover-radius": "8px",
+    "cover-spine-width": "0px",
+    "decoration-corner-image": "none",
+    "decoration-shadow": shadowValue("soft"),
+  },
+  dark: {
+    ...classic.dark,
+    "page-bg": "#080b0a",
+    "surface-bg": "#121816",
+    text: "#eef8f1",
+    "text-muted": "#a8bbb0",
+    accent: "#42e68a",
+    "accent-text": "#07110b",
+    "status-error": "#ff897f",
+    "status-warning": "#f3c969",
+    "status-success": "#74e5a2",
+    "status-info": "#8fd5e8",
+    border: "#2c3932",
+    "border-subtle": "#1c2721",
+    "font-heading": "system-ui, sans-serif",
+    "control-radius": "8px",
+    "panel-radius": "10px",
+    "content-gap": "1.5rem",
+    "decoration-pattern-image": "none",
+    "decoration-pattern-step": patternValues("none", "fine", "subtle").step,
+    "decoration-pattern-contrast": patternValues("none", "fine", "subtle").contrast,
+    "cover-radius": "8px",
+    "cover-spine-width": "0px",
+    "decoration-corner-image": "none",
+    "decoration-shadow": shadowValue("soft"),
+  },
+};
+
 export class OfficialThemeCatalog {
   private readonly definitions = new Map<
     OfficialThemeId,
@@ -283,6 +340,7 @@ export class OfficialThemeCatalog {
     [nanobook.id, nanobook],
     [herbario.id, herbario],
     [plano.id, plano],
+    [companio.id, companio],
   ]);
 
   get(id: string): OfficialThemeDefinition {

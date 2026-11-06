@@ -8,6 +8,7 @@ import { CompileTheme } from "../../../server/application/CompileTheme";
 const read = (path: string) => readFileSync(path, "utf8");
 
 const businessPresentationFiles = [
+  "src/financial-content/browser/ui/styles/financial-content.css",
   "src/auth/browser/ui/AuthForm.astro",
   "src/profiles/browser/ui/ProfileForm.astro",
   "src/profiles/browser/ui/ProfilePage.astro",

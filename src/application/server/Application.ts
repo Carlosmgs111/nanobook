@@ -1,4 +1,5 @@
 import { AuthServerModule } from "../../auth/server";
+import { createMarkdownExtensions } from "../shared/createMarkdownExtensions";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
 import { NavigationModule } from "../../navigation/server";
@@ -30,7 +31,8 @@ export class Application {
       nanobookModule.documentModule,
       eventBus,
     );
-    const publishingModule = await PublishingModule.create(eventBus);
+    const markdownExtensions = createMarkdownExtensions();
+    const publishingModule = await PublishingModule.create(eventBus, markdownExtensions);
     const themeModule = ThemeModule.create(
       routeProtector,
       nanobookModule.setNanobookTheme,

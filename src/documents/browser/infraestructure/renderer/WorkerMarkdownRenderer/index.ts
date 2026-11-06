@@ -4,8 +4,8 @@ import type { RenderedPreview } from "../../../domain/model/StagedDocument";
 import { EditionRenderError } from "../../../domain/errors";
 import type { RenderRequest, RenderResponse } from "./protocol";
 
-export class DelegatedMarkdownItRenderer implements PreviewRenderer {
-  private readonly worker: Worker;
+export class WorkerMarkdownRenderer implements PreviewRenderer {
+  private readonly worker: Pick<Worker, "postMessage" | "addEventListener">;
   private sequence = 0;
 
   private readonly pending = new Map<
@@ -15,8 +15,8 @@ export class DelegatedMarkdownItRenderer implements PreviewRenderer {
     }
   >();
 
-  constructor() {
-    this.worker = new Worker(new URL("./worker-entry.ts", import.meta.url), {
+  constructor(worker?: Pick<Worker, "postMessage" | "addEventListener">) {
+    this.worker = worker ?? new Worker(new URL("./worker-entry.ts", import.meta.url), {
       type: "module",
     });
     this.worker.addEventListener("message", this.handleMessage);

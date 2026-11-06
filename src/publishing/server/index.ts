@@ -1,4 +1,5 @@
 import type { EventBus } from "../../shared/domain/bus/EventBus";
+import type { MarkdownExtension } from "../../rendering/shared/MarkdownExtension";
 import type { RenderedPageCache } from "./domain/cache";
 import { DocumentCreated, DocumentUpdated, DocumentDeleted } from "../../documents/server";
 import { PagePublisher } from "./application/PagePublisher";
@@ -24,8 +25,9 @@ export class PublishingModule {
 
   static async create(
     eventBus: EventBus,
-  ) {
-    const pageRenderer = new UnifiedMarkdownRenderer();
+    extensions: readonly MarkdownExtension[] = [],
+  ): Promise<PublishingModule> {
+    const pageRenderer = new UnifiedMarkdownRenderer(extensions);
     const renderedPageCache = await createRenderedPageCache();
 
     const pagePublisher = new PagePublisher(pageRenderer, renderedPageCache);

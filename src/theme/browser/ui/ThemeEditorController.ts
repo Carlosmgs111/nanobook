@@ -269,6 +269,22 @@ export class ThemeEditorController {
               "decoration.corners": "line",
               "decoration.shadow": "offset",
             },
+            companio: {
+              "typography.family": "system-sans",
+              "typography.heading": "system-sans",
+              "typography.code": "mono",
+              "typography.scale": "normal",
+              "typography.rhythm": "balanced",
+              "shape.radius": "soft",
+              "shape.cover": "rounded",
+              "layout.density": "comfortable",
+              "layout.readingMeasure": "full",
+              "decoration.pattern": "none",
+              "decoration.patternScale": "fine",
+              "decoration.patternContrast": "subtle",
+              "decoration.corners": "none",
+              "decoration.shadow": "soft",
+            },
           };
           const selectedDefaults = defaults[selected] ?? defaults.monocromo;
           if (selectedDefaults[control.dataset.themeField ?? ""])

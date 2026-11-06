@@ -1,5 +1,5 @@
 export type ThemeReference =
-  | { kind: "official"; id: "classic" | "nanobook" | "herbario" | "plano" | "monocromo" }
+  | { kind: "official"; id: "classic" | "nanobook" | "herbario" | "plano" | "monocromo" | "companio" }
   | { kind: "custom"; id: string };
 
 export function isThemeReference(value: unknown): value is ThemeReference {
@@ -7,7 +7,7 @@ export function isThemeReference(value: unknown): value is ThemeReference {
   const reference = value as Record<string, unknown>;
   if (Object.keys(reference).some((key) => key !== "kind" && key !== "id")) return false;
   if (reference.kind === "official") {
-    return reference.id === "classic" || reference.id === "nanobook" || reference.id === "herbario" || reference.id === "plano" || reference.id === "monocromo";
+    return reference.id === "classic" || reference.id === "nanobook" || reference.id === "herbario" || reference.id === "plano" || reference.id === "monocromo" || reference.id === "companio";
   }
   return reference.kind === "custom" && typeof reference.id === "string" && reference.id.trim().length > 0;
 }

@@ -6,3 +6,5 @@
 @import "./utilities.css";
 @import "./prose.css";
 @import "./components/hatch.css";
+@import "../../financial-content/browser/ui/styles/financial-content.css";
+@import "../../rendering/browser/styles/component-blocks.css";

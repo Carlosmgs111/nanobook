@@ -13,6 +13,27 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - Añadidos documentos protegidos con contraseña: el propietario marca un documento desde el panel «Protección» del editor y los demás lectores deben resolver un desafío en la misma URL antes de que se renderice (`401` con formulario, `no-store` y `noindex`). La contraseña se guarda como hash scrypt en `document_access` (migración `0016`), el desbloqueo emite una cookie HMAC por documento de 12 h ligada a la versión de la contraseña, los fallos se limitan a 5 por documento e IP cada 15 minutos y el índice y el sidebar muestran solo título y candado. El atributo `secured` lo administra el servidor y `UpdateDocument` lo conserva.
 
+- **Added:** bloques de componentes en Markdown: una fence con el nombre de un componente registrado (`price-chart`, basado en `lightweight-charts` y propiedad de `financial-content`) se valida en servidor y se monta en el navegador mediante un registro cliente con carga diferida, también en la vista previa del editor. `rendering` solo aporta el mecanismo; cada módulo registra sus componentes.
+
+- **Fixed:** los bloques de componentes no se montaban al llegar a una página mediante la navegación del lado del cliente (solo tras una recarga completa): el observador estaba pegado al `<body>`, que Astro sustituye al navegar. Ahora observa `<html>` y reescanea en `astro:page-load`.
+
+- **Changed:** publicación y vista previa obtienen las extensiones Markdown de una única lista (`application/shared/createMarkdownExtensions.ts`).
+
+- **Changed:** `DelegatedMarkdownItRenderer` pasa a llamarse `WorkerMarkdownRenderer` (no usaba `markdown-it`) y se reescribe la documentación de `editor/rendering`.
+
+- **Removed:** `AstroMarkdownRenderer` (sin uso), la sección `markdown` de `astro.config.mjs` (Astro no procesa `.md`) y las dependencias sin importar `markdown-it`, `markdown-it-anchor`, `@shikijs/markdown-it`, `@shikijs/core`, `@shikijs/engine-javascript` y `shiki`; `hast-util-to-string` pasa a `devDependencies`.
+
+- **Added:** tema oficial Companio, inspirado en una interfaz financiera de
+  grafito y acentos verdes, disponible como base y tema asignable en Nanobook.
+
+- **Added:** cinco bloques financieros componibles en Markdown para perfil de empresa, métricas, gráficos, noticias y fuentes, con trazabilidad local, presentación accesible y el mismo resultado en vista previa y publicación SSR.
+
+- Corregida la configuración de extensiones Markdown: publicación y vista previa conservan una copia inmutable de la lista recibida, de modo que cambios posteriores del llamador no alteran el HTML ni invalidan la huella de caché.
+
+- Corregida la colisión entre los IDs de fichas financieras y los títulos Markdown; las secciones generadas usan el prefijo `financial:` y conservan sus referencias de accesibilidad.
+
+- **Changed:** publicación y vista previa comparten el pipeline Markdown; la caché de HTML renderizado queda versionada por el núcleo y las extensiones activas.
+
 - El desafío `401` del endpoint MCP anuncia ahora los scopes `nanobooks:read` y `nanobooks:write`. Los clientes que solo piden los scopes del desafío, como Claude, ya reciben en el consentimiento la opción de escritura; antes se autorizaban solo con lectura.
 
 - El servidor OAuth MCP ahora acepta también a Claude (claude.ai) además de Codex: la lista de clientes CIMD permitidos incluye `https://claude.ai/oauth/mcp-oauth-client-metadata` y la pantalla de consentimiento es genérica para cualquier agente. Claude Code (CLI) no está confirmado.
