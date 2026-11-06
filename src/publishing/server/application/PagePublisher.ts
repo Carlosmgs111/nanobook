@@ -4,6 +4,13 @@ import type { DocumentRenderer, RenderedDocumentPage } from "../domain/render";
 import type { Document } from "../../../documents/server";
 import type { PageCacheError } from "../infraestructure/errors";
 
+function renderedCacheHash(
+  rendererFingerprint: string,
+  contentHash: string,
+): string {
+  return `${rendererFingerprint}:${contentHash}`;
+}
+
 export class PagePublisher {
   constructor(
     private pageRenderer: DocumentRenderer,
@@ -40,9 +47,10 @@ export class PagePublisher {
     documentId: string,
     contentHash?: string
   ): Promise<string> {
-    const cacheKey = documentId;
-    if (this.pageCache && contentHash) {
-      const cached = await this.pageCache.get(cacheKey, contentHash);
+    const cacheHash = contentHash &&
+      renderedCacheHash(this.pageRenderer.fingerprint, contentHash);
+    if (this.pageCache && cacheHash) {
+      const cached = await this.pageCache.get(documentId, cacheHash);
       if (cached) {
         return cached.html;
       }
@@ -50,8 +58,8 @@ export class PagePublisher {
 
     const rendered = await this.pageRenderer.render(document);
 
-    if (this.pageCache && contentHash) {
-      await this.pageCache.set(cacheKey, contentHash, rendered.Content);
+    if (this.pageCache && cacheHash) {
+      await this.pageCache.set(documentId, cacheHash, rendered.Content);
     }
 
     return rendered.Content;

@@ -33,6 +33,12 @@ const official: ThemeSummary[] = [
     baseThemeId: "monocromo",
     editable: false,
   },
+  {
+    reference: { kind: "official", id: "companio" },
+    name: "Companio",
+    baseThemeId: "companio",
+    editable: false,
+  },
 ];
 export class ListThemes {
   constructor(private readonly repository: ThemeRepository) {}

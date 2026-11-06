@@ -3,7 +3,6 @@ import { defineConfig, envField } from "astro/config";
 import node from "@astrojs/node";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
-import rehypeSlug from "rehype-slug";
 
 const isVercelDeploy = process.env.VERCEL === "1" || process.env.VERCEL_DEPLOY === "true";
 
@@ -33,15 +32,17 @@ export default defineConfig({
       conditions: ["worker"],
     },
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      // Se importa de forma diferida; sin esto Vite la descubre tarde y la
+      // primera carga en dev falla con 504 "Outdated Optimize Dep".
+      include: ["lightweight-charts"],
+    },
     server: {
       watch: {
         // Reemplaza 'nombre-de-tu-carpeta' por la carpeta real
         ignored: ["**/content/**"],
       },
     },
-  },
-  markdown: {
-    rehypePlugins: [rehypeSlug],
   },
   server: ({ command }) => ({
     port: command === "dev" ? 4322 : 4320,
