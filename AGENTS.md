@@ -37,6 +37,7 @@ src/
   application/      # Composición global
     browser/        # Application y getApp del navegador
     server/         # Application y getApp del servidor
+    shared/         # Composición común a ambos entornos (p. ej. lista de extensiones Markdown)
   auth/
     browser/
     server/
@@ -66,7 +67,7 @@ Reglas:
 - `browser/` reúne presentación y código cliente. Los scripts que se envían al navegador no deben importar valores de servidor que arrastren secretos, I/O o APIs de Node.js.
 - `server/` contiene lógica y adaptadores de servidor; no depende de APIs del navegador.
 - Los componentes Astro de presentación residen en `browser/ui/`, incluso cuando su frontmatter consulta servicios de servidor: Astro ejecuta ese bloque exclusivamente en SSR. Mantener esas dependencias fuera de los bloques `<script>` cliente. Las rutas en `pages/` delegan en los módulos.
-- `application/` en la raíz de `src/` conserva los puntos de composición global por entorno; no es un módulo de negocio sujeto a las tres capas.
+- `application/` en la raíz de `src/` conserva los puntos de composición global por entorno (y, en `shared/`, la composición idéntica para ambos); no es un módulo de negocio sujeto a las tres capas.
 - Evitar `core` como cajón de sastre; usar nombres que describan la responsabilidad.
 
 ## Documentación de decisiones

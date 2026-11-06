@@ -1,4 +1,4 @@
-import { createMarkdownExtensions } from "../../../../../application/browser/createMarkdownExtensions";
+import { createMarkdownExtensions } from "../../../../../application/shared/createMarkdownExtensions";
 import { UnifiedMarkdownRenderer } from "../UnifiedMarkdownRenderer";
 import type { RenderRequest, RenderResponse } from "./protocol";
 

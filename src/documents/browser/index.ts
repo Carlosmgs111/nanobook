@@ -9,7 +9,7 @@ import { SessionStorageDocumentStorage } from "./infraestructure/storage/Session
 import { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
 import { HttpDocumentWriter } from "./infraestructure/documentWriter/HttpDocumentWriter";
 import { CreateDocument } from "./application/CreateDocument";
-import { DelegatedMarkdownItRenderer } from "./infraestructure/renderer/DelegatedMarkdownItRenderer";
+import { WorkerMarkdownRenderer } from "./infraestructure/renderer/WorkerMarkdownRenderer";
 import { EventTargetEventBus } from "../../shared/infrastructure/EventTargetEventBus";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 
@@ -46,11 +46,11 @@ export class EditionModule {
     const storage = new SessionStorageDocumentStorage();
     const contentParser = new YamlDocumentContentParser();
     const documentWriter = new HttpDocumentWriter();
-    const delegatedRenderer = new DelegatedMarkdownItRenderer();
+    const workerRenderer = new WorkerMarkdownRenderer();
     const eventBus = new EventTargetEventBus();
     const renderPreview = new RenderPreview(
       storage,
-      delegatedRenderer,
+      workerRenderer,
       eventBus
     );
     const saveDocument = new SaveDocument(storage, documentWriter);

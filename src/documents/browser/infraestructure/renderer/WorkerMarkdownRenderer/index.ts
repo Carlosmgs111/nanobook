@@ -4,7 +4,7 @@ import type { RenderedPreview } from "../../../domain/model/StagedDocument";
 import { EditionRenderError } from "../../../domain/errors";
 import type { RenderRequest, RenderResponse } from "./protocol";
 
-export class DelegatedMarkdownItRenderer implements PreviewRenderer {
+export class WorkerMarkdownRenderer implements PreviewRenderer {
   private readonly worker: Pick<Worker, "postMessage" | "addEventListener">;
   private sequence = 0;
 

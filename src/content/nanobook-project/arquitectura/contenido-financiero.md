@@ -202,10 +202,9 @@ errores. El gráfico incluye SVG y una tabla de datos equivalente; cuando su
 contenedor es estrecho, un resumen HTML mantiene las etiquetas legibles.
 `rendering/shared` es dueño del pipeline Markdown general y del puerto
 `MarkdownExtension`; no importa el módulo financiero. `publishing/server`
-adapta ese pipeline a la caché y a SSR. Las raíces
-`application/server/Application.ts` y
-`application/browser/createMarkdownExtensions.ts` registran
-`createFinancialContentExtension()` explícitamente. `theme` conserva el
+adapta ese pipeline a la caché y a SSR. La lista única
+`application/shared/createMarkdownExtensions.ts`, que consumen el servidor y el
+Worker, incluye `createFinancialContentExtensions()` explícitamente. `theme` conserva el
 contrato de paleta, tipografía, superficies, espaciado y estados; el contenido
 financiero solo consume esos roles.
 

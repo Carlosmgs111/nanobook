@@ -87,7 +87,7 @@ describe("Application", () => {
 
     expect(published.Content).toContain('class="financial-block financial-metrics"');
     expect(published.Content).toContain("Margen ilustrativo");
-    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|financial-content@1`);
+    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|financial-content@1|financial-components@1`);
     expect(app).not.toHaveProperty("financialContentModule");
     expect(app).not.toHaveProperty("financialContentRepository");
     expect(app).not.toHaveProperty("financialBlockSchemas");
