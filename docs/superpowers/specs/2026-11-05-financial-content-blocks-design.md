@@ -78,8 +78,8 @@ El diseño se considerará fallido aunque funcione técnicamente si:
 - El proyecto usa Astro SSR, Unified/Remark/Rehype y Markdown como fuente.
 - La publicación entrega actualmente una cadena HTML que `DocumentPage.astro`
   inserta mediante `set:html`.
-- La vista previa se renderiza en un Web Worker con una implementación separada
-  de la publicación.
+- La vista previa se renderiza en un Web Worker y la publicación en SSR; ambos
+  adaptadores usan el mismo pipeline Markdown compartido.
 - El tema efectivo se resuelve en servidor y los componentes consumen roles CSS
   semánticos del contrato de `theme`.
 - No deben llegar dependencias de Node.js, secretos ni adaptadores de servidor
@@ -284,7 +284,7 @@ son absolutas y usan `https:`.
 type ISODate = string;
 type HttpsUrl = string;
 type SourceId = string;
-type CurrencyCode = string; // ISO 4217, tres letras mayúsculas
+type CurrencyCode = string; // formato compatible con ISO 4217: tres letras mayúsculas
 
 type FinancialSourceType =
   | "filing"
@@ -310,6 +310,9 @@ interface FinancialSource {
   accessedAt?: ISODate;
 }
 ```
+
+El código de moneda se valida por su formato de tres letras mayúsculas, sin
+consultar un catálogo ISO 4217 completo o actualizado en tiempo real.
 
 Cada fuente requiere `publishedAt` o `period`; puede tener ambos. `id` usa
 letras ASCII minúsculas, números y guiones, y es único dentro del bloque.
@@ -472,7 +475,7 @@ de formato:
 
 - `percent`: el valor está expresado en puntos porcentuales; `16.7` se muestra
   como `16,7 %`, no como `1.670 %`;
-- `currency`: el valor está en unidades mayores y se muestra con el código ISO,
+- `currency`: el valor está en unidades mayores y se muestra con el código de tres letras,
   por ejemplo `USD 288,93`, evitando símbolos ambiguos;
 - `multiple`: `17.8` se muestra como `17,8×`;
 - `number`: separadores de `es-CO` y la precisión declarada;

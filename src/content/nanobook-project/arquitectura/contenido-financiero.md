@@ -157,8 +157,9 @@ admiten controles ni barras invertidas. Es útil consignar `organization` y
 Las fechas (`asOf`, `publishedAt`, `accessedAt`, `from`, `to`) son fechas civiles
 reales en formato `YYYY-MM-DD`, sin hora ni zona horaria. Las etiquetas `x`
 siempre son cadenas: escribe `"2025"`, no `2025`. Los códigos de moneda usan
-tres letras mayúsculas, por ejemplo `COP` o `USD`; el validador comprueba esa
-forma, no un catálogo de códigos ISO 4217. `reportingCurrency` identifica la
+un formato compatible con ISO 4217 de tres letras mayúsculas, por ejemplo `COP`
+o `USD`; el validador comprueba esa forma, no la pertenencia a un catálogo ISO
+completo o actualizado en tiempo real. `reportingCurrency` identifica la
 moneda de reporte de la empresa; en series y métricas, `currency` acompaña
 exclusivamente a `unit: currency`.
 
@@ -228,5 +229,7 @@ manifiesto y actualizar la versión de la extensión si cambian el parseo o el
 HTML/SVG. Los cambios incompatibles de campos persistidos requieren una versión
 de bloque y una regla explícita de compatibilidad o migración.
 
-Ver también [Renderizado Markdown extensible](./renderizado-extensible) y el
-[diseño de bloques financieros](../../../../docs/superpowers/specs/2026-11-05-financial-content-blocks-design.md).
+Ver también [Renderizado Markdown extensible](./renderizado-extensible). El
+diseño de bloques financieros está en
+`docs/superpowers/specs/2026-11-05-financial-content-blocks-design.md` dentro
+del repositorio.
