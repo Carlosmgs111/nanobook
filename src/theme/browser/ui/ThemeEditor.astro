@@ -11,9 +11,9 @@ const defaultBaseThemeId = theme?.baseThemeId ?? "monocromo";
 const isClassic = defaultBaseThemeId === "classic";
 const isMonochrome = defaultBaseThemeId === "monocromo";
 const isComfortable = isClassic || isMonochrome;
-const isTechnical = ["classic", "plano"].includes(defaultBaseThemeId);
+const isTechnical = ["classic", "plano", "companio"].includes(defaultBaseThemeId);
 const catalog = new OfficialThemeCatalog();
-const baseDefinitions = Object.fromEntries((["classic", "nanobook", "herbario", "plano", "monocromo"] as const).map((id) => [id, catalog.get(id)]));
+const baseDefinitions = Object.fromEntries((["classic", "nanobook", "herbario", "plano", "monocromo", "companio"] as const).map((id) => [id, catalog.get(id)]));
 const initialBase = baseDefinitions[defaultBaseThemeId];
 const initialPreviewStyle = Object.entries({
   ...Object.fromEntries(Object.entries(initialBase.light).map(([name, value]) => [`--theme-light-${name}`, value])),
@@ -109,6 +109,8 @@ const colors = [
             >Plano</option
           ><option value="monocromo" selected={defaultBaseThemeId === "monocromo"}
             >Monocromo</option
+          ><option value="companio" selected={theme?.baseThemeId === "companio"}
+            >Companio</option
           ></select
         >{theme && <small>La base se fija al crear el tema.</small>}</label
       >

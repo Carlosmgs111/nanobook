@@ -7,6 +7,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Added:** tema oficial Companio, inspirado en una interfaz financiera de
+  grafito y acentos verdes, disponible como base y tema asignable en Nanobook.
+
 - **Added:** cinco bloques financieros componibles en Markdown para perfil de empresa, métricas, gráficos, noticias y fuentes, con trazabilidad local, presentación accesible y el mismo resultado en vista previa y publicación SSR.
 
 - Corregida la configuración de extensiones Markdown: publicación y vista previa conservan una copia inmutable de la lista recibida, de modo que cambios posteriores del llamador no alteran el HTML ni invalidan la huella de caché.
