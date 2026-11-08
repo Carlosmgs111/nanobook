@@ -297,3 +297,10 @@
   color: var(--theme-content-muted);
   font-size: 0.875rem;
 }
+
+/* Solo la isla (`price-chart-island`) lo emite: texto del servidor bajo el gráfico. */
+.financial-price-chart > .financial-price-chart-summary {
+  margin: var(--theme-space-block) 0 0;
+  color: var(--theme-content-muted);
+  font-size: 0.8125rem;
+}
