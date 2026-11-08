@@ -21,7 +21,7 @@ Hay dos clases de componente, que conviven:
 | Clase | Se escribe como | Dónde se ejecuta | Ejemplo |
 |---|---|---|---|
 | Vanilla | Un montador `(element, props) => cleanup?` registrado por el módulo | Solo navegador, tras descargar la librería | `price-chart` (`financial-content`) |
-| De framework | Un archivo nativo (`.tsx`, `.jsx`, `.vue`, `.svelte`) junto a un `.block.ts` | Servidor (SSR) y navegador (hidratación) | `counter-demo` (demostración) |
+| De framework | Un archivo nativo (`.tsx`, `.jsx`, `.vue`, `.svelte`) junto a un `.block.ts` | Servidor (SSR) y navegador (hidratación) | `price-chart-island`, `counter-demo` (demostración) |
 
 Ver `componentes-de-framework-islas` para el porqué de este diseño.
 
@@ -84,8 +84,10 @@ Counter.block.ts     nombre de la fence y esquema zod de props (TypeScript puro)
 ```
 
 `Counter.block.ts` exporta por defecto un `ComponentBlockDefinition`. Debe
-importar solo `zod` y el tipo del contrato, porque lo cargan el servidor y el
-Worker de la vista previa (una prueba lo comprueba). El componente exporta por
+importar solo `zod`, el tipo del contrato y, si quiere reutilizar un esquema, el
+`shared/` de su propio módulo (`../../shared/…`, que por convención no depende de
+frameworks ni de Node), porque lo cargan el servidor y el Worker de la vista
+previa (una prueba lo comprueba). El componente exporta por
 defecto y recibe como props el valor ya validado por el esquema, con los
 `default` aplicados. Las props son datos JSON: sin funciones ni `Date`.
 
@@ -197,6 +199,19 @@ series:
 ````
 
 Un ejemplo largo con datos sintéticos está en `docs/examples/price-chart-demo.md`.
+
+**`price-chart-island`** (framework, React) es una versión de `price-chart`
+independiente de la original, con el mismo esquema de props
+(`financial-content/browser/components/PriceChartIsland.tsx` y
+`PriceChartIsland.block.ts`). El servidor entrega la figura con su título, el
+hueco del alto exacto y un resumen en texto de la serie (`describePriceChart`),
+así que hay contenido antes de cargar JavaScript y sin él; el gráfico se dibuja
+tras hidratar, porque `lightweight-charts` necesita el DOM. El dibujo vive en
+`createPriceChart.ts`, que comparten esta isla y el montador vanilla; la isla lo
+importa de forma diferida, de modo que la librería no se evalúa en el servidor.
+El contenedor del gráfico no tiene hijos de React para que la librería pueda
+poblarlo sin que React lo vea. En la vista previa del editor se ve solo su
+contenido alternativo (límite general de las islas). `price-chart` no cambia.
 
 **`counter-demo`** (framework, React) es una demostración del mecanismo
 (`application/browser/components/CounterDemo.tsx`). Se puede borrar, junto con su
