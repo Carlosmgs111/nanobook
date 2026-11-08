@@ -9,7 +9,8 @@ export function createFinancialContentExtensions(): readonly MarkdownExtension[]
     createFinancialContentExtension(),
     createComponentBlocksExtension({
       id: "financial-components",
-      version: "1",
+      // 2: los bloques de raíz pasan a emitirse entre marcadores (blockMarker).
+      version: "2",
       definitions: financialComponentBlockDefinitions,
     }),
   ];
