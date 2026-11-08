@@ -229,10 +229,12 @@ todos los casos está en `docs/examples/framework-component-demo.md`.
 - **Contenido guardado por el editor:** al abrir un documento editado y guardado en
   la misma sesión del navegador, `DocumentPageController` sustituye el cuerpo por el
   HTML que el editor dejó en `sessionStorage` (el del Worker). Ese HTML no trae
-  islas, así que si contiene bloques de raíz que el servidor pinta como isla
-  (`hasServerOnlyBlocks`) se conserva el HTML del servidor; el resto sigue
-  sustituyéndose como antes. Consecuencia: en un documento con islas se muestra el
-  render del servidor, no el guardado en sesión.
+  islas y puede venir incluso de otra versión del código (`sessionStorage` es por
+  origen y pestaña), así que el controlador no mira el contenido guardado sino la
+  página: si el servidor ya pintó alguna isla (`astro-island` dentro de
+  `#document-body`), no sustituye nada. Un documento sin islas se sustituye como
+  antes. Consecuencia: en un documento con islas se muestra el render del servidor,
+  no el guardado en sesión.
 - La directiva de hidratación es fija (`client:visible`); las directivas `client:*`
   no admiten valores dinámicos.
 - Las props son JSON validado con zod: sin funciones ni `Date`.

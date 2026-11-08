@@ -7,7 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-- **Fixed:** los componentes de framework (islas) se veían como la fence en texto al abrir un documento recién editado y guardado: `DocumentPageController` sustituía el cuerpo servido por el HTML que el editor guarda en `sessionStorage`, generado por el Worker, que no produce islas. Ahora conserva el HTML del servidor cuando el contenido guardado tiene bloques de raíz que el servidor pinta como isla (`hasServerOnlyBlocks`).
+- **Fixed:** los componentes de framework (islas) se veían como la fence en texto al abrir un documento recién editado y guardado: `DocumentPageController` sustituía el cuerpo servido por el HTML que el editor guarda en `sessionStorage`, generado por el Worker, que no produce islas. Ahora no sustituye nada cuando el servidor ya pintó alguna isla (`astro-island` dentro de `#document-body`), sea cual sea el contenido guardado, que puede ser de otra versión del código.
 
 - **Added:** `price-chart-island`, una versión de `price-chart` como isla de React (SSR más hidratación), con el mismo esquema de props y sin cambios en el original. El servidor entrega la figura con título, el alto exacto del gráfico y un resumen en texto de la serie; el gráfico se dibuja tras hidratar. El dibujo se extrae a `createPriceChart`, compartido con el montador de `price-chart`. Un `*.block.ts` puede ahora importar el `shared/` de su propio módulo, y Vitest transforma JSX para poder probar el renderizado en servidor.
 
