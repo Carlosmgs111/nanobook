@@ -1,0 +1,31 @@
+---
+import { findFrameworkBlockDefinition } from "../../shared/componentBlockDefinitions";
+import { resolveDocumentPieces } from "../../shared/resolveDocumentPieces";
+import ComponentBlockHost from "./generated/ComponentBlockHost.astro";
+import { ssrBlockNames } from "./generated/ssrBlockNames";
+
+interface Props {
+  /** HTML renderizado del documento, con los marcadores de bloque de raíz. */
+  html: string;
+}
+
+// Los segmentos de HTML se inyectan tal cual y los bloques de framework se pintan
+// como islas, en el orden del documento. Los que no puedan ser isla conservan su
+// punto de montaje original.
+const pieces = resolveDocumentPieces(Astro.props.html, {
+  ssrBlockNames,
+  findDefinition: findFrameworkBlockDefinition,
+  onInvalidProps: (name) =>
+    console.warn(`Bloque "${name}": las props ya no validan al servir; se muestra el contenido alternativo.`),
+});
+---
+
+{
+  pieces.map((piece) =>
+    piece.kind === "island" ? (
+      <ComponentBlockHost name={piece.name} props={piece.props} />
+    ) : (
+      <Fragment set:html={piece.html} />
+    )
+  )
+}
