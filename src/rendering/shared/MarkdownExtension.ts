@@ -14,3 +14,17 @@ export function assertUniqueExtensionIds(extensions: readonly MarkdownExtension[
     ids.add(id);
   }
 }
+
+/** Dos extensiones no pueden reclamar la misma fence: la segunda no se aplicaría nunca. */
+export function assertUniqueFenceLanguages(extensions: readonly MarkdownExtension[]): void {
+  const owners = new Map<string, string>();
+  for (const { id, fenceLanguages } of extensions) {
+    for (const language of fenceLanguages) {
+      const owner = owners.get(language);
+      if (owner !== undefined) {
+        throw new Error(`Duplicate Markdown fence language "${language}" claimed by extensions "${owner}" and "${id}"`);
+      }
+      owners.set(language, id);
+    }
+  }
+}

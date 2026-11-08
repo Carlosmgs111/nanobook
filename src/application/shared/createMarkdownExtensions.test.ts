@@ -7,6 +7,7 @@ it("registers the five financial fences in each browser extension list", () => {
   expect(extensions.map(({ id, version }) => `${id}@${version}`)).toEqual([
     "financial-content@1",
     "financial-components@2",
+    "component-blocks@1",
   ]);
   expect(extensions[0].fenceLanguages).toEqual([
     "company-profile",
