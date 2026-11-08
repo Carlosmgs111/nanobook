@@ -48,6 +48,24 @@ series:
     - { time: 2026-01-07, value: 14 }
 ```
 
+### 4b. El mismo gráfico como isla
+
+Con `price-chart-island` el servidor entrega el título, el hueco del alto exacto y
+un resumen en texto bajo el gráfico (visible con JavaScript desactivado); el
+gráfico se dibuja al hidratar, al entrar en el viewport.
+
+```price-chart-island
+title: ACME (isla)
+height: 220
+series:
+  type: line
+  data:
+    - { time: 2026-01-02, value: 10 }
+    - { time: 2026-01-05, value: 12 }
+    - { time: 2026-01-06, value: 11 }
+    - { time: 2026-01-07, value: 14 }
+```
+
 ## 5. Bloque anidado (limitación conocida)
 
 Dentro de una lista no es una isla: debe mostrarse el contenido de la fence tal
