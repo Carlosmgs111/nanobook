@@ -1,6 +1,7 @@
-import type { Element, ElementContent, Root } from "hast";
+import type { Comment, Element, ElementContent, Root, RootContent } from "hast";
 import { parse } from "yaml";
 import type { MarkdownExtension } from "../MarkdownExtension";
+import { BLOCK_END_COMMENT, blockStartComment } from "./blockMarker";
 import type { ComponentBlockDefinition } from "./ComponentBlockDefinition";
 
 function fenceOf(node: Element): { language: string; source: string } | undefined {
@@ -42,10 +43,47 @@ function mountPoint(name: string, props: unknown, fallback: Element): Element {
   };
 }
 
+interface Resolved {
+  readonly replacement: Element;
+  /** Presente solo si el contenido era válido; los errores no llevan marcadores. */
+  readonly block?: { readonly name: string; readonly props: unknown };
+}
+
+function resolve(node: Element, byName: ReadonlyMap<string, ComponentBlockDefinition>): Resolved | undefined {
+  const fence = fenceOf(node);
+  const definition = fence && byName.get(fence.language);
+  if (!fence || !definition) return undefined;
+
+  try {
+    const parsed = definition.props.safeParse(parse(fence.source));
+    if (!parsed.success) {
+      const reason = parsed.error.issues
+        .map((issue) => `${issue.path.join(".") || "(raíz)"}: ${issue.message}`)
+        .join("; ");
+      return { replacement: errorBlock(definition.name, reason) };
+    }
+    return {
+      replacement: mountPoint(definition.name, parsed.data, node),
+      block: { name: definition.name, props: parsed.data },
+    };
+  } catch {
+    return { replacement: errorBlock(definition.name, "el contenido no es YAML ni JSON válido") };
+  }
+}
+
+function comment(value: string): Comment {
+  return { type: "comment", value };
+}
+
 /**
  * Convierte fences cuyo lenguaje coincide con un componente registrado en un
  * punto de montaje `<div data-component data-props>`. El bloque de código
  * original queda dentro como contenido alternativo hasta que el cliente monte.
+ *
+ * Los bloques que son hijos directos de la raíz del documento se rodean además
+ * con un par de comentarios (`blockMarker`) para poder partir el HTML en
+ * segmentos sin cortar ningún elemento. Los anidados (listas, citas…) no los
+ * llevan: cortar dentro de ellos rompería la etiqueta que los contiene.
  */
 export function createComponentBlocksExtension(options: {
   readonly id: string;
@@ -54,36 +92,36 @@ export function createComponentBlocksExtension(options: {
 }): MarkdownExtension {
   const byName = new Map(options.definitions.map((definition) => [definition.name, definition]));
 
+  function visitNested(parent: Element): void {
+    parent.children.forEach((child, index) => {
+      if (child.type !== "element") return;
+      const resolved = resolve(child, byName);
+      if (resolved) parent.children[index] = resolved.replacement;
+      else visitNested(child);
+    });
+  }
+
   return {
     id: options.id,
     version: options.version,
     fenceLanguages: [...byName.keys()],
-    transform(tree) {
-      function visit(parent: Root | Element): void {
-        parent.children.forEach((node, index) => {
-          if (node.type !== "element") return;
-          const fence = fenceOf(node);
-          const definition = fence && byName.get(fence.language);
-          if (!fence || !definition) {
-            visit(node);
-            return;
-          }
+    transform(tree: Root) {
+      tree.children = tree.children.flatMap((node): RootContent[] => {
+        if (node.type !== "element") return [node];
 
-          try {
-            const parsed = definition.props.safeParse(parse(fence.source));
-            parent.children[index] = parsed.success
-              ? mountPoint(definition.name, parsed.data, node)
-              : errorBlock(
-                  definition.name,
-                  parsed.error.issues.map((issue) => `${issue.path.join(".") || "(raíz)"}: ${issue.message}`).join("; "),
-                );
-          } catch {
-            parent.children[index] = errorBlock(definition.name, "el contenido no es YAML ni JSON válido");
-          }
-        });
-      }
+        const resolved = resolve(node, byName);
+        if (!resolved) {
+          visitNested(node);
+          return [node];
+        }
+        if (!resolved.block) return [resolved.replacement];
 
-      visit(tree);
+        return [
+          comment(blockStartComment(resolved.block.name, resolved.block.props)),
+          resolved.replacement,
+          comment(BLOCK_END_COMMENT),
+        ];
+      });
     },
   };
 }
