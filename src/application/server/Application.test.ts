@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { PublishingModule } from "../../publishing/server";
 import { RENDERER_VERSION } from "../../rendering/shared/rendererFingerprint";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
+import { ssrBlockNames } from "../browser/ui/generated/ssrBlockNames";
+import { findFrameworkBlockDefinition } from "../shared/componentBlockDefinitions";
+import { resolveDocumentPieces } from "../shared/resolveDocumentPieces";
 import { Application } from "./Application";
 
 const { protect, create } = vi.hoisted(() => {
@@ -92,6 +95,23 @@ describe("Application", () => {
     expect(app).not.toHaveProperty("financialContentModule");
     expect(app).not.toHaveProperty("financialContentRepository");
     expect(app).not.toHaveProperty("financialBlockSchemas");
+  }, 15_000);
+
+  it("publishes a framework block that the page turns into an island", async () => {
+    const app = await Application.create();
+    const document = {
+      getContent: () =>
+        "Antes.\n\n```price-chart-island\ntitle: ACME\nseries:\n  type: line\n  data:\n    - { time: 2026-01-02, value: 10 }\n```\n\nDespués.",
+    };
+
+    const published = await app.publishingModule.pageRenderer.render(document);
+    const pieces = resolveDocumentPieces(published.Content, {
+      ssrBlockNames,
+      findDefinition: findFrameworkBlockDefinition,
+    });
+
+    expect(pieces.map((piece) => piece.kind)).toEqual(["html", "island", "html"]);
+    expect(pieces[1]).toMatchObject({ kind: "island", name: "price-chart-island", props: { title: "ACME", height: 360 } });
   }, 15_000);
 
   it("keeps financial fences as code when publishing receives no extensions", async () => {

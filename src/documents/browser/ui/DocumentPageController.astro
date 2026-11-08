@@ -1,7 +1,5 @@
 <script>
   import { getApp } from "../../../application/browser/Application";
-  import { ssrBlockNames } from "../../../application/browser/ui/generated/ssrBlockNames";
-  import { hasServerOnlyBlocks } from "../../../application/shared/hasServerOnlyBlocks";
 
   const app = getApp();
 
@@ -14,6 +12,12 @@
     // sessionStorage puede pertenecer a una versión anterior del documento
     // referenciado y ocultar temporalmente el contenido SSR correcto.
     if (body.dataset.documentRef) return;
+
+    // El servidor pinta los componentes de framework como islas. El HTML que guarda
+    // el editor lo genera el Worker, que no las produce (deja la fence en texto), y
+    // puede venir incluso de otra versión del código: sustituir el cuerpo las
+    // perdería. Si la página ya trae islas, se conserva tal como la sirvió el servidor.
+    if (body.querySelector("astro-island")) return;
 
     const renderedResult = app.editionModule.getRenderedDocument.execute(
       documentId,
@@ -29,12 +33,7 @@
         : JSON.stringify(cachedRef ?? "");
     if (normalizedCachedRef !== currentRef) return;
 
-    const cachedContent = renderedResult.getValue().rendered.Content;
-    // El Worker no genera islas de framework (deja la fence en texto); en ese caso
-    // se conserva el HTML del servidor, que sí las pinta.
-    if (hasServerOnlyBlocks(cachedContent, ssrBlockNames)) return;
-
-    body.innerHTML = cachedContent;
+    body.innerHTML = renderedResult.getValue().rendered.Content;
     body.dataset.renderedFromEdition = "true";
   });
 </script>
