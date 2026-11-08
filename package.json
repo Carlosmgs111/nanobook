@@ -7,10 +7,11 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "blocks:generate": "tsx scripts/generate-component-blocks.ts",
+    "dev": "npm run blocks:generate && astro dev",
+    "build": "npm run blocks:generate && astro build",
     "preview": "astro preview",
-    "dev:preview": "astro build && astro preview",
+    "dev:preview": "npm run build && astro preview",
     "start": "node ./dist/server/entry.mjs",
     "astro": "astro",
     "test": "vitest run",
