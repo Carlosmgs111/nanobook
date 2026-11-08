@@ -66,11 +66,19 @@ describe("the registered framework block definitions", () => {
   });
 });
 
-/** Importaciones que un `*.block.ts` puede tener: el servidor y el Worker lo cargan. */
+/**
+ * Importaciones que un `*.block.ts` puede tener: el servidor y el Worker lo
+ * cargan. Además de `zod` y el contrato, puede reutilizar el `shared/` de su
+ * propio módulo (`../../shared/…` desde `<módulo>/browser/components/`), que por
+ * convención no depende de frameworks, del navegador ni de Node.
+ */
 function forbiddenImports(source: string): string[] {
   const specifiers = [...source.matchAll(/(?:^|\n)\s*import\s[^;]*?from\s+["']([^"']+)["']/g)].map((match) => match[1]);
   return specifiers.filter(
-    (specifier) => specifier !== "zod" && !specifier.endsWith("rendering/shared/componentBlocks/ComponentBlockDefinition"),
+    (specifier) =>
+      specifier !== "zod" &&
+      !specifier.endsWith("rendering/shared/componentBlocks/ComponentBlockDefinition") &&
+      !/^\.\.\/\.\.\/shared\//.test(specifier),
   );
 }
 
@@ -82,6 +90,28 @@ describe("forbiddenImports", () => {
     ].join("\n");
 
     expect(forbiddenImports(source)).toEqual([]);
+  });
+
+  it("accepts the shared folder of the block's own module", () => {
+    const source = 'import { priceChartProps } from "../../shared/components/priceChart";';
+
+    expect(forbiddenImports(source)).toEqual([]);
+  });
+
+  it("flags the server and browser folders, the global shared folder and other modules", () => {
+    const source = [
+      'import a from "../server/thing";',
+      'import b from "../ui/Thing";',
+      'import c from "../../../shared/server/http/ServerTiming";',
+      'import d from "../../../other-module/shared/thing";',
+    ].join("\n");
+
+    expect(forbiddenImports(source)).toEqual([
+      "../server/thing",
+      "../ui/Thing",
+      "../../../shared/server/http/ServerTiming",
+      "../../../other-module/shared/thing",
+    ]);
   });
 
   it("flags framework and node imports", () => {
