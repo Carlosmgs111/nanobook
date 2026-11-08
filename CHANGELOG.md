@@ -7,6 +7,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Added:** componentes de framework en bloques de Markdown: un componente escrito con la extensión nativa de su librería (`.tsx`, `.jsx`, `.vue`, `.svelte`) junto a un `Nombre.block.ts` (nombre de fence y esquema zod de props) se renderiza en servidor y se hidrata en el navegador como isla de Astro (`client:visible`), intercalado en el orden del documento. `npm run blocks:generate` descubre los pares y genera `ComponentBlockHost.astro` y `ssrBlockNames.ts` (Astro solo hidrata componentes importados directamente en un `.astro`); los archivos generados se versionan y una prueba falla si están desactualizados. Incluye la integración `@astrojs/react` y un componente de demostración `counter-demo`. Ver `arquitectura/bloques-de-componentes` y `arquitectura/componentes-de-framework-islas`.
+
+- **Changed:** la extensión de bloques de componentes rodea con marcadores (`nb:block-start` / `nb:block-end`, props en base64url) los bloques que son hijos directos de la raíz del documento, y `splitComponentBlocks` parte con ellos el HTML cacheado. `DocumentPage` pinta el cuerpo mediante `RenderedDocument`, que conserva el HTML tal cual y convierte en isla solo los bloques de framework válidos; `price-chart`, los bloques anidados y los inválidos conservan su salida anterior. `financial-components` sube a la versión `2`, por lo que se invalida la caché de páginas renderizadas.
+
+- **Changed:** `createMarkdownExtensions` falla al componer si dos extensiones reclaman la misma fence (`assertUniqueFenceLanguages`); antes la segunda quedaba sin efecto en silencio. `dev`, `build` y `dev:preview` ejecutan `blocks:generate` antes de arrancar.
+
 - **Changed:** las instrucciones del servidor MCP aclaran que el documento índice (`index` y cualquier `…/index`) no muestra su cuerpo, solo título, descripción y la lista de sus documentos, y que al crear un nanobook se debe crear siempre además un documento propio con la información. La regla figura también en las descripciones de `create_nanobook`, `list_documents`, `create_document` y `update_document`, y en la guía de bloques.
 
 - **Added:** `create_document` y `update_document` avisan, sin bloquear el guardado, cuando se escribe cuerpo en un documento índice; el aviso se combina con el de bloques inválidos en un mismo mensaje.
