@@ -226,6 +226,13 @@ todos los casos está en `docs/examples/framework-component-demo.md`.
 - **Vista previa del editor:** el Worker no puede ejecutar el SSR de Astro, así que
   los componentes de framework se ven con su contenido alternativo; los vanilla
   se montan en vivo como siempre.
+- **Contenido guardado por el editor:** al abrir un documento editado y guardado en
+  la misma sesión del navegador, `DocumentPageController` sustituye el cuerpo por el
+  HTML que el editor dejó en `sessionStorage` (el del Worker). Ese HTML no trae
+  islas, así que si contiene bloques de raíz que el servidor pinta como isla
+  (`hasServerOnlyBlocks`) se conserva el HTML del servidor; el resto sigue
+  sustituyéndose como antes. Consecuencia: en un documento con islas se muestra el
+  render del servidor, no el guardado en sesión.
 - La directiva de hidratación es fija (`client:visible`); las directivas `client:*`
   no admiten valores dinámicos.
 - Las props son JSON validado con zod: sin funciones ni `Date`.

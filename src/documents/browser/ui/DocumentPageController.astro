@@ -1,5 +1,7 @@
 <script>
   import { getApp } from "../../../application/browser/Application";
+  import { ssrBlockNames } from "../../../application/browser/ui/generated/ssrBlockNames";
+  import { hasServerOnlyBlocks } from "../../../application/shared/hasServerOnlyBlocks";
 
   const app = getApp();
 
@@ -27,7 +29,12 @@
         : JSON.stringify(cachedRef ?? "");
     if (normalizedCachedRef !== currentRef) return;
 
-    body.innerHTML = renderedResult.getValue().rendered.Content;
+    const cachedContent = renderedResult.getValue().rendered.Content;
+    // El Worker no genera islas de framework (deja la fence en texto); en ese caso
+    // se conserva el HTML del servidor, que sí las pinta.
+    if (hasServerOnlyBlocks(cachedContent, ssrBlockNames)) return;
+
+    body.innerHTML = cachedContent;
     body.dataset.renderedFromEdition = "true";
   });
 </script>
