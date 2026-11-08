@@ -3,6 +3,7 @@ import { defineConfig, envField } from "astro/config";
 import node from "@astrojs/node";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@astrojs/react";
 
 const isVercelDeploy = process.env.VERCEL === "1" || process.env.VERCEL_DEPLOY === "true";
 
@@ -21,6 +22,8 @@ const allowedDomains = betterAuthUrl
 
 export default defineConfig({
   prefetch: true,
+  // Integraciones de los frameworks de los componentes de bloque (`*.block.ts`).
+  integrations: [react()],
   output: "server",
   adapter: adapter,
   security: {
