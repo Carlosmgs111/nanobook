@@ -2,9 +2,14 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BLOCK_NAME_PATTERN } from "../../../rendering/shared/componentBlocks/blockMarker";
+import {
+  BLOCK_HYDRATION_DIRECTIVES,
+  type BlockHydration,
+} from "../../../rendering/shared/componentBlocks/ComponentBlockDefinition";
 
 export interface BlockEntry {
   readonly name: string;
+  readonly hydrate?: BlockHydration;
   readonly blockFile: string;
   readonly componentFile: string;
 }
@@ -12,7 +17,7 @@ export interface BlockEntry {
 export type ImportModule = (file: string) => Promise<unknown>;
 
 const BLOCK_SUFFIX = ".block.ts";
-const COMPONENT_EXTENSIONS = [".tsx", ".jsx", ".vue", ".svelte"] as const;
+const COMPONENT_EXTENSIONS = [".astro", ".tsx", ".jsx", ".vue", ".svelte"] as const;
 
 const importFromDisk: ImportModule = (file) => import(pathToFileURL(file).href);
 
@@ -26,8 +31,13 @@ function listFiles(directory: string): string[] {
   }
 }
 
-async function readName(blockFile: string, importModule: ImportModule): Promise<string> {
-  const module = (await importModule(blockFile)) as { default?: { name?: unknown } } | undefined;
+async function readDefinition(
+  blockFile: string,
+  importModule: ImportModule,
+): Promise<{ name: string; hydrate?: BlockHydration }> {
+  const module = (await importModule(blockFile)) as
+    | { default?: { name?: unknown; hydrate?: unknown } }
+    | undefined;
   const name = module?.default?.name;
   if (typeof name !== "string") {
     throw new Error(`${blockFile}: debe exportar por defecto una definición de bloque con "name" y "props"`);
@@ -35,7 +45,14 @@ async function readName(blockFile: string, importModule: ImportModule): Promise<
   if (!BLOCK_NAME_PATTERN.test(name)) {
     throw new Error(`${blockFile}: el nombre de bloque "${name}" debe cumplir ${BLOCK_NAME_PATTERN}`);
   }
-  return name;
+  const hydrate = module?.default?.hydrate;
+  if (hydrate === undefined) return { name };
+  if (!(BLOCK_HYDRATION_DIRECTIVES as readonly unknown[]).includes(hydrate)) {
+    throw new Error(
+      `${blockFile}: hydrate "${String(hydrate)}" no es válido (${BLOCK_HYDRATION_DIRECTIVES.join(", ")})`,
+    );
+  }
+  return { name, hydrate: hydrate as BlockHydration };
 }
 
 /**
@@ -73,14 +90,18 @@ export async function discoverBlocks(
         throw new Error(`${blockFile} tiene más de un componente hermano: ${siblings.join(", ")}`);
       }
 
-      const name = await readName(blockFile, importModule);
+      const { name, hydrate } = await readDefinition(blockFile, importModule);
+      const componentFile = join(directory, siblings[0]);
+      if (hydrate !== undefined && componentFile.endsWith(".astro")) {
+        throw new Error(`${blockFile}: un componente .astro no se hidrata en el navegador; quita "hydrate"`);
+      }
       const existing = fileByName.get(name);
       if (existing !== undefined) {
         throw new Error(`Nombre de bloque duplicado "${name}": ${existing} y ${blockFile}`);
       }
       fileByName.set(name, blockFile);
 
-      entries.push({ name, blockFile, componentFile: join(directory, siblings[0]) });
+      entries.push({ name, hydrate, blockFile, componentFile });
     }
   }
 

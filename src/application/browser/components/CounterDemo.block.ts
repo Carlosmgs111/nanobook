@@ -7,6 +7,7 @@ import type { ComponentBlockDefinition } from "../../../rendering/shared/compone
  */
 const definition: ComponentBlockDefinition = {
   name: "counter-demo",
+  hydrate: "visible",
   props: z.object({
     label: z.string().max(80).default("Contador"),
     start: z.number().int().default(0),
