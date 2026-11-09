@@ -18,11 +18,26 @@ describe("renderHostSource", () => {
     expect(ssrBlockNames).toContain("new Set<string>([])");
   });
 
-  it("imports each component and renders it with a static tag and client:visible", () => {
-    const { host } = renderHostSource([{ name: "counter-demo", importPath: "../../components/Counter.tsx" }]);
+  it("imports each component and renders it with a static tag and its hydration directive", () => {
+    const { host } = renderHostSource([
+      { name: "counter-demo", importPath: "../../components/Counter.tsx", hydrate: "visible" },
+    ]);
 
     expect(host).toContain('import Block0 from "../../components/Counter.tsx";');
     expect(host).toContain('{name === "counter-demo" && <Block0 {...blockProps} client:visible />}');
+  });
+
+  it.each(["load", "idle", "visible"] as const)("emits the literal client:%s directive", (hydrate) => {
+    const { host } = renderHostSource([{ name: "thing-block", importPath: "./Thing.tsx", hydrate }]);
+
+    expect(host).toContain(`<Block0 {...blockProps} client:${hydrate} />`);
+  });
+
+  it("renders a block without hydrate as server-only HTML, with no client directive", () => {
+    const { host } = renderHostSource([{ name: "static-block", importPath: "./Static.astro" }]);
+
+    expect(host).toContain('{name === "static-block" && <Block0 {...blockProps} />}');
+    expect(host).not.toContain("client:");
   });
 
   it("orders entries by block name regardless of input order", () => {

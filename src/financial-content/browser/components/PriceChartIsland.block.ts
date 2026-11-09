@@ -7,6 +7,7 @@ import { priceChartProps } from "../../shared/components/priceChart";
  */
 const definition: ComponentBlockDefinition = {
   name: "price-chart-island",
+  hydrate: "visible",
   props: priceChartProps,
 };
 

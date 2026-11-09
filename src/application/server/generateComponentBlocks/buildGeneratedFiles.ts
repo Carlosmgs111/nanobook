@@ -19,7 +19,11 @@ export async function buildGeneratedFiles(srcRoot: string, importModule?: Import
   const directory = join(srcRoot, ...GENERATED_DIRECTORY);
   const blocks = await discoverBlocks(srcRoot, importModule);
   const { host, ssrBlockNames } = renderHostSource(
-    blocks.map(({ name, componentFile }) => ({ name, importPath: relativeImportPath(directory, componentFile) })),
+    blocks.map(({ name, hydrate, componentFile }) => ({
+      name,
+      hydrate,
+      importPath: relativeImportPath(directory, componentFile),
+    })),
   );
 
   return [

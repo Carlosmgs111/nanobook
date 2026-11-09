@@ -54,6 +54,40 @@ describe("discoverBlocks", () => {
     expect(entry.componentFile).toBe(join(dir, `Thing${extension}`));
   });
 
+  it("accepts an .astro component as a server-only block", async () => {
+    const dir = componentsDir("alpha");
+    touch(dir, "Card.block.ts", "Card.astro");
+
+    const [entry] = await discoverBlocks(src, importing({ "Card.block.ts": { name: "card-block" } }));
+
+    expect(entry.componentFile).toBe(join(dir, "Card.astro"));
+    expect(entry.hydrate).toBeUndefined();
+  });
+
+  it.each(["load", "idle", "visible"])("carries hydrate=%s from the definition", async (hydrate) => {
+    touch(componentsDir("alpha"), "Live.block.ts", "Live.tsx");
+
+    const [entry] = await discoverBlocks(src, importing({ "Live.block.ts": { name: "live-block", hydrate } }));
+
+    expect(entry.hydrate).toBe(hydrate);
+  });
+
+  it("fails when hydrate is not a known directive", async () => {
+    touch(componentsDir("alpha"), "Live.block.ts", "Live.tsx");
+
+    await expect(
+      discoverBlocks(src, importing({ "Live.block.ts": { name: "live-block", hydrate: "media" } })),
+    ).rejects.toThrow(/Live\.block\.ts.*hydrate.*media/s);
+  });
+
+  it("fails when an .astro component asks to hydrate", async () => {
+    touch(componentsDir("alpha"), "Card.block.ts", "Card.astro");
+
+    await expect(
+      discoverBlocks(src, importing({ "Card.block.ts": { name: "card-block", hydrate: "visible" } })),
+    ).rejects.toThrow(/Card\.block\.ts.*\.astro.*hidrat/s);
+  });
+
   it("ignores components that have no block definition", async () => {
     touch(componentsDir("alpha"), "Plain.tsx", "Other.vue");
 
