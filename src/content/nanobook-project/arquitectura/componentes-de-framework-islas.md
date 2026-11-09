@@ -95,3 +95,45 @@ filtrado, componentes vanilla y bloques anidados sin regresión e hidratación
 interactiva. En el panel de pruebas se forzó la intersección, porque no entrega
 eventos de `IntersectionObserver` en segundo plano; el disparo real de
 `client:visible` por scroll queda por comprobar en un navegador.
+
+## Actualización (2026-11-08): un solo mecanismo
+
+Con el mecanismo de islas funcionando convivían tres formas de renderizar un
+bloque: fichas estáticas por el pipeline de Markdown (HAST), montaje en cliente
+(`price-chart` como `div` más montador) e islas. Se decidió dejar uno solo, el de
+Astro, y aprovechar que una directiva `client:*` es opcional: un componente sin
+directiva se renderiza en el servidor y no envía JavaScript.
+
+1. **Contrato.** `Nombre.<ext>` + `Nombre.block.ts` como antes, con `.astro`
+   admitido entre las extensiones y un `hydrate` opcional (`load`, `idle`,
+   `visible`) en la definición. Un `.astro` no puede hidratarse (el generador falla
+   si lo declara); un componente de framework sin `hydrate` queda solo en servidor.
+2. **Fichas financieras.** Las cinco se rehicieron como componentes `.astro` dentro
+   de `financial-content`, que sigue siendo dueño de sus esquemas, formato, guía y
+   validación. Eran una demo exploratoria, no una API canónica, por lo que no se
+   protegieron con ganchos de compatibilidad: se retiró su parser YAML propio, los
+   renderizadores HAST y la extensión `financial-content`. El HTML resultante es
+   idéntico al anterior tras normalizar (comprobado con los ejemplos de la guía),
+   salvo que el titular de las noticias ya no recibe un `id` automático.
+3. **`price-chart`** pasa a ser la isla de React (antes `price-chart-island`); se
+   retiran el registro cliente y el montador. `financial-components` y
+   `price-chart-island` desaparecen como nombres.
+4. **Validación y guía del MCP** leen las mismas definiciones que el renderizado.
+
+Consecuencias:
+
+- Los componentes no pasan por la caché de Markdown: Astro los renderiza en cada
+  petición. Una caché de fragmentos (Container API) es posible para los bloques
+  sin hidratación y se difiere hasta que haga falta.
+- La huella de caché cambia a `component-blocks@2`.
+- Se perdió el endurecimiento del parser de las fichas (alias, etiquetas,
+  `__proto__`); `yaml.parse` estándar lo sustituye. Un parser estricto compartido
+  por todos los bloques queda como mejora pendiente.
+- Las fichas dejan de verse renderizadas en la vista previa del editor (aparece la
+  fence): el Worker no ejecuta Astro. Pendiente, junto con los bloques anidados y el
+  contenido hijo.
+- `DocumentPage` marca `#document-body` con `data-has-blocks` para que el
+  controlador no lo sustituya por el HTML del Worker cuando solo hay bloques
+  `.astro`, que no generan `astro-island`.
+- Los `.astro` se prueban con la Container API de Astro en un proyecto de Vitest
+  aparte (`npm run test:astro`).

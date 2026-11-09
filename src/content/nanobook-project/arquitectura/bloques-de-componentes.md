@@ -2,7 +2,7 @@
 id: "bloques-de-componentes-2026-11-06"
 ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"
 title: "Bloques de componentes en Markdown"
-description: "Cómo un documento usa componentes mediante fences: montaje en cliente (vanilla) y componentes de framework (.tsx, .vue, .svelte) con SSR e hidratación como islas de Astro."
+description: "Cómo un documento usa componentes mediante fences: un único mecanismo basado en Astro, con componentes .astro de solo servidor, componentes de framework de solo servidor e islas hidratadas."
 date: 2026-11-06
 author: "Nanobook"
 tags: ["nanobook", "arquitectura", "renderizado"]
@@ -13,36 +13,56 @@ draft: false
 
 El renderizador es una función de texto a texto y no ejecuta código de
 componentes. Los documentos referencian un componente por nombre y la página lo
-materializa. `rendering` aporta solo el **mecanismo**; los componentes concretos
-pertenecen al módulo que los expone.
+materializa con Astro. `rendering` aporta solo el **mecanismo**; los componentes
+concretos pertenecen al módulo que los expone.
 
-Hay dos clases de componente, que conviven:
+Hay **un único mecanismo**. Lo que cambia entre bloques es qué archivo los
+implementa y si se hidratan:
 
-| Clase | Se escribe como | Dónde se ejecuta | Ejemplo |
+| Archivo del componente | `hydrate` en el `.block.ts` | Resultado | Ejemplo |
 |---|---|---|---|
-| Vanilla | Un montador `(element, props) => cleanup?` registrado por el módulo | Solo navegador, tras descargar la librería | `price-chart` (`financial-content`) |
-| De framework | Un archivo nativo (`.tsx`, `.jsx`, `.vue`, `.svelte`) junto a un `.block.ts` | Servidor (SSR) y navegador (hidratación) | `price-chart-island`, `counter-demo` (demostración) |
+| `.astro` | no se admite | HTML del servidor, sin JavaScript | `financial-metrics` y las demás fichas |
+| `.tsx` `.jsx` `.vue` `.svelte` | ausente | HTML del servidor, sin JavaScript | (disponible) |
+| `.tsx` `.jsx` `.vue` `.svelte` | `load` · `idle` · `visible` | HTML del servidor e isla hidratada (`client:*`) | `price-chart`, `counter-demo` |
 
 Ver `componentes-de-framework-islas` para el porqué de este diseño.
 
+## Declaración
+
+Dos archivos hermanos en `src/<módulo>/browser/components/`:
+
+```text
+Nombre.astro         el componente (o .tsx .jsx .vue .svelte)
+Nombre.block.ts      nombre de la fence, esquema zod de props y, si hace falta, hydrate
+```
+
+`Nombre.block.ts` exporta por defecto un `ComponentBlockDefinition`:
+
+```ts
+const definition: ComponentBlockDefinition = {
+  name: "price-chart",     // lenguaje de la fence
+  hydrate: "visible",      // opcional; sin él, solo HTML del servidor
+  props: priceChartProps,  // esquema zod
+};
+```
+
+Debe importar solo `zod`, el tipo del contrato y, si quiere reutilizar un esquema,
+el `shared/` de su propio módulo (que por convención no depende de frameworks ni de
+Node), porque lo cargan el servidor y el Worker de la vista previa (una prueba lo
+comprueba). El componente recibe como props el valor ya validado, con los
+`default` aplicados. Las props son datos JSON: sin funciones ni `Date`.
+
 ## Mecanismo genérico (`rendering`)
 
-**Servidor y vista previa** (`rendering/shared/componentBlocks`):
 `createComponentBlocksExtension({ id, version, definitions })` devuelve una
 `MarkdownExtension`. Cuando el lenguaje de una fence coincide con
 `definition.name`, parsea el contenido como YAML (JSON incluido), lo valida con
-el esquema zod de la definición y lo sustituye por:
+el esquema zod y lo sustituye por un punto de montaje con la fence original como
+contenido alternativo. Si no valida, emite un `div.component-block-error` con el
+motivo.
 
-```html
-<div class="component-block" data-component="price-chart" data-props='{...}'>
-  <pre>…fence original como contenido alternativo…</pre>
-</div>
-```
-
-Si no valida, emite un `div.component-block-error` con el motivo.
-
-Si la fence es **hija directa de la raíz** del documento, además rodea ese `div`
-con un par de comentarios (`blockMarker.ts`):
+Si la fence es **hija directa de la raíz** del documento, además rodea el punto de
+montaje con un par de comentarios (`blockMarker.ts`):
 
 ```html
 <!--nb:block-start NOMBRE PROPS_BASE64URL-->
@@ -50,200 +70,129 @@ con un par de comentarios (`blockMarker.ts`):
 <!--nb:block-end-->
 ```
 
-Las props van en base64url porque su alfabeto no contiene `>`, así que el
-comentario siempre termina donde debe. Los bloques anidados (listas, citas) y los
-inválidos no llevan marcadores: partir el HTML dentro de un elemento rompería su
-etiqueta. Un comentario escrito a mano en el Markdown no sobrevive al render
-(`remarkRehype` descarta el HTML crudo), por lo que los marcadores solo pueden
-salir de la extensión.
+Las props van en base64url porque su alfabeto no contiene `>`. Los bloques
+anidados (listas, citas) y los inválidos no llevan marcadores: partir el HTML
+dentro de un elemento rompería su etiqueta. Un comentario escrito a mano no
+sobrevive al render (`remarkRehype` descarta el HTML crudo), así que los marcadores
+solo pueden salir de la extensión. `splitComponentBlocks(html)` (pura, nunca
+lanza) parte el HTML en segmentos ordenados `html` / `block`.
 
-`splitComponentBlocks(html)` (función pura, nunca lanza) parte el HTML en
-segmentos ordenados `html` / `block`. Un marcador ilegible o sin cierre queda
-como HTML.
-
-**Navegador, componentes vanilla** (`rendering/browser`):
-`registerComponentBlocks(entries)` permite a cada módulo registrar
-`nombre → cargador diferido`; registrar un nombre ya tomado por otro cargador
-falla. `installComponentBlocks()` monta cada `[data-component]` presente y los que
-aparezcan después (`MutationObserver` sobre `<html>`, no sobre `<body>`: el router
-de Astro sustituye el `<body>` al navegar sin recargar, y un observador pegado al
-anterior no vería la página nueva; además se reescanea en `astro:page-load`). La
-librería solo se descarga en páginas que usen el bloque.
-
-`rendering` no importa ningún módulo de negocio.
-
-## Componentes de framework (SSR e hidratación)
-
-### Declaración
-
-Dos archivos hermanos en `src/<módulo>/browser/components/`:
-
-```text
-Counter.tsx          el componente, con la extensión de su librería (.tsx .jsx .vue .svelte)
-Counter.block.ts     nombre de la fence y esquema zod de props (TypeScript puro)
-```
-
-`Counter.block.ts` exporta por defecto un `ComponentBlockDefinition`. Debe
-importar solo `zod`, el tipo del contrato y, si quiere reutilizar un esquema, el
-`shared/` de su propio módulo (`../../shared/…`, que por convención no depende de
-frameworks ni de Node), porque lo cargan el servidor y el Worker de la vista
-previa (una prueba lo comprueba). El componente exporta por
-defecto y recibe como props el valor ya validado por el esquema, con los
-`default` aplicados. Las props son datos JSON: sin funciones ni `Date`.
-
-### Descubrimiento y composición
+## Descubrimiento y composición
 
 - `application/shared/componentBlockDefinitions.ts` reúne los `*.block.ts` con
-  `import.meta.glob` (son TypeScript puro, así que Vite los resuelve en servidor,
-  Worker y pruebas) y valida export por defecto, nombre
-  (`^[a-z][a-z0-9-]*$`) y unicidad.
-- `application/shared/createMarkdownExtensions.ts` los registra como la extensión
-  `component-blocks` y comprueba con `assertUniqueFenceLanguages` que ninguna
-  fence esté reclamada por dos extensiones.
+  `import.meta.glob` (TypeScript puro, resoluble en servidor, Worker y pruebas) y
+  valida export por defecto, nombre (`^[a-z][a-z0-9-]*$`) y unicidad.
+- `application/shared/createMarkdownExtensions.ts` los registra como **una sola**
+  extensión, `component-blocks`, y comprueba con `assertUniqueFenceLanguages` que
+  ninguna fence esté reclamada dos veces. Es la única lista que consumen la
+  publicación y la vista previa.
 
-### El host generado
+## El host generado
 
-Astro solo hidrata un componente de framework importado **directamente** en un
-`.astro` y usado con una etiqueta estática; con una etiqueta dinámica
-(`const C = registro[nombre]`) las directivas `client:*` no se admiten. Por eso
+Astro solo admite una directiva `client:*` en un componente importado
+**directamente** en un `.astro` y usado con una etiqueta estática. Por eso
 `npm run blocks:generate` (`scripts/generate-component-blocks.ts`) escribe en
 `application/browser/ui/generated/`:
 
-- `ComponentBlockHost.astro`: una importación y una etiqueta
-  `<BlockN {...props} client:visible />` por componente.
+- `ComponentBlockHost.astro`: una importación y una etiqueta por componente, con
+  la directiva escrita como literal: `<BlockN {...props} client:visible />`, o sin
+  directiva si el bloque no declara `hydrate`.
 - `ssrBlockNames.ts`: los nombres que el host sabe pintar.
 
-`discoverBlocks` empareja cada `Nombre.block.ts` con su `Nombre.<ext>` y aborta
-si falta el componente, hay más de uno, el nombre es inválido o está repetido.
-`renderHostSource` es determinista y sin E/S. Los archivos generados **se
-versionan**; `generatedFilesAreFresh.test.ts` falla si están desactualizados.
-`dev`, `build` y `dev:preview` ejecutan la generación antes de arrancar (se
-encadena con `npm run`, sin ganchos `pre*`, que pnpm no siempre ejecuta).
+`discoverBlocks` empareja cada `Nombre.block.ts` con su `Nombre.<ext>` (`.astro`,
+`.tsx`, `.jsx`, `.vue`, `.svelte`) y aborta si falta el componente, hay más de uno,
+el nombre es inválido o repetido, `hydrate` no es una directiva conocida, o un
+`.astro` pide hidratarse. `renderHostSource` es determinista y sin E/S. Los
+archivos generados **se versionan**; `generatedFilesAreFresh.test.ts` falla si
+están desactualizados. `dev`, `build` y `dev:preview` generan antes de arrancar.
 
-### Flujo de una página publicada
+## Flujo de una página publicada
 
 ```text
-Markdown → renderMarkdown → HTML con marcadores ─→ caché (formato sin cambios)
+Markdown → renderMarkdown → HTML con marcadores ─→ caché
         → DocumentPage.astro → RenderedDocument.astro
             → resolveDocumentPieces(html)   (split + validación de props)
-                ├ html   → <Fragment set:html>
-                └ isla   → <ComponentBlockHost name props> → SSR + <astro-island client:visible>
+                ├ html     → <Fragment set:html>
+                └ bloque   → <ComponentBlockHost name props>
+                               ├ .astro / sin hydrate → HTML del servidor
+                               └ con hydrate          → <astro-island client:*>
 ```
 
-`resolveDocumentPieces` vuelve a validar las props (el HTML viene de caché).
-Todo lo que no pueda ser isla —`price-chart`, nombres sin host, props que ya no
-validan— vuelve a su punto de montaje original, así que nunca se pierde
-contenido. El navegador hidrata cada isla cuando entra en el viewport; los
-`div.component-block` que quedan son los que `installComponentBlocks` monta.
+`resolveDocumentPieces` vuelve a validar las props (el HTML viene de caché). Todo
+lo que no pueda pintarse —nombres sin host, bloques anidados, props que ya no
+validan— vuelve a su punto de montaje original, así que nunca se pierde contenido.
+
+Los componentes **no pasan por la caché del Markdown**: Astro los renderiza dentro
+de la página en cada petición. Para plantillas pequeñas el costo es mínimo; si
+llegara a importar, un `.astro` sin hidratación admite una caché de fragmentos
+(Container API) con clave `(bloque, hash de props, versión)` sin cambiar el
+contrato.
 
 ## Quién aporta qué
 
-`financial-content`:
+`financial-content` (dueño de sus componentes):
 
-- `shared/components/priceChart.ts`: nombre y esquema de props de `price-chart`,
-  más `financialComponentBlockDefinitions`.
-- `shared/rendering/createFinancialContentExtensions.ts`: devuelve, en orden,
-  la extensión de fichas (`financial-content`) y la de componentes
-  (`financial-components`, versión `2`: sus bloques de raíz llevan marcadores).
-- `browser/components/priceChart.ts`: montador con `lightweight-charts`.
-- `browser/financialComponentMounts.ts`: mapa nombre → cargador diferido.
-- Estilos propios en `browser/ui/styles/financial-content.css`.
+- `browser/components/`: `FinancialMetrics`, `FinancialChart`, `FinancialNews`,
+  `FinancialSources` y `CompanyProfile` (`.astro` + `.block.ts`, solo servidor) y
+  `PriceChart.tsx` + `.block.ts` (isla de React, `hydrate: "visible"`).
+- `browser/ui/`: parciales `.astro` (`FinancialTime`, `FinancialPeriod`,
+  `ExternalLink`, `SourceDates`) y `blockIndex.ts`, que numera los bloques de cada
+  petición (`Astro.request`) para que los `id` de las fichas sean únicos.
+- `shared/components/financialBlockProps.ts`: esquema de props de cada ficha;
+  inyecta el `kind` (lo fija la fence, el autor no lo escribe) y traduce las
+  incidencias de zod al mensaje en español del contrato.
+- `shared/validation/`: esquemas estrictos (`FinancialBlockSchemas`), mensajes
+  (`financialIssueMessages`) y el validador de documentos.
+- `shared/chart/`: geometría y modelo de vista puro del gráfico SVG
+  (`createChartView`); el `.astro` solo dibuja.
+- `shared/guide/`, `shared/formatting/` y estilos en
+  `browser/ui/styles/financial-content.css`.
 
-`application` (composición):
-
-- `shared/createMarkdownExtensions.ts`: una sola lista para servidor y Worker.
-- `shared/componentBlockDefinitions.ts`, `shared/resolveDocumentPieces.ts`.
-- `server/generateComponentBlocks/`: `discoverBlocks`, `renderHostSource`,
-  `buildGeneratedFiles`.
-- `browser/ui/RenderedDocument.astro` y `browser/ui/generated/`.
-- `browser/installComponentBlocks.ts`: registra los montadores vanilla de cada
-  módulo; `Layout.astro` lo importa.
+`application` (composición): `createMarkdownExtensions`, `componentBlockDefinitions`,
+`resolveDocumentPieces`, `server/generateComponentBlocks/`,
+`browser/ui/RenderedDocument.astro` y `browser/ui/generated/`.
+`createMarkdownBlockAdvisor` valida contra la misma lista de definiciones.
 
 ## Añadir un componente
 
-**De framework:**
-
-1. Crear `Nombre.tsx` (o `.jsx`, `.vue`, `.svelte`) y `Nombre.block.ts` en
-   `src/<módulo>/browser/components/`.
-2. Ejecutar `npm run blocks:generate` y versionar los archivos generados
-   (`dev` y `build` lo hacen solos al arrancar).
-3. Si el framework es nuevo, instalar su integración de Astro
-   (`@astrojs/vue`, `@astrojs/svelte`…) y añadirla a `integrations` en
-   `astro.config.mjs`. Si conviven dos frameworks que comparten `.jsx` o `.tsx`
-   (React, Preact, Solid), cada integración necesita su opción `include`.
-
-**Vanilla:**
-
-1. Definir nombre y esquema de props y añadirlo a las definiciones del módulo.
-2. Escribir su montador `(element, props) => cleanup?` y añadirlo al mapa de
-   montadores del módulo.
-3. Si el módulo es nuevo, registrar sus extensiones en
-   `createMarkdownExtensions.ts` y sus montadores en `installComponentBlocks.ts`.
-
-Un test por módulo verifica que toda definición vanilla tenga montador.
-
-## Componentes actuales
-
-**`price-chart`** (vanilla) usa TradingView `lightweight-charts`. Series `line`,
-`area` o `candlestick`:
-
-````md
-```price-chart
-title: ACME
-height: 320
-series:
-  type: candlestick
-  data:
-    - { time: 2026-01-02, open: 10, high: 12, low: 9, close: 11 }
-```
-````
-
-Un ejemplo largo con datos sintéticos está en `docs/examples/price-chart-demo.md`.
-
-**`price-chart-island`** (framework, React) es una versión de `price-chart`
-independiente de la original, con el mismo esquema de props
-(`financial-content/browser/components/PriceChartIsland.tsx` y
-`PriceChartIsland.block.ts`). El servidor entrega la figura con su título, el
-hueco del alto exacto y un resumen en texto de la serie (`describePriceChart`),
-así que hay contenido antes de cargar JavaScript y sin él; el gráfico se dibuja
-tras hidratar, porque `lightweight-charts` necesita el DOM. El dibujo vive en
-`createPriceChart.ts`, que comparten esta isla y el montador vanilla; la isla lo
-importa de forma diferida, de modo que la librería no se evalúa en el servidor.
-El contenedor del gráfico no tiene hijos de React para que la librería pueda
-poblarlo sin que React lo vea. En la vista previa del editor se ve solo su
-contenido alternativo (límite general de las islas). `price-chart` no cambia.
-
-**`counter-demo`** (framework, React) es una demostración del mecanismo
-(`application/browser/components/CounterDemo.tsx`). Se puede borrar, junto con su
-`.block.ts`, cuando exista el primer componente real. Un documento de prueba con
-todos los casos está en `docs/examples/framework-component-demo.md`.
+1. Crear `Nombre.astro` (o `.tsx`, `.jsx`, `.vue`, `.svelte`) y `Nombre.block.ts`
+   en `src/<módulo>/browser/components/`.
+2. Si debe hidratarse, declarar `hydrate` en el `.block.ts` (solo componentes de
+   framework).
+3. Ejecutar `npm run blocks:generate` y versionar los archivos generados.
+4. Si el framework es nuevo, instalar su integración de Astro y añadirla a
+   `integrations` en `astro.config.mjs`.
+5. Probar un `.astro` con la Container API: un archivo `*.astro.test.ts` se ejecuta
+   con `npm run test:astro` (`vitest.astro.config.ts`).
 
 ## Límites
 
 - Solo se ejecutan componentes registrados; un autor no puede subir código.
-- **Bloques de framework anidados** (dentro de una lista o una cita) no se
-  hidratan: muestran su contenido alternativo. Solo los bloques de raíz son islas.
-- **Vista previa del editor:** el Worker no puede ejecutar el SSR de Astro, así que
-  los componentes de framework se ven con su contenido alternativo; los vanilla
-  se montan en vivo como siempre.
+- **Bloques anidados** (dentro de una lista o una cita) no se renderizan como
+  componente: muestran su contenido alternativo. Solo los bloques de raíz cuentan.
+- **Vista previa del editor:** el Worker no puede ejecutar Astro, así que ningún
+  componente (ni `.astro` ni isla) se ve renderizado: aparece su contenido
+  alternativo. Pendiente de otra sesión.
+- **Sin contenido hijo:** un bloque recibe solo props, no Markdown anidado.
+- **YAML:** los bloques se parsean con `yaml.parse` estándar. Se perdió el parser
+  endurecido de las fichas antiguas (rechazo de alias, etiquetas y `__proto__`);
+  la validación estricta del esquema se conserva.
 - **Contenido guardado por el editor:** al abrir un documento editado y guardado en
-  la misma sesión del navegador, `DocumentPageController` sustituye el cuerpo por el
-  HTML que el editor dejó en `sessionStorage` (el del Worker). Ese HTML no trae
-  islas y puede venir incluso de otra versión del código (`sessionStorage` es por
-  origen y pestaña), así que el controlador no mira el contenido guardado sino la
-  página: si el servidor ya pintó alguna isla (`astro-island` dentro de
-  `#document-body`), no sustituye nada. Un documento sin islas se sustituye como
-  antes. Consecuencia: en un documento con islas se muestra el render del servidor,
-  no el guardado en sesión.
-- La directiva de hidratación es fija (`client:visible`); las directivas `client:*`
-  no admiten valores dinámicos.
+  la misma sesión, `DocumentPageController` sustituiría el cuerpo por el HTML del
+  Worker, que no puede renderizar bloques (deja la fence en texto) y puede ser de
+  otra versión del código. Para evitarlo, `DocumentPage` marca `#document-body` con
+  `data-has-blocks` cuando la página pinta algún bloque (`documentHasBlocks`), sea
+  isla o solo servidor, y el controlador no sustituye nada si la marca existe (o si
+  hay un `astro-island`). Un documento sin bloques se sustituye como antes.
 - Las props son JSON validado con zod: sin funciones ni `Date`.
-- Los colores de `price-chart` se leen de las variables `--theme-*` al montar y no
-  se actualizan al cambiar de tema sin recargar.
-- Un cambio de esquema, o de la forma del HTML que emite una extensión, debe subir
-  la `version` de esa extensión para invalidar la caché de páginas renderizadas.
+- Los colores de `price-chart` se leen de `--theme-*` al hidratar y no se
+  actualizan al cambiar de tema sin recargar.
+- Un cambio de esquema, o de la forma del HTML que emite la extensión, debe subir
+  la `version` de la extensión para invalidar la caché de páginas renderizadas
+  (hoy `component-blocks@2`).
 - En desarrollo, `lightweight-charts` figura en `vite.optimizeDeps.include` para
-  evitar el 504 `Outdated Optimize Dep` en la primera carga. Con React no se
-  observó ese problema.
-- El host generado importa todos los componentes de framework en el bundle del
-  servidor; el cliente solo descarga los de las islas presentes en la página.
+  evitar el 504 `Outdated Optimize Dep` en la primera carga.
+- El host generado importa todos los componentes en el bundle del servidor; el
+  cliente solo descarga los de las islas presentes en la página.
+- La hidratación real con `client:visible` depende de `IntersectionObserver`; el
+  panel de navegador de la herramienta de desarrollo no entrega esos eventos.
