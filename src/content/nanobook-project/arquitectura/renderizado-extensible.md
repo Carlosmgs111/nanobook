@@ -33,7 +33,7 @@ debe cambiar cuando cambie su salida.
 ## Composición y paridad
 
 `src/application/shared/createMarkdownExtensions.ts` es la única lista de
-extensiones (hoy las de `financial-content`). `application/server/Application.ts`
+extensiones (hoy, una sola: la extensión genérica de bloques `component-blocks`). `application/server/Application.ts`
 se la entrega a `PublishingModule`, que construye `UnifiedMarkdownRenderer`; ese
 renderer adapta `renderMarkdown` al contrato de publicación. En el navegador, el
 Worker usa la misma función para el renderer de vista previa. Ambos adaptadores
