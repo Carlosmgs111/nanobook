@@ -13,11 +13,12 @@
     // referenciado y ocultar temporalmente el contenido SSR correcto.
     if (body.dataset.documentRef) return;
 
-    // El servidor pinta los componentes de framework como islas. El HTML que guarda
-    // el editor lo genera el Worker, que no las produce (deja la fence en texto), y
-    // puede venir incluso de otra versión del código: sustituir el cuerpo las
-    // perdería. Si la página ya trae islas, se conserva tal como la sirvió el servidor.
-    if (body.querySelector("astro-island")) return;
+    // El servidor pinta los bloques de componentes con Astro (islas o solo servidor).
+    // El HTML que guarda el editor lo genera el Worker, que no los produce (deja la
+    // fence en texto), y puede venir incluso de otra versión del código: sustituir el
+    // cuerpo los perdería. Si la página trae bloques (`data-has-blocks`, que fija el
+    // servidor, o cualquier isla), se conserva tal como la sirvió el servidor.
+    if (body.dataset.hasBlocks || body.querySelector("astro-island")) return;
 
     const renderedResult = app.editionModule.getRenderedDocument.execute(
       documentId,

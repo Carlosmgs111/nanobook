@@ -25,6 +25,7 @@ export type FinancialIssueCode = keyof typeof messages;
 export type FinancialBlockPath = readonly (string | number)[];
 
 function issueCode(issue: z.core.$ZodIssue): FinancialIssueCode {
+  if (issue.path.length === 1 && issue.path[0] === "version") return "unsupported-version";
   if (issue.code === "custom") {
     return (issue.params?.code as FinancialIssueCode | undefined) ?? "invalid-field";
   }

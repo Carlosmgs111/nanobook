@@ -23,6 +23,21 @@ describe("financialBlockProps", () => {
     expect(parsed.kind).toBe("financial-metrics");
   });
 
+  it("assumes version 1 when the author omits it", () => {
+    const { version: _omitted, ...withoutVersion } = metrics;
+
+    expect(financialBlockProps("financial-metrics").parse(withoutVersion).version).toBe(1);
+  });
+
+  it("rejects another version with the contract's message and path", () => {
+    const result = financialBlockProps("financial-metrics").safeParse({ ...metrics, version: 2 });
+
+    expect(result.success).toBe(false);
+    const [issue] = result.error!.issues;
+    expect(issue.path).toEqual(["version"]);
+    expect(issue.message).toBe("La versión del bloque debe ser 1.");
+  });
+
   it("ignores a kind written by the author", () => {
     const parsed = financialBlockProps("financial-metrics").parse({ ...metrics, kind: "financial-news" });
 

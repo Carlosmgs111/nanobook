@@ -17,7 +17,9 @@ export function financialBlockProps<Kind extends FinancialFenceKind>(
   const schema = financialBlockSchemas[kind] as z.ZodType<Extract<FinancialBlock, { kind: Kind }>>;
 
   return z.any().transform((value, ctx) => {
-    const payload = value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value, kind } : value;
+    // `version` es opcional para el autor: sin ella rige la 1, como siempre.
+    const payload =
+      value !== null && typeof value === "object" && !Array.isArray(value) ? { version: 1, ...value, kind } : value;
     const result = schema.safeParse(payload);
     if (result.success) return result.data;
 
