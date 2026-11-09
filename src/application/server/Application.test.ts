@@ -91,7 +91,7 @@ describe("Application", () => {
 
     expect(published.Content).toContain('class="financial-block financial-metrics"');
     expect(published.Content).toContain("Margen ilustrativo");
-    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|financial-content@1|financial-components@2|component-blocks@1`);
+    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|financial-content@1|component-blocks@1`);
     expect(app).not.toHaveProperty("financialContentModule");
     expect(app).not.toHaveProperty("financialContentRepository");
     expect(app).not.toHaveProperty("financialBlockSchemas");
@@ -101,7 +101,7 @@ describe("Application", () => {
     const app = await Application.create();
     const document = {
       getContent: () =>
-        "Antes.\n\n```price-chart-island\ntitle: ACME\nseries:\n  type: line\n  data:\n    - { time: 2026-01-02, value: 10 }\n```\n\nDespués.",
+        "Antes.\n\n```price-chart\ntitle: ACME\nseries:\n  type: line\n  data:\n    - { time: 2026-01-02, value: 10 }\n```\n\nDespués.",
     };
 
     const published = await app.publishingModule.pageRenderer.render(document);
@@ -111,7 +111,7 @@ describe("Application", () => {
     });
 
     expect(pieces.map((piece) => piece.kind)).toEqual(["html", "island", "html"]);
-    expect(pieces[1]).toMatchObject({ kind: "island", name: "price-chart-island", props: { title: "ACME", height: 360 } });
+    expect(pieces[1]).toMatchObject({ kind: "island", name: "price-chart", props: { title: "ACME", height: 360 } });
   }, 15_000);
 
   it("keeps financial fences as code when publishing receives no extensions", async () => {

@@ -1,12 +1,9 @@
 import type { ComponentBlockDefinition } from "../../../rendering/shared/componentBlocks/ComponentBlockDefinition";
 import { priceChartProps } from "../../shared/components/priceChart";
 
-/**
- * Versión de `price-chart` como isla de React (SSR más hidratación). Reutiliza el
- * esquema de props del original; `price-chart` sigue montándose solo en el cliente.
- */
+/** Gráfico de precios: se renderiza en el servidor y se hidrata al entrar en el viewport. */
 const definition: ComponentBlockDefinition = {
-  name: "price-chart-island",
+  name: "price-chart",
   hydrate: "visible",
   props: priceChartProps,
 };

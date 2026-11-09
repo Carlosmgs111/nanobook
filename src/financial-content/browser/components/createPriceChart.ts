@@ -8,7 +8,7 @@ function themeColor(name: string, fallback: string): string {
 /**
  * Dibuja el gráfico de precios dentro de `container` (que debe tener ya su alto)
  * y devuelve la función que lo destruye. No crea ni sustituye ningún otro nodo:
- * lo comparten el montador vanilla de `price-chart` y la isla `price-chart-island`.
+ * lo usa la isla `PriceChart` tras hidratar.
  */
 export function createPriceChart(container: HTMLElement, props: PriceChartProps): () => void {
   const text = themeColor("--theme-content-muted", "#8a8f98");

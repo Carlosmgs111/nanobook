@@ -298,7 +298,7 @@
   font-size: 0.875rem;
 }
 
-/* Solo la isla (`price-chart-island`) lo emite: texto del servidor bajo el gráfico. */
+/* Texto del servidor bajo el gráfico (lo emite la isla `price-chart`). */
 .financial-price-chart > .financial-price-chart-summary {
   margin: var(--theme-space-block) 0 0;
   color: var(--theme-content-muted);
