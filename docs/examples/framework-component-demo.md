@@ -1,6 +1,6 @@
 # Demo de componentes de framework
 
-Documento de prueba manual para los bloques de framework (`counter-demo`, React).
+Documento de prueba manual para los bloques de framework (`counter-demo` y `price-chart`, React).
 Publícalo en un nanobook y comprueba lo que indica cada sección.
 
 ## 1. Bloque de raíz con valores explícitos
@@ -32,30 +32,14 @@ label: Segundo contador
 start: 10
 ```
 
-## 4. Componente vanilla en el mismo documento
+## 4. Gráfico de precios
 
-El gráfico se monta en el navegador con su mecanismo de siempre; no es una isla.
+`price-chart` es una isla de React: el servidor entrega el título, el hueco del
+alto exacto y un resumen en texto bajo el gráfico (visible con JavaScript
+desactivado); el gráfico se dibuja al hidratar, al entrar en el viewport.
 
 ```price-chart
 title: ACME
-height: 220
-series:
-  type: line
-  data:
-    - { time: 2026-01-02, value: 10 }
-    - { time: 2026-01-05, value: 12 }
-    - { time: 2026-01-06, value: 11 }
-    - { time: 2026-01-07, value: 14 }
-```
-
-### 4b. El mismo gráfico como isla
-
-Con `price-chart-island` el servidor entrega el título, el hueco del alto exacto y
-un resumen en texto bajo el gráfico (visible con JavaScript desactivado); el
-gráfico se dibuja al hidratar, al entrar en el viewport.
-
-```price-chart-island
-title: ACME (isla)
 height: 220
 series:
   type: line

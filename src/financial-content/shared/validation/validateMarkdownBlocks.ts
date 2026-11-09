@@ -2,7 +2,6 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { parse } from "yaml";
 import type { ComponentBlockDefinition } from "../../../rendering/shared/componentBlocks/ComponentBlockDefinition";
-import { financialComponentBlockDefinitions } from "../components/priceChart";
 import { formatFinancialBlockPath } from "../parsing/FinancialBlockParseError";
 import { isFinancialFenceKind, parseFinancialBlock } from "../parsing/parseFinancialBlock";
 import { financialBlockSchemas } from "./FinancialBlockSchemas";
@@ -67,7 +66,7 @@ function validateComponentBlock(definition: ComponentBlockDefinition, source: st
  */
 export function validateMarkdownBlocks(
   markdown: string,
-  definitions: readonly ComponentBlockDefinition[] = financialComponentBlockDefinitions,
+  definitions: readonly ComponentBlockDefinition[],
 ): readonly MarkdownBlockIssue[] {
   const tree = unified().use(remarkParse).parse(markdown) as unknown as MarkdownNode;
   const byName = new Map(definitions.map((definition) => [definition.name, definition]));

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { ComponentBlockDefinition } from "../../../rendering/shared/componentBlocks/ComponentBlockDefinition";
 
 const time = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Usa fechas YYYY-MM-DD");
 
@@ -42,11 +41,3 @@ export const priceChartProps = z.object({
 });
 
 export type PriceChartProps = z.infer<typeof priceChartProps>;
-
-export const priceChartDefinition: ComponentBlockDefinition = {
-  name: "price-chart",
-  props: priceChartProps,
-};
-
-/** Componentes interactivos del módulo; cada uno requiere un montador en `browser/`. */
-export const financialComponentBlockDefinitions: readonly ComponentBlockDefinition[] = [priceChartDefinition];

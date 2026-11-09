@@ -3,13 +3,13 @@ import type { PriceChartProps } from "../../shared/components/priceChart";
 import { describePriceChart } from "../../shared/components/priceChartSummary";
 
 /**
- * `price-chart` como isla: el servidor entrega la figura con su título, el hueco
+ * Bloque `price-chart`, una isla de React: el servidor entrega la figura con su título, el hueco
  * del alto exacto (sin saltos de maquetación) y un resumen en texto; el gráfico
  * se dibuja en el navegador tras hidratar, porque `lightweight-charts` necesita
  * el DOM. El contenedor del gráfico no tiene hijos de React, así que la librería
  * puede poblarlo sin que React lo vea.
  */
-export default function PriceChartIsland(props: PriceChartProps) {
+export default function PriceChart(props: PriceChartProps) {
   const canvas = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -7,7 +7,6 @@ it("registers the five financial fences in each browser extension list", () => {
 
   expect(extensions.map(({ id, version }) => `${id}@${version}`)).toEqual([
     "financial-content@1",
-    "financial-components@2",
     "component-blocks@1",
   ]);
   expect(extensions[0].fenceLanguages).toEqual([
@@ -20,15 +19,11 @@ it("registers the five financial fences in each browser extension list", () => {
   expect(createMarkdownExtensions()).not.toBe(extensions);
 });
 
-it("keeps price-chart (client mount) and price-chart-island (framework island) as separate fences", async () => {
+it("renders price-chart as a single framework block between markers", async () => {
   const series = "series:\n  type: line\n  data:\n    - { time: 2026-01-02, value: 10 }";
-  const html = await renderMarkdown(
-    `\`\`\`price-chart\n${series}\n\`\`\`\n\n\`\`\`price-chart-island\n${series}\n\`\`\``,
-    createMarkdownExtensions(),
-  );
+  const html = await renderMarkdown(`\`\`\`price-chart\n${series}\n\`\`\``, createMarkdownExtensions());
 
-  expect(html).toContain("<!--nb:block-start price-chart ");
-  expect(html).toContain("<!--nb:block-start price-chart-island ");
+  expect(html.match(/<!--nb:block-start price-chart /g)).toHaveLength(1);
   expect(html).toContain('data-component="price-chart"');
-  expect(html).toContain('data-component="price-chart-island"');
+  expect(html).toContain("<!--nb:block-end-->");
 }, 30_000);
