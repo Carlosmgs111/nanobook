@@ -1,9 +1,7 @@
-import type { FinancialFenceKind } from "../model/FinancialBlock";
+import type { z } from "zod";
 
 const messages = {
   "invalid-yaml": "El contenido debe ser un documento YAML válido.",
-  "yaml-alias": "El bloque no admite alias YAML.",
-  "yaml-tag": "El bloque solo admite etiquetas del esquema core de YAML.",
   "unsupported-version": "La versión del bloque debe ser 1.",
   "unknown-field": "El bloque contiene un campo que el contrato no admite.",
   "invalid-field": "El campo falta o su valor no cumple el contrato.",
@@ -22,18 +20,26 @@ const messages = {
   "incompatible-series": "Las series deben compartir unidad y moneda.",
 };
 
-export type FinancialBlockParseErrorCode = keyof typeof messages;
+/** Códigos con los que los esquemas etiquetan sus reglas propias (`params.code`). */
+export type FinancialIssueCode = keyof typeof messages;
 export type FinancialBlockPath = readonly (string | number)[];
 
-export class FinancialBlockParseError extends Error {
-  constructor(
-    public readonly kind: FinancialFenceKind,
-    public readonly code: FinancialBlockParseErrorCode,
-    public readonly path: FinancialBlockPath = [],
-  ) {
-    super(messages[code]);
-    this.name = "FinancialBlockParseError";
+function issueCode(issue: z.core.$ZodIssue): FinancialIssueCode {
+  if (issue.code === "custom") {
+    return (issue.params?.code as FinancialIssueCode | undefined) ?? "invalid-field";
   }
+  if (issue.code === "unrecognized_keys") return "unknown-field";
+  if ((issue.code === "too_big" || issue.code === "too_small") && issue.origin === "array") {
+    return "collection-limit";
+  }
+  if (issue.code === "invalid_format" && issue.format === "date") return "invalid-date";
+  if (issue.code === "invalid_type" && issue.expected === "number") return "invalid-number";
+  return "invalid-field";
+}
+
+/** Mensaje en español, con el vocabulario del contrato, de una incidencia de validación. */
+export function financialIssueMessage(issue: z.core.$ZodIssue): string {
+  return messages[issueCode(issue)];
 }
 
 /** Ruta legible de un campo, por ejemplo `series[0].values`. Vacía si el error afecta a todo el bloque. */

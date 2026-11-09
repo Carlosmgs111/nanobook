@@ -1,0 +1,115 @@
+---
+import { CHART_HEIGHT, CHART_WIDTH } from "../../shared/chart/ChartGeometry";
+import { CHART_PLOT, createChartView, dashPattern, markerPath } from "../../shared/chart/chartView";
+import { formatFinancialValue } from "../../shared/formatting/formatFinancialValue";
+import type { FinancialChartBlock } from "../../shared/model/FinancialBlock";
+import { nextBlockIndex } from "../ui/blockIndex";
+import ExternalLink from "../ui/ExternalLink.astro";
+import SourceDates from "../ui/SourceDates.astro";
+
+type Props = FinancialChartBlock;
+
+const block = Astro.props;
+const index = nextBlockIndex(Astro.request);
+const headingId = `financial:chart-${index}-heading`;
+const titleId = `financial:chart-${index}-title`;
+const descriptionId = `financial:chart-${index}-description`;
+const { left, top, right, bottom } = CHART_PLOT;
+const view = createChartView(block);
+const sources = new Map(block.sources.map((source) => [source.id, source]));
+---
+<figure class="financial-block financial-chart">
+  <figcaption>
+    <h2 id={headingId}>{block.title}</h2>
+    {block.description && <p>{block.description}</p>}
+  </figcaption>
+  <svg class="financial-chart__plot" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
+    <title id={titleId}>{block.title}</title>
+    <desc id={descriptionId}>{view.description}</desc>
+    <g class="financial-chart__axes" fill="currentColor" font-size="11">
+      <line x1={left} x2={left} y1={top} y2={bottom} stroke="currentColor" />
+      <line x1={left} x2={right} y1={bottom} y2={bottom} stroke="currentColor" />
+      {view.yTicks.map((tick) => (
+        <g>
+          <line x1={left} x2={right} y1={tick.y} y2={tick.y} stroke="currentColor" opacity="0.25" />
+          <text x={left - 8} y={tick.y + 4} text-anchor="end" textLength={tick.squeeze ? left - 10 : undefined} lengthAdjust={tick.squeeze ? "spacingAndGlyphs" : undefined}>{tick.label}</text>
+        </g>
+      ))}
+      {view.xTicks.map((tick) => (
+        <g>
+          <line x1={tick.x} x2={tick.x} y1={bottom} y2={bottom + 5} stroke="currentColor" />
+          <text x={tick.x} y={bottom + 22} text-anchor={tick.anchor}>{tick.label}</text>
+        </g>
+      ))}
+    </g>
+    {view.series.map((series) => (
+      <g class="financial-chart__series" data-series={series.index} stroke="currentColor">
+        {series.marks.map((mark) => {
+          switch (mark.kind) {
+            case "zero":
+              return <line class="financial-chart__zero" x1={mark.x1} x2={mark.x2} y1={mark.y} y2={mark.y} stroke-width="3" stroke-linecap="butt" />;
+            case "bar":
+              return <rect x={mark.x} y={mark.y} width={mark.width} height={mark.height} stroke-width={mark.strokeWidth} fill="currentColor" fill-opacity="0.25" stroke-dasharray={series.dash} />;
+            case "line":
+              return <path class="financial-chart__line" d={mark.d} fill="none" stroke-width="2" stroke-linecap="round" stroke-dasharray={series.dash} />;
+            case "marker":
+              return <path class="financial-chart__marker" d={mark.d} fill="none" stroke-width="1.5" />;
+          }
+        })}
+      </g>
+    ))}
+  </svg>
+  <dl class="financial-chart__axis-summary">
+    <dt>Referencias del eje X</dt>
+    <dd>{view.axisSummary.x}</dd>
+    <dt>Eje Y</dt>
+    <dd>{view.axisSummary.y}</dd>
+  </dl>
+  <ol class="financial-chart__legend">
+    {block.series.map((series, position) => (
+      <li data-series={position}>
+        <svg class="financial-chart__key" viewBox="0 0 32 12" width="32" height="12" aria-hidden="true" stroke="currentColor">
+          {block.chart === "bar" ? (
+            <rect x="3" y="2" width="26" height="8" fill="currentColor" fill-opacity="0.25" stroke-dasharray={dashPattern(position)} />
+          ) : (
+            <Fragment>
+              <line x1="2" x2="30" y1="6" y2="6" stroke-width="2" stroke-dasharray={dashPattern(position)} />
+              <path class="financial-chart__marker" d={markerPath({ x: 16, y: 6 }, position)} fill="none" stroke-width="1.5" />
+            </Fragment>
+          )}
+        </svg>
+        {` ${series.name} · Fuentes `}
+        {series.sourceIds.flatMap((id) => {
+          const source = sources.get(id);
+          return source ? [source] : [];
+        }).map((source, order) => (
+          <Fragment>{order > 0 ? ", " : ""}<span><ExternalLink url={source.url}>{source.label}</ExternalLink><SourceDates source={source} mode="inline" /></span></Fragment>
+        ))}
+      </li>
+    ))}
+  </ol>
+  <details class="financial-chart__data">
+    <summary>Ver datos del gráfico</summary>
+    <div class="financial-chart__table" tabindex="0" role="region" aria-label="Datos del gráfico">
+      <table aria-labelledby={headingId}>
+        <thead>
+          <tr>
+            <th scope="col">Categoría</th>
+            {block.series.map((series) => <th scope="col">{series.name}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {block.x.map((label, row) => (
+            <tr>
+              <th scope="row">{label}</th>
+              {block.series.map((series) => {
+                const value = series.values[row];
+                return <td>{value === null ? "Sin dato" : formatFinancialValue({ ...series, value })}</td>;
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</figure>

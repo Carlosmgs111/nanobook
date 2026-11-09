@@ -1,0 +1,51 @@
+---
+import type { CompanyProfileBlock } from "../../shared/model/FinancialBlock";
+import { nextBlockIndex } from "../ui/blockIndex";
+import ExternalLink from "../ui/ExternalLink.astro";
+import FinancialTime from "../ui/FinancialTime.astro";
+import SourceDates from "../ui/SourceDates.astro";
+
+type Props = CompanyProfileBlock;
+
+const block = Astro.props;
+const { company } = block;
+const index = nextBlockIndex(Astro.request);
+const title = block.title ?? company.name;
+const headingId = `financial:company-${index}-heading`;
+const fields: Array<[string, string]> = [
+  ["Ticker", company.ticker],
+  ["Bolsa", company.exchange],
+  ["País", company.country],
+  ["Industria", company.industry],
+  ["Moneda de reporte", company.reportingCurrency],
+];
+if (title !== company.name) fields.unshift(["Empresa", company.name]);
+
+const citedIds = new Set(company.sourceIds);
+const citedSources = block.sources.filter(({ id }) => citedIds.has(id));
+---
+<section class="financial-block financial-company" aria-labelledby={headingId}>
+  <h2 id={headingId}>{title}</h2>
+  {block.description && <p>{block.description}</p>}
+  <p>{company.description}</p>
+  <dl>
+    {fields.map(([label, value]) => (
+      <Fragment><dt>{label}</dt><dd>{value}</dd></Fragment>
+    ))}
+    <dt>Fecha de corte</dt><dd><FinancialTime date={company.asOf} /></dd>
+  </dl>
+  {company.links?.length ? (
+    <Fragment>
+      <h3 id={`financial:company-${index}-links`}>Enlaces</h3>
+      <ul class="financial-company__links">
+        {company.links.map(({ label, url }) => <li><ExternalLink url={url}>{label}</ExternalLink></li>)}
+      </ul>
+    </Fragment>
+  ) : null}
+  <h3 id={`financial:company-${index}-sources`}>Fuentes</h3>
+  <ul class="financial-company__sources">
+    {citedSources.map((source) => (
+      <li><ExternalLink url={source.url}>{source.label}</ExternalLink><SourceDates source={source} mode="inline" /></li>
+    ))}
+  </ul>
+</section>

@@ -1,0 +1,10 @@
+---
+import { formatFinancialDate } from "../../shared/formatting/formatFinancialDate";
+
+interface Props {
+  date: string;
+}
+
+const { date } = Astro.props;
+---
+<time datetime={date}>{formatFinancialDate(date)}</time>

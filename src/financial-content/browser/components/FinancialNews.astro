@@ -1,0 +1,29 @@
+---
+import type { FinancialNewsBlock } from "../../shared/model/FinancialBlock";
+import { nextBlockIndex } from "../ui/blockIndex";
+import ExternalLink from "../ui/ExternalLink.astro";
+import SourceDates from "../ui/SourceDates.astro";
+
+type Props = FinancialNewsBlock;
+
+const block = Astro.props;
+const headingId = `financial:news-${nextBlockIndex(Astro.request)}-heading`;
+const sources = new Map(block.sources.map((source) => [source.id, source]));
+// La validación garantiza que cada noticia cita una fuente del bloque.
+const articles = block.items.map((item) => ({ item, source: sources.get(item.sourceId)! }));
+---
+<section class="financial-block financial-news" aria-labelledby={headingId}>
+  <h2 id={headingId}>{block.title ?? "Noticias financieras"}</h2>
+  {block.description && <p>{block.description}</p>}
+  {articles.map(({ item, source }) => (
+    <article class="financial-news__article">
+      <h3>
+        <ExternalLink url={source.url}>{item.title}{" "}<span class="financial-news__external">(enlace externo, abre en otra pestaña)</span></ExternalLink>
+      </h3>
+      <p class="financial-news__meta">{source.organization ?? source.label}<SourceDates source={source} mode="inline" /></p>
+      <p>{item.summary}</p>
+      {item.relatedTickers?.length ? <p class="financial-news__references">{`Tickers: ${item.relatedTickers.join(", ")}`}</p> : null}
+      {item.mentionedMetrics?.length ? <p class="financial-news__references">{`Métricas: ${item.mentionedMetrics.join(", ")}`}</p> : null}
+    </article>
+  ))}
+</section>

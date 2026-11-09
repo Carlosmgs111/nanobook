@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createMarkdownExtensions } from "../../application/shared/createMarkdownExtensions";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
-import { createFinancialContentExtension } from "../../financial-content/shared";
 import { UnifiedMarkdownRenderer as ServerRenderer } from "../../publishing/server/infraestructure/renderer/UnifiedMarkdownRenderer";
 import type { MarkdownExtension } from "./MarkdownExtension";
 
@@ -33,14 +32,14 @@ const sources = [
     marker: 'class="shiki github-dark"',
   },
   {
-    name: "a full financial note",
+    name: "a full financial note (component blocks)",
     source: financialNote,
-    marker: 'class="financial-block financial-sources"',
+    marker: 'data-component="financial-sources"',
   },
 ];
 
 describe("Markdown renderer parity", () => {
-  const server = new ServerRenderer([createFinancialContentExtension()]);
+  const server = new ServerRenderer(createMarkdownExtensions());
   const preview = new PreviewRenderer(createMarkdownExtensions());
   const serverWithoutExtensions = new ServerRenderer();
 

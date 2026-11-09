@@ -2,9 +2,7 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { parse } from "yaml";
 import type { ComponentBlockDefinition } from "../../../rendering/shared/componentBlocks/ComponentBlockDefinition";
-import { formatFinancialBlockPath } from "../parsing/FinancialBlockParseError";
-import { isFinancialFenceKind, parseFinancialBlock } from "../parsing/parseFinancialBlock";
-import { financialBlockSchemas } from "./FinancialBlockSchemas";
+import { formatFinancialBlockPath } from "./financialIssueMessages";
 
 /** Un problema concreto de un bloque dentro de un documento Markdown. */
 export interface MarkdownBlockIssue {
@@ -18,10 +16,6 @@ export interface MarkdownBlockIssue {
 }
 
 const NEAR_MISS_PREFIXES = ["financial-", "company-", "price-"];
-
-function knownBlockNames(definitions: readonly ComponentBlockDefinition[]): string[] {
-  return [...Object.keys(financialBlockSchemas), ...definitions.map(({ name }) => name)];
-}
 
 /** Forma mínima del árbol mdast que se necesita aquí; evita depender de `@types/mdast`. */
 interface MarkdownNode {
@@ -56,13 +50,11 @@ function validateComponentBlock(definition: ComponentBlockDefinition, source: st
 }
 
 /**
- * Comprueba los bloques financieros y de componentes de un documento Markdown
- * con los mismos parsers y esquemas que usa el renderizado, sin renderizar.
- *
- * Los bloques financieros informan solo del primer problema de cada uno, como
- * hace el parser; los de componentes informan de todos. Una fence con un
- * nombre casi correcto (`financial-chartt`) se señala, porque de otro modo se
- * publicaría en silencio como código normal.
+ * Comprueba los bloques de componentes de un documento Markdown con los mismos
+ * esquemas que usa el renderizado, sin renderizar. Informa de todos los
+ * problemas de cada bloque. Una fence con un nombre casi correcto
+ * (`financial-chartt`) se señala, porque de otro modo se publicaría en silencio
+ * como código normal.
  */
 export function validateMarkdownBlocks(
   markdown: string,
@@ -70,22 +62,13 @@ export function validateMarkdownBlocks(
 ): readonly MarkdownBlockIssue[] {
   const tree = unified().use(remarkParse).parse(markdown) as unknown as MarkdownNode;
   const byName = new Map(definitions.map((definition) => [definition.name, definition]));
-  const known = knownBlockNames(definitions);
+  const known = definitions.map(({ name }) => name);
   const issues: MarkdownBlockIssue[] = [];
 
   for (const fence of codeFences(tree)) {
     const lang = fence.lang;
     if (!lang) continue;
     const line = fence.position?.start.line ?? 0;
-
-    if (isFinancialFenceKind(lang)) {
-      const result = parseFinancialBlock(lang, fence.value ?? "");
-      if (!result.isSuccess) {
-        const error = result.getError();
-        issues.push({ block: lang, line, path: formatFinancialBlockPath(error.path), message: error.message });
-      }
-      continue;
-    }
 
     const definition = byName.get(lang);
     if (definition) {

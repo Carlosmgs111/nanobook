@@ -2,19 +2,18 @@ import { expect, it } from "vitest";
 import { renderMarkdown } from "../../rendering/shared/renderMarkdown";
 import { createMarkdownExtensions } from "./createMarkdownExtensions";
 
-it("registers the five financial fences in each browser extension list", () => {
+it("resolves every block fence through a single component-blocks extension", () => {
   const extensions = createMarkdownExtensions();
 
-  expect(extensions.map(({ id, version }) => `${id}@${version}`)).toEqual([
-    "financial-content@1",
-    "component-blocks@1",
-  ]);
-  expect(extensions[0].fenceLanguages).toEqual([
+  expect(extensions.map(({ id, version }) => `${id}@${version}`)).toEqual(["component-blocks@2"]);
+  expect([...extensions[0].fenceLanguages].sort()).toEqual([
     "company-profile",
+    "counter-demo",
     "financial-chart",
     "financial-metrics",
     "financial-news",
     "financial-sources",
+    "price-chart",
   ]);
   expect(createMarkdownExtensions()).not.toBe(extensions);
 });

@@ -1,0 +1,33 @@
+---
+import type { FinancialSourcesBlock } from "../../shared/model/FinancialBlock";
+import type { FinancialSourceType } from "../../shared/model/FinancialSource";
+import { nextBlockIndex } from "../ui/blockIndex";
+import ExternalLink from "../ui/ExternalLink.astro";
+import SourceDates from "../ui/SourceDates.astro";
+
+type Props = FinancialSourcesBlock;
+
+const sourceTypeLabels: Record<FinancialSourceType, string> = {
+  filing: "Reporte regulatorio",
+  earnings: "Resultados",
+  news: "Noticia",
+  dataset: "Conjunto de datos",
+  other: "Otra fuente",
+};
+
+const block = Astro.props;
+const headingId = `financial:sources-${nextBlockIndex(Astro.request)}-heading`;
+---
+<section class="financial-block financial-sources" aria-labelledby={headingId}>
+  <h2 id={headingId}>{block.title ?? "Fuentes"}</h2>
+  {block.description && <p>{block.description}</p>}
+  <ol class="financial-sources__list">
+    {block.items.map((source) => (
+      <li>
+        <ExternalLink url={source.url}>{source.label}</ExternalLink>
+        <p class="financial-sources__meta">{[source.organization, sourceTypeLabels[source.type]].filter(Boolean).join(" · ")}</p>
+        <SourceDates source={source} mode="paragraphs" />
+      </li>
+    ))}
+  </ol>
+</section>

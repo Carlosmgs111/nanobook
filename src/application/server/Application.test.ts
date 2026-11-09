@@ -84,14 +84,14 @@ describe("Application", () => {
     expect(app.nanobookModule.listNanobooks).toBeDefined();
   });
 
-  it("composes financial rendering as an internal publishing capability", async () => {
+  it("composes financial blocks as an internal publishing capability", async () => {
     const app = await Application.create();
     const { pageRenderer } = app.publishingModule;
     const published = await pageRenderer.render(financialDocument);
 
-    expect(published.Content).toContain('class="financial-block financial-metrics"');
+    expect(published.Content).toContain("<!--nb:block-start financial-metrics ");
     expect(published.Content).toContain("Margen ilustrativo");
-    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|financial-content@1|component-blocks@1`);
+    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|component-blocks@2`);
     expect(app).not.toHaveProperty("financialContentModule");
     expect(app).not.toHaveProperty("financialContentRepository");
     expect(app).not.toHaveProperty("financialBlockSchemas");

@@ -14,8 +14,9 @@
     "dev:preview": "npm run build && astro preview",
     "start": "node ./dist/server/entry.mjs",
     "astro": "astro",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.astro.config.ts",
     "test:watch": "vitest",
+    "test:astro": "vitest run --config vitest.astro.config.ts",
     "database:migrate": "tsx scripts/database-migrate.ts",
     "profile:change-username": "tsx scripts/change-profile-username.ts"
   },

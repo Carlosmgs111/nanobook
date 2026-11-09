@@ -1,0 +1,33 @@
+import { z } from "zod";
+import type { FinancialBlock, FinancialFenceKind } from "../model/FinancialBlock";
+import { financialBlockSchemas } from "../validation/FinancialBlockSchemas";
+import { financialIssueMessage } from "../validation/financialIssueMessages";
+
+/**
+ * Esquema de props de una ficha financiera como bloque de componente.
+ *
+ * El autor no escribe `kind` (lo fija el nombre de la fence), así que se inyecta
+ * antes de validar con el esquema estricto de siempre; un `kind` escrito a mano
+ * se ignora. Las incidencias se devuelven con su ruta y con el mensaje en español
+ * del contrato, de modo que el validador y el aviso en línea siguen siendo claros.
+ */
+export function financialBlockProps<Kind extends FinancialFenceKind>(
+  kind: Kind,
+): z.ZodType<Extract<FinancialBlock, { kind: Kind }>> {
+  const schema = financialBlockSchemas[kind] as z.ZodType<Extract<FinancialBlock, { kind: Kind }>>;
+
+  return z.any().transform((value, ctx) => {
+    const payload = value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value, kind } : value;
+    const result = schema.safeParse(payload);
+    if (result.success) return result.data;
+
+    for (const issue of result.error.issues) {
+      ctx.addIssue({
+        code: "custom",
+        message: financialIssueMessage(issue),
+        path: issue.path.filter((part): part is string | number => typeof part !== "symbol"),
+      });
+    }
+    return z.NEVER;
+  }) as unknown as z.ZodType<Extract<FinancialBlock, { kind: Kind }>>;
+}

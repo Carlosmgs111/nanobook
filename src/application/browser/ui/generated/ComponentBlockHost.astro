@@ -1,7 +1,12 @@
 ---
 // GENERADO por scripts/generate-component-blocks.ts. No editar a mano.
-import Block0 from "../../components/CounterDemo.tsx";
-import Block1 from "../../../../financial-content/browser/components/PriceChart.tsx";
+import Block0 from "../../../../financial-content/browser/components/CompanyProfile.astro";
+import Block1 from "../../components/CounterDemo.tsx";
+import Block2 from "../../../../financial-content/browser/components/FinancialChart.astro";
+import Block3 from "../../../../financial-content/browser/components/FinancialMetrics.astro";
+import Block4 from "../../../../financial-content/browser/components/FinancialNews.astro";
+import Block5 from "../../../../financial-content/browser/components/FinancialSources.astro";
+import Block6 from "../../../../financial-content/browser/components/PriceChart.tsx";
 
 interface Props {
   name: string;
@@ -12,5 +17,10 @@ const { name, props } = Astro.props;
 const blockProps = props as never;
 ---
 
-{name === "counter-demo" && <Block0 {...blockProps} client:visible />}
-{name === "price-chart" && <Block1 {...blockProps} client:visible />}
+{name === "company-profile" && <Block0 {...blockProps} />}
+{name === "counter-demo" && <Block1 {...blockProps} client:visible />}
+{name === "financial-chart" && <Block2 {...blockProps} />}
+{name === "financial-metrics" && <Block3 {...blockProps} />}
+{name === "financial-news" && <Block4 {...blockProps} />}
+{name === "financial-sources" && <Block5 {...blockProps} />}
+{name === "price-chart" && <Block6 {...blockProps} client:visible />}
