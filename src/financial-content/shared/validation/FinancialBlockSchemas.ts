@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { FinancialBlock, FinancialFenceKind, FinancialUnit } from "../model/FinancialBlock";
 import type { CurrencyCode, FinancialSource, SourceId } from "../model/FinancialSource";
-import type { FinancialBlockParseErrorCode, FinancialBlockPath } from "../parsing/FinancialBlockParseError";
+import type { FinancialBlockPath, FinancialIssueCode } from "./financialIssueMessages";
 
 const MAX_SERIES = 8;
 const MAX_POINTS = 120;
@@ -65,7 +65,7 @@ const quantity = {
 
 function addIssue(
   ctx: z.RefinementCtx,
-  code: FinancialBlockParseErrorCode,
+  code: FinancialIssueCode,
   path: FinancialBlockPath,
 ): void {
   ctx.addIssue({ code: "custom", params: { code }, path: [...path] });

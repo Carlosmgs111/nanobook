@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { MarkdownExtension } from "../../../../rendering/shared/MarkdownExtension";
-import { createFinancialContentExtension } from "../../../../financial-content/shared";
+import { z } from "zod";
+import { createComponentBlocksExtension } from "../../../../rendering/shared/componentBlocks/createComponentBlocksExtension";
 import { EditionRenderError } from "../../domain/errors";
 import { UnifiedMarkdownRenderer } from "./UnifiedMarkdownRenderer";
 
+const createBlockExtension = () =>
+  createComponentBlocksExtension({
+    id: "demo-blocks",
+    version: "1",
+    definitions: [{ name: "demo-block", props: z.object({ count: z.number() }) }],
+  });
+
 describe("UnifiedMarkdownRenderer", () => {
-  const financialFence = "```financial-metrics\ninvalid\n```";
+  const blockFence = "```demo-block\ninvalid\n```";
 
   it("renders markdown through the PreviewRenderer contract", async () => {
     const renderer = new UnifiedMarkdownRenderer();
@@ -49,18 +57,18 @@ describe("UnifiedMarkdownRenderer", () => {
   it("keeps the preview extension configuration after caller array mutations", async () => {
     const initiallyEmpty: MarkdownExtension[] = [];
     const plainRenderer = new UnifiedMarkdownRenderer(initiallyEmpty);
-    initiallyEmpty.push(createFinancialContentExtension());
+    initiallyEmpty.push(createBlockExtension());
 
-    const configured = [createFinancialContentExtension()];
-    const financialRenderer = new UnifiedMarkdownRenderer(configured);
+    const configured = [createBlockExtension()];
+    const blockRenderer = new UnifiedMarkdownRenderer(configured);
     configured[0] = { id: "other", version: "1", fenceLanguages: [], transform() {} };
 
-    const plain = await plainRenderer.render(financialFence);
-    const financial = await financialRenderer.render(financialFence);
+    const plain = await plainRenderer.render(blockFence);
+    const withBlocks = await blockRenderer.render(blockFence);
 
     expect(plain.isSuccess).toBe(true);
-    expect(plain.getValue().Content).toContain('<code class="language-financial-metrics">');
-    expect(financial.isSuccess).toBe(true);
-    expect(financial.getValue().Content).toContain('class="financial-block financial-block--error"');
+    expect(plain.getValue().Content).toContain('<code class="language-demo-block">');
+    expect(withBlocks.isSuccess).toBe(true);
+    expect(withBlocks.getValue().Content).toContain("component-block-error");
   });
 });

@@ -1,0 +1,24 @@
+---
+import type { FinancialSource } from "../../shared/model/FinancialSource";
+import FinancialPeriod from "./FinancialPeriod.astro";
+import FinancialTime from "./FinancialTime.astro";
+
+interface Props {
+  source: FinancialSource;
+  /** `inline`: fragmentos precedidos por « · »; `paragraphs`: un párrafo por dato. */
+  mode: "inline" | "paragraphs";
+}
+
+const { source, mode } = Astro.props;
+---
+{mode === "inline" ? (
+  <Fragment>
+    {source.period && <Fragment>{" · Periodo "}<FinancialPeriod period={source.period} /></Fragment>}{source.publishedAt && <Fragment>{" · Publicado "}<FinancialTime date={source.publishedAt} /></Fragment>}{source.accessedAt && <Fragment>{" · Consultado "}<FinancialTime date={source.accessedAt} /></Fragment>}
+  </Fragment>
+) : (
+  <Fragment>
+    {source.period && <p>Periodo <FinancialPeriod period={source.period} /></p>}
+    {source.publishedAt && <p>Publicado <FinancialTime date={source.publishedAt} /></p>}
+    {source.accessedAt && <p>Consultado <FinancialTime date={source.accessedAt} /></p>}
+  </Fragment>
+)}

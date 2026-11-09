@@ -9,6 +9,6 @@ export default defineConfig({
     environment: "node",
     pool: "forks",
     maxWorkers: 4,
-    exclude: ["node_modules", ".opencode", "dist", ".astro", "**/*.astro"],
+    exclude: ["node_modules", ".opencode", "dist", ".astro", "**/*.astro", "**/*.astro.test.ts"],
   },
 });

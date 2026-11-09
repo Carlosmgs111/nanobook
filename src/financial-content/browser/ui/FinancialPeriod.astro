@@ -1,0 +1,11 @@
+---
+import type { FinancialPeriod } from "../../shared/model/FinancialSource";
+import FinancialTime from "./FinancialTime.astro";
+
+interface Props {
+  period: FinancialPeriod;
+}
+
+const { period } = Astro.props;
+---
+{period.label}{period.from && <Fragment>{" desde "}<FinancialTime date={period.from} /></Fragment>}{period.to && <Fragment>{" hasta "}<FinancialTime date={period.to} /></Fragment>}
