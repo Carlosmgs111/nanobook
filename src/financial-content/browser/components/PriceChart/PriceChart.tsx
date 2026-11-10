@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import type { PriceChartProps } from "../../shared/components/priceChart";
-import { describePriceChart } from "../../shared/components/priceChartSummary";
+import type { PriceChartProps } from "./PriceChart.schema";
+import { describePriceChart } from "./priceChartSummary";
 
 /**
  * Bloque `price-chart`, una isla de React: el servidor entrega la figura con su título, el hueco

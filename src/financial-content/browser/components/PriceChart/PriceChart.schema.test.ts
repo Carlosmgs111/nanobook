@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { priceChartProps } from "./priceChart";
+import { priceChartProps } from "./PriceChart.schema";
 
 describe("price-chart props", () => {
   it("applies the default height and rejects empty series", () => {

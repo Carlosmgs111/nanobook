@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { priceChartProps } from "../../shared/components/priceChart";
+import { priceChartProps } from "./PriceChart.schema";
 import PriceChart from "./PriceChart";
 
 const props = (extra: object = {}) =>

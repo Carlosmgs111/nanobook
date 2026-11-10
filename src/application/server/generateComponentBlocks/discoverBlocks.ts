@@ -31,6 +31,17 @@ function listFiles(directory: string): string[] {
   }
 }
 
+function listFolders(directory: string): string[] {
+  try {
+    return readdirSync(directory, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
 async function readDefinition(
   blockFile: string,
   importModule: ImportModule,
@@ -56,9 +67,10 @@ async function readDefinition(
 }
 
 /**
- * Busca los pares `Nombre.block.ts` + `Nombre.<ext>` de cada
- * `src/<módulo>/browser/components/`. Un componente sin `.block.ts` es un
- * componente corriente y se ignora. Cualquier incoherencia detiene la generación.
+ * Busca los pares `Nombre.block.ts` + `Nombre.<ext>` de cada carpeta de bloque,
+ * `src/<módulo>/browser/components/<Nombre>/`. Una carpeta sin `.block.ts` es
+ * de componentes corrientes y se ignora. Cualquier incoherencia detiene la
+ * generación, incluido un `.block.ts` fuera de carpeta, que el registro no vería.
  */
 export async function discoverBlocks(
   srcRoot: string,
@@ -73,35 +85,46 @@ export async function discoverBlocks(
   const fileByName = new Map<string, string>();
 
   for (const module of modules) {
-    const directory = join(srcRoot, module, "browser", "components");
-    const files = listFiles(directory);
+    const components = join(srcRoot, module, "browser", "components");
 
-    for (const file of files.filter((candidate) => candidate.endsWith(BLOCK_SUFFIX)).sort()) {
-      const blockFile = join(directory, file);
-      const base = file.slice(0, -BLOCK_SUFFIX.length);
-
-      const siblings = COMPONENT_EXTENSIONS.map((extension) => `${base}${extension}`).filter((candidate) =>
-        files.includes(candidate),
+    const loose = listFiles(components).find((candidate) => candidate.endsWith(BLOCK_SUFFIX));
+    if (loose !== undefined) {
+      throw new Error(
+        `${join(components, loose)} debe estar dentro de su propia carpeta: components/<Nombre>/${loose}`,
       );
-      if (siblings.length === 0) {
-        throw new Error(`${blockFile} no tiene un componente hermano (${COMPONENT_EXTENSIONS.join(", ")})`);
-      }
-      if (siblings.length > 1) {
-        throw new Error(`${blockFile} tiene más de un componente hermano: ${siblings.join(", ")}`);
-      }
+    }
 
-      const { name, hydrate } = await readDefinition(blockFile, importModule);
-      const componentFile = join(directory, siblings[0]);
-      if (hydrate !== undefined && componentFile.endsWith(".astro")) {
-        throw new Error(`${blockFile}: un componente .astro no se hidrata en el navegador; quita "hydrate"`);
-      }
-      const existing = fileByName.get(name);
-      if (existing !== undefined) {
-        throw new Error(`Nombre de bloque duplicado "${name}": ${existing} y ${blockFile}`);
-      }
-      fileByName.set(name, blockFile);
+    for (const folder of listFolders(components)) {
+      const directory = join(components, folder);
+      const files = listFiles(directory);
 
-      entries.push({ name, hydrate, blockFile, componentFile });
+      for (const file of files.filter((candidate) => candidate.endsWith(BLOCK_SUFFIX)).sort()) {
+        const blockFile = join(directory, file);
+        const base = file.slice(0, -BLOCK_SUFFIX.length);
+
+        const siblings = COMPONENT_EXTENSIONS.map((extension) => `${base}${extension}`).filter((candidate) =>
+          files.includes(candidate),
+        );
+        if (siblings.length === 0) {
+          throw new Error(`${blockFile} no tiene un componente hermano (${COMPONENT_EXTENSIONS.join(", ")})`);
+        }
+        if (siblings.length > 1) {
+          throw new Error(`${blockFile} tiene más de un componente hermano: ${siblings.join(", ")}`);
+        }
+
+        const { name, hydrate } = await readDefinition(blockFile, importModule);
+        const componentFile = join(directory, siblings[0]);
+        if (hydrate !== undefined && componentFile.endsWith(".astro")) {
+          throw new Error(`${blockFile}: un componente .astro no se hidrata en el navegador; quita "hydrate"`);
+        }
+        const existing = fileByName.get(name);
+        if (existing !== undefined) {
+          throw new Error(`Nombre de bloque duplicado "${name}": ${existing} y ${blockFile}`);
+        }
+        fileByName.set(name, blockFile);
+
+        entries.push({ name, hydrate, blockFile, componentFile });
+      }
     }
   }
 

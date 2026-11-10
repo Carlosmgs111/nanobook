@@ -203,12 +203,13 @@ sincronización con Companio.
 
 `financial-content` sigue siendo dueño de las capacidades de estas fichas, pero
 ya no tiene un pipeline propio: cada ficha es un componente `.astro` de solo
-servidor (`browser/components/`: `CompanyProfile`, `FinancialChart`,
-`FinancialMetrics`, `FinancialNews`, `FinancialSources`) con su `.block.ts`, que
-Astro renderiza dentro de la página. En `shared/` conserva el modelo, los
-esquemas estrictos y sus mensajes, el formato, la guía de autoría, el validador de
-documentos y la geometría del gráfico (`shared/chart`, con `createChartView` como
-modelo de vista puro). Su hoja en `financial-content/browser/ui/styles` usa roles
+servidor (`browser/components/<Nombre>/`, una carpeta por bloque: `CompanyProfile`,
+`FinancialChart`, `FinancialMetrics`, `FinancialNews`, `FinancialSources`) con su
+`.block.ts` y su `.schema.ts`, que
+Astro renderiza dentro de la página. La geometría del gráfico y su modelo de vista
+puro (`createChartView`) viven en la carpeta de `FinancialChart`. En `shared/` conserva
+el modelo, las primitivas comunes de los esquemas y los mensajes de error, el
+formato, la guía de autoría y el validador de documentos. Su hoja en `financial-content/browser/ui/styles` usa roles
 CSS de `theme`. El gráfico incluye SVG y una tabla de datos equivalente; cuando su
 contenedor es estrecho, un resumen HTML mantiene las etiquetas legibles.
 `rendering/shared` es dueño del pipeline Markdown general, del puerto

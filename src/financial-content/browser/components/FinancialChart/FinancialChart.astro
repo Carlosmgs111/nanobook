@@ -1,11 +1,11 @@
 ---
-import { CHART_HEIGHT, CHART_WIDTH } from "../../shared/chart/ChartGeometry";
-import { CHART_PLOT, createChartView, dashPattern, markerPath } from "../../shared/chart/chartView";
-import { formatFinancialValue } from "../../shared/formatting/formatFinancialValue";
-import type { FinancialChartBlock } from "../../shared/model/FinancialBlock";
-import { nextBlockIndex } from "../ui/blockIndex";
-import ExternalLink from "../ui/ExternalLink.astro";
-import SourceDates from "../ui/SourceDates.astro";
+import { CHART_HEIGHT, CHART_WIDTH } from "./ChartGeometry";
+import { CHART_PLOT, createChartView, dashPattern, markerPath } from "./chartView";
+import { formatFinancialValue } from "../../../shared/formatting/formatFinancialValue";
+import type { FinancialChartBlock } from "../../../shared/model/FinancialBlock";
+import { nextBlockIndex } from "../../ui/blockIndex";
+import ExternalLink from "../../ui/ExternalLink.astro";
+import SourceDates from "../../ui/SourceDates.astro";
 
 type Props = FinancialChartBlock;
 
