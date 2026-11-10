@@ -1,4 +1,4 @@
-import type { PriceChartProps } from "./priceChart";
+import type { PriceChartProps } from "./PriceChart.schema";
 
 function describe(kind: string, data: readonly { time: string }[], latest: string): string {
   const count = data.length;

@@ -34,7 +34,7 @@ export function collectFrameworkBlockDefinitions(modules: BlockModules): readonl
 // Los `*.block.ts` son TypeScript puro (sin framework), así que Vite puede
 // resolverlos en servidor, Worker y pruebas. El componente hidratado, en cambio,
 // no se puede descubrir así: ver el host generado.
-const modules = import.meta.glob<{ default?: ComponentBlockDefinition }>("/src/*/browser/components/*.block.ts", {
+const modules = import.meta.glob<{ default?: ComponentBlockDefinition }>("/src/*/browser/components/*/*.block.ts", {
   eager: true,
 });
 

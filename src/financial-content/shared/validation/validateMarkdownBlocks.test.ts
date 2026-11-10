@@ -2,22 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { financialAuthoringGuide, financialGuideExamples } from "../guide/financialAuthoringGuide";
 import { validateMarkdownBlocks } from "./validateMarkdownBlocks";
-import { financialBlockProps } from "../components/financialBlockProps";
-import { priceChartProps } from "../components/priceChart";
-import type { FinancialFenceKind } from "../model/FinancialBlock";
+import { listFrameworkBlockDefinitions } from "../../../application/shared/componentBlockDefinitions";
 
 /** El validador recibe las definiciones de bloques; aquí, las mismas que registra la aplicación. */
-const financialKinds: FinancialFenceKind[] = [
-  "company-profile",
-  "financial-chart",
-  "financial-metrics",
-  "financial-news",
-  "financial-sources",
-];
-const definitions = [
-  { name: "price-chart", props: priceChartProps },
-  ...financialKinds.map((kind) => ({ name: kind, props: financialBlockProps(kind) })),
-];
+const definitions = listFrameworkBlockDefinitions();
 const validate = (markdown: string) => validateMarkdownBlocks(markdown, definitions);
 
 function fence(lang: string, body: string): string {

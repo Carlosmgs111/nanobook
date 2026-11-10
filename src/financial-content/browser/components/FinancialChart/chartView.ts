@@ -1,5 +1,5 @@
-import { formatFinancialValue } from "../formatting/formatFinancialValue";
-import type { FinancialChartBlock } from "../model/FinancialBlock";
+import { formatFinancialValue } from "../../../shared/formatting/formatFinancialValue";
+import type { FinancialChartBlock } from "../../../shared/model/FinancialBlock";
 import {
   categoryX,
   CHART_PLOT,

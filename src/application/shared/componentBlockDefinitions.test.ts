@@ -19,8 +19,8 @@ describe("collectFrameworkBlockDefinitions", () => {
 
   it("returns the default export of each module, ordered by module path", () => {
     const collected = collectFrameworkBlockDefinitions({
-      "/src/b/browser/components/Beta.block.ts": { default: definition("beta-block") },
-      "/src/a/browser/components/Alpha.block.ts": { default: definition("alpha-block") },
+      "/src/b/browser/components/Beta/Beta.block.ts": { default: definition("beta-block") },
+      "/src/a/browser/components/Alpha/Alpha.block.ts": { default: definition("alpha-block") },
     });
 
     expect(collected.map(({ name }) => name)).toEqual(["alpha-block", "beta-block"]);
@@ -28,14 +28,14 @@ describe("collectFrameworkBlockDefinitions", () => {
 
   it("fails naming the module that has no default export", () => {
     expect(() =>
-      collectFrameworkBlockDefinitions({ "/src/a/browser/components/Alpha.block.ts": {} }),
-    ).toThrow("/src/a/browser/components/Alpha.block.ts");
+      collectFrameworkBlockDefinitions({ "/src/a/browser/components/Alpha/Alpha.block.ts": {} }),
+    ).toThrow("/src/a/browser/components/Alpha/Alpha.block.ts");
   });
 
   it("fails naming the module whose block name is not allowed", () => {
     expect(() =>
       collectFrameworkBlockDefinitions({
-        "/src/a/browser/components/Alpha.block.ts": { default: definition("Alpha Block") },
+        "/src/a/browser/components/Alpha/Alpha.block.ts": { default: definition("Alpha Block") },
       }),
     ).toThrow(/Alpha\.block\.ts.*Alpha Block/s);
   });
@@ -43,8 +43,8 @@ describe("collectFrameworkBlockDefinitions", () => {
   it("fails naming both modules when two blocks share a name", () => {
     expect(() =>
       collectFrameworkBlockDefinitions({
-        "/src/a/browser/components/One.block.ts": { default: definition("same-name") },
-        "/src/b/browser/components/Two.block.ts": { default: definition("same-name") },
+        "/src/a/browser/components/One/One.block.ts": { default: definition("same-name") },
+        "/src/b/browser/components/Two/Two.block.ts": { default: definition("same-name") },
       }),
     ).toThrow(/same-name.*One\.block\.ts.*Two\.block\.ts/s);
   });
@@ -67,9 +67,10 @@ describe("the registered framework block definitions", () => {
 });
 
 /**
- * Importaciones que un `*.block.ts` puede tener: el servidor y el Worker lo
- * cargan. Además de `zod` y el contrato, puede reutilizar el `shared/` de su
- * propio módulo (`../../shared/…` desde `<módulo>/browser/components/`), que por
+ * Importaciones que un `*.block.ts` o un `*.schema.ts` puede tener: el servidor y
+ * el Worker los cargan. Además de `zod` y el contrato, pueden importar un
+ * `./Nombre.schema` de su carpeta y el `shared/` de su propio módulo
+ * (`../../../shared/…` desde `<módulo>/browser/components/<Nombre>/`), que por
  * convención no depende de frameworks, del navegador ni de Node.
  */
 function forbiddenImports(source: string): string[] {
@@ -78,7 +79,8 @@ function forbiddenImports(source: string): string[] {
     (specifier) =>
       specifier !== "zod" &&
       !specifier.endsWith("rendering/shared/componentBlocks/ComponentBlockDefinition") &&
-      !/^\.\.\/\.\.\/shared\//.test(specifier),
+      !/^\.\/[\w.-]+\.schema$/.test(specifier) &&
+      !/^\.\.\/\.\.\/\.\.\/shared\//.test(specifier),
   );
 }
 
@@ -93,24 +95,38 @@ describe("forbiddenImports", () => {
   });
 
   it("accepts the shared folder of the block's own module", () => {
-    const source = 'import { priceChartProps } from "../../shared/components/priceChart";';
+    const source = 'import type { FinancialBlock } from "../../../shared/model/FinancialBlock";';
 
     expect(forbiddenImports(source)).toEqual([]);
+  });
+
+  it("accepts the schema file of the block's own folder", () => {
+    expect(forbiddenImports('import { priceChartProps } from "./PriceChart.schema";')).toEqual([]);
+  });
+
+  it("flags the component next to the block, since it may import a framework", () => {
+    expect(forbiddenImports('import PriceChart from "./PriceChart";')).toEqual(["./PriceChart"]);
+  });
+
+  it("flags the previous flat depth, which no longer reaches the module's shared folder", () => {
+    expect(forbiddenImports('import a from "../../shared/model/FinancialBlock";')).toEqual([
+      "../../shared/model/FinancialBlock",
+    ]);
   });
 
   it("flags the server and browser folders, the global shared folder and other modules", () => {
     const source = [
       'import a from "../server/thing";',
       'import b from "../ui/Thing";',
-      'import c from "../../../shared/server/http/ServerTiming";',
-      'import d from "../../../other-module/shared/thing";',
+      'import c from "../../../../shared/server/http/ServerTiming";',
+      'import d from "../../../../other-module/shared/thing";',
     ].join("\n");
 
     expect(forbiddenImports(source)).toEqual([
       "../server/thing",
       "../ui/Thing",
-      "../../../shared/server/http/ServerTiming",
-      "../../../other-module/shared/thing",
+      "../../../../shared/server/http/ServerTiming",
+      "../../../../other-module/shared/thing",
     ]);
   });
 
@@ -121,23 +137,31 @@ describe("forbiddenImports", () => {
   });
 });
 
-describe("*.block.ts files in the repository", () => {
-  it("only import zod and the definition contract", () => {
+describe("*.block.ts and *.schema.ts files in the repository", () => {
+  it("only import zod, the definition contract, their own schema and their module's shared folder", () => {
     const srcRoot = join(import.meta.dirname, "..", "..");
     const offenders: string[] = [];
 
     for (const module of readdirSync(srcRoot, { withFileTypes: true })) {
       if (!module.isDirectory()) continue;
-      const directory = join(srcRoot, module.name, "browser", "components");
-      let files: string[];
+      const components = join(srcRoot, module.name, "browser", "components");
+      let folders: string[];
       try {
-        files = readdirSync(directory).filter((file) => file.endsWith(".block.ts"));
+        folders = readdirSync(components, { withFileTypes: true })
+          .filter((entry) => entry.isDirectory())
+          .map((entry) => entry.name);
       } catch {
         continue;
       }
-      for (const file of files) {
-        const imports = forbiddenImports(readFileSync(join(directory, file), "utf8"));
-        if (imports.length > 0) offenders.push(`${module.name}/browser/components/${file}: ${imports.join(", ")}`);
+      for (const folder of folders) {
+        const directory = join(components, folder);
+        const files = readdirSync(directory).filter((file) => /.(block|schema).ts$/.test(file));
+        for (const file of files) {
+          const imports = forbiddenImports(readFileSync(join(directory, file), "utf8"));
+          if (imports.length > 0) {
+            offenders.push(`${module.name}/browser/components/${folder}/${file}: ${imports.join(", ")}`);
+          }
+        }
       }
     }
 

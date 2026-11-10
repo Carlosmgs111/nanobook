@@ -29,12 +29,20 @@ Ver `componentes-de-framework-islas` para el porqué de este diseño.
 
 ## Declaración
 
-Dos archivos hermanos en `src/<módulo>/browser/components/`:
+Cada bloque vive en **su propia carpeta**, `src/<módulo>/browser/components/<Nombre>/`,
+con todo lo que le pertenece:
 
 ```text
-Nombre.astro         el componente (o .tsx .jsx .vue .svelte)
-Nombre.block.ts      nombre de la fence, esquema zod de props y, si hace falta, hydrate
+PriceChart/
+  PriceChart.tsx          el componente (o .astro .jsx .vue .svelte)
+  PriceChart.block.ts     nombre de la fence y, si hace falta, hydrate
+  PriceChart.schema.ts    esquema zod de props
+  …                       su lógica, ayudas y pruebas (createPriceChart.ts, priceChartSummary.ts, *.test.ts)
 ```
+
+El generador exige que `Nombre.block.ts` y su componente `Nombre.<ext>` estén en la
+misma carpeta, y falla si un `.block.ts` queda suelto en `components/` (el registro
+no lo vería).
 
 `Nombre.block.ts` exporta por defecto un `ComponentBlockDefinition`:
 
@@ -46,10 +54,11 @@ const definition: ComponentBlockDefinition = {
 };
 ```
 
-Debe importar solo `zod`, el tipo del contrato y, si quiere reutilizar un esquema,
-el `shared/` de su propio módulo (que por convención no depende de frameworks ni de
-Node), porque lo cargan el servidor y el Worker de la vista previa (una prueba lo
-comprueba). El componente recibe como props el valor ya validado, con los
+Un `.block.ts` o un `.schema.ts` debe importar solo `zod`, el tipo del contrato, un
+`./Nombre.schema` de su carpeta y el `shared/` de su propio módulo
+(`../../../shared/…`, que por convención no depende de frameworks ni de Node),
+porque los cargan el servidor y el Worker de la vista previa (una prueba lo
+comprueba en todo el repositorio). El componente recibe como props el valor ya validado, con los
 `default` aplicados. Las props son datos JSON: sin funciones ni `Date`.
 
 ## Mecanismo genérico (`rendering`)
@@ -132,19 +141,22 @@ contrato.
 
 `financial-content` (dueño de sus componentes):
 
-- `browser/components/`: `FinancialMetrics`, `FinancialChart`, `FinancialNews`,
-  `FinancialSources` y `CompanyProfile` (`.astro` + `.block.ts`, solo servidor) y
-  `PriceChart.tsx` + `.block.ts` (isla de React, `hydrate: "visible"`).
+- `browser/components/<Nombre>/`: una carpeta por bloque. `FinancialMetrics`,
+  `FinancialChart`, `FinancialNews`, `FinancialSources` y `CompanyProfile` (`.astro`,
+  `.block.ts` y `.schema.ts`, solo servidor) y `PriceChart` (`.tsx`, isla de React con
+  `hydrate: "visible"`, más `createPriceChart` y `priceChartSummary`). `FinancialChart`
+  incluye además `ChartGeometry` y `chartView` (modelo de vista puro; el `.astro`
+  solo dibuja).
 - `browser/ui/`: parciales `.astro` (`FinancialTime`, `FinancialPeriod`,
   `ExternalLink`, `SourceDates`) y `blockIndex.ts`, que numera los bloques de cada
   petición (`Astro.request`) para que los `id` de las fichas sean únicos.
-- `shared/components/financialBlockProps.ts`: esquema de props de cada ficha;
+- `shared/components/financialBlockProps.ts`: envuelve el esquema de cada ficha;
   inyecta el `kind` (lo fija la fence, el autor no lo escribe) y traduce las
   incidencias de zod al mensaje en español del contrato.
-- `shared/validation/`: esquemas estrictos (`FinancialBlockSchemas`), mensajes
-  (`financialIssueMessages`) y el validador de documentos.
-- `shared/chart/`: geometría y modelo de vista puro del gráfico SVG
-  (`createChartView`); el `.astro` solo dibuja.
+- `shared/validation/`: las primitivas comunes de los esquemas
+  (`financialPrimitives`: texto, fecha, URL, fuentes, periodo…), los mensajes
+  (`financialIssueMessages`) y el validador de documentos. El esquema de cada ficha
+  vive en la carpeta de su bloque.
 - `shared/guide/`, `shared/formatting/` y estilos en
   `browser/ui/styles/financial-content.css`.
 
@@ -155,8 +167,8 @@ contrato.
 
 ## Añadir un componente
 
-1. Crear `Nombre.astro` (o `.tsx`, `.jsx`, `.vue`, `.svelte`) y `Nombre.block.ts`
-   en `src/<módulo>/browser/components/`.
+1. Crear la carpeta `src/<módulo>/browser/components/Nombre/` con `Nombre.astro` (o
+   `.tsx`, `.jsx`, `.vue`, `.svelte`), `Nombre.block.ts` y `Nombre.schema.ts`.
 2. Si debe hidratarse, declarar `hydrate` en el `.block.ts` (solo componentes de
    framework).
 3. Ejecutar `npm run blocks:generate` y versionar los archivos generados.

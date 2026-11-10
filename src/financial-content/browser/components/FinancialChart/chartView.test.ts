@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { FinancialChartBlock } from "../model/FinancialBlock";
+import type { FinancialChartBlock } from "../../../shared/model/FinancialBlock";
 import { createChartView, dashPattern, markerPath } from "./chartView";
 
 const source = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { priceChartProps } from "./priceChart";
+import { priceChartProps } from "./PriceChart.schema";
 import { describePriceChart } from "./priceChartSummary";
 
 const parse = (series: unknown) => priceChartProps.parse({ series });

@@ -1,5 +1,5 @@
 import { AreaSeries, CandlestickSeries, createChart, LineSeries } from "lightweight-charts";
-import type { PriceChartProps } from "../../shared/components/priceChart";
+import type { PriceChartProps } from "./PriceChart.schema";
 
 function themeColor(name: string, fallback: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
