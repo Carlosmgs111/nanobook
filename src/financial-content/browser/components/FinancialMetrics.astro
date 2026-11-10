@@ -19,41 +19,60 @@ const index = nextBlockIndex(Astro.request);
 const headingId = `financial:metrics-${index}-heading`;
 const sources = new Map(block.sources.map((source) => [source.id, source]));
 ---
+
 <section class="financial-block financial-metrics" aria-labelledby={headingId}>
   <h2 id={headingId}>{block.title ?? "Métricas financieras"}</h2>
   {block.description && <p>{block.description}</p>}
   <dl>
-    {block.metrics.map((metric, position) => {
-      const descriptionId = `financial:metrics-${index}-metric-${position}-description`;
-      return (
-        <div class="financial-metrics__item">
-          <dt>{metric.label}</dt>
-          <dd aria-describedby={metric.description ? descriptionId : undefined}>
-            <p class="financial-metrics__value">{formatFinancialValue(metric)}</p>
-            <p class="financial-metrics__period"><FinancialPeriod period={metric.period} /></p>
-            {metric.description && <p id={descriptionId}>{metric.description}</p>}
-            {metric.comparison && (
-              <p class="financial-metrics__comparison" data-direction={metric.comparison.direction}>
-                {`${metric.comparison.label}: ${formatFinancialValue({ ...metric, value: metric.comparison.value })} · ${directionLabels[metric.comparison.direction]}`}
+    {
+      block.metrics.map((metric, position) => {
+        const descriptionId = `financial:metrics-${index}-metric-${position}-description`;
+        return (
+          <div class="financial-metrics__item">
+            <dt>{metric.label}</dt>
+            <dd
+              aria-describedby={metric.description ? descriptionId : undefined}
+            >
+              <p class="financial-metrics__value">
+                {formatFinancialValue(metric)}
               </p>
-            )}
-            <ul class="financial-metrics__sources">
-              {metric.sourceIds.map((id) => {
-                const source = sources.get(id);
-                return (
-                  <li>
-                    {source ? (
-                      <Fragment><ExternalLink url={source.url}>{source.label}</ExternalLink><SourceDates source={source} mode="inline" /></Fragment>
-                    ) : (
-                      "Fuente no disponible"
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </dd>
-        </div>
-      );
-    })}
+              <p class="financial-metrics__period">
+                <FinancialPeriod period={metric.period} />
+              </p>
+              {metric.description && (
+                <p id={descriptionId}>{metric.description}</p>
+              )}
+              {metric.comparison && (
+                <p
+                  class="financial-metrics__comparison"
+                  data-direction={metric.comparison.direction}
+                >
+                  {`${metric.comparison.label}: ${formatFinancialValue({ ...metric, value: metric.comparison.value })} · ${directionLabels[metric.comparison.direction]}`}
+                </p>
+              )}
+              <ul class="financial-metrics__sources">
+                {metric.sourceIds.map((id) => {
+                  const source = sources.get(id);
+                  return (
+                    <li>
+                      {source ? (
+                        <Fragment>
+                          <ExternalLink url={source.url}>
+                            {source.label}
+                          </ExternalLink>
+                          <SourceDates source={source} mode="inline" />
+                        </Fragment>
+                      ) : (
+                        "Fuente no disponible"
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </dd>
+          </div>
+        );
+      })
+    }
   </dl>
 </section>
