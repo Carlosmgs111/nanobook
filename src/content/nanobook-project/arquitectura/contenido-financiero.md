@@ -205,7 +205,7 @@ sincronización con Companio.
 ya no tiene un pipeline propio: cada ficha es un componente `.astro` de solo
 servidor (`browser/components/<Nombre>/`, una carpeta por bloque: `CompanyProfile`,
 `FinancialChart`, `FinancialMetrics`, `FinancialNews`, `FinancialSources`) con su
-`.block.ts` y su `.schema.ts`, que
+`.schema.ts`, que
 Astro renderiza dentro de la página. La geometría del gráfico y su modelo de vista
 puro (`createChartView`) viven en la carpeta de `FinancialChart`. En `shared/` conserva
 el modelo, las primitivas comunes de los esquemas y los mensajes de error, el
@@ -217,7 +217,7 @@ contenedor es estrecho, un resumen HTML mantiene las etiquetas legibles.
 financiero. `publishing/server` adapta ese pipeline a la caché y a SSR. La lista
 única `application/shared/createMarkdownExtensions.ts`, que consumen el servidor
 y el Worker, registra una sola extensión, `component-blocks`, con las definiciones
-que descubre de los `*.block.ts`. `theme` conserva el contrato de paleta,
+registradas explícitamente (la lista de este módulo está en `browser/blocks.ts`). `theme` conserva el contrato de paleta,
 tipografía, superficies, espaciado y estados; el contenido financiero solo
 consume esos roles.
 
@@ -233,7 +233,7 @@ con su contenido alternativo (la fence), porque el Worker no ejecuta Astro; est�
 pendiente de otra sesión.
 
 Para añadir otro tipo de bloque, ver `bloques-de-componentes`: un componente y su
-`.block.ts` con el esquema estricto y los límites, referencias a fuentes, estilos
+esquema estricto y los límites, registrados en `browser/blocks.ts`, referencias a fuentes, estilos
 basados en `theme` y pruebas de validación, seguridad y accesibilidad (los `.astro`
 se prueban con `npm run test:astro`). Si cambia la forma del HTML que emite la
 extensión, subir su versión. Los cambios incompatibles de campos persistidos

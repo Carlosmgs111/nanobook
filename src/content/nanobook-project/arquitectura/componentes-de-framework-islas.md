@@ -137,3 +137,35 @@ Consecuencias:
   `.astro`, que no generan `astro-island`.
 - Los `.astro` se prueban con la Container API de Astro en un proyecto de Vitest
   aparte (`npm run test:astro`).
+
+## Actualización (2026-11-10): registro explícito y directiva en el componente
+
+Revisando la primera versión del contrato se vio que `rendering`, único responsable
+de pintar, no debía depender de un descubrimiento por convención de archivos. Se
+cambió a un **registro explícito** con la directiva dentro del componente:
+
+1. **Registro.** `rendering` expone `registerBlocks`; cada módulo exporta la lista de
+   sus bloques (`{ name, component, props }`, datos puros) y
+   `application/shared/blocks.ts` los registra. `component` es la ruta del `.astro`
+   como texto, de modo que el Worker de la vista previa puede cargar el registro sin
+   cargar componentes.
+2. **La directiva vive en el componente.** Todo componente registrado es un `.astro`;
+   uno que deba hidratarse envuelve su componente de framework y escribe `client:*`
+   como literal. Así `hydrate` sale del registro, el host puede pintar cualquier bloque
+   con una etiqueta dinámica y desaparecen el generador, el host generado, su test de
+   frescura, `ssrBlockNames`, el emparejamiento `*.block.ts` ↔ componente y el glob de
+   descubrimiento. Quedan un `import.meta.glob` de búsqueda (ruta → módulo) y un error
+   al arrancar si un bloque registrado apunta a un `.astro` inexistente.
+3. **Verificación.** Antes de implementarlo se probó que una isla dentro de un
+   `.astro` pintado con etiqueta dinámica se hidrata (`astro-island` con
+   `client="visible"`, props, SSR previo), tanto en desarrollo como en el build de
+   producción, y que el cliente solo descarga los assets de las islas presentes. En el
+   panel de pruebas se forzó la intersección (no entrega eventos de
+   `IntersectionObserver`); el disparo real por scroll no se ha comprobado.
+
+Consecuencias: añadir un bloque exige tocar la lista de su módulo (y, si es de un
+módulo nuevo, `application/shared/blocks.ts`); cada isla necesita un `.astro`
+envoltorio pequeño; los `.schema.ts` y las listas de bloques siguen debiendo ser
+TypeScript puro (los carga el Worker), pero ya no hay una prueba que lo compruebe: un
+import indebido rompería el build del Worker. La pieza `resolveDocumentPieces` conserva
+el tipo de segmento `island` aunque ahora cubre cualquier bloque registrado.
