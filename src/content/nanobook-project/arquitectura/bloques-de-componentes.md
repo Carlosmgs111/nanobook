@@ -2,7 +2,7 @@
 id: "bloques-de-componentes-2026-11-06"
 ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv"
 title: "Bloques de componentes en Markdown"
-description: "Cómo un documento usa componentes mediante fences: un único mecanismo basado en Astro, con componentes .astro de solo servidor, componentes de framework de solo servidor e islas hidratadas."
+description: "Cómo un documento usa componentes mediante fences: un registro explícito de bloques en rendering y componentes .astro que Astro renderiza, con o sin hidratación."
 date: 2026-11-06
 author: "Nanobook"
 tags: ["nanobook", "arquitectura", "renderizado"]
@@ -16,50 +16,62 @@ componentes. Los documentos referencian un componente por nombre y la página lo
 materializa con Astro. `rendering` aporta solo el **mecanismo**; los componentes
 concretos pertenecen al módulo que los expone.
 
-Hay **un único mecanismo**. Lo que cambia entre bloques es qué archivo los
-implementa y si se hidratan:
+Hay **un único mecanismo** y un **registro explícito**: cada bloque se declara en
+una lista, no se descubre. Todo componente registrado es un `.astro`; si debe
+hidratarse, **el propio `.astro` declara la directiva** `client:*` sobre su
+componente de framework.
 
-| Archivo del componente | `hydrate` en el `.block.ts` | Resultado | Ejemplo |
-|---|---|---|---|
-| `.astro` | no se admite | HTML del servidor, sin JavaScript | `financial-metrics` y las demás fichas |
-| `.tsx` `.jsx` `.vue` `.svelte` | ausente | HTML del servidor, sin JavaScript | (disponible) |
-| `.tsx` `.jsx` `.vue` `.svelte` | `load` · `idle` · `visible` | HTML del servidor e isla hidratada (`client:*`) | `price-chart`, `counter-demo` |
+| Componente registrado | Resultado | Ejemplo |
+|---|---|---|
+| `.astro` de solo plantilla | HTML del servidor, sin JavaScript | `financial-metrics` y las demás fichas |
+| `.astro` que envuelve un componente de framework con `client:visible` (o `load`, `idle`) | HTML del servidor e isla hidratada | `price-chart`, `counter-demo` |
 
 Ver `componentes-de-framework-islas` para el porqué de este diseño.
 
-## Declaración
+## Registro
 
-Cada bloque vive en **su propia carpeta**, `src/<módulo>/browser/components/<Nombre>/`,
-con todo lo que le pertenece:
+`rendering` expone `registerBlocks(definiciones)` y el tipo `ComponentBlockDefinition`:
+
+```ts
+interface ComponentBlockDefinition {
+  name: string;       // lenguaje de la fence
+  component: string;  // ruta del .astro desde la raíz: "/src/<módulo>/…/Nombre.astro"
+  props: ZodType;     // esquema zod del contenido de la fence
+}
+```
+
+`component` es un texto y no un import para que el registro sea un dato puro que
+también cargue el Worker de la vista previa, que no puede cargar componentes.
+`registerBlocks` falla, nombrando el bloque, si el nombre no cumple
+`^[a-z][a-z0-9-]*$`, está repetido o la ruta no es un `.astro` bajo `/src/`.
+
+Cada módulo exporta sus bloques como lista (`financial-content/browser/blocks.ts`) y
+`application/shared/blocks.ts` los registra junto con los suyos, produciendo
+`blockRegistry`. Es la **única lista** que consumen la extensión de Markdown, la
+página y el asesor del MCP.
+
+Cada bloque vive en su propia carpeta, `src/<módulo>/browser/components/<Nombre>/`:
 
 ```text
 PriceChart/
-  PriceChart.tsx          el componente (o .astro .jsx .vue .svelte)
-  PriceChart.block.ts     nombre de la fence y, si hace falta, hydrate
+  PriceChart.astro        lo que se registra; aquí vive la directiva client:visible
+  PriceChartIsland.tsx    el componente de framework que se hidrata
   PriceChart.schema.ts    esquema zod de props
   …                       su lógica, ayudas y pruebas (createPriceChart.ts, priceChartSummary.ts, *.test.ts)
 ```
 
-El generador exige que `Nombre.block.ts` y su componente `Nombre.<ext>` estén en la
-misma carpeta, y falla si un `.block.ts` queda suelto en `components/` (el registro
-no lo vería).
-
-`Nombre.block.ts` exporta por defecto un `ComponentBlockDefinition`:
-
-```ts
-const definition: ComponentBlockDefinition = {
-  name: "price-chart",     // lenguaje de la fence
-  hydrate: "visible",      // opcional; sin él, solo HTML del servidor
-  props: priceChartProps,  // esquema zod
-};
+```astro
+---
+import PriceChartIsland from "./PriceChartIsland.tsx";
+---
+<PriceChartIsland {...Astro.props} client:visible />
 ```
 
-Un `.block.ts` o un `.schema.ts` debe importar solo `zod`, el tipo del contrato, un
-`./Nombre.schema` de su carpeta y el `shared/` de su propio módulo
-(`../../../shared/…`, que por convención no depende de frameworks ni de Node),
-porque los cargan el servidor y el Worker de la vista previa (una prueba lo
-comprueba en todo el repositorio). El componente recibe como props el valor ya validado, con los
-`default` aplicados. Las props son datos JSON: sin funciones ni `Date`.
+Un `.schema.ts` y las listas de bloques deben importar solo `zod`, el tipo del
+contrato y el `shared/` de su propio módulo (que por convención no depende de
+frameworks ni de Node), porque los carga también el Worker. El componente recibe
+como props el valor ya validado, con los `default` aplicados. Las props son datos
+JSON: sin funciones ni `Date`.
 
 ## Mecanismo genérico (`rendering`)
 
@@ -86,34 +98,21 @@ sobrevive al render (`remarkRehype` descarta el HTML crudo), así que los marcad
 solo pueden salir de la extensión. `splitComponentBlocks(html)` (pura, nunca
 lanza) parte el HTML en segmentos ordenados `html` / `block`.
 
-## Descubrimiento y composición
+## Composición y host
 
-- `application/shared/componentBlockDefinitions.ts` reúne los `*.block.ts` con
-  `import.meta.glob` (TypeScript puro, resoluble en servidor, Worker y pruebas) y
-  valida export por defecto, nombre (`^[a-z][a-z0-9-]*$`) y unicidad.
-- `application/shared/createMarkdownExtensions.ts` los registra como **una sola**
-  extensión, `component-blocks`, y comprueba con `assertUniqueFenceLanguages` que
-  ninguna fence esté reclamada dos veces. Es la única lista que consumen la
-  publicación y la vista previa.
-
-## El host generado
-
-Astro solo admite una directiva `client:*` en un componente importado
-**directamente** en un `.astro` y usado con una etiqueta estática. Por eso
-`npm run blocks:generate` (`scripts/generate-component-blocks.ts`) escribe en
-`application/browser/ui/generated/`:
-
-- `ComponentBlockHost.astro`: una importación y una etiqueta por componente, con
-  la directiva escrita como literal: `<BlockN {...props} client:visible />`, o sin
-  directiva si el bloque no declara `hydrate`.
-- `ssrBlockNames.ts`: los nombres que el host sabe pintar.
-
-`discoverBlocks` empareja cada `Nombre.block.ts` con su `Nombre.<ext>` (`.astro`,
-`.tsx`, `.jsx`, `.vue`, `.svelte`) y aborta si falta el componente, hay más de uno,
-el nombre es inválido o repetido, `hydrate` no es una directiva conocida, o un
-`.astro` pide hidratarse. `renderHostSource` es determinista y sin E/S. Los
-archivos generados **se versionan**; `generatedFilesAreFresh.test.ts` falla si
-están desactualizados. `dev`, `build` y `dev:preview` generan antes de arrancar.
+- `application/shared/createMarkdownExtensions.ts` registra **una sola**
+  extensión, `component-blocks`, con las definiciones de `blockRegistry`, y
+  comprueba con `assertUniqueFenceLanguages` que ninguna fence esté reclamada dos
+  veces. La consumen la publicación y la vista previa.
+- `application/browser/ui/blockComponents.ts` convierte la ruta registrada en
+  componente con `import.meta.glob("/src/*/browser/components/*/*.astro")`. Es solo
+  una tabla de búsqueda: el registro decide qué bloques existen. Si un bloque
+  registrado apunta a un `.astro` que no existe, el módulo lanza un error al
+  cargarse y nombra el bloque y la ruta.
+- `application/browser/ui/BlockHost.astro` pinta el componente registrado con una
+  etiqueta dinámica. Astro no admite una directiva `client:*` en una etiqueta
+  dinámica, y por eso la directiva vive dentro del componente registrado, donde
+  sí es un literal sobre un import estático. No hace falta generar nada.
 
 ## Flujo de una página publicada
 
@@ -122,14 +121,14 @@ Markdown → renderMarkdown → HTML con marcadores ─→ caché
         → DocumentPage.astro → RenderedDocument.astro
             → resolveDocumentPieces(html)   (split + validación de props)
                 ├ html     → <Fragment set:html>
-                └ bloque   → <ComponentBlockHost name props>
-                               ├ .astro / sin hydrate → HTML del servidor
-                               └ con hydrate          → <astro-island client:*>
+                └ bloque   → <BlockHost name props>  (componente registrado, etiqueta dinámica)
+                               ├ solo plantilla       → HTML del servidor
+                               └ con client:* propio  → <astro-island client:*>
 ```
 
 `resolveDocumentPieces` vuelve a validar las props (el HTML viene de caché). Todo
-lo que no pueda pintarse —nombres sin host, bloques anidados, props que ya no
-validan— vuelve a su punto de montaje original, así que nunca se pierde contenido.
+lo que no pueda pintarse —nombres no registrados, bloques anidados, props que ya
+no validan— vuelve a su punto de montaje original, así que nunca se pierde contenido.
 
 Los componentes **no pasan por la caché del Markdown**: Astro los renderiza dentro
 de la página en cada petición. Para plantillas pequeñas el costo es mínimo; si
@@ -142,11 +141,12 @@ contrato.
 `financial-content` (dueño de sus componentes):
 
 - `browser/components/<Nombre>/`: una carpeta por bloque. `FinancialMetrics`,
-  `FinancialChart`, `FinancialNews`, `FinancialSources` y `CompanyProfile` (`.astro`,
-  `.block.ts` y `.schema.ts`, solo servidor) y `PriceChart` (`.tsx`, isla de React con
-  `hydrate: "visible"`, más `createPriceChart` y `priceChartSummary`). `FinancialChart`
+  `FinancialChart`, `FinancialNews`, `FinancialSources` y `CompanyProfile` (`.astro` y
+  `.schema.ts`, solo servidor) y `PriceChart` (`.astro` con `client:visible` más
+  `PriceChartIsland.tsx`, `createPriceChart` y `priceChartSummary`). `FinancialChart`
   incluye además `ChartGeometry` y `chartView` (modelo de vista puro; el `.astro`
   solo dibuja).
+- `browser/blocks.ts`: la lista de sus bloques (nombre, ruta del `.astro` y esquema).
 - `browser/ui/`: parciales `.astro` (`FinancialTime`, `FinancialPeriod`,
   `ExternalLink`, `SourceDates`) y `blockIndex.ts`, que numera los bloques de cada
   petición (`Astro.request`) para que los `id` de las fichas sean únicos.
@@ -160,21 +160,22 @@ contrato.
 - `shared/guide/`, `shared/formatting/` y estilos en
   `browser/ui/styles/financial-content.css`.
 
-`application` (composición): `createMarkdownExtensions`, `componentBlockDefinitions`,
-`resolveDocumentPieces`, `server/generateComponentBlocks/`,
-`browser/ui/RenderedDocument.astro` y `browser/ui/generated/`.
-`createMarkdownBlockAdvisor` valida contra la misma lista de definiciones.
+`application` (composición): `shared/blocks.ts` (el registro), `createMarkdownExtensions`,
+`resolveDocumentPieces`, `browser/ui/RenderedDocument.astro`, `BlockHost.astro` y
+`blockComponents.ts`. `createMarkdownBlockAdvisor` valida contra el mismo registro.
 
 ## Añadir un componente
 
-1. Crear la carpeta `src/<módulo>/browser/components/Nombre/` con `Nombre.astro` (o
-   `.tsx`, `.jsx`, `.vue`, `.svelte`), `Nombre.block.ts` y `Nombre.schema.ts`.
-2. Si debe hidratarse, declarar `hydrate` en el `.block.ts` (solo componentes de
-   framework).
-3. Ejecutar `npm run blocks:generate` y versionar los archivos generados.
-4. Si el framework es nuevo, instalar su integración de Astro y añadirla a
+1. Crear la carpeta `src/<módulo>/browser/components/Nombre/` con `Nombre.astro` y
+   `Nombre.schema.ts`. Si debe hidratarse, añadir también el componente de
+   framework (`NombreIsland.tsx`, `.vue`, `.svelte`…) e importarlo en `Nombre.astro`
+   con `client:visible` (o `load`, `idle`).
+2. Añadir el bloque (nombre, ruta del `.astro` y esquema) a la lista de su módulo
+   (`browser/blocks.ts`); si el módulo es nuevo, registrar su lista en
+   `application/shared/blocks.ts`.
+3. Si el framework es nuevo, instalar su integración de Astro y añadirla a
    `integrations` en `astro.config.mjs`.
-5. Probar un `.astro` con la Container API: un archivo `*.astro.test.ts` se ejecuta
+4. Probar un `.astro` con la Container API: un archivo `*.astro.test.ts` se ejecuta
    con `npm run test:astro` (`vitest.astro.config.ts`).
 
 ## Límites
@@ -204,7 +205,9 @@ contrato.
   (hoy `component-blocks@2`).
 - En desarrollo, `lightweight-charts` figura en `vite.optimizeDeps.include` para
   evitar el 504 `Outdated Optimize Dep` en la primera carga.
-- El host generado importa todos los componentes en el bundle del servidor; el
-  cliente solo descarga los de las islas presentes en la página.
+- Los componentes se cargan bajo demanda en el servidor; el cliente solo descarga
+  los de las islas presentes en la página.
+- Un `.astro` que contiene una isla y se pinta con etiqueta dinámica se hidrata con
+  normalidad (comprobado en desarrollo y en el build de producción).
 - La hidratación real con `client:visible` depende de `IntersectionObserver`; el
   panel de navegador de la herramienta de desarrollo no entrega esos eventos.
