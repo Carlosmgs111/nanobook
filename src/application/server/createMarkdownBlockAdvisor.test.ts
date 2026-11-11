@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listFrameworkBlockDefinitions } from "../shared/componentBlockDefinitions";
+import { blockRegistry } from "../shared/blocks";
 import { createMarkdownBlockAdvisor } from "./createMarkdownBlockAdvisor";
 
 const fence = (lang: string, body: string) => `\`\`\`${lang}\n${body}\n\`\`\``;
@@ -7,7 +7,7 @@ const fence = (lang: string, body: string) => `\`\`\`${lang}\n${body}\n\`\`\``;
 describe("createMarkdownBlockAdvisor", () => {
   it("validates every registered framework block, not only price-chart", () => {
     const { validate } = createMarkdownBlockAdvisor();
-    const names = listFrameworkBlockDefinitions().map(({ name }) => name);
+    const names = blockRegistry.blocks.map(({ name }) => name);
 
     expect(names).toContain("counter-demo");
     const issues = validate(fence("counter-demo", "start: no-es-un-numero"));

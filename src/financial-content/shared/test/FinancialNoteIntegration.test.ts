@@ -2,8 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
 import { createMarkdownExtensions } from "../../../application/shared/createMarkdownExtensions";
 import { Application } from "../../../application/server/Application";
-import { ssrBlockNames } from "../../../application/browser/ui/generated/ssrBlockNames";
-import { findFrameworkBlockDefinition } from "../../../application/shared/componentBlockDefinitions";
+import { blockRegistry } from "../../../application/shared/blocks";
 import { resolveDocumentPieces } from "../../../application/shared/resolveDocumentPieces";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
 
@@ -31,7 +30,7 @@ it("publishes the full financial note as framework blocks in author order, with 
   const { Content: published } = await app.publishingModule.pageRenderer.render({ getContent: () => note });
   const preview = await new PreviewRenderer(createMarkdownExtensions()).render(note);
 
-  const pieces = resolveDocumentPieces(published, { ssrBlockNames, findDefinition: findFrameworkBlockDefinition });
+  const pieces = resolveDocumentPieces(published, { findDefinition: blockRegistry.find });
   const blocks = pieces.flatMap((piece) => (piece.kind === "island" ? [piece.name] : []));
   expect(blocks).toEqual(["company-profile", "financial-metrics", "financial-chart", "financial-news", "financial-sources"]);
   expect(published).not.toContain("component-block-error");

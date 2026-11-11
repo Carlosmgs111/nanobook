@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PublishingModule } from "../../publishing/server";
 import { RENDERER_VERSION } from "../../rendering/shared/rendererFingerprint";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import { ssrBlockNames } from "../browser/ui/generated/ssrBlockNames";
-import { findFrameworkBlockDefinition } from "../shared/componentBlockDefinitions";
+import { blockRegistry } from "../shared/blocks";
 import { resolveDocumentPieces } from "../shared/resolveDocumentPieces";
 import { Application } from "./Application";
 
@@ -105,10 +104,7 @@ describe("Application", () => {
     };
 
     const published = await app.publishingModule.pageRenderer.render(document);
-    const pieces = resolveDocumentPieces(published.Content, {
-      ssrBlockNames,
-      findDefinition: findFrameworkBlockDefinition,
-    });
+    const pieces = resolveDocumentPieces(published.Content, { findDefinition: blockRegistry.find });
 
     expect(pieces.map((piece) => piece.kind)).toEqual(["html", "island", "html"]);
     expect(pieces[1]).toMatchObject({ kind: "island", name: "price-chart", props: { title: "ACME", height: 360 } });

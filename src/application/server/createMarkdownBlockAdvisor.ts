@@ -1,6 +1,6 @@
 import type { MarkdownBlockAdvisor } from "../../agents/server";
 import { financialAuthoringGuide, validateMarkdownBlocks } from "../../financial-content/shared";
-import { listFrameworkBlockDefinitions } from "../shared/componentBlockDefinitions";
+import { blockRegistry } from "../shared/blocks";
 
 /**
  * Compone lo que el agente necesita saber de los bloques especiales del
@@ -10,6 +10,6 @@ import { listFrameworkBlockDefinitions } from "../shared/componentBlockDefinitio
 export function createMarkdownBlockAdvisor(): MarkdownBlockAdvisor {
   return {
     guide: () => financialAuthoringGuide,
-    validate: (content) => validateMarkdownBlocks(content, listFrameworkBlockDefinitions()),
+    validate: (content) => validateMarkdownBlocks(content, blockRegistry.blocks),
   };
 }

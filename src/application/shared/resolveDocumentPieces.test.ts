@@ -17,7 +17,6 @@ function block(name: string, props: unknown, inner = '<div class="component-bloc
 
 function resolve(html: string, overrides: Partial<Parameters<typeof resolveDocumentPieces>[1]> = {}) {
   return resolveDocumentPieces(html, {
-    ssrBlockNames: new Set(["counter-demo"]),
     findDefinition: (name) => definitions.get(name),
     ...overrides,
   });

@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { financialAuthoringGuide, financialGuideExamples } from "../guide/financialAuthoringGuide";
 import { validateMarkdownBlocks } from "./validateMarkdownBlocks";
-import { listFrameworkBlockDefinitions } from "../../../application/shared/componentBlockDefinitions";
+import { blockRegistry } from "../../../application/shared/blocks";
 
 /** El validador recibe las definiciones de bloques; aquí, las mismas que registra la aplicación. */
-const definitions = listFrameworkBlockDefinitions();
+const definitions = blockRegistry.blocks;
 const validate = (markdown: string) => validateMarkdownBlocks(markdown, definitions);
 
 function fence(lang: string, body: string): string {

@@ -1,7 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
-import { findFrameworkBlockDefinition } from "../../../application/shared/componentBlockDefinitions";
+import { blockRegistry } from "../../../application/shared/blocks";
 import type { FinancialFenceKind } from "../../shared/model/FinancialBlock";
 import { financialGuideExamples } from "../../shared/guide/financialAuthoringGuide";
 import CompanyProfile from "./CompanyProfile/CompanyProfile.astro";
@@ -19,7 +19,7 @@ const components = {
 type Kind = keyof typeof components;
 
 function propsFor(kind: FinancialFenceKind, edit: (source: string) => string = (source) => source) {
-  return findFrameworkBlockDefinition(kind)!.props.parse(parse(edit(financialGuideExamples[kind])));
+  return blockRegistry.find(kind)!.props.parse(parse(edit(financialGuideExamples[kind])));
 }
 
 async function render(kind: Kind, props: unknown, request?: Request): Promise<string> {
