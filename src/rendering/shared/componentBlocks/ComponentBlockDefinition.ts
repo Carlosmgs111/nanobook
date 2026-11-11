@@ -1,18 +1,17 @@
 import type { ZodType } from "zod";
 
-/** Directivas `client:*` que un bloque puede pedir. Sin ninguna, el bloque es solo HTML del servidor. */
-export const BLOCK_HYDRATION_DIRECTIVES = ["load", "idle", "visible"] as const;
-
-export type BlockHydration = (typeof BLOCK_HYDRATION_DIRECTIVES)[number];
-
 /**
- * Contrato puro de un componente embebible en Markdown. El nombre es el
- * lenguaje de la fence. `hydrate` es opcional: sin él, el componente se
- * renderiza en el servidor y no envía JavaScript; con él, Astro lo hidrata en
- * el navegador con la directiva `client:<hydrate>`. Un `.astro` no puede hidratarse.
+ * Un bloque que `rendering` sabe pintar cuando un documento invoca su fence.
+ *
+ * - `name` es el lenguaje de la fence.
+ * - `component` es la ruta, desde la raíz del proyecto, del componente `.astro`
+ *   que lo pinta. Es un texto (no un import) para que el registro se pueda cargar
+ *   también en el Worker de la vista previa, que no puede cargar componentes.
+ *   Si el bloque debe hidratarse, el propio `.astro` lo declara con `client:*`.
+ * - `props` es el esquema zod que valida el contenido de la fence.
  */
 export interface ComponentBlockDefinition {
   readonly name: string;
+  readonly component: string;
   readonly props: ZodType<unknown>;
-  readonly hydrate?: BlockHydration;
 }

@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { priceChartProps } from "./PriceChart.schema";
-import PriceChart from "./PriceChart";
+import PriceChartIsland from "./PriceChartIsland";
 
 const props = (extra: object = {}) =>
   priceChartProps.parse({
@@ -17,9 +17,9 @@ const props = (extra: object = {}) =>
     ...extra,
   });
 
-describe("PriceChart (server render)", () => {
+describe("PriceChartIsland (server render)", () => {
   it("renders the figure, the title and a fixed-height container without touching the DOM", () => {
-    const html = renderToString(createElement(PriceChart, props({ title: "ACME" })));
+    const html = renderToString(createElement(PriceChartIsland, props({ title: "ACME" })));
 
     expect(html).toContain('<figure class="financial-price-chart">');
     expect(html).toContain("<figcaption>ACME</figcaption>");
@@ -27,13 +27,13 @@ describe("PriceChart (server render)", () => {
   });
 
   it("renders a text summary so the chart has content before and without JavaScript", () => {
-    const html = renderToString(createElement(PriceChart, props()));
+    const html = renderToString(createElement(PriceChartIsland, props()));
 
     expect(html).toContain("Serie de línea: 2 observaciones entre 2026-01-02 y 2026-01-03; último valor 12.");
   });
 
   it("omits the caption when there is no title", () => {
-    const html = renderToString(createElement(PriceChart, props()));
+    const html = renderToString(createElement(PriceChartIsland, props()));
 
     expect(html).not.toContain("<figcaption");
   });

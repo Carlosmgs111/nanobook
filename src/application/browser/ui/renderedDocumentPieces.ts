@@ -1,6 +1,5 @@
-import { findFrameworkBlockDefinition } from "../../shared/componentBlockDefinitions";
+import { blockRegistry } from "../../shared/blocks";
 import { resolveDocumentPieces, type DocumentPiece } from "../../shared/resolveDocumentPieces";
-import { ssrBlockNames } from "./generated/ssrBlockNames";
 
 /**
  * Parte el HTML renderizado de un documento en HTML y bloques que la página
@@ -9,8 +8,7 @@ import { ssrBlockNames } from "./generated/ssrBlockNames";
  */
 export function resolveRenderedPieces(html: string): DocumentPiece[] {
   return resolveDocumentPieces(html, {
-    ssrBlockNames,
-    findDefinition: findFrameworkBlockDefinition,
+    findDefinition: blockRegistry.find,
     onInvalidProps: (name) =>
       console.warn(`Bloque "${name}": las props ya no validan al servir; se muestra el contenido alternativo.`),
   });
@@ -22,7 +20,5 @@ export function resolveRenderedPieces(html: string): DocumentPiece[] {
  * sustituir el cuerpo por él los perdería.
  */
 export function documentHasBlocks(html: string): boolean {
-  return resolveDocumentPieces(html, { ssrBlockNames, findDefinition: findFrameworkBlockDefinition }).some(
-    (piece) => piece.kind === "island",
-  );
+  return resolveDocumentPieces(html, { findDefinition: blockRegistry.find }).some((piece) => piece.kind === "island");
 }

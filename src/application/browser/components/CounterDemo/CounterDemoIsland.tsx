@@ -5,7 +5,7 @@ interface CounterDemoProps {
   start: number;
 }
 
-export default function CounterDemo({ label, start }: CounterDemoProps) {
+export default function CounterDemoIsland({ label, start }: CounterDemoProps) {
   const [count, setCount] = useState(start);
 
   return (

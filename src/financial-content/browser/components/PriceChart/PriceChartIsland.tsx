@@ -9,7 +9,7 @@ import { describePriceChart } from "./priceChartSummary";
  * el DOM. El contenedor del gráfico no tiene hijos de React, así que la librería
  * puede poblarlo sin que React lo vea.
  */
-export default function PriceChart(props: PriceChartProps) {
+export default function PriceChartIsland(props: PriceChartProps) {
   const canvas = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
