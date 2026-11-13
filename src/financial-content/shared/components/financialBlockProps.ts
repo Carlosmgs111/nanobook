@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { FinancialBlock, FinancialFenceKind } from "../model/FinancialBlock";
-import { financialIssueMessage } from "../validation/financialIssueMessages";
+import { financialIssueMessage, financialIssuePath } from "../validation/financialIssueMessages";
 
 /**
  * Esquema de props de una ficha financiera como bloque de componente.
@@ -25,7 +25,7 @@ export function financialBlockProps<Kind extends FinancialFenceKind>(
       ctx.addIssue({
         code: "custom",
         message: financialIssueMessage(issue),
-        path: issue.path.filter((part): part is string | number => typeof part !== "symbol"),
+        path: financialIssuePath(issue),
       });
     }
     return z.NEVER;

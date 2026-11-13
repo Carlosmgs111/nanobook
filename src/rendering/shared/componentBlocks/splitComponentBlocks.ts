@@ -4,7 +4,7 @@ import { BLOCK_END, BLOCK_START, decodeBlockHeader } from "./blockMarker";
  * Trozo ordenado de un documento renderizado: HTML corriente o un bloque de
  * componente de raíz con sus props ya decodificadas.
  */
-export type BlockSegment =
+type BlockSegment =
   | { readonly kind: "html"; readonly html: string }
   | {
       readonly kind: "block";
