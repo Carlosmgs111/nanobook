@@ -1,7 +1,7 @@
 import { AuthServerModule } from "../../auth/server";
-import { blockDefinitions } from "../shared/blocks";
+import { counterDemoBlock } from "../browser/components/CounterDemo/counterDemoBlock";
+import { FinancialContentModule } from "../../financial-content/browser";
 import { RenderingModule } from "../../rendering/server";
-import { createMarkdownBlockAdvisor } from "./createMarkdownBlockAdvisor";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
 import { NavigationModule } from "../../navigation/server";
@@ -34,13 +34,15 @@ export class Application {
       nanobookModule.documentModule,
       eventBus,
     );
-    const renderingModule = RenderingModule.create(blockDefinitions);
+    const renderingModule = RenderingModule.create();
+    const financialContentModule = FinancialContentModule.create(renderingModule.blocks);
+    renderingModule.blocks.register([counterDemoBlock]);
     const publishingModule = await PublishingModule.create(eventBus, renderingModule.markdownEngine);
     const themeModule = ThemeModule.create(
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
-    const agentModule = AgentModule.create(nanobookModule, createMarkdownBlockAdvisor(renderingModule.blocks));
+    const agentModule = AgentModule.create(nanobookModule, financialContentModule.markdownBlockAdvisor);
     return new Application(
       authServerModule,
       routeProtector,

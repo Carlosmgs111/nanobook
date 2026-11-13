@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { blockDefinitions } from "./blocks";
+import { counterDemoBlock } from "../browser/components/CounterDemo/counterDemoBlock";
+import { FinancialContentModule } from "../../financial-content/browser";
 import {
   createComponentBlocksExtension,
   createMarkdownEngine,
-  registerBlocks,
+  createBlockRegistry,
   type MarkdownExtension,
 } from "../../rendering/shared";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
@@ -44,7 +45,12 @@ const sources = [
 ];
 
 describe("Markdown renderer parity", () => {
-  const blockEngine = () => createMarkdownEngine([createComponentBlocksExtension(registerBlocks(blockDefinitions))]);
+  const blockEngine = () => {
+    const blocks = createBlockRegistry();
+    FinancialContentModule.create(blocks);
+    blocks.register([counterDemoBlock]);
+    return createMarkdownEngine([createComponentBlocksExtension(blocks)]);
+  };
   const server = new ServerRenderer(blockEngine());
   const preview = new PreviewRenderer(blockEngine());
   const serverWithoutExtensions = new ServerRenderer(createMarkdownEngine());

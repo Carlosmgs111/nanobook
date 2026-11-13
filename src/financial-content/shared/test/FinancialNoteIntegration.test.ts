@@ -1,7 +1,5 @@
 import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
-import { blockDefinitions } from "../../../application/shared/blocks";
-import { RenderingModule } from "../../../rendering/server";
 import { Application } from "../../../application/server/Application";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
 

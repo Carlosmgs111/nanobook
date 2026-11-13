@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { renderMarkdown } from "../renderMarkdown";
-import { registerBlocks } from "./registerBlocks";
+import { createBlockRegistry } from "./createBlockRegistry";
 import { createComponentBlocksExtension } from "./createComponentBlocksExtension";
 import { splitComponentBlocks } from "./splitComponentBlocks";
 
@@ -11,7 +11,9 @@ const demo = {
   props: z.object({ label: z.string(), size: z.number().default(3) }),
 };
 
-const extensions = [createComponentBlocksExtension(registerBlocks([demo]))];
+const blocks = createBlockRegistry();
+blocks.register([demo]);
+const extensions = [createComponentBlocksExtension(blocks)];
 
 describe("createComponentBlocksExtension", () => {
   it("declares the manifest it was given", () => {

@@ -4,5 +4,5 @@ export { createMarkdownEngine, type MarkdownEngine } from "./createMarkdownEngin
 export type { MarkdownExtension } from "./MarkdownExtension";
 export { RENDERER_VERSION } from "./rendererFingerprint";
 export { createComponentBlocksExtension } from "./componentBlocks/createComponentBlocksExtension";
-export { registerBlocks, type BlockRegistry } from "./componentBlocks/registerBlocks";
+export { createBlockRegistry, type BlockRegistry } from "./componentBlocks/createBlockRegistry";
 export type { ComponentBlockDefinition } from "./componentBlocks/ComponentBlockDefinition";

@@ -25,8 +25,7 @@ describe("browser application consumers", () => {
       "src/documents/browser/infraestructure/renderer/WorkerMarkdownRenderer/worker-entry.ts",
     );
 
-    expect(source).toContain("blockDefinitions");
-    expect(source).toContain("createMarkdownEngine([");
-    expect(source).not.toContain("financial-content");
+    expect(source).toContain("FinancialContentModule.create(blocks)");
+    expect(source).toContain("createMarkdownEngine([createComponentBlocksExtension(blocks)])");
   });
 });
