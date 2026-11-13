@@ -21,22 +21,20 @@ tanto el servidor como el Web Worker del navegador. `renderMarkdown` acepta una
 lista opcional de `MarkdownExtension`; la lista vacía conserva el renderizado
 Markdown básico. El núcleo no depende de `financial-content`.
 
-Cada extensión declara `id`, `version` y `fenceLanguages`, además de
-`transform(tree: Root): void`. El manifiesto identifica la implementación y
-ofrece los lenguajes de fence para una eventual selección confiable antes de
-cargarla; actualmente el pipeline ejecuta todas las extensiones suministradas
-en el orden recibido y no selecciona por `fenceLanguages`. Los `id` duplicados
-se rechazan. El contrato exige una transformación síncrona de HAST; el pipeline
+Cada extensión declara `id` y `version`, además de
+`transform(tree: Root): void`. El manifiesto identifica la implementación; el
+pipeline ejecuta todas las extensiones suministradas en el orden recibido. Los
+`id` duplicados se rechazan. El contrato exige una transformación síncrona de HAST; el pipeline
 no espera promesas y la implementación no debe abrir una fase de I/O. La versión
 debe cambiar cuando cambie su salida.
 
 ## Composición y paridad
 
-`src/application/shared/createMarkdownExtensions.ts` es la única lista de
-extensiones (hoy, una sola: la extensión genérica de bloques `component-blocks`). `application/server/Application.ts`
-se la entrega a `PublishingModule`, que construye `UnifiedMarkdownRenderer`; ese
-renderer adapta `renderMarkdown` al contrato de publicación. En el navegador, el
-Worker usa la misma función para el renderer de vista previa. Ambos adaptadores
+`RenderingModule.markdownEngine` (`rendering/server/index.ts`) envuelve `renderMarkdown` y la lista de
+extensiones (hoy, una: `component-blocks`) y expone `render(source)` y un `fingerprint`. `application/server/Application.ts`
+se lo entrega a `PublishingModule`, que construye `UnifiedMarkdownRenderer`; ese
+renderer adapta el motor al contrato de publicación. En el navegador, `worker-entry.ts`
+crea un motor con la misma extensión para el renderer de vista previa. Ambos adaptadores
 usan el mismo `renderMarkdown`; con la misma fuente y el mismo conjunto ordenado
 de extensiones producen el mismo HTML, y al compartir la lista no pueden
 divergir por un olvido en una de las dos raíces. `rendering` y `publishing` conservan la posibilidad de

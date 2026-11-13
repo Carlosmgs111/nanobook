@@ -1,15 +1,14 @@
 import type { MarkdownBlockAdvisor } from "../../agents/server";
 import { financialAuthoringGuide, validateMarkdownBlocks } from "../../financial-content/shared";
-import { blockRegistry } from "../shared/blocks";
+import type { BlockRegistry } from "../../rendering/shared";
 
 /**
  * Compone lo que el agente necesita saber de los bloques especiales del
- * contenido. Es la única pieza que une `agents` con `financial-content`.
- * Valida contra las mismas definiciones que usa el renderizado.
+ * contenido. Valida contra el mismo registro que usa el renderizado.
  */
-export function createMarkdownBlockAdvisor(): MarkdownBlockAdvisor {
+export function createMarkdownBlockAdvisor(blocks: BlockRegistry): MarkdownBlockAdvisor {
   return {
     guide: () => financialAuthoringGuide,
-    validate: (content) => validateMarkdownBlocks(content, blockRegistry.blocks),
+    validate: (content) => validateMarkdownBlocks(content, blocks.blocks),
   };
 }

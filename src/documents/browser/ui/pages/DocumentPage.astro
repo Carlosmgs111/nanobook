@@ -2,12 +2,8 @@
 import IndexList from "../../../../navigation/browser/ui/components/IndexList/index.astro";
 import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
-import RenderedDocument from "../../../../application/browser/ui/RenderedDocument.astro";
-import { documentHasBlocks } from "../../../../application/browser/ui/renderedDocumentPieces";
+import RenderedDocument from "../../../../rendering/browser/ui/RenderedDocument.astro";
 import { AuthorizeNanobook } from "../../../../nanobooks/server";
-import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
-import type { Document } from "../../../server";
-import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 import DocumentPageController from "../DocumentPageController.astro";
 import DocumentUnlockForm from "../components/DocumentUnlockForm.astro";
@@ -16,7 +12,10 @@ import { appendServerTiming } from "../../../../shared/server/http/ServerTiming"
 
 const timings: Record<string, number> = {};
 
-async function measure<T>(name: string, operation: () => Promise<T>): Promise<T> {
+async function measure<T>(
+  name: string,
+  operation: () => Promise<T>
+): Promise<T> {
   const startedAt = performance.now();
   try {
     return await operation();
@@ -27,18 +26,9 @@ async function measure<T>(name: string, operation: () => Promise<T>): Promise<T>
 
 const app = await measure("app", getApp);
 
-interface Props {
-  nanobook: Nanobook;
-  user: AuthenticatedUser | null;
-  /** The (proxy-resolved) document, already fetched by the route. */
-  document: Document;
-  /** The viewer must pass the password challenge before seeing any content. */
-  challenged: boolean;
-}
-
 const { nanobook, user } = Astro.props;
-const documentModule = app.nanobookModule.documentModule;
-const { publishingModule, navigationModule } = app;
+const { publishingModule, navigationModule, themeModule, renderingModule } =
+  app;
 const nanobookId = nanobook.getId();
 const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
 const deferOwnerActions = nanobook.getVisibility() === "public" && !canEdit;
@@ -47,7 +37,7 @@ const navigationContext = {
   book: { name: nanobook.getName(), href: `/n/${nanobook.getSlug()}` },
 };
 const theme = await measure("theme", () =>
-  app.themeModule.resolveTheme.execute(nanobook.getSettings().theme, Astro.request)
+  themeModule.resolveTheme.execute(nanobook.getSettings().theme, Astro.request)
 );
 const sharedNavigation = await measure("navigation", () =>
   navigationModule.getNavigation(nanobookId, {
@@ -56,7 +46,9 @@ const sharedNavigation = await measure("navigation", () =>
   })
 );
 // Writers see the whole book; everyone else sees protected documents redacted.
-const navigationService = canEdit ? sharedNavigation : restrictSecuredNavigation(sharedNavigation);
+const navigationService = canEdit
+  ? sharedNavigation
+  : restrictSecuredNavigation(sharedNavigation);
 
 export const prerender = false;
 
@@ -69,32 +61,39 @@ const { document, challenged } = Astro.props;
 
 const renderedPage = challenged
   ? null
-  : await measure("publish", () => publishingModule.pagePublisher.publish(document));
+  : await measure("publish", () =>
+      publishingModule.pagePublisher.publish(document)
+    );
 if (!challenged && !renderedPage) throw new Error("Page not found");
 const headings = renderedPage?.headings ?? [];
 // When challenged, only the title is used; no content reaches the response.
 const entry = renderedPage?.rendered.entry ?? document.parse();
 const renderedBody = renderedPage?.rendered.renderedBody ?? "";
+const pieces = renderingModule.pieceResolver.resolve(renderedBody, (name) =>
+  console.warn(
+    `Bloque "${name}": las props ya no validan al servir; se muestra el contenido alternativo.`
+  )
+);
 
 const baseHref = `/n/${nanobook.getSlug()}`;
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
 
-const newHref =
-  entry.isIndex
-    ? entry.slug === "index"
-      ? `${baseHref}/index/new`
-      : `${baseHref}/${entry.slug}/new`
-    : undefined;
-const canonicalHref = !challenged && entry.ref
-  ? entry.ref === "index"
-    ? `${baseHref || "/"}`
-    : `${baseHref}/${entry.ref}/`
+const newHref = entry.isIndex
+  ? entry.slug === "index"
+    ? `${baseHref}/index/new`
+    : `${baseHref}/${entry.slug}/new`
   : undefined;
+const canonicalHref =
+  !challenged && entry.ref
+    ? entry.ref === "index"
+      ? `${baseHref || "/"}`
+      : `${baseHref}/${entry.ref}/`
+    : undefined;
 
 Astro.response.headers.set("Cache-Control", "no-store");
 Astro.response.headers.set(
   "Server-Timing",
-  appendServerTiming(Astro.response.headers.get("Server-Timing"), timings),
+  appendServerTiming(Astro.response.headers.get("Server-Timing"), timings)
 );
 ---
 
@@ -136,7 +135,13 @@ Astro.response.headers.set(
             <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">
               {entry.title}
             </h1>
-            {(canEdit || deferOwnerActions) && <DocumentActionLink href={editHref} label="Editar" ownerId={deferOwnerActions ? nanobook.getOwnerId() : undefined} />}
+            {(canEdit || deferOwnerActions) && (
+              <DocumentActionLink
+                href={editHref}
+                label="Editar"
+                ownerId={deferOwnerActions ? nanobook.getOwnerId() : undefined}
+              />
+            )}
           </div>
         </div>
 
@@ -157,9 +162,11 @@ Astro.response.headers.set(
           id="document-body"
           data-document-id={entry.documentId}
           data-document-ref={entry.ref ?? ""}
-          data-has-blocks={documentHasBlocks(renderedBody) ? "true" : undefined}
+          data-has-blocks={
+            pieces.some((piece) => piece.kind === "island") ? "true" : undefined
+          }
         >
-          <RenderedDocument html={renderedBody} />
+          <RenderedDocument pieces={pieces} />
         </div>
       </Fragment>
     )

@@ -1,5 +1,6 @@
 import { AuthServerModule } from "../../auth/server";
-import { createMarkdownExtensions } from "../shared/createMarkdownExtensions";
+import { blockDefinitions } from "../shared/blocks";
+import { RenderingModule } from "../../rendering/server";
 import { createMarkdownBlockAdvisor } from "./createMarkdownBlockAdvisor";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
@@ -20,6 +21,7 @@ export class Application {
     public readonly publishingModule: PublishingModule,
     public readonly themeModule: ThemeModule,
     public readonly agentModule: AgentModule,
+    public readonly renderingModule: RenderingModule,
   ) {}
 
   static async create(): Promise<Application> {
@@ -32,13 +34,13 @@ export class Application {
       nanobookModule.documentModule,
       eventBus,
     );
-    const markdownExtensions = createMarkdownExtensions();
-    const publishingModule = await PublishingModule.create(eventBus, markdownExtensions);
+    const renderingModule = RenderingModule.create(blockDefinitions);
+    const publishingModule = await PublishingModule.create(eventBus, renderingModule.markdownEngine);
     const themeModule = ThemeModule.create(
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
-    const agentModule = AgentModule.create(nanobookModule, createMarkdownBlockAdvisor());
+    const agentModule = AgentModule.create(nanobookModule, createMarkdownBlockAdvisor(renderingModule.blocks));
     return new Application(
       authServerModule,
       routeProtector,
@@ -48,6 +50,7 @@ export class Application {
       publishingModule,
       themeModule,
       agentModule,
+      renderingModule,
     );
   }
 }

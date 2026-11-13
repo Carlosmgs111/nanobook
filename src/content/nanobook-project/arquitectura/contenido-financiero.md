@@ -215,8 +215,8 @@ contenedor es estrecho, un resumen HTML mantiene las etiquetas legibles.
 `rendering/shared` es dueño del pipeline Markdown general, del puerto
 `MarkdownExtension` y de la extensión genérica de bloques; no importa el módulo
 financiero. `publishing/server` adapta ese pipeline a la caché y a SSR. La lista
-única `application/shared/createMarkdownExtensions.ts`, que consumen el servidor
-y el Worker, registra una sola extensión, `component-blocks`, con las definiciones
+`RenderingModule` (`rendering/server/index.ts`), que crean el servidor y el Worker con la lista
+`application/shared/blocks.ts`, expone una sola extensión, `component-blocks`, con las definiciones
 registradas explícitamente (la lista de este módulo está en `browser/blocks.ts`). `theme` conserva el contrato de paleta,
 tipografía, superficies, espaciado y estados; el contenido financiero solo
 consume esos roles.

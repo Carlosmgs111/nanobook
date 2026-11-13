@@ -46,9 +46,9 @@ también cargue el Worker de la vista previa, que no puede cargar componentes.
 `^[a-z][a-z0-9-]*$`, está repetido o la ruta no es un `.astro` bajo `/src/`.
 
 Cada módulo exporta sus bloques como lista (`financial-content/browser/blocks.ts`) y
-`application/shared/blocks.ts` los registra junto con los suyos, produciendo
-`blockRegistry`. Es la **única lista** que consumen la extensión de Markdown, la
-página y el asesor del MCP.
+`application/shared/blocks.ts` los junta con los suyos, produciendo
+`blockDefinitions`, la **única lista** que consumen, vía `RenderingModule`, la extensión de
+Markdown, la página y el asesor del MCP.
 
 Cada bloque vive en su propia carpeta, `src/<módulo>/browser/components/<Nombre>/`:
 
@@ -100,33 +100,57 @@ lanza) parte el HTML en segmentos ordenados `html` / `block`.
 
 ## Composición y host
 
-- `application/shared/createMarkdownExtensions.ts` registra **una sola**
-  extensión, `component-blocks`, con las definiciones de `blockRegistry`, y
-  comprueba con `assertUniqueFenceLanguages` que ninguna fence esté reclamada dos
-  veces. La consumen la publicación y la vista previa.
-- `application/browser/ui/blockComponents.ts` convierte la ruta registrada en
-  componente con `import.meta.glob("/src/*/browser/components/*/*.astro")`. Es solo
-  una tabla de búsqueda: el registro decide qué bloques existen. Si un bloque
-  registrado apunta a un `.astro` que no existe, el módulo lanza un error al
-  cargarse y nombra el bloque y la ruta.
-- `application/browser/ui/BlockHost.astro` pinta el componente registrado con una
-  etiqueta dinámica. Astro no admite una directiva `client:*` en una etiqueta
-  dinámica, y por eso la directiva vive dentro del componente registrado, donde
-  sí es un literal sobre un import estático. No hace falta generar nada.
+`rendering` sigue el patrón compositor del resto de módulos: `RenderingModule.create(definiciones)`
+(`rendering/server/index.ts`) recibe la lista de bloques, instancia las piezas y las expone como
+campos; nadie más importa piezas internas.
+
+| Campo | Qué es |
+|---|---|
+| `blocks` | El registro (`find`, `blocks`); lo usa el asesor del MCP para validar. |
+| `markdownEngine` | El motor Markdown → HTML con la extensión `component-blocks`; expone `render(source)` y un `fingerprint` de caché. |
+| `pieceResolver` | `DocumentPieceResolver`: `resolve(html)` parte el HTML renderizado en piezas, cada una con la ruta de su componente. |
+
+**Fronteras.** `rendering` no importa ningún otro módulo y solo se entra por tres puertas
+(las vigila `rendering/boundary.test.ts`):
+
+- `rendering/shared`: `createMarkdownEngine`, `registerBlocks`, `createComponentBlocksExtension` y los tipos
+  del contrato (`ComponentBlockDefinition`, `BlockRegistry`, `MarkdownExtension`, `MarkdownEngine`).
+- `rendering/server`: `RenderingModule` y `DocumentPiece`.
+- `rendering/browser/ui`: los componentes de la vista (`RenderedDocument.astro`, `BlockHost.astro`).
+
+Quien necesita renderizar recibe el motor ya construido, a través de un puerto propio:
+`PublishingModule.create(eventBus, markdownEngine)` y el `UnifiedMarkdownRenderer` del Worker reciben un
+objeto con `render`; ninguno importa `renderMarkdown` ni la huella de caché. El cableado se hace en
+`application/server/Application.ts` y en `worker-entry.ts`, que usan la misma extensión y por tanto
+producen el mismo HTML (`application/shared/MarkdownRendererParity.test.ts` lo comprueba).
+
+La lista de bloques es `application/shared/blocks.ts` (`blockDefinitions`, datos puros). Cada
+entorno crea el módulo con ella:
+
+- `application/server/Application.ts`: `renderingModule`; pasa `markdownEngine` a
+  `PublishingModule`, `blocks` al asesor del MCP y lo expone a las páginas.
+- `worker-entry.ts` (vista previa): crea su propio módulo con la misma lista.
+- `DocumentPage.astro` llama a `app.renderingModule.pieceResolver.resolve` y pasa las piezas a
+  `RenderedDocument.astro`, que no conoce el registro.
+- `rendering/browser/ui/blockComponents.ts` convierte la ruta de una pieza en componente con
+  `import.meta.glob("/src/*/browser/components/*/*.astro")`; es solo una tabla de búsqueda. Una
+  prueba (`blocks.test.ts`) comprueba que cada ruta registrada existe.
+- `BlockHost.astro` pinta el componente con una etiqueta dinámica. Astro no admite `client:*` en
+  una etiqueta dinámica, y por eso la directiva vive dentro del componente registrado.
 
 ## Flujo de una página publicada
 
 ```text
 Markdown → renderMarkdown → HTML con marcadores ─→ caché
         → DocumentPage.astro → RenderedDocument.astro
-            → resolveDocumentPieces(html)   (split + validación de props)
+            → renderingModule.pieceResolver.resolve(html)   (split + validación de props)
                 ├ html     → <Fragment set:html>
-                └ bloque   → <BlockHost name props>  (componente registrado, etiqueta dinámica)
+                └ bloque   → <BlockHost component props>  (componente registrado, etiqueta dinámica)
                                ├ solo plantilla       → HTML del servidor
                                └ con client:* propio  → <astro-island client:*>
 ```
 
-`resolveDocumentPieces` vuelve a validar las props (el HTML viene de caché). Todo
+`pieceResolver.resolve` vuelve a validar las props (el HTML viene de caché). Todo
 lo que no pueda pintarse —nombres no registrados, bloques anidados, props que ya
 no validan— vuelve a su punto de montaje original, así que nunca se pierde contenido.
 
@@ -160,9 +184,9 @@ contrato.
 - `shared/guide/`, `shared/formatting/` y estilos en
   `browser/ui/styles/financial-content.css`.
 
-`application` (composición): `shared/blocks.ts` (el registro), `createMarkdownExtensions`,
-`resolveDocumentPieces`, `browser/ui/RenderedDocument.astro`, `BlockHost.astro` y
-`blockComponents.ts`. `createMarkdownBlockAdvisor` valida contra el mismo registro.
+`application` (composición): `shared/blocks.ts` (la lista), `RenderingModule` inyectado en
+`Application`. Los componentes de la vista (`RenderedDocument.astro`, `BlockHost.astro`, `blockComponents.ts`) viven en `rendering/browser/ui`.
+`createMarkdownBlockAdvisor(blocks)` valida contra el mismo registro.
 
 ## Añadir un componente
 

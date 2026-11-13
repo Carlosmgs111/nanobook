@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { BLOCK_END_COMMENT, blockStartComment } from "../../rendering/shared/componentBlocks/blockMarker";
-import type { ComponentBlockDefinition } from "../../rendering/shared/componentBlocks/ComponentBlockDefinition";
-import { resolveDocumentPieces } from "./resolveDocumentPieces";
+import { BLOCK_END_COMMENT, blockStartComment } from "../shared/componentBlocks/blockMarker";
+import type { ComponentBlockDefinition } from "../shared/componentBlocks/ComponentBlockDefinition";
+import { DocumentPieceResolver } from "./DocumentPieceResolver";
 
 const counter: ComponentBlockDefinition = {
   name: "counter-demo",
+  component: "/src/application/browser/components/CounterDemo/CounterDemo.astro",
   props: z.object({ label: z.string().default("Contador"), start: z.number().int().default(0) }),
 };
 
@@ -15,28 +16,29 @@ function block(name: string, props: unknown, inner = '<div class="component-bloc
   return `<!--${blockStartComment(name, props)}-->${inner}<!--${BLOCK_END_COMMENT}-->`;
 }
 
-function resolve(html: string, overrides: Partial<Parameters<typeof resolveDocumentPieces>[1]> = {}) {
-  return resolveDocumentPieces(html, {
-    findDefinition: (name) => definitions.get(name),
-    ...overrides,
-  });
+function resolve(
+  html: string,
+  overrides: { findDefinition?: (name: string) => ComponentBlockDefinition | undefined; onInvalidProps?: (name: string) => void } = {},
+) {
+  const find = overrides.findDefinition ?? ((name: string) => definitions.get(name));
+  return new DocumentPieceResolver({ find }).resolve(html, overrides.onInvalidProps);
 }
 
-describe("resolveDocumentPieces", () => {
+describe("DocumentPieceResolver", () => {
   it("returns plain html as a single piece", () => {
     expect(resolve("<p>hola</p>")).toEqual([{ kind: "html", html: "<p>hola</p>" }]);
   });
 
   it("turns a registered block with valid props into an island", () => {
     expect(resolve(block("counter-demo", { label: "Clics", start: 3 }))).toEqual([
-      { kind: "island", name: "counter-demo", props: { label: "Clics", start: 3 } },
+      { kind: "island", name: "counter-demo", component: counter.component, props: { label: "Clics", start: 3 } },
     ]);
   });
 
   it("passes the validated props, with defaults applied, to the island", () => {
     const [piece] = resolve(block("counter-demo", {}));
 
-    expect(piece).toEqual({ kind: "island", name: "counter-demo", props: { label: "Contador", start: 0 } });
+    expect(piece).toEqual({ kind: "island", name: "counter-demo", component: counter.component, props: { label: "Contador", start: 0 } });
   });
 
   it("keeps document order between html and islands", () => {

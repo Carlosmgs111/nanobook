@@ -32,7 +32,7 @@ Restricciones del sistema:
 1. La extensión de bloques sigue interceptando las fences, validando las props con
    zod y emitiendo un punto de montaje. Los bloques de raíz se rodean además con
    marcadores (`nb:block-start` / `nb:block-end`).
-2. Al servir la página, `resolveDocumentPieces` parte el HTML cacheado en
+2. Al servir la página, `pieceResolver.resolve` parte el HTML cacheado en
    segmentos y `RenderedDocument.astro` los pinta en orden: el HTML tal cual y
    cada bloque de framework como una isla de Astro (SSR más `client:visible`).
 3. Los componentes se declaran como `Nombre.<ext>` + `Nombre.block.ts` y un
@@ -167,5 +167,5 @@ Consecuencias: añadir un bloque exige tocar la lista de su módulo (y, si es de
 módulo nuevo, `application/shared/blocks.ts`); cada isla necesita un `.astro`
 envoltorio pequeño; los `.schema.ts` y las listas de bloques siguen debiendo ser
 TypeScript puro (los carga el Worker), pero ya no hay una prueba que lo compruebe: un
-import indebido rompería el build del Worker. La pieza `resolveDocumentPieces` conserva
+import indebido rompería el build del Worker. La pieza `pieceResolver.resolve` conserva
 el tipo de segmento `island` aunque ahora cubre cualquier bloque registrado.

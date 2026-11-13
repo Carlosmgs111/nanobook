@@ -1,0 +1,15 @@
+---
+import { loadBlockComponent } from "./blockComponents";
+
+interface Props {
+  /** Ruta del .astro registrado para el bloque. */
+  component: string;
+  props: Record<string, unknown>;
+}
+
+// Etiqueta dinámica: la directiva client:*, si el bloque se hidrata, la declara
+// el propio componente registrado, no este host.
+const Block = await loadBlockComponent(Astro.props.component);
+---
+
+<Block {...Astro.props.props} />

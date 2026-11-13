@@ -1,4 +1,4 @@
-import type { ComponentBlockDefinition } from "../../rendering/shared/componentBlocks/ComponentBlockDefinition";
+import type { ComponentBlockDefinition } from "../../rendering/shared";
 import { financialBlockProps } from "../shared/components/financialBlockProps";
 import { companyProfileSchema } from "./components/CompanyProfile/CompanyProfile.schema";
 import { financialChartSchema } from "./components/FinancialChart/FinancialChart.schema";

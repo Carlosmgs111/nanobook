@@ -1,20 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { renderMarkdown } from "../renderMarkdown";
-import type { ComponentBlockDefinition } from "./ComponentBlockDefinition";
+import { registerBlocks } from "./registerBlocks";
 import { createComponentBlocksExtension } from "./createComponentBlocksExtension";
 import { splitComponentBlocks } from "./splitComponentBlocks";
 
-const demo: ComponentBlockDefinition = {
+const demo = {
   name: "demo-widget",
+  component: "/src/demo/Demo.astro",
   props: z.object({ label: z.string(), size: z.number().default(3) }),
 };
 
-const extensions = [createComponentBlocksExtension({ id: "demo", version: "7", definitions: [demo] })];
+const extensions = [createComponentBlocksExtension(registerBlocks([demo]))];
 
 describe("createComponentBlocksExtension", () => {
   it("declares the manifest it was given", () => {
-    expect(extensions[0]).toMatchObject({ id: "demo", version: "7", fenceLanguages: ["demo-widget"] });
+    expect(extensions[0]).toMatchObject({ id: "component-blocks", version: "2" });
   });
 
   it("replaces a registered fence with a mount point carrying validated props", async () => {
