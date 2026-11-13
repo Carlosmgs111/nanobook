@@ -5,6 +5,12 @@ export interface RenderedDocument {
   Content: any;
 }
 
+/** Puerto: lo que publicación necesita para convertir Markdown en HTML; lo aporta el compositor. */
+export interface MarkdownEngine {
+  readonly fingerprint: string;
+  render(source: string): Promise<string>;
+}
+
 export interface DocumentRenderer {
   readonly fingerprint: string;
   render(document: { getContent(): string }): Promise<RenderedDocument>;

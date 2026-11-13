@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { financialAuthoringGuide, financialGuideExamples } from "../guide/financialAuthoringGuide";
 import { validateMarkdownBlocks } from "./validateMarkdownBlocks";
-import { blockRegistry } from "../../../application/shared/blocks";
+import { blockDefinitions } from "../../../application/shared/blocks";
+import { RenderingModule } from "../../../rendering/server";
+const blockRegistry = RenderingModule.create(blockDefinitions).blocks;
 
 /** El validador recibe las definiciones de bloques; aquí, las mismas que registra la aplicación. */
 const definitions = blockRegistry.blocks;

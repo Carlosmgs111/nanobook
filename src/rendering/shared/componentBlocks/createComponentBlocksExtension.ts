@@ -2,7 +2,10 @@ import type { Comment, Element, ElementContent, Root, RootContent } from "hast";
 import { parse } from "yaml";
 import type { MarkdownExtension } from "../MarkdownExtension";
 import { BLOCK_END_COMMENT, blockStartComment } from "./blockMarker";
-import type { ComponentBlockDefinition } from "./ComponentBlockDefinition";
+import type { BlockRegistry } from "./registerBlocks";
+
+/** Sube cuando cambia la forma del HTML que emite la extensión: invalida la caché de páginas. */
+const COMPONENT_BLOCKS_VERSION = "2";
 
 function fenceOf(node: Element): { language: string; source: string } | undefined {
   if (node.tagName !== "pre" || node.children.length !== 1) return;
@@ -49,9 +52,9 @@ interface Resolved {
   readonly block?: { readonly name: string; readonly props: unknown };
 }
 
-function resolve(node: Element, byName: ReadonlyMap<string, ComponentBlockDefinition>): Resolved | undefined {
+function resolve(node: Element, blocks: Pick<BlockRegistry, "find">): Resolved | undefined {
   const fence = fenceOf(node);
-  const definition = fence && byName.get(fence.language);
+  const definition = fence && blocks.find(fence.language);
   if (!fence || !definition) return undefined;
 
   try {
@@ -85,31 +88,25 @@ function comment(value: string): Comment {
  * segmentos sin cortar ningún elemento. Los anidados (listas, citas…) no los
  * llevan: cortar dentro de ellos rompería la etiqueta que los contiene.
  */
-export function createComponentBlocksExtension(options: {
-  readonly id: string;
-  readonly version: string;
-  readonly definitions: readonly ComponentBlockDefinition[];
-}): MarkdownExtension {
-  const byName = new Map(options.definitions.map((definition) => [definition.name, definition]));
+export function createComponentBlocksExtension(blocks: Pick<BlockRegistry, "find">): MarkdownExtension {
 
   function visitNested(parent: Element): void {
     parent.children.forEach((child, index) => {
       if (child.type !== "element") return;
-      const resolved = resolve(child, byName);
+      const resolved = resolve(child, blocks);
       if (resolved) parent.children[index] = resolved.replacement;
       else visitNested(child);
     });
   }
 
   return {
-    id: options.id,
-    version: options.version,
-    fenceLanguages: [...byName.keys()],
+    id: "component-blocks",
+    version: COMPONENT_BLOCKS_VERSION,
     transform(tree: Root) {
       tree.children = tree.children.flatMap((node): RootContent[] => {
         if (node.type !== "element") return [node];
 
-        const resolved = resolve(node, byName);
+        const resolved = resolve(node, blocks);
         if (!resolved) {
           visitNested(node);
           return [node];

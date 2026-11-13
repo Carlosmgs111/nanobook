@@ -1,8 +1,15 @@
-import { createMarkdownExtensions } from "../../../../../application/shared/createMarkdownExtensions";
+import { blockDefinitions } from "../../../../../application/shared/blocks";
+import {
+  createComponentBlocksExtension,
+  createMarkdownEngine,
+  registerBlocks,
+} from "../../../../../rendering/shared";
 import { UnifiedMarkdownRenderer } from "../UnifiedMarkdownRenderer";
 import type { RenderRequest, RenderResponse } from "./protocol";
 
-const renderer = new UnifiedMarkdownRenderer(createMarkdownExtensions());
+const renderer = new UnifiedMarkdownRenderer(
+  createMarkdownEngine([createComponentBlocksExtension(registerBlocks(blockDefinitions))]),
+);
 
 self.addEventListener(
   "message",

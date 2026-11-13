@@ -1,0 +1,22 @@
+---
+import type { DocumentPiece } from "../../server";
+import BlockHost from "./BlockHost.astro";
+
+interface Props {
+  /** Piezas del documento ya resueltas por pieceResolver.resolve. */
+  pieces: DocumentPiece[];
+}
+
+// Los segmentos de HTML se inyectan tal cual y los bloques se pintan con Astro
+// (solo servidor o isla), en el orden del documento.
+---
+
+{
+  Astro.props.pieces.map((piece) =>
+    piece.kind === "island" ? (
+      <BlockHost component={piece.component} props={piece.props} />
+    ) : (
+      <Fragment set:html={piece.html} />
+    )
+  )
+}

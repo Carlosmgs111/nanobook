@@ -1,6 +1,8 @@
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { describe, expect, it, vi } from "vitest";
 import { createMarkdownBlockAdvisor } from "../../../../application/server/createMarkdownBlockAdvisor";
+import { blockDefinitions } from "../../../../application/shared/blocks";
+import { RenderingModule } from "../../../../rendering/server";
 import { financialGuideExamples } from "../../../../financial-content/shared/guide/financialAuthoringGuide";
 import { Result } from "../../../../shared/domain/Result";
 import type { NanobookModule } from "../../../../nanobooks/server";
@@ -28,7 +30,7 @@ function connect(scopes: readonly string[] = actor.scopes) {
       updateDocument: { execute: updateDocument },
     },
   } as unknown as NanobookModule;
-  const tools = new AgentToolService(nanobooks, { write: vi.fn() }, createMarkdownBlockAdvisor());
+  const tools = new AgentToolService(nanobooks, { write: vi.fn() }, createMarkdownBlockAdvisor(RenderingModule.create(blockDefinitions).blocks));
   const handler = createMcpHandler(
     () => createNanobookMcpServer({ ...actor, scopes }, tools),
     { legacy: "stateless", responseMode: "json" },

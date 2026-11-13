@@ -1,9 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { createMarkdownExtensions } from "../../application/shared/createMarkdownExtensions";
+import { blockDefinitions } from "./blocks";
+import {
+  createComponentBlocksExtension,
+  createMarkdownEngine,
+  registerBlocks,
+  type MarkdownExtension,
+} from "../../rendering/shared";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
 import { UnifiedMarkdownRenderer as ServerRenderer } from "../../publishing/server/infraestructure/renderer/UnifiedMarkdownRenderer";
-import type { MarkdownExtension } from "./MarkdownExtension";
 
 const financialNote = readFileSync(new URL(
   "../../financial-content/shared/test/fixtures/alphabet-analysis.md",
@@ -39,9 +44,10 @@ const sources = [
 ];
 
 describe("Markdown renderer parity", () => {
-  const server = new ServerRenderer(createMarkdownExtensions());
-  const preview = new PreviewRenderer(createMarkdownExtensions());
-  const serverWithoutExtensions = new ServerRenderer();
+  const blockEngine = () => createMarkdownEngine([createComponentBlocksExtension(registerBlocks(blockDefinitions))]);
+  const server = new ServerRenderer(blockEngine());
+  const preview = new PreviewRenderer(blockEngine());
+  const serverWithoutExtensions = new ServerRenderer(createMarkdownEngine());
 
   it.each(sources)("renders identical HTML for $name", async ({ source, marker }) => {
     const published = await server.render({ getContent: () => source });
@@ -60,14 +66,13 @@ describe("Markdown renderer parity", () => {
     const extensions: readonly MarkdownExtension[] = [{
       id: "paragraph-marker",
       version: "1",
-      fenceLanguages: [],
       transform(tree) {
         tree.children.push({ type: "text", value: "From extension" });
       },
     }];
     const source = "Paragraph";
-    const published = await new ServerRenderer(extensions).render({ getContent: () => source });
-    const result = await new PreviewRenderer(extensions).render(source);
+    const published = await new ServerRenderer(createMarkdownEngine(extensions)).render({ getContent: () => source });
+    const result = await new PreviewRenderer(createMarkdownEngine(extensions)).render(source);
 
     expect(result.isSuccess).toBe(true);
     expect(published.Content).toBe("<p>Paragraph</p>From extension");

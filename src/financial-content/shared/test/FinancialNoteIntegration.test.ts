@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
-import { createMarkdownExtensions } from "../../../application/shared/createMarkdownExtensions";
+import { blockDefinitions } from "../../../application/shared/blocks";
+import { RenderingModule } from "../../../rendering/server";
 import { Application } from "../../../application/server/Application";
-import { blockRegistry } from "../../../application/shared/blocks";
-import { resolveDocumentPieces } from "../../../application/shared/resolveDocumentPieces";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
 
 vi.mock("astro:env/server", () => ({
@@ -28,9 +27,9 @@ const note = readFileSync(new URL("./fixtures/alphabet-analysis.md", import.meta
 it("publishes the full financial note as framework blocks in author order, with identical SSR and preview HTML", async () => {
   const app = await Application.create();
   const { Content: published } = await app.publishingModule.pageRenderer.render({ getContent: () => note });
-  const preview = await new PreviewRenderer(createMarkdownExtensions()).render(note);
+  const preview = await new PreviewRenderer(app.renderingModule.markdownEngine).render(note);
 
-  const pieces = resolveDocumentPieces(published, { findDefinition: blockRegistry.find });
+  const pieces = app.renderingModule.pieceResolver.resolve(published);
   const blocks = pieces.flatMap((piece) => (piece.kind === "island" ? [piece.name] : []));
   expect(blocks).toEqual(["company-profile", "financial-metrics", "financial-chart", "financial-news", "financial-sources"]);
   expect(published).not.toContain("component-block-error");

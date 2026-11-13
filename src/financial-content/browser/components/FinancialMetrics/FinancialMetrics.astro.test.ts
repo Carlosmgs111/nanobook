@@ -1,7 +1,9 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { describe, expect, it } from "vitest";
-import { blockRegistry } from "../../../../application/shared/blocks";
+import { blockDefinitions } from "../../../../application/shared/blocks";
+import { RenderingModule } from "../../../../rendering/server";
 import FinancialMetrics from "./FinancialMetrics.astro";
+const blockRegistry = RenderingModule.create(blockDefinitions).blocks;
 
 const props = blockRegistry.find("financial-metrics")!.props.parse({
   version: 1,

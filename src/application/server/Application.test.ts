@@ -1,9 +1,8 @@
+import { createMarkdownEngine } from "../../rendering/shared";
 import { describe, expect, it, vi } from "vitest";
 import { PublishingModule } from "../../publishing/server";
-import { RENDERER_VERSION } from "../../rendering/shared/rendererFingerprint";
+import { RENDERER_VERSION } from "../../rendering/shared";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import { blockRegistry } from "../shared/blocks";
-import { resolveDocumentPieces } from "../shared/resolveDocumentPieces";
 import { Application } from "./Application";
 
 const { protect, create } = vi.hoisted(() => {
@@ -104,14 +103,14 @@ describe("Application", () => {
     };
 
     const published = await app.publishingModule.pageRenderer.render(document);
-    const pieces = resolveDocumentPieces(published.Content, { findDefinition: blockRegistry.find });
+    const pieces = app.renderingModule.pieceResolver.resolve(published.Content);
 
     expect(pieces.map((piece) => piece.kind)).toEqual(["html", "island", "html"]);
     expect(pieces[1]).toMatchObject({ kind: "island", name: "price-chart", props: { title: "ACME", height: 360 } });
   }, 15_000);
 
   it("keeps financial fences as code when publishing receives no extensions", async () => {
-    const { pageRenderer } = await PublishingModule.create(new InMemoryEventBus(), []);
+    const { pageRenderer } = await PublishingModule.create(new InMemoryEventBus(), createMarkdownEngine());
     const published = await pageRenderer.render(financialDocument);
 
     expect(published.Content).toContain('<code class="language-financial-metrics">');

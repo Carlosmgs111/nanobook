@@ -1,7 +1,7 @@
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { parse } from "yaml";
-import type { ComponentBlockDefinition } from "../../../rendering/shared/componentBlocks/ComponentBlockDefinition";
+import type { ComponentBlockDefinition } from "../../../rendering/shared";
 import { formatFinancialBlockPath } from "./financialIssueMessages";
 
 /** Un problema concreto de un bloque dentro de un documento Markdown. */

@@ -20,13 +20,13 @@ describe("browser application consumers", () => {
     expect(source).not.toContain("import { edition");
   });
 
-  it("composes Worker markdown extensions through the shared application factory", () => {
+  it("composes Worker markdown extensions through the shared rendering factory", () => {
     const source = read(
       "src/documents/browser/infraestructure/renderer/WorkerMarkdownRenderer/worker-entry.ts",
     );
 
-    expect(source).toMatch(/import\s*\{\s*createMarkdownExtensions\s*\}\s*from\s*["'][^"']*\/application\/shared\/createMarkdownExtensions["']/);
-    expect(source).toContain("new UnifiedMarkdownRenderer(createMarkdownExtensions())");
+    expect(source).toContain("blockDefinitions");
+    expect(source).toContain("createMarkdownEngine([");
     expect(source).not.toContain("financial-content");
   });
 });
