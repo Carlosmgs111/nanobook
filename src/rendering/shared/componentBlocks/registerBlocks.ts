@@ -20,11 +20,11 @@ export function registerBlocks(definitions: readonly ComponentBlockDefinition[])
 
   for (const definition of definitions) {
     const { name, component } = definition;
-    if (typeof name !== "string" || !BLOCK_NAME_PATTERN.test(name)) {
-      throw new Error(`Nombre de bloque inválido "${String(name)}": debe cumplir ${BLOCK_NAME_PATTERN}`);
+    if (!BLOCK_NAME_PATTERN.test(name)) {
+      throw new Error(`Nombre de bloque inválido "${name}": debe cumplir ${BLOCK_NAME_PATTERN}`);
     }
-    if (typeof component !== "string" || !COMPONENT_PATH_PATTERN.test(component)) {
-      throw new Error(`Bloque "${name}": el componente debe ser la ruta de un .astro bajo /src/ (recibido: ${String(component)})`);
+    if (!COMPONENT_PATH_PATTERN.test(component)) {
+      throw new Error(`Bloque "${name}": el componente debe ser la ruta de un .astro bajo /src/ (recibido: ${component})`);
     }
     if (byName.has(name)) {
       throw new Error(`Bloque duplicado "${name}"`);

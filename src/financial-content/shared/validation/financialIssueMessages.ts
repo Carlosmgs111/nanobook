@@ -43,6 +43,11 @@ export function financialIssueMessage(issue: z.core.$ZodIssue): string {
   return messages[issueCode(issue)];
 }
 
+/** Ruta de una incidencia de zod sin los símbolos, que no pueden aparecer en un documento. */
+export function financialIssuePath(issue: z.core.$ZodIssue): (string | number)[] {
+  return issue.path.filter((part): part is string | number => typeof part !== "symbol");
+}
+
 /** Ruta legible de un campo, por ejemplo `series[0].values`. Vacía si el error afecta a todo el bloque. */
 export function formatFinancialBlockPath(path: FinancialBlockPath): string {
   return path

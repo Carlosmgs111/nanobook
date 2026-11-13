@@ -2,7 +2,7 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { parse } from "yaml";
 import type { ComponentBlockDefinition } from "../../../rendering/shared";
-import { formatFinancialBlockPath } from "./financialIssueMessages";
+import { financialIssuePath, formatFinancialBlockPath } from "./financialIssueMessages";
 
 /** Un problema concreto de un bloque dentro de un documento Markdown. */
 export interface MarkdownBlockIssue {
@@ -44,7 +44,7 @@ function validateComponentBlock(definition: ComponentBlockDefinition, source: st
   return parsed.error.issues.map((issue) => ({
     block: definition.name,
     line,
-    path: formatFinancialBlockPath(issue.path.filter((part): part is string | number => typeof part !== "symbol")),
+    path: formatFinancialBlockPath(financialIssuePath(issue)),
     message: issue.message,
   }));
 }
