@@ -216,8 +216,8 @@ contenedor es estrecho, un resumen HTML mantiene las etiquetas legibles.
 `MarkdownExtension` y de la extensión genérica de bloques; no importa el módulo
 financiero. `publishing/server` adapta ese pipeline a la caché y a SSR. La lista
 `RenderingModule` (`rendering/server/index.ts`), que crean el servidor y el Worker con la lista
-`application/shared/blocks.ts`, expone una sola extensión, `component-blocks`, con las definiciones
-registradas explícitamente (la lista de este módulo está en `browser/blocks.ts`). `theme` conserva el contrato de paleta,
+`Application.ts`, expone una sola extensión, `component-blocks`. `FinancialContentModule.create(blocks)`
+registra sus bloques (la lista está en `browser/blocks.ts`) al componerse. `theme` conserva el contrato de paleta,
 tipografía, superficies, espaciado y estados; el contenido financiero solo
 consume esos roles.
 
@@ -233,7 +233,7 @@ con su contenido alternativo (la fence), porque el Worker no ejecuta Astro; est�
 pendiente de otra sesión.
 
 Para añadir otro tipo de bloque, ver `bloques-de-componentes`: un componente y su
-esquema estricto y los límites, registrados en `browser/blocks.ts`, referencias a fuentes, estilos
+esquema estricto y los límites, registrados en `browser/blocks.ts` (los registra `FinancialContentModule`), referencias a fuentes, estilos
 basados en `theme` y pruebas de validación, seguridad y accesibilidad (los `.astro`
 se prueban con `npm run test:astro`). Si cambia la forma del HTML que emite la
 extensión, subir su versión. Los cambios incompatibles de campos persistidos

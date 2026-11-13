@@ -1,15 +1,16 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
-import { blockDefinitions } from "../../../application/shared/blocks";
-import { RenderingModule } from "../../../rendering/server";
+import { createBlockRegistry } from "../../../rendering/shared";
+import { FinancialContentModule } from "..";
 import type { FinancialFenceKind } from "../../shared/model/FinancialBlock";
 import { financialGuideExamples } from "../../shared/guide/financialAuthoringGuide";
 import CompanyProfile from "./CompanyProfile/CompanyProfile.astro";
 import FinancialChart from "./FinancialChart/FinancialChart.astro";
 import FinancialNews from "./FinancialNews/FinancialNews.astro";
 import FinancialSources from "./FinancialSources/FinancialSources.astro";
-const blockRegistry = RenderingModule.create(blockDefinitions).blocks;
+const blockRegistry = createBlockRegistry();
+FinancialContentModule.create(blockRegistry);
 
 const components = {
   "company-profile": CompanyProfile,

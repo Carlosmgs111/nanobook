@@ -1,4 +1,4 @@
-import type { BlockRegistry } from "../shared/componentBlocks/registerBlocks";
+import type { BlockRegistry } from "../shared/componentBlocks/createBlockRegistry";
 import { splitComponentBlocks } from "../shared/componentBlocks/splitComponentBlocks";
 
 /** Lo que `RenderedDocument.astro` pinta, en orden: HTML tal cual o un bloque registrado (`island`: componente Astro, con o sin hidratación). */

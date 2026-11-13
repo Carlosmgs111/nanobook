@@ -146,7 +146,7 @@ cambió a un **registro explícito** con la directiva dentro del componente:
 
 1. **Registro.** `rendering` expone `registerBlocks`; cada módulo exporta la lista de
    sus bloques (`{ name, component, props }`, datos puros) y
-   `application/shared/blocks.ts` los registra. `component` es la ruta del `.astro`
+   cada módulo los registra al componerse. `component` es la ruta del `.astro`
    como texto, de modo que el Worker de la vista previa puede cargar el registro sin
    cargar componentes.
 2. **La directiva vive en el componente.** Todo componente registrado es un `.astro`;
@@ -164,7 +164,7 @@ cambió a un **registro explícito** con la directiva dentro del componente:
    `IntersectionObserver`); el disparo real por scroll no se ha comprobado.
 
 Consecuencias: añadir un bloque exige tocar la lista de su módulo (y, si es de un
-módulo nuevo, `application/shared/blocks.ts`); cada isla necesita un `.astro`
+módulo nuevo, su `create` los registra); cada isla necesita un `.astro`
 envoltorio pequeño; los `.schema.ts` y las listas de bloques siguen debiendo ser
 TypeScript puro (los carga el Worker), pero ya no hay una prueba que lo compruebe: un
 import indebido rompería el build del Worker. La pieza `pieceResolver.resolve` conserva

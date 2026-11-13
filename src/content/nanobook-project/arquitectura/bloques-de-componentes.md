@@ -30,7 +30,7 @@ Ver `componentes-de-framework-islas` para el porqué de este diseño.
 
 ## Registro
 
-`rendering` expone `registerBlocks(definiciones)` y el tipo `ComponentBlockDefinition`:
+`rendering` expone un registro de bloques (`createBlockRegistry()`) y el tipo `ComponentBlockDefinition`:
 
 ```ts
 interface ComponentBlockDefinition {
@@ -42,13 +42,14 @@ interface ComponentBlockDefinition {
 
 `component` es un texto y no un import para que el registro sea un dato puro que
 también cargue el Worker de la vista previa, que no puede cargar componentes.
-`registerBlocks` falla, nombrando el bloque, si el nombre no cumple
-`^[a-z][a-z0-9-]*$`, está repetido o la ruta no es un `.astro` bajo `/src/`.
+`registry.register(definiciones)` falla, nombrando el bloque, si el nombre no cumple
+`^[a-z][a-z0-9-]*$`, está repetido o la ruta no es un `.astro` bajo `/src/`, y en ese caso no registra ninguno.
 
-Cada módulo exporta sus bloques como lista (`financial-content/browser/blocks.ts`) y
-`application/shared/blocks.ts` los junta con los suyos, produciendo
-`blockDefinitions`, la **única lista** que consumen, vía `RenderingModule`, la extensión de
-Markdown, la página y el asesor del MCP.
+**Cada módulo registra sus propios bloques cuando se compone.** `RenderingModule.create()` nace con el
+registro vacío; `FinancialContentModule.create(blocks)` (`financial-content/browser/index.ts`) registra los suyos
+(la lista está en `browser/blocks.ts`). Si la aplicación no compone el módulo, sus bloques no existen: su fence
+se publica como código normal. El registro es compartido y se lee en el momento de usarlo, así que el orden de
+creación no importa.
 
 Cada bloque vive en su propia carpeta, `src/<módulo>/browser/components/<Nombre>/`:
 
@@ -100,20 +101,20 @@ lanza) parte el HTML en segmentos ordenados `html` / `block`.
 
 ## Composición y host
 
-`rendering` sigue el patrón compositor del resto de módulos: `RenderingModule.create(definiciones)`
-(`rendering/server/index.ts`) recibe la lista de bloques, instancia las piezas y las expone como
-campos; nadie más importa piezas internas.
+`rendering` sigue el patrón compositor del resto de módulos: `RenderingModule.create()`
+(`rendering/server/index.ts`) instancia las piezas y las expone como campos; nadie más importa piezas
+internas.
 
 | Campo | Qué es |
 |---|---|
-| `blocks` | El registro (`find`, `blocks`); lo usa el asesor del MCP para validar. |
+| `blocks` | El registro (`register`, `find`, `blocks`): los módulos registran aquí sus bloques. |
 | `markdownEngine` | El motor Markdown → HTML con la extensión `component-blocks`; expone `render(source)` y un `fingerprint` de caché. |
 | `pieceResolver` | `DocumentPieceResolver`: `resolve(html)` parte el HTML renderizado en piezas, cada una con la ruta de su componente. |
 
 **Fronteras.** `rendering` no importa ningún otro módulo y solo se entra por tres puertas
 (las vigila `rendering/boundary.test.ts`):
 
-- `rendering/shared`: `createMarkdownEngine`, `registerBlocks`, `createComponentBlocksExtension` y los tipos
+- `rendering/shared`: `createMarkdownEngine`, `createBlockRegistry`, `createComponentBlocksExtension` y los tipos
   del contrato (`ComponentBlockDefinition`, `BlockRegistry`, `MarkdownExtension`, `MarkdownEngine`).
 - `rendering/server`: `RenderingModule` y `DocumentPiece`.
 - `rendering/browser/ui`: los componentes de la vista (`RenderedDocument.astro`, `BlockHost.astro`).
@@ -124,17 +125,18 @@ objeto con `render`; ninguno importa `renderMarkdown` ni la huella de caché. El
 `application/server/Application.ts` y en `worker-entry.ts`, que usan la misma extensión y por tanto
 producen el mismo HTML (`application/shared/MarkdownRendererParity.test.ts` lo comprueba).
 
-La lista de bloques es `application/shared/blocks.ts` (`blockDefinitions`, datos puros). Cada
-entorno crea el módulo con ella:
+Cada raíz de composición compone los módulos que necesita:
 
-- `application/server/Application.ts`: `renderingModule`; pasa `markdownEngine` a
-  `PublishingModule`, `blocks` al asesor del MCP y lo expone a las páginas.
-- `worker-entry.ts` (vista previa): crea su propio módulo con la misma lista.
+- `application/server/Application.ts`: crea `renderingModule`, compone `FinancialContentModule` con su registro,
+  registra `counter-demo` (`counterDemoBlock`), pasa `markdownEngine` a `PublishingModule` y el
+  `markdownBlockAdvisor` del módulo financiero a `AgentModule`.
+- `worker-entry.ts` (vista previa): su propia raíz; crea un registro, compone los mismos módulos y construye
+  el motor con la misma extensión.
 - `DocumentPage.astro` llama a `app.renderingModule.pieceResolver.resolve` y pasa las piezas a
   `RenderedDocument.astro`, que no conoce el registro.
 - `rendering/browser/ui/blockComponents.ts` convierte la ruta de una pieza en componente con
   `import.meta.glob("/src/*/browser/components/*/*.astro")`; es solo una tabla de búsqueda. Una
-  prueba (`blocks.test.ts`) comprueba que cada ruta registrada existe.
+  prueba (`FinancialContentModule.test.ts`) comprueba que cada ruta registrada existe.
 - `BlockHost.astro` pinta el componente con una etiqueta dinámica. Astro no admite `client:*` en
   una etiqueta dinámica, y por eso la directiva vive dentro del componente registrado.
 
@@ -184,9 +186,10 @@ contrato.
 - `shared/guide/`, `shared/formatting/` y estilos en
   `browser/ui/styles/financial-content.css`.
 
-`application` (composición): `shared/blocks.ts` (la lista), `RenderingModule` inyectado en
-`Application`. Los componentes de la vista (`RenderedDocument.astro`, `BlockHost.astro`, `blockComponents.ts`) viven en `rendering/browser/ui`.
-`createMarkdownBlockAdvisor(blocks)` valida contra el mismo registro.
+`application` (composición): `Application` (servidor) compone los módulos y registra `counter-demo`. Los
+componentes de la vista (`RenderedDocument.astro`, `BlockHost.astro`, `blockComponents.ts`) viven en
+`rendering/browser/ui`. El módulo financiero expone `markdownBlockAdvisor` (guía y validación contra el registro
+compartido).
 
 ## Añadir un componente
 
@@ -195,8 +198,8 @@ contrato.
    framework (`NombreIsland.tsx`, `.vue`, `.svelte`…) e importarlo en `Nombre.astro`
    con `client:visible` (o `load`, `idle`).
 2. Añadir el bloque (nombre, ruta del `.astro` y esquema) a la lista de su módulo
-   (`browser/blocks.ts`); si el módulo es nuevo, registrar su lista en
-   `application/shared/blocks.ts`.
+   (`browser/blocks.ts`). Si el módulo es nuevo, que su `create(blocks)` los registre y
+   componerlo en `Application.ts` y en `worker-entry.ts`.
 3. Si el framework es nuevo, instalar su integración de Astro y añadirla a
    `integrations` en `astro.config.mjs`.
 4. Probar un `.astro` con la Container API: un archivo `*.astro.test.ts` se ejecuta

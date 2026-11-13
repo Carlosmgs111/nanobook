@@ -2,7 +2,7 @@ import type { Comment, Element, ElementContent, Root, RootContent } from "hast";
 import { parse } from "yaml";
 import type { MarkdownExtension } from "../MarkdownExtension";
 import { BLOCK_END_COMMENT, blockStartComment } from "./blockMarker";
-import type { BlockRegistry } from "./registerBlocks";
+import type { BlockRegistry } from "./createBlockRegistry";
 
 /** Sube cuando cambia la forma del HTML que emite la extensión: invalida la caché de páginas. */
 const COMPONENT_BLOCKS_VERSION = "2";
