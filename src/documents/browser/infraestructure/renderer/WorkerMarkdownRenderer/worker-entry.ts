@@ -1,5 +1,6 @@
 import { counterDemoBlock } from "../../../../../application/browser/components/CounterDemo/counterDemoBlock";
 import { FinancialContentModule } from "../../../../../financial-content/browser";
+import { SpreadsheetsModule } from "../../../../../spreadsheets/browser";
 import {
   createBlockRegistry,
   createComponentBlocksExtension,
@@ -11,6 +12,7 @@ import type { RenderRequest, RenderResponse } from "./protocol";
 // Raíz de composición del Worker: los mismos módulos que el servidor, para producir el mismo HTML.
 const blocks = createBlockRegistry();
 FinancialContentModule.create(blocks);
+SpreadsheetsModule.create(blocks);
 blocks.register([counterDemoBlock]);
 
 const renderer = new UnifiedMarkdownRenderer(createMarkdownEngine([createComponentBlocksExtension(blocks)]));
