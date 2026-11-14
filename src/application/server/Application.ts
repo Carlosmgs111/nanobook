@@ -1,6 +1,7 @@
 import { AuthServerModule } from "../../auth/server";
 import { counterDemoBlock } from "../browser/components/CounterDemo/counterDemoBlock";
 import { FinancialContentModule } from "../../financial-content/browser";
+import { SpreadsheetsModule } from "../../spreadsheets/browser";
 import { RenderingModule } from "../../rendering/server";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
@@ -36,6 +37,7 @@ export class Application {
     );
     const renderingModule = RenderingModule.create();
     const financialContentModule = FinancialContentModule.create(renderingModule.blocks);
+    SpreadsheetsModule.create(renderingModule.blocks);
     renderingModule.blocks.register([counterDemoBlock]);
     const publishingModule = await PublishingModule.create(eventBus, renderingModule.markdownEngine);
     const themeModule = ThemeModule.create(
