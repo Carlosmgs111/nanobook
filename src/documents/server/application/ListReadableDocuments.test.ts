@@ -62,6 +62,27 @@ describe("ListReadableDocuments", () => {
     expect(require).not.toHaveBeenCalled();
   });
 
+  it("treats an empty userId as anonymous without asking the write port", async () => {
+    const secured = doc("secreto", true, "# Secreto");
+    const require = vi.fn();
+
+    const result = await setup([secured], [secured], { require } as unknown as WriteAccess).execute("book-a", {
+      userId: "",
+    });
+
+    expect(result[0].getContent()).toBe("");
+    expect(require).not.toHaveBeenCalled();
+  });
+
+  it("redacts when the stored document is open but the resolved one is protected", async () => {
+    const raw = doc("p", false, "");
+    const resolved = doc("p", true, "# secreto");
+
+    const result = await setup([raw], [resolved]).execute("book-a", { userId: "user-2" });
+
+    expect(result[0].getContent()).toBe("");
+  });
+
   it("redacts when only the stored link of a proxy is protected", async () => {
     const raw = doc("proxy", true, "");
     const resolved = doc("proxy", false, "# Contenido del destino");

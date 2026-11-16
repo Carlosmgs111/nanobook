@@ -22,8 +22,8 @@ export class ListReadableDocuments {
 
     const raw = listed.getValue();
     const resolved = await this.proxyParser.parseProxies(nanobookId, raw);
-    // Un fallo al consultar el puerto cuenta como «no escritor».
-    const canWrite = userId !== undefined && (await this.writeAccess.require(nanobookId, userId)).isSuccess;
+    // Sin usuario (o vacío) no se consulta el puerto; un fallo del puerto cuenta como «no escritor».
+    const canWrite = Boolean(userId) && (await this.writeAccess.require(nanobookId, userId as string)).isSuccess;
     if (canWrite) return resolved;
 
     return resolved.map((document, index) =>
