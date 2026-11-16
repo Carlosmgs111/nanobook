@@ -88,8 +88,8 @@ export class DocumentModule {
     const proxyParser = new ProxyParser(referenceResolver);
     const sourceCache = createDocumentSourceCache();
     const createDocument = new CreateDocument(contentRepository, eventBus, writeAccess);
-    const updateDocument = new UpdateDocument(contentRepository, eventBus);
-    const deleteDocument = new DeleteDocument(contentRepository, eventBus);
+    const updateDocument = new UpdateDocument(contentRepository, eventBus, writeAccess);
+    const deleteDocument = new DeleteDocument(contentRepository, eventBus, writeAccess);
     const getAllDocuments = new GetAllDocuments(contentRepository, proxyParser);
     const getDocument = new GetDocument(contentRepository, proxyParser, sourceCache);
     const invalidateDocumentSourceCache = new InvalidateDocumentSourceCache(sourceCache);

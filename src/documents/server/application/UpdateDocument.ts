@@ -8,11 +8,11 @@ import {
   DocumentAlreadyExistsError,
   DocumentRepositoryError,
   DocumentParseError,
-  DocumentAccessDeniedError,
   InvalidDocumentIdError,
   type DocumentServiceError,
 } from "../domain/errors";
 import { Document } from "../domain/Document";
+import type { WriteAccess } from "../domain/ports/WriteAccess";
 import type { EventBusError } from "../../../shared/domain/bus/errors";
 
 export type UpdateDocumentError =
@@ -24,7 +24,8 @@ export type UpdateDocumentError =
 export class UpdateDocument {
   constructor(
     private contentRepository: ContentRepository,
-    private eventBus: EventBus
+    private eventBus: EventBus,
+    private writeAccess: WriteAccess,
   ) {}
 
   async execute(
@@ -32,6 +33,9 @@ export class UpdateDocument {
     documentDelta: DocumentInput,
     actorId: string,
   ): Promise<Result<UpdateDocumentError, Document>> {
+    const writable = await this.writeAccess.require(nanobookId, actorId);
+    if (!writable.isSuccess) return Result.fail(writable.getError());
+
     const documentId = documentDelta.id;
     if (!documentId) {
       return Result.fail(new InvalidDocumentIdError(documentId ?? ""));
@@ -48,9 +52,6 @@ export class UpdateDocument {
     const existingDocument = documentResult.getValue();
     if (!existingDocument) {
       return Result.fail(new DocumentNotFoundError(documentId));
-    }
-    if (existingDocument.getMetadata().ownerId !== actorId) {
-      return Result.fail(new DocumentAccessDeniedError(documentId));
     }
 
     const { id, expectedRevision, path, content } = documentDelta;
@@ -92,17 +93,6 @@ export class UpdateDocument {
       updatedDocument
     );
     if (!documentsToUpdate.isSuccess) return Result.fail(documentsToUpdate.getError());
-
-    const unauthorizedDocument = documentsToUpdate
-      .getValue()
-      .find((document) => document.getMetadata().ownerId !== actorId);
-    if (unauthorizedDocument) {
-      return Result.fail(
-        new DocumentAccessDeniedError(
-          unauthorizedDocument.getDocumentId().getValue()
-        )
-      );
-    }
 
     const updates = documentsToUpdate.getValue().map((document, index) => ({
       document,

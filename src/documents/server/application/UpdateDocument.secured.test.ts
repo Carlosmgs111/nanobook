@@ -3,7 +3,7 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { Document } from "../domain/Document";
 import type { DocumentInput } from "./dto/DocumentInput";
-import { buildDocumentInput, createEventBus, createRepository } from "./test/factories";
+import { allowWrites, buildDocumentInput, createEventBus, createRepository } from "./test/factories";
 import { UpdateDocument } from "./UpdateDocument";
 
 function existingSecuredDocument() {
@@ -33,7 +33,7 @@ describe("UpdateDocument and the secured flag", () => {
       getById: vi.fn().mockResolvedValue(Result.ok(existingSecuredDocument())),
     });
 
-    const result = await new UpdateDocument(repository, createEventBus()).execute(
+    const result = await new UpdateDocument(repository, createEventBus(), allowWrites).execute(
       "book-a",
       buildDocumentInput({ id: "doc-1", path: "intro" }),
       "owner-1",
@@ -50,7 +50,7 @@ describe("UpdateDocument and the secured flag", () => {
     });
     const tampered = { ...buildDocumentInput({ id: "doc-1", path: "intro" }), secured: false } as DocumentInput;
 
-    await new UpdateDocument(repository, createEventBus()).execute("book-a", tampered, "owner-1");
+    await new UpdateDocument(repository, createEventBus(), allowWrites).execute("book-a", tampered, "owner-1");
 
     const saved = (repository.updateMany as Mock).mock.calls[0][1][0].document as Document;
     expect(saved.getMetadata().secured).toBe(true);
