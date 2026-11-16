@@ -38,7 +38,7 @@ export default defineConfig({
     optimizeDeps: {
       // Se importa de forma diferida; sin esto Vite la descubre tarde y la
       // primera carga en dev falla con 504 "Outdated Optimize Dep".
-      include: ["lightweight-charts", "react-spreadsheet"],
+      include: ["lightweight-charts"],
     },
     server: {
       watch: {

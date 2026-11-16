@@ -10,6 +10,22 @@ export const sheetRows = z.array(z.array(cell).min(1).max(26)).min(1).max(200);
 export const totalFunctions = ["sum", "average", "min", "max", "count"] as const;
 export type TotalFunction = (typeof totalFunctions)[number];
 
+/** Etiqueta de columna al estilo Excel (A, B, … Z, AA…), para las hojas sin `columns`. */
+export function columnLabel(index: number): string {
+  let label = "";
+  for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) label = String.fromCharCode(65 + ((n - 1) % 26)) + label;
+  return label;
+}
+
+/** Orden de celdas de una columna: números (de menor a mayor), después texto, y las vacías al final. */
+export function compareCells(a: Cell | undefined, b: Cell | undefined): number {
+  const rank = (value: Cell | undefined) => (typeof value === "number" ? 0 : value === null || value === undefined || value === "" ? 2 : 1);
+  const byRank = rank(a) - rank(b);
+  if (byRank !== 0) return byRank;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a ?? "").localeCompare(String(b ?? ""), "es");
+}
+
 /** Ancho de la hoja: la fila más larga o, si hay más etiquetas que celdas, el número de etiquetas. */
 export function sheetWidth(rows: readonly (readonly Cell[])[], columns?: readonly string[]): number {
   return Math.max(columns?.length ?? 0, ...rows.map((row) => row.length));

@@ -18,38 +18,54 @@
   background: var(--theme-surface-bg);
 }
 
+.sheet table,
 .sheet-totals table {
   inline-size: 100%;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
 }
 
+.sheet :is(th, td),
 .sheet-totals :is(th, td) {
   padding: 0.35rem 0.75rem;
   border: 1px solid var(--theme-border);
-  text-align: end;
-}
-
-.sheet-totals :is(thead th:first-child, tbody th) {
   text-align: start;
 }
 
-.sheet .Spreadsheet {
-  --background-color: var(--theme-surface-bg);
-  --text-color: var(--theme-content-primary);
-  --readonly-text-color: var(--theme-content-primary);
-  --border-color: var(--theme-border);
-  --header-background-color: var(--theme-surface-bg);
-  --elevation: 0;
+.sheet .sheet-number,
+.sheet-totals td {
+  text-align: end;
 }
 
-.sheet-fallback {
+.sheet thead th {
+  background: var(--theme-surface-bg);
+  font-weight: 600;
+}
+
+.sheet th button {
+  all: unset;
+  display: block;
   inline-size: 100%;
-  border-collapse: collapse;
+  cursor: pointer;
 }
 
-.sheet-fallback :is(th, td) {
-  padding: 0.35rem 0.75rem;
-  border: 1px solid var(--theme-border);
+.sheet th button:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+.sheet td input {
+  all: unset;
+  display: block;
+  inline-size: 100%;
+  box-sizing: border-box;
+}
+
+.sheet td input:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+.sheet-totals :is(thead th:first-child, tbody th) {
   text-align: start;
 }
