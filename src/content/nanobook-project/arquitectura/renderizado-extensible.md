@@ -31,14 +31,13 @@ debe cambiar cuando cambie su salida.
 ## Composición y paridad
 
 `RenderingModule.markdownEngine` (`rendering/server/index.ts`) envuelve `renderMarkdown` y la lista de
-extensiones (hoy, una: `component-blocks`) y expone `render(source)` y un `fingerprint`. `application/server/Application.ts`
-se lo entrega a `PublishingModule`, que construye `UnifiedMarkdownRenderer`; ese
-renderer adapta el motor al contrato de publicación. En el navegador, `worker-entry.ts`
+extensiones (hoy, una: `component-blocks`) y expone `render(source)` y un `fingerprint`. `RenderingModule.pageRenderer`
+(`rendering/server/application/PageRenderer.ts`) lo usa para renderizar páginas con caché (ver más abajo). En el navegador, `worker-entry.ts`
 crea un motor con la misma extensión para el renderer de vista previa. Ambos adaptadores
 usan el mismo `renderMarkdown`; con la misma fuente y el mismo conjunto ordenado
 de extensiones producen el mismo HTML, y al compartir la lista no pueden
-divergir por un olvido en una de las dos raíces. `rendering` y `publishing` conservan la posibilidad de
-recibir una lista vacía y siguen siendo independientes de `financial-content`.
+divergir por un olvido en una de las dos raíces. `rendering` conserva la posibilidad de
+recibir una lista vacía y sigue siendo independiente de `financial-content`.
 Todavía no existe selección de extensiones por documento o nanobook.
 
 ## Validez de caché

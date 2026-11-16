@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { BLOCK_END_COMMENT, blockStartComment } from "../shared/componentBlocks/blockMarker";
-import type { ComponentBlockDefinition } from "../shared/componentBlocks/ComponentBlockDefinition";
+import { BLOCK_END_COMMENT, blockStartComment } from "../../shared/componentBlocks/blockMarker";
+import type { ComponentBlockDefinition } from "../../shared/componentBlocks/ComponentBlockDefinition";
 import { DocumentPieceResolver } from "./DocumentPieceResolver";
 
 const counter: ComponentBlockDefinition = {

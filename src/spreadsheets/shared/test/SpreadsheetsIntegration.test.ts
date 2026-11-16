@@ -24,7 +24,7 @@ const document = readFileSync(new URL("./fixtures/ventas-por-region.md", import.
 
 it("publishes a document that uses the spreadsheets module, in author order", async () => {
   const app = await Application.create();
-  const { Content: published } = await app.publishingModule.pageRenderer.render({ getContent: () => document });
+  const published = await app.renderingModule.markdownEngine.render(document);
 
   const pieces = app.renderingModule.pieceResolver.resolve(published);
   const blocks = pieces.flatMap((piece) => (piece.kind === "island" ? [piece.name] : []));
@@ -38,7 +38,7 @@ it("publishes a document that uses the spreadsheets module, in author order", as
 
 it("produces the same HTML in the preview Worker as in publication", async () => {
   const app = await Application.create();
-  const { Content: published } = await app.publishingModule.pageRenderer.render({ getContent: () => document });
+  const published = await app.renderingModule.markdownEngine.render(document);
   const preview = await new PreviewRenderer(app.renderingModule.markdownEngine).render(document);
 
   expect(preview.getValue().Content).toBe(published);
@@ -48,7 +48,7 @@ const cases = readFileSync(new URL("./fixtures/hojas-casos.md", import.meta.url)
 
 it("renders the cases fixture: valid blocks, inline errors, near-miss fences and nested fallbacks", async () => {
   const app = await Application.create();
-  const { Content: published } = await app.publishingModule.pageRenderer.render({ getContent: () => cases });
+  const published = await app.renderingModule.markdownEngine.render(cases);
   const pieces = app.renderingModule.pieceResolver.resolve(published);
   const blocks = pieces.flatMap((piece) => (piece.kind === "island" ? [piece] : []));
 

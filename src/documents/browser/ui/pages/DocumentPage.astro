@@ -27,8 +27,7 @@ async function measure<T>(
 const app = await measure("app", getApp);
 
 const { nanobook, user } = Astro.props;
-const { publishingModule, navigationModule, themeModule, renderingModule } =
-  app;
+const { navigationModule, themeModule, renderingModule } = app;
 const nanobookId = nanobook.getId();
 const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
 const deferOwnerActions = nanobook.getVisibility() === "public" && !canEdit;
@@ -62,18 +61,13 @@ const { document, challenged } = Astro.props;
 const renderedPage = challenged
   ? null
   : await measure("publish", () =>
-      publishingModule.pagePublisher.publish(document)
+      renderingModule.pageRenderer.renderDocument(document)
     );
 if (!challenged && !renderedPage) throw new Error("Page not found");
 const headings = renderedPage?.headings ?? [];
 // When challenged, only the title is used; no content reaches the response.
 const entry = renderedPage?.rendered.entry ?? document.parse();
 const renderedBody = renderedPage?.rendered.renderedBody ?? "";
-const pieces = renderingModule.pieceResolver.resolve(renderedBody, (name) =>
-  console.warn(
-    `Bloque "${name}": las props ya no validan al servir; se muestra el contenido alternativo.`
-  )
-);
 
 const baseHref = `/n/${nanobook.getSlug()}`;
 const editHref = slug ? `${baseHref}/${slug}/edit` : `${baseHref}/edit`;
@@ -158,16 +152,12 @@ Astro.response.headers.set(
             </time>
           )}
         </div>
-        <div
+        <RenderedDocument
           id="document-body"
           data-document-id={entry.documentId}
           data-document-ref={entry.ref ?? ""}
-          data-has-blocks={
-            pieces.some((piece) => piece.kind === "island") ? "true" : undefined
-          }
-        >
-          <RenderedDocument pieces={pieces} />
-        </div>
+          html={renderedBody}
+        />
       </Fragment>
     )
   }

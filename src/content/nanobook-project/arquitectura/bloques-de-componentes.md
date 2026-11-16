@@ -120,20 +120,20 @@ internas.
 - `rendering/browser/ui`: los componentes de la vista (`RenderedDocument.astro`, `BlockHost.astro`).
 
 Quien necesita renderizar recibe el motor ya construido, a través de un puerto propio:
-`PublishingModule.create(eventBus, markdownEngine)` y el `UnifiedMarkdownRenderer` del Worker reciben un
-objeto con `render`; ninguno importa `renderMarkdown` ni la huella de caché. El cableado se hace en
+`RenderingModule` (para sus páginas con caché) y el `UnifiedMarkdownRenderer` del Worker reciben un
+objeto con `render`; ninguno importa `renderMarkdown`. El cableado se hace en
 `application/server/Application.ts` y en `worker-entry.ts`, que usan la misma extensión y por tanto
 producen el mismo HTML (`application/shared/MarkdownRendererParity.test.ts` lo comprueba).
 
 Cada raíz de composición compone los módulos que necesita:
 
 - `application/server/Application.ts`: crea `renderingModule`, compone `FinancialContentModule` con su registro,
-  registra `counter-demo` (`counterDemoBlock`), pasa `markdownEngine` a `PublishingModule` y el
+  registra `counter-demo` (`counterDemoBlock`), entrega a `AgentModule` el
   `markdownBlockAdvisor` del módulo financiero a `AgentModule`.
 - `worker-entry.ts` (vista previa): su propia raíz; crea un registro, compone los mismos módulos y construye
   el motor con la misma extensión.
-- `DocumentPage.astro` llama a `app.renderingModule.pieceResolver.resolve` y pasa las piezas a
-  `RenderedDocument.astro`, que no conoce el registro.
+- `DocumentPage.astro` entrega a `RenderedDocument.astro` el HTML y `renderingModule.pieceResolver`; el componente
+  parte el HTML en piezas, pinta el contenedor (recibe `id` y `data-*`) y marca `data-has-blocks` si hay bloques.
 - `rendering/browser/ui/blockComponents.ts` convierte la ruta de una pieza en componente con
   `import.meta.glob("/src/*/browser/components/*/*.astro")`; es solo una tabla de búsqueda. Una
   prueba (`FinancialContentModule.test.ts`) comprueba que cada ruta registrada existe.
@@ -144,8 +144,8 @@ Cada raíz de composición compone los módulos que necesita:
 
 ```text
 Markdown → renderMarkdown → HTML con marcadores ─→ caché
-        → DocumentPage.astro → RenderedDocument.astro
-            → renderingModule.pieceResolver.resolve(html)   (split + validación de props)
+        → DocumentPage.astro → RenderedDocument.astro (html + resolver)
+            → pieceResolver.resolve(html)   (split + validación de props)
                 ├ html     → <Fragment set:html>
                 └ bloque   → <BlockHost component props>  (componente registrado, etiqueta dinámica)
                                ├ solo plantilla       → HTML del servidor

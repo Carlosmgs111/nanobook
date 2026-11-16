@@ -214,7 +214,7 @@ CSS de `theme`. El gráfico incluye SVG y una tabla de datos equivalente; cuando
 contenedor es estrecho, un resumen HTML mantiene las etiquetas legibles.
 `rendering/shared` es dueño del pipeline Markdown general, del puerto
 `MarkdownExtension` y de la extensión genérica de bloques; no importa el módulo
-financiero. `publishing/server` adapta ese pipeline a la caché y a SSR. La lista
+financiero. `rendering/server` adapta ese pipeline a la caché y a SSR. La lista
 `RenderingModule` (`rendering/server/index.ts`), que crean el servidor y el Worker con la lista
 `Application.ts`, expone una sola extensión, `component-blocks`. `FinancialContentModule.create(blocks)`
 registra sus bloques (la lista está en `browser/blocks.ts`) al componerse. `theme` conserva el contrato de paleta,

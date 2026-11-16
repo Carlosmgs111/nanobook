@@ -1,8 +1,6 @@
 import { createMarkdownEngine } from "../../rendering/shared";
 import { describe, expect, it, vi } from "vitest";
-import { PublishingModule } from "../../publishing/server";
 import { RENDERER_VERSION } from "../../rendering/shared";
-import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { Application } from "./Application";
 
 const { protect, create } = vi.hoisted(() => {
@@ -82,14 +80,14 @@ describe("Application", () => {
     expect(app.nanobookModule.listNanobooks).toBeDefined();
   });
 
-  it("composes financial blocks as an internal publishing capability", async () => {
+  it("composes financial blocks as an internal rendering capability", async () => {
     const app = await Application.create();
-    const { pageRenderer } = app.publishingModule;
-    const published = await pageRenderer.render(financialDocument);
+    const { markdownEngine } = app.renderingModule;
+    const published = await markdownEngine.render(financialDocument.getContent());
 
-    expect(published.Content).toContain("<!--nb:block-start financial-metrics ");
-    expect(published.Content).toContain("Margen ilustrativo");
-    expect(pageRenderer.fingerprint).toBe(`${RENDERER_VERSION}|component-blocks@2`);
+    expect(published).toContain("<!--nb:block-start financial-metrics ");
+    expect(published).toContain("Margen ilustrativo");
+    expect(markdownEngine.fingerprint).toBe(`${RENDERER_VERSION}|component-blocks@2`);
     expect(app).not.toHaveProperty("financialContentModule");
     expect(app).not.toHaveProperty("financialContentRepository");
     expect(app).not.toHaveProperty("financialBlockSchemas");
@@ -102,18 +100,18 @@ describe("Application", () => {
         "Antes.\n\n```price-chart\ntitle: ACME\nseries:\n  type: line\n  data:\n    - { time: 2026-01-02, value: 10 }\n```\n\nDespués.",
     };
 
-    const published = await app.publishingModule.pageRenderer.render(document);
-    const pieces = app.renderingModule.pieceResolver.resolve(published.Content);
+    const published = await app.renderingModule.markdownEngine.render(document.getContent());
+    const pieces = app.renderingModule.pieceResolver.resolve(published);
 
     expect(pieces.map((piece) => piece.kind)).toEqual(["html", "island", "html"]);
     expect(pieces[1]).toMatchObject({ kind: "island", name: "price-chart", props: { title: "ACME", height: 360 } });
   }, 15_000);
 
-  it("keeps financial fences as code when publishing receives no extensions", async () => {
-    const { pageRenderer } = await PublishingModule.create(new InMemoryEventBus(), createMarkdownEngine());
-    const published = await pageRenderer.render(financialDocument);
+  it("keeps financial fences as code when the engine has no extensions", async () => {
+    const engine = createMarkdownEngine();
+    const published = await engine.render(financialDocument.getContent());
 
-    expect(published.Content).toContain('<code class="language-financial-metrics">');
-    expect(pageRenderer.fingerprint).toBe(RENDERER_VERSION);
+    expect(published).toContain('<code class="language-financial-metrics">');
+    expect(engine.fingerprint).toBe(RENDERER_VERSION);
   }, 15_000);
 });

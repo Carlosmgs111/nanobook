@@ -6,7 +6,6 @@ import { RenderingModule } from "../../rendering/server";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
 import { NavigationModule } from "../../navigation/server";
-import { PublishingModule } from "../../publishing/server";
 import type { RouteProtector } from "../../shared/server/capabilities/RouteProtector";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { ThemeModule } from "../../theme/server";
@@ -19,7 +18,6 @@ export class Application {
     public readonly profileModule: ProfileModule,
     public readonly nanobookModule: NanobookModule,
     public readonly navigationModule: NavigationModule,
-    public readonly publishingModule: PublishingModule,
     public readonly themeModule: ThemeModule,
     public readonly agentModule: AgentModule,
     public readonly renderingModule: RenderingModule,
@@ -35,11 +33,10 @@ export class Application {
       nanobookModule.documentModule,
       eventBus,
     );
-    const renderingModule = RenderingModule.create();
+    const renderingModule = RenderingModule.create(eventBus);
     const financialContentModule = FinancialContentModule.create(renderingModule.blocks);
     SpreadsheetsModule.create(renderingModule.blocks);
     renderingModule.blocks.register([counterDemoBlock]);
-    const publishingModule = await PublishingModule.create(eventBus, renderingModule.markdownEngine);
     const themeModule = ThemeModule.create(
       routeProtector,
       nanobookModule.setNanobookTheme,
@@ -51,7 +48,6 @@ export class Application {
       profileModule,
       nanobookModule,
       navigationModule,
-      publishingModule,
       themeModule,
       agentModule,
       renderingModule,

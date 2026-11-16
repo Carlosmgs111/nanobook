@@ -16,7 +16,7 @@ interface Props {
 
 const { nanobook, user } = Astro.props;
 const documentModule = app.nanobookModule.documentModule;
-const { publishingModule, navigationModule } = app;
+const { renderingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
 const theme = await app.themeModule.resolveTheme.execute(
   nanobook.getSettings().theme,
@@ -33,7 +33,7 @@ const slug = Astro.params.slug || "index";
 if (!slug) return Astro.redirect("/404");
 const document = await documentModule.getDocument.execute(nanobookId, slug);
 if (!document) throw new Error("Document not found");
-const renderedPage = await publishingModule.pagePublisher.publish(document);
+const renderedPage = await renderingModule.pageRenderer.renderDocument(document);
 if (!renderedPage) throw new Error("Page not found");
 const { rendered } = renderedPage;
 const { entry } = rendered;

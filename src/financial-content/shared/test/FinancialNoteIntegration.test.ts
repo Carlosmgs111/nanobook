@@ -24,7 +24,7 @@ const note = readFileSync(new URL("./fixtures/alphabet-analysis.md", import.meta
 
 it("publishes the full financial note as framework blocks in author order, with identical SSR and preview HTML", async () => {
   const app = await Application.create();
-  const { Content: published } = await app.publishingModule.pageRenderer.render({ getContent: () => note });
+  const published = await app.renderingModule.markdownEngine.render(note);
   const preview = await new PreviewRenderer(app.renderingModule.markdownEngine).render(note);
 
   const pieces = app.renderingModule.pieceResolver.resolve(published);

@@ -1,10 +1,15 @@
-import type { BlockRegistry } from "../shared/componentBlocks/createBlockRegistry";
-import { splitComponentBlocks } from "../shared/componentBlocks/splitComponentBlocks";
+import type { BlockRegistry } from "../../shared/componentBlocks/createBlockRegistry";
+import { splitComponentBlocks } from "../../shared/componentBlocks/splitComponentBlocks";
 
 /** Lo que `RenderedDocument.astro` pinta, en orden: HTML tal cual o un bloque registrado (`island`: componente Astro, con o sin hidratación). */
 export type DocumentPiece =
   | { readonly kind: "html"; readonly html: string }
-  | { readonly kind: "island"; readonly name: string; readonly component: string; readonly props: Record<string, unknown> };
+  | {
+      readonly kind: "island";
+      readonly name: string;
+      readonly component: string;
+      readonly props: Record<string, unknown>;
+    };
 
 /**
  * Decide, para cada segmento del HTML renderizado, si se pinta tal cual o como
@@ -16,7 +21,10 @@ export class DocumentPieceResolver {
   constructor(private readonly blocks: Pick<BlockRegistry, "find">) {}
 
   /** `onInvalidProps` se invoca cuando las props, válidas al renderizar, ya no validan al servir. */
-  resolve(html: string, onInvalidProps?: (name: string) => void): DocumentPiece[] {
+  resolve(
+    html: string,
+    onInvalidProps?: (name: string) => void
+  ): DocumentPiece[] {
     return splitComponentBlocks(html).map((segment): DocumentPiece => {
       if (segment.kind === "html") return segment;
 
@@ -24,12 +32,16 @@ export class DocumentPieceResolver {
       if (definition) {
         const parsed = definition.props.safeParse(segment.props);
         if (parsed.success) {
-          return { kind: "island", name: segment.name, component: definition.component, props: parsed.data as Record<string, unknown> };
+          return {
+            kind: "island",
+            name: segment.name,
+            component: definition.component,
+            props: parsed.data as Record<string, unknown>,
+          };
         }
         onInvalidProps?.(segment.name);
       }
       return { kind: "html", html: segment.fallbackHtml };
     });
   }
-
 }

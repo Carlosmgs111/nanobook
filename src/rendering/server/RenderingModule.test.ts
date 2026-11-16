@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
 import { RenderingModule } from "./index";
 
 const counter = {
@@ -10,7 +11,7 @@ const counter = {
 
 describe("RenderingModule", () => {
   it("renders and resolves blocks that modules register after it was created", async () => {
-    const rendering = RenderingModule.create();
+    const rendering = RenderingModule.create(new InMemoryEventBus());
     const fence = "Antes\n\n```counter-demo\nstart: 2\n```\n\nDespués";
 
     expect(await rendering.markdownEngine.render(fence)).not.toContain("data-component");
@@ -27,7 +28,7 @@ describe("RenderingModule", () => {
   }, 15_000);
 
   it("rejects an invalid or duplicated registration without registering any of it", () => {
-    const { blocks } = RenderingModule.create();
+    const { blocks } = RenderingModule.create(new InMemoryEventBus());
 
     expect(() => blocks.register([counter, counter])).toThrow(/duplicado/i);
     expect(blocks.blocks).toEqual([]);

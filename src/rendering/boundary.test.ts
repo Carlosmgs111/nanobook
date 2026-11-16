@@ -32,7 +32,12 @@ describe("rendering boundaries", () => {
       .filter((path) => posix(path).startsWith("rendering/"))
       .flatMap((path) =>
         specifiers(readFileSync(path, "utf8"))
-          .filter((spec) => spec.startsWith(".") && !join(path, "..", spec).startsWith(join("src", "rendering")))
+          .filter((spec) => spec.startsWith("."))
+          .filter((spec) => {
+            const target = join(path, "..", spec);
+            // `src/shared` es infraestructura transversal, no un módulo de negocio.
+            return !target.startsWith(join("src", "rendering")) && !target.startsWith(join("src", "shared"));
+          })
           .map((spec) => `${posix(path)} → ${spec}`),
       );
 

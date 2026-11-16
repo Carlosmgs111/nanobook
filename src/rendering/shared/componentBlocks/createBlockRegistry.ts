@@ -24,16 +24,23 @@ export function createBlockRegistry(): BlockRegistry {
     get blocks() {
       return [...byName.values()];
     },
-    find: (name) => byName.get(name),
+    find: (name) => {
+      const component = byName.get(name);
+      return component;
+    },
     register(definitions) {
       const next = new Map(byName);
       for (const definition of definitions) {
         const { name, component } = definition;
         if (!BLOCK_NAME_PATTERN.test(name)) {
-          throw new Error(`Nombre de bloque inválido "${name}": debe cumplir ${BLOCK_NAME_PATTERN}`);
+          throw new Error(
+            `Nombre de bloque inválido "${name}": debe cumplir ${BLOCK_NAME_PATTERN}`
+          );
         }
         if (!COMPONENT_PATH_PATTERN.test(component)) {
-          throw new Error(`Bloque "${name}": el componente debe ser la ruta de un .astro bajo /src/ (recibido: ${component})`);
+          throw new Error(
+            `Bloque "${name}": el componente debe ser la ruta de un .astro bajo /src/ (recibido: ${component})`
+          );
         }
         if (next.has(name)) {
           throw new Error(`Bloque duplicado "${name}"`);
