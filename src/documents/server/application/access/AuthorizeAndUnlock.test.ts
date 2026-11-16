@@ -141,8 +141,9 @@ describe("UnlockDocument", () => {
     const raw = options.raw === undefined ? document("doc-1", true) : options.raw;
     const resolved = options.resolved === undefined ? raw : options.resolved;
     const getDocument = {
-      executeRaw: vi.fn().mockResolvedValue(raw),
-      execute: vi.fn().mockResolvedValue(resolved),
+      executeChain: vi
+        .fn()
+        .mockResolvedValue(raw ? { raw, resolved: resolved ?? raw } : null),
     };
     const unlock = new UnlockDocument(
       getDocument as never,
@@ -215,8 +216,10 @@ describe("UnlockDocument", () => {
     await accessRepository.setPasswordHash("doc-1", "hash:clave-origen");
     await accessRepository.setPasswordHash("target-1", "hash:clave-destino");
     const getDocument = {
-      executeRaw: vi.fn().mockResolvedValue(document("doc-1", true)),
-      execute: vi.fn().mockResolvedValue(document("target-1", true)),
+      executeChain: vi.fn().mockResolvedValue({
+        raw: document("doc-1", true),
+        resolved: document("target-1", true),
+      }),
     };
     const unlock = new UnlockDocument(
       getDocument as never,

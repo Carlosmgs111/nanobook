@@ -37,7 +37,7 @@ export type UnlockDocumentError =
 
 export class UnlockDocument {
   constructor(
-    private readonly getDocument: Pick<GetDocument, "execute" | "executeRaw">,
+    private readonly getDocument: Pick<GetDocument, "executeChain">,
     private readonly accessRepository: DocumentAccessRepository,
     private readonly hasher: PasswordHasher,
     private readonly limiter: UnlockAttemptLimiter,
@@ -47,14 +47,13 @@ export class UnlockDocument {
   ) {}
 
   async execute(input: UnlockDocumentInput): Promise<Result<UnlockDocumentError, UnlockGrant>> {
-    const raw = await this.getDocument.executeRaw(input.nanobookId, input.documentPath);
-    const resolved = await this.getDocument.execute(input.nanobookId, input.documentPath);
-    const chain = securedDocuments([raw, resolved]);
-    if (chain.length === 0) return Result.fail(new DocumentNotFoundError(input.documentPath));
+    const found = await this.getDocument.executeChain(input.nanobookId, input.documentPath);
+    const chain = securedDocuments(found ? [found.raw, found.resolved] : []);
+    if (!found || chain.length === 0) return Result.fail(new DocumentNotFoundError(input.documentPath));
 
     const now = this.clock();
     // Attempts are counted against the requested document, not the chain link.
-    const limiterId = (raw ?? resolved)!.getDocumentId().getValue();
+    const limiterId = found.raw.getDocumentId().getValue();
 
     const status = await this.limiter.check(limiterId, input.clientKey, now);
     if (!status.isSuccess) return Result.fail(status.getError());
