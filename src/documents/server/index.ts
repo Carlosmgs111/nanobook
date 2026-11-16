@@ -27,6 +27,7 @@ import { CompositeReferenceResolver } from "./domain/reference/resolver";
 import { InternalReferenceResolver } from "./infraestructure/reference/InternalReferenceResolver";
 import { LocalFileReferenceResolver } from "./infraestructure/reference/LocalFileReferenceResolver";
 import { GitHubReferenceResolver } from "./infraestructure/reference/GitHubReferenceResolver";
+import type { WriteAccess } from "./domain/ports/WriteAccess";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { DocumentCreated } from "./domain/events/DocumentCreated";
 import { DocumentUpdated } from "./domain/events/DocumentUpdated";
@@ -44,6 +45,8 @@ export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentDeleted } from "./domain/events/DocumentDeleted";
 export { grantsFromCookieHeader } from "./infraestructure/rest/GrantCookie";
+export type { WriteAccess } from "./domain/ports/WriteAccess";
+export { WriteAccessDeniedError, DocumentRepositoryError } from "./domain/errors";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
 export class DocumentModule {
@@ -60,7 +63,7 @@ export class DocumentModule {
     public readonly unlockDocumentController: UnlockDocumentController,
   ) {}
 
-  static async create(eventBus: EventBus) {
+  static async create(eventBus: EventBus, writeAccess: WriteAccess) {
     const contentRepository = new DrizzleContentRepository(
       db,
       new UnifiedDocumentParser(),

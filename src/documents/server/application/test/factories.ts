@@ -5,6 +5,8 @@ import type { EventBus } from "../../../../shared/domain/bus/EventBus";
 import { Document } from "../../domain/Document";
 import type { DocumentInput } from "../dto/DocumentInput";
 import type { DocumentMetadata } from "../../domain/types";
+import { WriteAccessDeniedError } from "../../domain/errors";
+import type { WriteAccess } from "../../domain/ports/WriteAccess";
 
 export function createRepository(
   overrides: Partial<ContentRepository> = {}
@@ -71,3 +73,8 @@ export function createDocument(
     content
   ).getValue();
 }
+
+export const allowWrites: WriteAccess = { require: async () => Result.ok() };
+export const denyWrites: WriteAccess = {
+  require: async (nanobookId) => Result.fail(new WriteAccessDeniedError(nanobookId)),
+};
