@@ -1,6 +1,6 @@
 import { Result } from "../../../shared/domain/Result";
 import { serializeEntry } from "../../../documents/server/application/dto/SerializedEntry";
-import { DocumentNotFoundError } from "../../../documents/server/domain/errors";
+import { DocumentAccessDeniedError, DocumentNotFoundError } from "../../../documents/server/domain/errors";
 import type { NanobookModule } from "../../../nanobooks/server";
 import type { CreateNanobookData } from "../../../nanobooks/server/domain/types";
 import type {
@@ -101,23 +101,29 @@ export class AgentToolService {
   async listDocuments(actor: AgentActor, nanobookId: string) {
     const access = await this.require(actor, nanobookId, "read");
     if (!access.isSuccess) return access;
-    return Result.ok(
-      (
-        await this.nanobooks.documentModule.getAllDocuments.execute(nanobookId)
-      ).map((document) => serializeEntry(document.parse()))
-    );
+    const documents = await this.nanobooks.documentModule.listReadableDocuments.execute(nanobookId, {
+      userId: actor.actorId,
+    });
+    return Result.ok(documents.map((document) => serializeEntry(document.parse())));
   }
 
   async getDocument(actor: AgentActor, nanobookId: string, path: string) {
     const access = await this.require(actor, nanobookId, "read");
     if (!access.isSuccess) return access;
-    const document = await this.nanobooks.documentModule.getDocument.execute(
+    const read = await this.nanobooks.documentModule.readDocument.execute({
       nanobookId,
-      path
-    );
-    return document
-      ? Result.ok(serializeEntry(document.parse()))
-      : Result.fail(new DocumentNotFoundError(path));
+      path,
+      viewer: {
+        userId: async () => actor.actorId,
+        // Un agente no tiene cómo superar el desafío de contraseña.
+        grantFor: () => undefined,
+      },
+    });
+    if (read.kind === "not-found") return Result.fail(new DocumentNotFoundError(path));
+    if (read.kind === "challenge") {
+      return Result.fail(new DocumentAccessDeniedError(read.document.getDocumentId().getValue()));
+    }
+    return Result.ok(serializeEntry(read.document.parse()));
   }
 
   async createDocument(
