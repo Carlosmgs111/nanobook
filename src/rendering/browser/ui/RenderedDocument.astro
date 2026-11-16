@@ -11,7 +11,7 @@ interface Props {
   [attribute: string]: unknown;
 }
 
-const { html, resolver, ...attributes } = Astro.props;
+const { html, ...attributes } = Astro.props;
 
 // Los segmentos de HTML se inyectan tal cual y los bloques se pintan con Astro
 // (solo servidor o isla), en el orden del documento.
