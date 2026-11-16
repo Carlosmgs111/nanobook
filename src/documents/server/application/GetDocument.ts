@@ -21,15 +21,23 @@ export class GetDocument {
     documentPathValue: string,
     observeTiming?: DocumentTimingObserver,
   ): Promise<Document | null> {
-    const document = await measure("document-lookup", observeTiming, () =>
+    return (await this.executeChain(nanobookId, documentPathValue, observeTiming))?.resolved ?? null;
+  }
+
+  /** Stored document and its proxy-resolved version, from a single lookup. */
+  async executeChain(
+    nanobookId: string,
+    documentPathValue: string,
+    observeTiming?: DocumentTimingObserver,
+  ): Promise<{ raw: Document; resolved: Document } | null> {
+    const raw = await measure("document-lookup", observeTiming, () =>
       this.executeRaw(nanobookId, documentPathValue),
     );
-    if (!document) return null;
-    return (
-      await measure("document-proxy", observeTiming, () =>
-        this.parseProxy.parseProxies(nanobookId, [document]),
-      )
-    )[0];
+    if (!raw) return null;
+    const [resolved] = await measure("document-proxy", observeTiming, () =>
+      this.parseProxy.parseProxies(nanobookId, [raw]),
+    );
+    return { raw, resolved };
   }
 
   async executeRaw(nanobookId: string, documentPathValue: string): Promise<Document | null> {
