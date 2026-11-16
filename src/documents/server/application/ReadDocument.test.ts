@@ -8,7 +8,7 @@ import type { WriteAccess } from "../domain/ports/WriteAccess";
 import { AuthorizeDocumentAccess } from "./access/AuthorizeDocumentAccess";
 import { FakeCodec, InMemoryAccessRepository } from "./access/testDoubles";
 import { ReadDocument, type DocumentViewer } from "./ReadDocument";
-import { allowWrites, denyWrites } from "./test/factories";
+import { denyWrites } from "./test/factories";
 
 const now = new Date("2026-11-04T12:00:00.000Z");
 
@@ -125,7 +125,11 @@ describe("ReadDocument", () => {
 
   it("challenges when only the stored link of a proxy chain is protected", async () => {
     const raw = document("doc-1", true);
-    const resolved = document("doc-1", false, "# Contenido del destino");
+    const resolved = Document.create(
+      "guia",
+      { ...document("doc-9", false).getMetadata(), title: "Título del destino" },
+      "# Contenido del destino",
+    ).getValue();
     const { read } = await setup({ raw, resolved });
 
     const result = await read.execute({ ...input, viewer: viewer({ userId: "user-2" }).value });
@@ -133,6 +137,28 @@ describe("ReadDocument", () => {
     expect(result.kind).toBe("challenge");
     if (result.kind !== "challenge") throw new Error("unreachable");
     expect(result.document.getContent()).toBe("");
+    expect(result.document.getTitle()).toBe("Título doc-1");
+  });
+
+  it("challenges when only the resolved target of a proxy chain is protected", async () => {
+    const raw = document("doc-2", false);
+    const resolved = document("doc-1", true, "# Destino protegido");
+    const { read } = await setup({ raw, resolved });
+
+    const result = await read.execute({ ...input, viewer: viewer({ userId: "user-2" }).value });
+
+    expect(result.kind).toBe("challenge");
+  });
+
+  it("treats an empty userId as anonymous", async () => {
+    const secured = document("doc-1", true);
+    const { writeAccess, require } = spyWriteAccess(true);
+    const { read } = await setup({ raw: secured, resolved: secured }, writeAccess);
+
+    const result = await read.execute({ ...input, viewer: viewer({ userId: "" }).value });
+
+    expect(result.kind).toBe("challenge");
+    expect(require).not.toHaveBeenCalled();
   });
 
   it("forwards the timing observer to the lookup", async () => {

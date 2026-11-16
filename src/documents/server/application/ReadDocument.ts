@@ -49,8 +49,8 @@ export class ReadDocument {
     }
 
     const userId = await viewer.userId();
-    // Un fallo al consultar el puerto cuenta como «no escritor»: la lectura falla cerrada.
-    const canWrite = userId !== undefined && (await this.writeAccess.require(nanobookId, userId)).isSuccess;
+    // Un resultado fallido del puerto cuenta como «no escritor»: la lectura falla cerrada.
+    const canWrite = Boolean(userId) && (await this.writeAccess.require(nanobookId, userId as string)).isSuccess;
 
     const decision = await this.authorize.execute({ documents, canWrite, grantFor: viewer.grantFor });
     if (decision.kind === "challenge") {
