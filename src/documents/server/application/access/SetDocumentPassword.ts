@@ -10,13 +10,14 @@ import {
 } from "../../domain/errors";
 import { DocumentUpdated } from "../../domain/events/DocumentUpdated";
 import type { ContentRepository, ContentRepositoryError } from "../../domain/ports/ContentRepository";
-import { loadOwnedDocument, type LoadOwnedDocumentError } from "./loadOwnedDocument";
+import type { WriteAccess } from "../../domain/ports/WriteAccess";
+import { loadWritableDocument, type LoadWritableDocumentError } from "./loadWritableDocument";
 
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 128;
 
 export type DocumentAccessAdminError =
-  | LoadOwnedDocumentError
+  | LoadWritableDocumentError
   | InvalidDocumentPasswordError
   | DocumentRepositoryError
   | ContentRepositoryError
@@ -30,6 +31,7 @@ export class SetDocumentPassword {
     private readonly accessRepository: DocumentAccessRepository,
     private readonly hasher: PasswordHasher,
     private readonly eventBus: EventBus,
+    private readonly writeAccess: WriteAccess,
     private readonly clock: () => Date = () => new Date(),
   ) {}
 
@@ -51,7 +53,7 @@ export class SetDocumentPassword {
       );
     }
 
-    const loaded = await loadOwnedDocument(this.contentRepository, nanobookId, documentPath, actorId);
+    const loaded = await loadWritableDocument(this.writeAccess, this.contentRepository, nanobookId, documentPath, actorId);
     if (!loaded.isSuccess) return Result.fail(loaded.getError());
     const document = loaded.getValue();
     const documentId = document.getDocumentId().getValue();

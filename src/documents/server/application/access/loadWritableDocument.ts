@@ -1,22 +1,33 @@
 import { Result } from "../../../../shared/domain/Result";
 import type { Document } from "../../domain/Document";
 import { DocumentPath } from "../../domain/DocumentPath";
-import { DocumentAccessDeniedError, DocumentNotFoundError, type InvalidDocumentError } from "../../domain/errors";
+import {
+  DocumentNotFoundError,
+  type DocumentRepositoryError,
+  type InvalidDocumentError,
+  type WriteAccessDeniedError,
+} from "../../domain/errors";
 import type { ContentRepository, ContentRepositoryListError } from "../../domain/ports/ContentRepository";
+import type { WriteAccess } from "../../domain/ports/WriteAccess";
 
-export type LoadOwnedDocumentError =
+export type LoadWritableDocumentError =
+  | WriteAccessDeniedError
+  | DocumentRepositoryError
   | ContentRepositoryListError
   | DocumentNotFoundError
-  | DocumentAccessDeniedError
   | InvalidDocumentError;
 
-/** Loads a document by public path and requires the actor to own it. */
-export async function loadOwnedDocument(
+/** Loads a document by public path, requiring write access to its nanobook. */
+export async function loadWritableDocument(
+  writeAccess: WriteAccess,
   contentRepository: ContentRepository,
   nanobookId: string,
   documentPath: string,
   actorId: string,
-): Promise<Result<LoadOwnedDocumentError, Document>> {
+): Promise<Result<LoadWritableDocumentError, Document>> {
+  const writable = await writeAccess.require(nanobookId, actorId);
+  if (!writable.isSuccess) return Result.fail(writable.getError());
+
   const pathResult = DocumentPath.create(documentPath);
   if (!pathResult.isSuccess) return Result.fail(new DocumentNotFoundError(documentPath));
 
@@ -25,8 +36,5 @@ export async function loadOwnedDocument(
 
   const document = found.getValue();
   if (!document) return Result.fail(new DocumentNotFoundError(documentPath));
-  if (document.getMetadata().ownerId !== actorId) {
-    return Result.fail(new DocumentAccessDeniedError(document.getDocumentId().getValue()));
-  }
   return Result.ok(document);
 }

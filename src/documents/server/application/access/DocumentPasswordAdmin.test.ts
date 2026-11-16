@@ -2,8 +2,8 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { Result } from "../../../../shared/domain/Result";
 import { Document } from "../../domain/Document";
-import { DocumentAccessDeniedError, DocumentNotFoundError, InvalidDocumentPasswordError } from "../../domain/errors";
-import { createEventBus, createRepository } from "../test/factories";
+import { DocumentNotFoundError, InvalidDocumentPasswordError, WriteAccessDeniedError } from "../../domain/errors";
+import { allowWrites, createEventBus, createRepository, denyWrites } from "../test/factories";
 import { ClearDocumentPassword } from "./ClearDocumentPassword";
 import { SetDocumentPassword } from "./SetDocumentPassword";
 import { FakeHasher, InMemoryAccessRepository } from "./testDoubles";
@@ -42,7 +42,7 @@ describe("SetDocumentPassword", () => {
   it("hashes the password, stores it and marks the document as secured", async () => {
     const { contentRepository, accessRepository, eventBus } = setup(document());
 
-    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus).execute(
+    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus, allowWrites).execute(
       "book-a",
       "guia",
       "una-clave-segura",
@@ -59,7 +59,7 @@ describe("SetDocumentPassword", () => {
 
   it("bumps the version when the password changes", async () => {
     const { contentRepository, accessRepository, eventBus } = setup(document(true));
-    const useCase = new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus);
+    const useCase = new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus, allowWrites);
 
     await useCase.execute("book-a", "guia", "primera-clave-1", "owner-1");
     await useCase.execute("book-a", "guia", "segunda-clave-2", "owner-1");
@@ -70,7 +70,7 @@ describe("SetDocumentPassword", () => {
   it.each(["corta", "x".repeat(129), "   "])("rejects an invalid password (%s)", async (password) => {
     const { contentRepository, accessRepository, eventBus } = setup(document());
 
-    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus).execute(
+    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus, allowWrites).execute(
       "book-a",
       "guia",
       password,
@@ -81,24 +81,21 @@ describe("SetDocumentPassword", () => {
     expect(accessRepository.records.size).toBe(0);
   });
 
-  it("rejects actors that do not own the document", async () => {
+  it("does not store a password when the actor cannot write", async () => {
     const { contentRepository, accessRepository, eventBus } = setup(document());
 
-    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus).execute(
-      "book-a",
-      "guia",
-      "una-clave-segura",
-      "intruder",
-    );
+    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus, denyWrites)
+      .execute("book-a", "guia", "una-clave-segura", "intruso");
 
-    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
     expect(accessRepository.records.size).toBe(0);
+    expect(contentRepository.updateMany).not.toHaveBeenCalled();
   });
 
   it("fails when the document does not exist", async () => {
     const { contentRepository, accessRepository, eventBus } = setup(null);
 
-    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus).execute(
+    const result = await new SetDocumentPassword(contentRepository, accessRepository, new FakeHasher(), eventBus, allowWrites).execute(
       "book-a",
       "missing",
       "una-clave-segura",
@@ -114,7 +111,7 @@ describe("ClearDocumentPassword", () => {
     const { contentRepository, accessRepository, eventBus } = setup(document(true));
     await accessRepository.setPasswordHash("doc-1", "hash:vieja-clave-1");
 
-    const result = await new ClearDocumentPassword(contentRepository, accessRepository, eventBus).execute(
+    const result = await new ClearDocumentPassword(contentRepository, accessRepository, eventBus, allowWrites).execute(
       "book-a",
       "guia",
       "owner-1",
@@ -129,7 +126,7 @@ describe("ClearDocumentPassword", () => {
   it("is a no-op for documents that are not secured", async () => {
     const { contentRepository, accessRepository, eventBus } = setup(document(false));
 
-    const result = await new ClearDocumentPassword(contentRepository, accessRepository, eventBus).execute(
+    const result = await new ClearDocumentPassword(contentRepository, accessRepository, eventBus, allowWrites).execute(
       "book-a",
       "guia",
       "owner-1",
@@ -140,15 +137,18 @@ describe("ClearDocumentPassword", () => {
     expect(contentRepository.updateMany).not.toHaveBeenCalled();
   });
 
-  it("rejects actors that do not own the document", async () => {
+  it("does not clear the password when the actor cannot write", async () => {
     const { contentRepository, accessRepository, eventBus } = setup(document(true));
+    await accessRepository.setPasswordHash("doc-1", "hash:vieja-clave-1");
 
-    const result = await new ClearDocumentPassword(contentRepository, accessRepository, eventBus).execute(
+    const result = await new ClearDocumentPassword(contentRepository, accessRepository, eventBus, denyWrites).execute(
       "book-a",
       "guia",
-      "intruder",
+      "intruso",
     );
 
-    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
+    expect(accessRepository.records.get("doc-1")).toMatchObject({ passwordHash: "hash:vieja-clave-1", passwordVersion: 1 });
+    expect(contentRepository.updateMany).not.toHaveBeenCalled();
   });
 });

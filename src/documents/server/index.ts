@@ -127,8 +127,8 @@ export class DocumentModule {
     const readDocument = new ReadDocument(getDocument, authorizeDocumentAccess, writeAccess);
     const listReadableDocuments = new ListReadableDocuments(contentRepository, proxyParser, writeAccess);
     const documentAccessAdminController = new DocumentAccessAdminController(
-      new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus),
-      new ClearDocumentPassword(contentRepository, accessRepository, eventBus),
+      new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, writeAccess),
+      new ClearDocumentPassword(contentRepository, accessRepository, eventBus, writeAccess),
     );
     const unlockDocumentController = new UnlockDocumentController(unlockDocument);
     return new DocumentModule(
