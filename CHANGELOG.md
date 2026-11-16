@@ -7,6 +7,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Fixed:** MCP: `get_document` y `list_documents` ya no devuelven el contenido de documentos protegidos a quien no es dueño del nanobook.
+
+- **Changed:** `documents` expone `readDocument`, que resuelve la protección por sí mismo (`not-found` / `allowed` / `challenge`) y absorbe la composición de `getDocument` + `authorizeDocumentAccess`, que deja de exponerse en `DocumentModule`. La página pública ya no compone la autorización, envía `X-Robots-Tag: noindex, nofollow` en todo acceso a contenido protegido y el desafío muestra el título del documento almacenado, no el del destino de un proxy.
+
+- **Changed:** las mutaciones de documentos (crear, actualizar, borrar, fijar o quitar contraseña) comprueban el permiso de escritura del nanobook dentro del propio módulo, mediante el puerto `WriteAccess`. Ya no se autoriza por el `ownerId` del documento: los documentos sin dueño dejan de quedar bloqueados para su escritor. `CreateDocument` estampa `ownerId` con el actor y `DocumentInput.ownerId` desaparece.
+
 - **Changed:** las instrucciones del servidor MCP aclaran que el documento índice (`index` y cualquier `…/index`) no muestra su cuerpo, solo título, descripción y la lista de sus documentos, y que al crear un nanobook se debe crear siempre además un documento propio con la información. La regla figura también en las descripciones de `create_nanobook`, `list_documents`, `create_document` y `update_document`, y en la guía de bloques.
 
 - **Added:** `create_document` y `update_document` avisan, sin bloquear el guardado, cuando se escribe cuerpo en un documento índice; el aviso se combina con el de bloques inválidos en un mismo mensaje.
