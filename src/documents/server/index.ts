@@ -17,6 +17,8 @@ import { UpdateDocument } from "./application/UpdateDocument";
 import { DeleteDocument } from "./application/DeleteDocument";
 import { GetAllDocuments } from "./application/GetAllDocuments";
 import { GetDocument } from "./application/GetDocument";
+import { ReadDocument } from "./application/ReadDocument";
+import { ListReadableDocuments } from "./application/ListReadableDocuments";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { DrizzleContentRepository } from "./infraestructure/repository/DrizzleContentRepository";
 import { UnifiedDocumentParser } from "./infraestructure/parse/DocumentParser";
@@ -40,6 +42,7 @@ export type { Heading } from "./domain/Heading";
 export type { CreateDocumentRequest } from "./application/dto/CreateDocumentRequest";
 export type { UpdateDocumentRequest } from "./application/dto/UpdateDocumentRequest";
 export type { SerializedEntry } from "./application/dto/SerializedEntry";
+export type { DocumentViewer, ReadDocumentResult } from "./application/ReadDocument";
 
 export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
@@ -58,7 +61,8 @@ export class DocumentModule {
     public readonly deleteDocumentController: DeleteDocumentController,
     public readonly getAllDocuments: GetAllDocuments,
     public readonly getDocument: GetDocument,
-    public readonly authorizeDocumentAccess: AuthorizeDocumentAccess,
+    public readonly readDocument: ReadDocument,
+    public readonly listReadableDocuments: ListReadableDocuments,
     public readonly documentAccessAdminController: DocumentAccessAdminController,
     public readonly unlockDocumentController: UnlockDocumentController,
   ) {}
@@ -120,6 +124,8 @@ export class DocumentModule {
       grantCodec,
       DEFAULT_ACCESS_GRANT_POLICY,
     );
+    const readDocument = new ReadDocument(getDocument, authorizeDocumentAccess, writeAccess);
+    const listReadableDocuments = new ListReadableDocuments(contentRepository, proxyParser, writeAccess);
     const documentAccessAdminController = new DocumentAccessAdminController(
       new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus),
       new ClearDocumentPassword(contentRepository, accessRepository, eventBus),
@@ -133,7 +139,8 @@ export class DocumentModule {
       deleteDocumentController,
       getAllDocuments,
       getDocument,
-      authorizeDocumentAccess,
+      readDocument,
+      listReadableDocuments,
       documentAccessAdminController,
       unlockDocumentController,
     );
