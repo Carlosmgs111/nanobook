@@ -6,7 +6,7 @@ import type { CreateDocument } from "../../application/CreateDocument";
 import { CreateDocumentController } from "./CreateDocumentController";
 
 describe("CreateDocumentController", () => {
-  it("assigns the authenticated actor as owner instead of trusting the request", async () => {
+  it("passes the authenticated actor and ignores a forged owner", async () => {
     const execute = vi
       .fn()
       .mockResolvedValue(Result.fail(new DocumentAlreadyExistsError("new-doc")));
@@ -30,9 +30,8 @@ describe("CreateDocumentController", () => {
 
     expect(execute).toHaveBeenCalledWith(
       "book-a",
-      expect.objectContaining({
-        ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
-      }),
+      expect.not.objectContaining({ ownerId: expect.anything() }),
+      "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
     );
   });
 });

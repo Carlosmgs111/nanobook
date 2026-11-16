@@ -59,9 +59,9 @@ export class CreateNanobook {
             title: nanobook.getName(),
             description: nanobook.getName(),
             content: `# ${nanobook.getName()}\n`,
-            ownerId: nanobook.getOwnerId(),
             author: nanobook.getOwnerId(),
           },
+          nanobook.getOwnerId(),
         );
         if (!rootResult.isSuccess) {
           await this.updateSetupStatus(nanobook, "failed");

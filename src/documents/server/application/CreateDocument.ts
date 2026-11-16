@@ -1,6 +1,7 @@
 import type { EventBus } from "../../../shared/domain/bus/EventBus";
 import { Result } from "../../../shared/domain/Result";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
+import type { WriteAccess } from "../domain/ports/WriteAccess";
 import {
   DocumentAlreadyExistsError,
   InvalidDocumentIdError,
@@ -25,13 +26,18 @@ export type CreateDocumentError =
 export class CreateDocument {
   constructor(
     private repository: ContentRepository,
-    private eventBus: EventBus
+    private eventBus: EventBus,
+    private writeAccess: WriteAccess,
   ) {}
 
   async execute(
     nanobookId: string,
-    input: DocumentInput
+    input: DocumentInput,
+    actorId: string,
   ): Promise<Result<CreateDocumentError, Document>> {
+    const writable = await this.writeAccess.require(nanobookId, actorId);
+    if (!writable.isSuccess) return Result.fail(writable.getError());
+
     const pathResult = DocumentPath.create(input.path);
     if (!pathResult.isSuccess) {
       return Result.fail(pathResult.getError());
@@ -77,7 +83,7 @@ export class CreateDocument {
         // La auditoría se origina en el servidor; no puede venir del editor.
         createdAt: now,
         updatedAt: now,
-        ownerId: input.ownerId,
+        ownerId: actorId,
         author: input.author,
         position: input.position,
         draft: input.draft,

@@ -135,11 +135,8 @@ export class AgentToolService {
     if (!access.isSuccess) return access;
     const result = await this.nanobooks.documentModule.createDocument.execute(
       nanobookId,
-      {
-        ...input,
-        ownerId: actor.actorId,
-        author: input.author ?? actor.actorId,
-      }
+      { ...input, author: input.author ?? actor.actorId },
+      actor.actorId,
     );
     if (result.isSuccess)
       await this.audit.write({

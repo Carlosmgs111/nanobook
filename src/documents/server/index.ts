@@ -87,7 +87,7 @@ export class DocumentModule {
     const referenceResolver = new CompositeReferenceResolver(plugins);
     const proxyParser = new ProxyParser(referenceResolver);
     const sourceCache = createDocumentSourceCache();
-    const createDocument = new CreateDocument(contentRepository, eventBus);
+    const createDocument = new CreateDocument(contentRepository, eventBus, writeAccess);
     const updateDocument = new UpdateDocument(contentRepository, eventBus);
     const deleteDocument = new DeleteDocument(contentRepository, eventBus);
     const getAllDocuments = new GetAllDocuments(contentRepository, proxyParser);

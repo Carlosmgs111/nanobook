@@ -33,10 +33,11 @@ export class CreateDocumentController {
         return jsonResponse({ error: "Autenticación requerida" }, 401);
       }
 
-      const result = await this.createDocument.execute(nanobookId, {
-        ...toDocumentInput(payload),
-        ownerId: locals.currentUserId,
-      });
+      const result = await this.createDocument.execute(
+        nanobookId,
+        toDocumentInput(payload),
+        locals.currentUserId,
+      );
 
       if (!result.isSuccess) {
         return handleServiceError(result.getError());

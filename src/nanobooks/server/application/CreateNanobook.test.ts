@@ -66,6 +66,7 @@ describe("CreateNanobook", () => {
     expect(documentModule.createDocument.execute).toHaveBeenCalledWith(
       result.getValue().getId(),
       expect.objectContaining({ path: "index" }),
+      result.getValue().getOwnerId(),
     );
     expect(
       (await repository.findBySlug("architecture")).getValue()?.getSetupStatus(),
