@@ -28,7 +28,7 @@ const app = await measure("app", getApp);
 interface Props {
   nanobook: Nanobook;
   user: AuthenticatedUser | null;
-  /** The (proxy-resolved) document, already fetched by the route. */
+  /** The proxy-resolved document, or the stored one redacted when challenged. */
   document: Document;
   /** The viewer must pass the password challenge before seeing any content. */
   challenged: boolean;

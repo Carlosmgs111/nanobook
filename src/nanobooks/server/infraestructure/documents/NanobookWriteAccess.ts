@@ -8,7 +8,10 @@ import type { NanobookAccessRequirement } from "../../application/RequireNanoboo
 export class NanobookWriteAccess implements WriteAccess {
   constructor(private readonly access: NanobookAccessRequirement) {}
 
-  async require(nanobookId: string, actorId: string) {
+  async require(
+    nanobookId: string,
+    actorId: string,
+  ): Promise<Result<WriteAccessDeniedError | DocumentRepositoryError, void>> {
     const result = await this.access.execute(actorId, nanobookId, "write");
     if (result.isSuccess) return Result.ok();
 

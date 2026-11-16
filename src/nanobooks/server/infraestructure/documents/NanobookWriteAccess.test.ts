@@ -14,7 +14,7 @@ vi.mock("astro:env/server", () => ({
   BETTER_AUTH_SECRET: undefined,
   CACHE_BACKEND: "memory",
   REDIS_URL: undefined,
-}), { virtual: true });
+}));
 
 function adapter(result: unknown) {
   const execute = vi.fn().mockResolvedValue(result);

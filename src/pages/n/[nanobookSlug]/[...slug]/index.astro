@@ -67,4 +67,4 @@ if (challenged || (read.kind === "allowed" && read.via !== "open")) {
 Astro.response.headers.set("Server-Timing", formatServerTiming(timings));
 ---
 
-<DocumentPage nanobook={nanobook} user={user} document={read.document}challenged={challenged} />
+<DocumentPage nanobook={nanobook} user={user} document={read.document} challenged={challenged} />
