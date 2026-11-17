@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** `nanobooks` registra su política de acceso (dueño y visibilidad) en el módulo `authorization` y `UpdateNanobook`, `DeleteNanobook` y `SetNanobookTheme` autorizan a través de `Authorizer`, antes de cargar el nanobook. Un usuario ajeno que intenta modificar un nanobook privado recibe 404 en lugar de 403, igual que si no existiera, para no revelar que existe; sobre uno público sigue recibiendo 403.
+
 - **Added:** módulo `authorization` (`src/authorization/server`) con el contrato de acceso (`Subject`, `Resource`, `Decision`, `Policy`), el motor `createAuthorizer` y la traducción `accessErrorResponse`. Combina políticas registradas por cada módulo y falla cerrado: concede solo con un `allow` explícito y sin `deny` ni `challenge`, y un fallo técnico nunca concede. Todavía no lo usa ningún módulo.
 
 - **Changed:** se redujo el módulo `documents` por flujos (escritura, lectura, acceso, navegador), sin cambiar la protección:
