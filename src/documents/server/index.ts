@@ -67,6 +67,11 @@ export class DocumentModule {
     public readonly unlockDocumentController: UnlockDocumentController,
   ) {}
 
+  /**
+   * Compone el módulo y registra en `policies` la política de contraseña. Esa política es una
+   * restricción (nunca concede): sin registrarla, la protección de lectura no se aplica y un documento
+   * protegido de un nanobook público se serviría sin desafío; por eso `create` la registra siempre.
+   */
   static async create(eventBus: EventBus, authorizer: Authorizer, policies: Policy[]) {
     // Persistencia y resolución de referencias entre documentos.
     const contentRepository = new DrizzleContentRepository(db, new UnifiedDocumentParser());
