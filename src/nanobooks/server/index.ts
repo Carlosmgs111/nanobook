@@ -15,6 +15,7 @@ import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 import { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
 import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
+import { DocumentModuleRootDocument } from "./infraestructure/documents/DocumentModuleRootDocument";
 import { createNanobookReadCache } from "./infraestructure/cache/createNanobookReadCache";
 
 export { Nanobook } from "./domain/Nanobook";
@@ -51,7 +52,11 @@ export class NanobookModule {
     const listNanobooks = new ListNanobooks(repository);
     const getNanobookBySlug = new GetNanobookBySlug(repository, readCache);
     const documentModule = await DocumentModule.create(eventBus, authorizer, policies);
-    const createNanobook = new CreateNanobook(repository, documentModule, readCache);
+    const createNanobook = new CreateNanobook(
+      repository,
+      new DocumentModuleRootDocument(documentModule),
+      readCache,
+    );
     const updateNanobook = new UpdateNanobook(repository, readCache, authorizer);
     const deleteNanobook = new DeleteNanobook(repository, readCache, authorizer);
 
