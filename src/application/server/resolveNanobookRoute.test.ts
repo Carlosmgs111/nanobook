@@ -244,4 +244,65 @@ describe("resolveNanobookRoute", () => {
 
     expect((result as Response).status).toBe(404);
   });
+
+  it("answers an anonymous write identically whether the slug exists or not, resolving the session once", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+    }).getValue();
+    const build = (found: Nanobook | null) => {
+      const getSession = vi.fn().mockResolvedValue(null);
+      const app = {
+        nanobookModule: {
+          getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(found)) },
+        },
+        authServerModule: { getSession },
+        authorizer: authorizerFor(nanobook),
+      } as never;
+      return { app, getSession };
+    };
+    const request = () => new Request("https://nanobook.test/n/manual");
+
+    const missing = build(null);
+    const existing = build(nanobook);
+    const missingResponse = (await resolveNanobookRoute(missing.app, request(), "manual", "write")) as Response;
+    const existingResponse = (await resolveNanobookRoute(existing.app, request(), "manual", "write")) as Response;
+
+    expect(missingResponse.status).toBe(401);
+    expect(existingResponse.status).toBe(401);
+    expect(await missingResponse.text()).toBe("Autenticación requerida");
+    expect(await existingResponse.text()).toBe("Autenticación requerida");
+    expect(missing.getSession).toHaveBeenCalledTimes(1);
+    expect(existing.getSession).toHaveBeenCalledTimes(1);
+  });
+
+  it("resolves the session once when an authenticated user writes", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+    }).getValue();
+    const user = { id: "owner-1", name: "Ada", email: "ada@example.com" };
+    const getSession = vi.fn().mockResolvedValue(user);
+    const app = {
+      nanobookModule: {
+        getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(nanobook)) },
+      },
+      authServerModule: { getSession },
+      authorizer: authorizerFor(nanobook),
+    } as never;
+
+    const result = await resolveNanobookRoute(
+      app,
+      new Request("https://nanobook.test/n/manual"),
+      "manual",
+      "write",
+    );
+
+    expect(result).toEqual({ nanobook, user });
+    expect(getSession).toHaveBeenCalledTimes(1);
+  });
 });

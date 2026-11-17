@@ -28,9 +28,16 @@ export class NanobookWriteAccess implements WriteAccess {
 
     const error = result.getError();
     if (error instanceof AccessDeniedError) return Result.fail(new WriteAccessDeniedError(nanobookId));
+    if (error instanceof AccessCheckFailedError) {
+      return Result.fail(
+        new DocumentRepositoryError("No fue posible comprobar el permiso sobre el nanobook", {
+          cause: error.cause,
+        }),
+      );
+    }
     return Result.fail(
       new DocumentRepositoryError("No fue posible comprobar el permiso sobre el nanobook", {
-        cause: (error as AccessCheckFailedError).cause,
+        cause: error,
       }),
     );
   }

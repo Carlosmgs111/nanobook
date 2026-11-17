@@ -19,6 +19,20 @@ describe("Subject.of", () => {
     expect(resolve).toHaveBeenCalledTimes(1);
   });
 
+
+  it("memoiza también el rechazo del resolvedor", async () => {
+    const failure = new Error("sesión caída");
+    const resolve = vi.fn(async (): Promise<string> => {
+      throw failure;
+    });
+    const subject = Subject.of(resolve);
+
+    await expect(subject.userId()).rejects.toBe(failure);
+    await expect(subject.userId()).rejects.toBe(failure);
+
+    expect(resolve).toHaveBeenCalledTimes(1);
+  });
+
   it("entrega la credencial presentada por recurso, o ninguna", () => {
     const subject = Subject.of("u-1", (id) => (id === "doc-1" ? "tok" : undefined));
 

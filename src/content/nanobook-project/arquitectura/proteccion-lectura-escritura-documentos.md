@@ -21,7 +21,7 @@ La lectura de contenido protegido pasa siempre por `ReadDocument` (documento) y 
 
 ## Escritura
 
-`documents` define el puerto `WriteAccess`; no puede importar `nanobooks`, que es quien construye `DocumentModule` (habría un ciclo). `nanobooks` lo implementa con `RequireNanobookAccess` (`NanobookWriteAccess`) y lo inyecta en `DocumentModule.create`.
+`documents` define el puerto `WriteAccess`; no puede importar `nanobooks`, que es quien construye `DocumentModule` (habría un ciclo). `nanobooks` lo implementa con `NanobookWriteAccess`, que delega la decisión de escritura en la política de nanobooks del módulo `authorization` (vía `Authorizer.require`), y lo inyecta en `DocumentModule.create`.
 
 Crear, actualizar, borrar y fijar o quitar contraseña autorizan por el permiso `write` del nanobook dentro de cada caso de uso. El `ownerId` del documento es solo metadato de auditoría (lo estampa `CreateDocument` con el actor); los documentos sin dueño ya no quedan bloqueados para su escritor.
 
