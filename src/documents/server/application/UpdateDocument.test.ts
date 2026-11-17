@@ -1,82 +1,147 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { EventBusError } from "../../../shared/domain/bus/errors";
-import { WriteAccessDeniedError } from "../domain/errors";
-import { UpdateDocument } from "./UpdateDocument";
 import {
-  allowWrites,
-  createDocument,
-  createEventBus,
-  createRepository,
-  denyWrites,
-} from "./test/factories";
+  DocumentAlreadyExistsError,
+  DocumentNotFoundError,
+  InvalidDocumentIdError,
+  WriteAccessDeniedError,
+} from "../domain/errors";
+import { Document } from "../domain/Document";
+import { UpdateDocument } from "./UpdateDocument";
+import { allowWrites, createEventBus, createRepository, denyWrites } from "./test/factories";
+
+function stored(path: string, overrides: Record<string, unknown> = {}) {
+  return Document.create(
+    path,
+    {
+      id: `id-${path.replaceAll("/", "_")}`,
+      title: "Old",
+      description: "Old",
+      author: "Autora",
+      ownerId: "owner-1",
+      secured: true,
+      createdAt: new Date("2026-01-01"),
+      updatedAt: new Date("2026-01-01"),
+      ...overrides,
+    },
+    "# Old",
+    null,
+    undefined,
+    undefined,
+    3,
+  ).getValue();
+}
+
+const edit = (overrides = {}) => ({
+  id: "id-intro",
+  path: "intro",
+  title: "New",
+  description: "New",
+  content: "# New",
+  ...overrides,
+});
+
+const savedUpdates = (repository: ReturnType<typeof createRepository>) =>
+  (repository.updateMany as Mock).mock.calls[0][1] as Array<{ document: Document; expectedRevision?: number }>;
 
 describe("UpdateDocument", () => {
-  it("propagates eventBus.publish errors", async () => {
-    const existingDocument = createDocument(
-      "guide/intro",
-      {
-        title: "Old title",
-        description: "Old description",
-        createdAt: new Date("2024-01-01"),
-      },
-      "# Old",
-    );
-    const repository = createRepository({
-      getById: vi.fn().mockResolvedValue(Result.ok(existingDocument)),
+  it("saves the edit by a writer who is not the owner, keeping server-owned fields", async () => {
+    const repository = createRepository({ getById: vi.fn().mockResolvedValue(Result.ok(stored("intro"))) });
+    const bus = createEventBus();
+    const forged = { ...edit(), author: "forged", ownerId: "forged", secured: false } as never;
+
+    const result = await new UpdateDocument(repository, bus, allowWrites).execute("book-a", forged, "writer");
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().getRevision()).toBe(4);
+    const [{ document }] = savedUpdates(repository);
+    expect(document.getMetadata()).toMatchObject({
+      title: "New",
+      author: "Autora",
+      ownerId: "owner-1",
+      secured: true,
+      createdAt: new Date("2026-01-01"),
     });
-    const eventBus = createEventBus();
-    eventBus.publish = vi
-      .fn()
-      .mockResolvedValue(Result.fail(new EventBusError("boom")));
-    const useCase = new UpdateDocument(repository, eventBus, allowWrites);
-
-    const result = await useCase.execute(
-      "book-a",
-      {
-        id: existingDocument.getDocumentId().getValue(),
-        path: "guide/intro",
-        title: "New title",
-        description: "New description",
-        createdAt: new Date("2024-01-02"),
-        content: "# New",
-      },
-      "owner-1",
-    );
-
-    expect(result.isSuccess).toBe(false);
-    expect(result.getError()).toBeInstanceOf(EventBusError);
+    expect((bus.publish as Mock).mock.calls.map(([event]) => [event.name, event.documentId, event.nanobookId]))
+      .toEqual([["document.updated", "id-intro", "book-a"]]);
   });
 
-  it("rejects actors without write access before reading anything", async () => {
+  it("rejects an actor without write access before reading anything", async () => {
     const repository = createRepository();
-    const useCase = new UpdateDocument(repository, createEventBus(), denyWrites);
+    const bus = createEventBus();
 
-    const result = await useCase.execute(
-      "book-a",
-      { id: "doc-1", path: "intro", title: "T", description: "D", createdAt: new Date("2024-01-02"), content: "# T" },
-      "intruso",
-    );
+    const result = await new UpdateDocument(repository, bus, denyWrites).execute("book-a", edit(), "intruder");
 
     expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
     expect(repository.getById).not.toHaveBeenCalled();
     expect(repository.updateMany).not.toHaveBeenCalled();
+    expect(bus.publish).not.toHaveBeenCalled();
   });
 
-  it("lets a nanobook writer edit a document whose stored owner is someone else", async () => {
-    const existing = createDocument(
-      "intro",
-      { title: "Old", description: "Old", createdAt: new Date("2024-01-01"), ownerId: "otro-usuario" },
-      "# Old",
-    );
-    const repository = createRepository({ getById: vi.fn().mockResolvedValue(Result.ok(existing)) });
+  it("requires an existing document id", async () => {
+    const useCase = new UpdateDocument(createRepository(), createEventBus(), allowWrites);
 
-    const result = await new UpdateDocument(repository, createEventBus(), allowWrites).execute(
+    expect((await useCase.execute("book-a", edit({ id: undefined }), "w")).getError()).toBeInstanceOf(InvalidDocumentIdError);
+    expect((await useCase.execute("book-a", edit(), "w")).getError()).toBeInstanceOf(DocumentNotFoundError);
+  });
+
+  it("applies the revision the client knew only to the edited document", async () => {
+    const repository = createRepository({ getById: vi.fn().mockResolvedValue(Result.ok(stored("intro"))) });
+
+    await new UpdateDocument(repository, createEventBus(), allowWrites).execute("book-a", edit({ expectedRevision: 2 }), "w");
+
+    expect(savedUpdates(repository)[0].expectedRevision).toBe(2);
+  });
+
+  it("moves an index together with its descendants and notifies each one", async () => {
+    const root = stored("guide/index", { secured: false });
+    const child = stored("guide/intro", { secured: false });
+    const sibling = stored("other", { secured: false });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(root)),
+      list: vi.fn().mockResolvedValue(Result.ok([root, child, sibling])),
+    });
+    const bus = createEventBus();
+
+    const result = await new UpdateDocument(repository, bus, allowWrites).execute(
       "book-a",
-      { id: existing.getDocumentId().getValue(), path: "intro", title: "New", description: "New", createdAt: new Date("2024-01-02"), content: "# New" },
-      "escritor",
+      edit({ id: "id-guide_index", path: "ref/index", expectedRevision: 3 }),
+      "w",
     );
 
     expect(result.isSuccess).toBe(true);
+    const updates = savedUpdates(repository);
+    expect(updates.map(({ document }) => document.getPath())).toEqual(["ref/index", "ref/intro"]);
+    expect(updates.map(({ expectedRevision }) => expectedRevision)).toEqual([3, undefined]);
+    expect(bus.publish).toHaveBeenCalledTimes(2);
+  });
+
+  it("refuses a move that collides with an unrelated document", async () => {
+    const root = stored("guide/index", { secured: false });
+    const clash = stored("ref/index", { secured: false });
+    const repository = createRepository({
+      getById: vi.fn().mockResolvedValue(Result.ok(root)),
+      list: vi.fn().mockResolvedValue(Result.ok([root, clash])),
+    });
+
+    const result = await new UpdateDocument(repository, createEventBus(), allowWrites).execute(
+      "book-a",
+      edit({ id: "id-guide_index", path: "ref/index" }),
+      "w",
+    );
+
+    expect(result.getError()).toBeInstanceOf(DocumentAlreadyExistsError);
+    expect(repository.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("propagates event bus failures", async () => {
+    const repository = createRepository({ getById: vi.fn().mockResolvedValue(Result.ok(stored("intro"))) });
+    const bus = createEventBus();
+    bus.publish = vi.fn().mockResolvedValue(Result.fail(new EventBusError("boom")));
+
+    const result = await new UpdateDocument(repository, bus, allowWrites).execute("book-a", edit(), "w");
+
+    expect(result.getError()).toBeInstanceOf(EventBusError);
   });
 });

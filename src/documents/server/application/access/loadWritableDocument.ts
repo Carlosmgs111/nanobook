@@ -17,7 +17,7 @@ export type LoadWritableDocumentError =
   | DocumentNotFoundError
   | InvalidDocumentError;
 
-/** Loads a document by public path, requiring write access to its nanobook. */
+/** Carga un documento por ruta pública exigiendo permiso de escritura sobre su nanobook. */
 export async function loadWritableDocument(
   writeAccess: WriteAccess,
   contentRepository: ContentRepository,

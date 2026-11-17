@@ -1,4 +1,3 @@
-import type { DocumentId } from "./DocumentId";
 import type { Ref } from "./DocumentReference";
 import type { Heading } from "./Heading";
 
@@ -26,11 +25,10 @@ export interface DocumentMetadata {
   ref?: Ref | string;
 }
 
+/** Contenido resuelto de un `ref`: sus metadatos y cuerpo. */
 export interface ContentEntry {
-  id: DocumentId;
   data: DocumentMetadata;
   body?: string;
-  rawFrontmatter?: string;
 }
 
 export interface Entry {

@@ -1,14 +1,12 @@
 import type { Document } from "../domain/Document";
 import type { WriteAccess } from "../domain/ports/WriteAccess";
 import { securedDocuments, type AuthorizeDocumentAccess } from "./access/AuthorizeDocumentAccess";
+import { canWrite } from "./canWrite";
 import type { DocumentTimingObserver, GetDocument } from "./GetDocument";
 
 /** Quién lee: su identidad (si la hay) y la prueba de acceso que presenta. */
 export interface DocumentViewer {
-  /**
-   * Id del usuario autenticado. Se invoca solo si la cadena tiene un enlace
-   * protegido (evita leer la sesión en lecturas públicas).
-   */
+  /** Solo se invoca si la cadena tiene un enlace protegido, para no leer la sesión en lecturas públicas. */
   userId(): Promise<string | undefined>;
   /** Token presentado para un documento; cómo viaja (cookie) es asunto del llamador. */
   grantFor(documentId: string): string | undefined;
@@ -23,15 +21,12 @@ export interface ReadDocumentInput {
 
 export type ReadDocumentResult =
   | { kind: "not-found" }
-  /** `via` es la evidencia de por qué se concedió: documento abierto, escritor del nanobook o grant válido. */
+  /** `via` indica por qué se concedió: documento abierto, escritor del nanobook o grant válido. */
   | { kind: "allowed"; document: Document; via: "open" | "writer" | "grant" }
-  /** `document` está redactado: sin cuerpo ni descripción. */
+  /** `document` va redactado: sin cuerpo ni descripción. */
   | { kind: "challenge"; method: "password"; document: Document };
 
-/**
- * Único punto de lectura que aplica la protección: quien lo usa no puede
- * obtener contenido protegido sin haber superado el desafío.
- */
+/** Único punto de lectura que aplica la protección: no se obtiene contenido protegido sin superar el desafío. */
 export class ReadDocument {
   constructor(
     private readonly getDocument: Pick<GetDocument, "executeChain">,
@@ -48,14 +43,11 @@ export class ReadDocument {
       return { kind: "allowed", document: chain.resolved, via: "open" };
     }
 
-    const userId = await viewer.userId();
-    // Un resultado fallido del puerto cuenta como «no escritor»: la lectura falla cerrada.
-    const canWrite = Boolean(userId) && (await this.writeAccess.require(nanobookId, userId as string)).isSuccess;
-
-    const decision = await this.authorize.execute({ documents, canWrite, grantFor: viewer.grantFor });
+    const writer = await canWrite(this.writeAccess, nanobookId, await viewer.userId());
+    const decision = await this.authorize.execute({ documents, canWrite: writer, grantFor: viewer.grantFor });
     if (decision.kind === "challenge") {
       return { kind: "challenge", method: decision.method, document: chain.raw.redacted() };
     }
-    return { kind: "allowed", document: chain.resolved, via: canWrite ? "writer" : "grant" };
+    return { kind: "allowed", document: chain.resolved, via: writer ? "writer" : "grant" };
   }
 }

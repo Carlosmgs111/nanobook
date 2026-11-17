@@ -35,7 +35,6 @@ interface Props {
 }
 
 const { nanobook, user } = Astro.props;
-const documentModule = app.nanobookModule.documentModule;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
 const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);

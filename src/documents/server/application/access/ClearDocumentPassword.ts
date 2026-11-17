@@ -29,7 +29,7 @@ export class ClearDocumentPassword {
     const documentId = document.getDocumentId().getValue();
     const now = this.clock();
 
-    // Bump the version first: any grant issued before this point is revoked.
+    // Sube la versión primero: revoca cualquier grant anterior.
     const cleared = await this.accessRepository.setPasswordHash(documentId, null, now);
     if (!cleared.isSuccess) return Result.fail(cleared.getError());
 

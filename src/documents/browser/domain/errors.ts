@@ -15,6 +15,7 @@ export class EditionRenderError extends InfrastructureError {
 }
 
 export class EditionWriterError extends InfrastructureError {
+  /** Estado HTTP de la respuesta rechazada (401/403 sin permiso, 409 revisión obsoleta). */
   public readonly status?: number;
   public readonly expectedRevision?: number;
   public readonly actualRevision?: number;
@@ -42,9 +43,3 @@ export class InvalidDocumentContentError extends Error {
     this.name = "InvalidDocumentContentError";
   }
 }
-
-export type EditionServiceError =
-  | EditionStorageError
-  | EditionRenderError
-  | EditionWriterError
-  | InvalidDocumentContentError;

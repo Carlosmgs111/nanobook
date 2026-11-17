@@ -30,7 +30,7 @@ export class DrizzleDocumentAccessRepository implements DocumentAccessRepository
 
   async setPasswordHash(documentId: string, passwordHash: string | null, at: Date) {
     try {
-      await this.database
+      const [row] = await this.database
         .insert(documentAccess)
         .values({ documentId, passwordHash, passwordVersion: 1, updatedAt: at })
         .onConflictDoUpdate({
@@ -40,17 +40,15 @@ export class DrizzleDocumentAccessRepository implements DocumentAccessRepository
             passwordVersion: sql`${documentAccess.passwordVersion} + 1`,
             updatedAt: at,
           },
-        });
+        })
+        .returning();
+      return Result.ok<DocumentAccessRecord>({
+        documentId: row.documentId,
+        passwordHash: row.passwordHash,
+        passwordVersion: row.passwordVersion,
+      });
     } catch (error) {
       return Result.fail(new DocumentRepositoryError("No fue posible guardar el acceso del documento", { cause: error }));
     }
-
-    const stored = await this.get(documentId);
-    if (!stored.isSuccess) return Result.fail(stored.getError());
-    const record = stored.getValue();
-    if (!record) {
-      return Result.fail(new DocumentRepositoryError("El acceso del documento no se persistió"));
-    }
-    return Result.ok(record);
   }
 }

@@ -1,4 +1,5 @@
 import type { EventBus } from "../../../shared/domain/bus/EventBus";
+import type { EventBusError } from "../../../shared/domain/bus/errors";
 import { Result } from "../../../shared/domain/Result";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { WriteAccess } from "../domain/ports/WriteAccess";
@@ -6,16 +7,16 @@ import {
   DocumentAlreadyExistsError,
   InvalidDocumentIdError,
   ParentNotFoundError,
-  DocumentRepositoryError,
-  DocumentParseError,
   type DocumentServiceError,
+  type DocumentRepositoryError,
+  type DocumentParseError,
 } from "../domain/errors";
 import { DocumentCreated } from "../domain/events/DocumentCreated";
 import { Document } from "../domain/Document";
 import { DocumentId } from "../domain/DocumentId";
 import { DocumentPath } from "../domain/DocumentPath";
 import type { DocumentInput } from "./dto/DocumentInput";
-import type { EventBusError } from "../../../shared/domain/bus/errors";
+import { publishAll } from "./publishAll";
 
 export type CreateDocumentError =
   | DocumentServiceError
@@ -39,48 +40,25 @@ export class CreateDocument {
     if (!writable.isSuccess) return Result.fail(writable.getError());
 
     const pathResult = DocumentPath.create(input.path);
-    if (!pathResult.isSuccess) {
-      return Result.fail(pathResult.getError());
-    }
+    if (!pathResult.isSuccess) return Result.fail(pathResult.getError());
     const path = pathResult.getValue();
 
-    const existingResult = await this.repository.getByPath(
-      nanobookId,
-      path.getInternalValue(),
-    );
-    if (!existingResult.isSuccess) {
-      return Result.fail(existingResult.getError());
-    }
-    if (existingResult.getValue()) {
+    const existing = await this.repository.getByPath(nanobookId, path.getInternalValue());
+    if (!existing.isSuccess) return Result.fail(existing.getError());
+    if (existing.getValue()) {
       return Result.fail(new DocumentAlreadyExistsError(path.getInternalValue()));
     }
 
-    const parentPath = path.getInternalParentPath();
-    let parentDocument: Document | null = null;
-    if (parentPath !== null) {
-      const parentResult = await this.repository.getByPath(
-        nanobookId,
-        parentPath.getInternalValue(),
-      );
-      if (!parentResult.isSuccess) {
-        return Result.fail(parentResult.getError());
-      }
-      parentDocument = parentResult.getValue();
-      if (!parentDocument) {
-        return Result.fail(new ParentNotFoundError(parentPath.getInternalValue()));
-      }
-      if (!parentDocument.isIndex()) {
-        return Result.fail(new InvalidDocumentIdError(parentPath.getInternalValue()));
-      }
-    }
+    const parent = await this.findParent(nanobookId, path);
+    if (!parent.isSuccess) return Result.fail(parent.getError());
 
+    // La auditoría y el dueño los fija el servidor; no pueden venir del editor.
     const now = new Date();
     const documentResult = Document.create(
       input.path,
       {
         title: input.title,
         description: input.description,
-        // La auditoría se origina en el servidor; no puede venir del editor.
         createdAt: now,
         updatedAt: now,
         ownerId: actorId,
@@ -94,36 +72,36 @@ export class CreateDocument {
       input.content,
       undefined,
       undefined,
-      input.id ?? DocumentId.generate().getValue()
+      input.id ?? DocumentId.generate().getValue(),
     );
-    if (!documentResult.isSuccess) {
-      return Result.fail(documentResult.getError());
-    }
+    if (!documentResult.isSuccess) return Result.fail(documentResult.getError());
     const document = documentResult.getValue();
 
-    const createResult = await this.repository.create(nanobookId, document);
-    if (!createResult.isSuccess) {
-      return Result.fail(createResult.getError());
-    }
+    const created = await this.repository.create(nanobookId, document);
+    if (!created.isSuccess) return Result.fail(created.getError());
 
-    const documentId = document.getDocumentId().getValue();
-
-    const documentEventResult = await this.eventBus.publish(
-      new DocumentCreated(documentId, nanobookId)
+    // El índice padre también cambia: su listado de hijos y su caché dependen del nuevo documento.
+    const published = await publishAll(
+      this.eventBus,
+      [document, parent.getValue()]
+        .filter((affected): affected is Document => affected !== null)
+        .map((affected) => new DocumentCreated(affected.getDocumentId().getValue(), nanobookId)),
     );
-    if (!documentEventResult.isSuccess) {
-      return Result.fail(documentEventResult.getError());
-    }
-
-    if (parentDocument !== null) {
-      const parentEventResult = await this.eventBus.publish(
-        new DocumentCreated(parentDocument.getDocumentId().getValue(), nanobookId)
-      );
-      if (!parentEventResult.isSuccess) {
-        return Result.fail(parentEventResult.getError());
-      }
-    }
+    if (!published.isSuccess) return Result.fail(published.getError());
 
     return Result.ok(document);
+  }
+
+  /** `null` cuando el documento cuelga de la raíz; el padre de un documento siempre es un índice. */
+  private async findParent(nanobookId: string, path: DocumentPath) {
+    const parentPath = path.getInternalParentPath();
+    if (parentPath === null) return Result.ok<Document | null>(null);
+
+    const found = await this.repository.getByPath(nanobookId, parentPath.getInternalValue());
+    if (!found.isSuccess) return Result.fail(found.getError());
+    const parent = found.getValue();
+    if (!parent) return Result.fail(new ParentNotFoundError(parentPath.getInternalValue()));
+    if (!parent.isIndex()) return Result.fail(new InvalidDocumentIdError(parentPath.getInternalValue()));
+    return Result.ok<Document | null>(parent);
   }
 }

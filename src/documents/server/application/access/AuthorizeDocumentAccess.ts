@@ -1,16 +1,17 @@
 import type { Document } from "../../domain/Document";
-import type { AccessDecision, DocumentAccessPolicy } from "../../domain/access/DocumentAccessPolicy";
 import type { AccessGrantCodec, DocumentAccessRepository } from "../../domain/access/ports";
 
+export type AccessDecision = { kind: "allow" } | { kind: "challenge"; method: "password" };
+
 export interface AuthorizeDocumentAccessInput {
-  /** The proxy chain: the stored document and, when different, the resolved one. */
+  /** La cadena de proxies: el documento almacenado y, si difiere, el resuelto. */
   documents: Array<Document | null | undefined>;
   canWrite: boolean;
-  /** Token the viewer presented for a document, if any. How it travels is the caller's concern. */
+  /** Token que el lector presentó para un documento, si lo hay. */
   grantFor: (documentId: string) => string | undefined;
 }
 
-/** Returns the protected links of a chain, deduplicated by identity. */
+/** Los eslabones protegidos de una cadena, sin repetir. */
 export function securedDocuments(documents: Array<Document | null | undefined>): Document[] {
   const seen = new Set<string>();
   const secured: Document[] = [];
@@ -28,21 +29,20 @@ export class AuthorizeDocumentAccess {
   constructor(
     private readonly accessRepository: DocumentAccessRepository,
     private readonly codec: AccessGrantCodec,
-    private readonly policy: DocumentAccessPolicy,
     private readonly clock: () => Date = () => new Date(),
   ) {}
 
   async execute({ documents, canWrite, grantFor }: AuthorizeDocumentAccessInput): Promise<AccessDecision> {
     const secured = securedDocuments(documents);
-    if (secured.length === 0 || canWrite) {
-      return this.policy.evaluate({ secured: secured.length > 0, canWrite, hasValidGrant: false });
-    }
+    // Sin eslabones protegidos, o con permiso de escritura, no hay desafío.
+    if (secured.length === 0 || canWrite) return { kind: "allow" };
 
+    // Cada eslabón protegido de la cadena exige su propio grant válido.
     for (const document of secured) {
       const documentId = document.getDocumentId().getValue();
-      const hasValidGrant = await this.hasValidGrant(documentId, grantFor(documentId));
-      const decision = this.policy.evaluate({ secured: true, canWrite: false, hasValidGrant });
-      if (decision.kind === "challenge") return decision;
+      if (!(await this.hasValidGrant(documentId, grantFor(documentId)))) {
+        return { kind: "challenge", method: "password" };
+      }
     }
     return { kind: "allow" };
   }
@@ -51,7 +51,7 @@ export class AuthorizeDocumentAccess {
     if (!token) return false;
 
     const record = await this.accessRepository.get(documentId);
-    // A failing lookup or a missing/cleared hash never grants access.
+    // Un fallo de lectura o un hash ausente nunca concede acceso.
     if (!record.isSuccess) return false;
     const value = record.getValue();
     if (!value || value.passwordHash === null) return false;

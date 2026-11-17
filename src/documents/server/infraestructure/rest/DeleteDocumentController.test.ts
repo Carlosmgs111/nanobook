@@ -1,24 +1,42 @@
 import { describe, expect, it, vi } from "vitest";
-
 import { Result } from "../../../../shared/domain/Result";
-import type { DeleteDocument } from "../../application/DeleteDocument";
-import { DocumentNotFoundError } from "../../domain/errors";
+import { DocumentNotFoundError, WriteAccessDeniedError } from "../../domain/errors";
 import { DeleteDocumentController } from "./DeleteDocumentController";
 
+function call(execute: unknown, { params = { id: "doc-1", nanobookId: "book-a" }, locals = { currentUserId: "u1" } } = {}) {
+  return new DeleteDocumentController({ execute } as never).handle({ params, locals } as never) as Promise<Response>;
+}
+
 describe("DeleteDocumentController", () => {
-  it("uses the document id supplied by the nanobook route", async () => {
-    const execute = vi.fn().mockResolvedValue(Result.fail(new DocumentNotFoundError("document-1")));
-    const controller = new DeleteDocumentController({ execute } as unknown as DeleteDocument);
+  it("deletes on behalf of the session user", async () => {
+    const execute = vi.fn().mockResolvedValue(Result.ok());
 
-    const response = await controller.handle({
-      params: { id: "document-1", nanobookId: "book-a" },
-      request: new Request("https://nanobook.test/api/nanobooks/book-a/documents/document-1", {
-        method: "DELETE",
-      }),
-      locals: { currentUserId: "owner-1" },
-    } as never);
+    const response = await call(execute);
 
-    expect(response.status).toBe(404);
-    expect(execute).toHaveBeenCalledWith("book-a", "document-1", "owner-1");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(execute).toHaveBeenCalledWith("book-a", "doc-1", "u1");
+  });
+
+  it("rejects an anonymous request and missing route params", async () => {
+    const execute = vi.fn();
+
+    expect((await call(execute, { locals: {} as never })).status).toBe(401);
+    expect((await call(execute, { params: { nanobookId: "book-a" } as never })).status).toBe(400);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("maps a foreign author to 403 and a missing document to 404", async () => {
+    const respond = (error: Error) => call(vi.fn().mockResolvedValue(Result.fail(error)));
+
+    expect((await respond(new WriteAccessDeniedError("book-a"))).status).toBe(403);
+    expect((await respond(new DocumentNotFoundError("doc-1"))).status).toBe(404);
+  });
+
+  it("answers 500 when the use case throws", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect((await call(vi.fn().mockRejectedValue(new Error("boom")))).status).toBe(500);
+    spy.mockRestore();
   });
 });

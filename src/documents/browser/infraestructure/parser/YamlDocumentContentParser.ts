@@ -4,39 +4,31 @@ import type {
   SerializedEntry,
   SerializedDocumentMetadata,
 } from "../../domain/model/StagedDocument";
+import { PROTECTED_FRONTMATTER_FIELDS } from "../../domain/model/protectedFrontmatterFields";
 import { InvalidDocumentContentError } from "../../domain/errors";
 import type { DocumentContentParser } from "../../domain/ports/DocumentContentParser";
+
+const FRONTMATTER_REGEX = /^---[\s\S]*?---\n?/;
 
 export class YamlDocumentContentParser implements DocumentContentParser {
   parse(
     base: SerializedEntry,
     fullContent: string
   ): Result<InvalidDocumentContentError, SerializedEntry> {
-    const frontmatterMatch = fullContent.match(/^---[\s\S]*?---\n?/);
-    const rawFrontmatter = frontmatterMatch?.[0] ?? "";
-    const frontmatterBody = rawFrontmatter.replaceAll("---", "");
+    const rawFrontmatter = fullContent.match(FRONTMATTER_REGEX)?.[0] ?? "";
 
     let data: Partial<SerializedDocumentMetadata>;
     try {
-      data = (parse(frontmatterBody) ?? {}) as Partial<SerializedDocumentMetadata>;
+      data = (parse(rawFrontmatter.replaceAll("---", "")) ??
+        {}) as Partial<SerializedDocumentMetadata>;
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       return Result.fail(new InvalidDocumentContentError(reason));
     }
 
-    const content = fullContent.replace(/^---[\s\S]*?---\n?/g, "");
-
-    const {
-      id: _id,
-      author: _author,
-      createdAt: _createdAt,
-      updatedAt: _updatedAt,
-      ...editableData
-    } = data;
-    const baseMetadata = base.metadata;
-
-    const createdAt = base.metadata.createdAt;
-    const updatedAt = base.metadata.updatedAt;
+    // Los campos protegidos nunca se toman del texto editado: se conserva la base.
+    const editable: Record<string, unknown> = { ...data };
+    for (const field of PROTECTED_FRONTMATTER_FIELDS) delete editable[field];
 
     return Result.ok({
       ...base,
@@ -45,14 +37,11 @@ export class YamlDocumentContentParser implements DocumentContentParser {
       position: data.position ?? base.position,
       ref: typeof data.ref === "string" ? data.ref : base.ref,
       metadata: {
-        ...baseMetadata,
-        ...editableData,
+        ...base.metadata,
+        ...editable,
         id: base.metadata.id ?? base.documentId,
-        author: base.metadata.author,
-        createdAt,
-        updatedAt,
       },
-      content,
+      content: fullContent.replace(FRONTMATTER_REGEX, ""),
       rawFrontmatter,
     });
   }

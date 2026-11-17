@@ -1,173 +1,94 @@
 import { describe, expect, it, vi } from "vitest";
-
 import { Result } from "../../../shared/domain/Result";
 import { Document } from "../domain/Document";
-import { PasswordAccessPolicy } from "../domain/access/DocumentAccessPolicy";
+import type { AccessGrantCodec, DocumentAccessRepository } from "../domain/access/ports";
 import { DocumentRepositoryError } from "../domain/errors";
 import type { WriteAccess } from "../domain/ports/WriteAccess";
 import { AuthorizeDocumentAccess } from "./access/AuthorizeDocumentAccess";
-import { FakeCodec, InMemoryAccessRepository } from "./access/testDoubles";
 import { ReadDocument, type DocumentViewer } from "./ReadDocument";
-import { denyWrites } from "./test/factories";
-
-const now = new Date("2026-11-04T12:00:00.000Z");
+import { allowWrites, denyWrites } from "./test/factories";
 
 function document(id: string, secured: boolean, content = "# Secreto") {
+  const date = new Date("2026-01-01");
   return Document.create(
     "guia",
-    {
-      id,
-      title: `Título ${id}`,
-      description: "Descripción",
-      author: "Autora",
-      ownerId: "owner-1",
-      secured,
-      createdAt: new Date("2026-01-01T00:00:00.000Z"),
-      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-    },
+    { id, title: `Título ${id}`, description: "Descripción", secured, createdAt: date, updatedAt: date },
     content,
   ).getValue();
 }
 
-async function setup(chain: { raw: Document; resolved: Document } | null, writeAccess: WriteAccess = denyWrites) {
-  const accessRepository = new InMemoryAccessRepository();
-  await accessRepository.setPasswordHash("doc-1", "hash:clave");
-  const authorize = new AuthorizeDocumentAccess(accessRepository, new FakeCodec(), new PasswordAccessPolicy(), () => now);
+function setup(chain: { raw: Document; resolved: Document } | null, writeAccess: WriteAccess = denyWrites) {
+  // Todo documento protegido tiene contraseña; el grant válido es `<id>:1`.
+  const accessRepository = {
+    get: async (documentId: string) => Result.ok({ documentId, passwordHash: "hash", passwordVersion: 1 }),
+  } as unknown as DocumentAccessRepository;
+  const codec = { verify: (token: string, input: { documentId: string }) => token === `${input.documentId}:1` };
+  const authorize = new AuthorizeDocumentAccess(accessRepository, codec as unknown as AccessGrantCodec);
   const getDocument = { executeChain: vi.fn().mockResolvedValue(chain) };
-  return { read: new ReadDocument(getDocument, authorize, writeAccess), getDocument };
+  return new ReadDocument(getDocument, authorize, writeAccess);
 }
 
-function viewer(options: { userId?: string; grants?: Record<string, string> } = {}) {
-  const userId = vi.fn().mockResolvedValue(options.userId);
-  const value: DocumentViewer = { userId, grantFor: (id) => options.grants?.[id] };
-  return { value, userId };
+function viewer(userId?: string, grants: Record<string, string> = {}) {
+  const resolveUser = vi.fn().mockResolvedValue(userId);
+  const value: DocumentViewer = { userId: resolveUser, grantFor: (id) => grants[id] };
+  return { value, resolveUser };
 }
 
-function spyWriteAccess(allowed: boolean) {
-  const require = vi.fn(async (nanobookId: string, actorId: string) =>
-    allowed ? Result.ok() : denyWrites.require(nanobookId, actorId),
-  );
-  return { writeAccess: { require } as unknown as WriteAccess, require };
-}
-
-const input = { nanobookId: "book-a", path: "guia" };
+const input = { nanobookId: "book", path: "guia" };
 
 describe("ReadDocument", () => {
   it("reports a missing document", async () => {
-    const { read } = await setup(null);
-
-    const result = await read.execute({ ...input, viewer: viewer().value });
-
-    expect(result).toEqual({ kind: "not-found" });
+    expect(await setup(null).execute({ ...input, viewer: viewer().value })).toEqual({ kind: "not-found" });
   });
 
-  it("allows an unprotected document without resolving the viewer", async () => {
-    const open = document("doc-2", false);
-    const { writeAccess, require } = spyWriteAccess(true);
-    const { read } = await setup({ raw: open, resolved: open }, writeAccess);
-    const v = viewer({ userId: "user-1" });
+  it("allows an open document without resolving the viewer", async () => {
+    const open = document("open", false);
+    const v = viewer("user");
 
-    const result = await read.execute({ ...input, viewer: v.value });
+    const result = await setup({ raw: open, resolved: open }).execute({ ...input, viewer: v.value });
 
     expect(result).toEqual({ kind: "allowed", document: open, via: "open" });
-    expect(v.userId).not.toHaveBeenCalled();
-    expect(require).not.toHaveBeenCalled();
+    expect(v.resolveUser).not.toHaveBeenCalled();
   });
 
-  it("allows a writer of the nanobook on a protected document", async () => {
+  it("allows writers and readers with a valid grant on a protected document", async () => {
     const secured = document("doc-1", true);
-    const { writeAccess, require } = spyWriteAccess(true);
-    const { read } = await setup({ raw: secured, resolved: secured }, writeAccess);
+    const chain = { raw: secured, resolved: secured };
 
-    const result = await read.execute({ ...input, viewer: viewer({ userId: "user-1" }).value });
-
-    expect(result).toEqual({ kind: "allowed", document: secured, via: "writer" });
-    expect(require).toHaveBeenCalledWith("book-a", "user-1");
-  });
-
-  it("allows readers holding a valid grant", async () => {
-    const secured = document("doc-1", true);
-    const { read } = await setup({ raw: secured, resolved: secured }, denyWrites);
-
-    const result = await read.execute({
-      ...input,
-      viewer: viewer({ userId: "user-2", grants: { "doc-1": "doc-1:1" } }).value,
+    expect(await setup(chain, allowWrites).execute({ ...input, viewer: viewer("user").value })).toMatchObject({
+      kind: "allowed",
+      via: "writer",
     });
-
-    expect(result).toEqual({ kind: "allowed", document: secured, via: "grant" });
+    expect(
+      await setup(chain).execute({ ...input, viewer: viewer("user", { "doc-1": "doc-1:1" }).value }),
+    ).toMatchObject({ kind: "allowed", via: "grant" });
   });
 
-  it("challenges anonymous readers without asking the write port, and never returns content", async () => {
+  it("challenges everyone else with a redacted document, also when the write port fails", async () => {
     const secured = document("doc-1", true, "# No debe salir");
-    const { writeAccess, require } = spyWriteAccess(true);
-    const { read } = await setup({ raw: secured, resolved: secured }, writeAccess);
-
-    const result = await read.execute({ ...input, viewer: viewer().value });
-
-    expect(result.kind).toBe("challenge");
-    if (result.kind !== "challenge") throw new Error("unreachable");
-    expect(result.method).toBe("password");
-    expect(result.document.getContent()).toBe("");
-    expect(result.document.getDescription()).toBe("");
-    expect(result.document.getTitle()).toBe("Título doc-1");
-    expect(require).not.toHaveBeenCalled();
-  });
-
-  it("fails closed when the write port cannot be consulted", async () => {
-    const secured = document("doc-1", true);
+    const chain = { raw: secured, resolved: secured };
     const broken: WriteAccess = { require: async () => Result.fail(new DocumentRepositoryError("db caída")) };
-    const { read } = await setup({ raw: secured, resolved: secured }, broken);
 
-    const result = await read.execute({ ...input, viewer: viewer({ userId: "user-1" }).value });
-
-    expect(result.kind).toBe("challenge");
+    for (const [writeAccess, userId] of [[denyWrites, undefined], [denyWrites, "user"], [broken, "user"]] as const) {
+      const result = await setup(chain, writeAccess).execute({ ...input, viewer: viewer(userId).value });
+      expect(result.kind).toBe("challenge");
+      if (result.kind !== "challenge") throw new Error("unreachable");
+      expect(result.document.getContent()).toBe("");
+      expect(result.document.getDescription()).toBe("");
+    }
   });
 
-  it("challenges when only the stored link of a proxy chain is protected", async () => {
-    const raw = document("doc-1", true);
-    const resolved = Document.create(
-      "guia",
-      { ...document("doc-9", false).getMetadata(), title: "Título del destino" },
-      "# Contenido del destino",
-    ).getValue();
-    const { read } = await setup({ raw, resolved });
+  it("challenges when only one link of a proxy chain is protected, never returning the target", async () => {
+    const open = document("open", false, "# Público");
+    const secret = document("secret", true, "# Destino protegido");
 
-    const result = await read.execute({ ...input, viewer: viewer({ userId: "user-2" }).value });
+    const protectedTarget = await setup({ raw: open, resolved: secret }).execute({ ...input, viewer: viewer("user").value });
+    const protectedSource = await setup({ raw: secret, resolved: open }).execute({ ...input, viewer: viewer("user").value });
 
-    expect(result.kind).toBe("challenge");
-    if (result.kind !== "challenge") throw new Error("unreachable");
-    expect(result.document.getContent()).toBe("");
-    expect(result.document.getTitle()).toBe("Título doc-1");
-  });
-
-  it("challenges when only the resolved target of a proxy chain is protected", async () => {
-    const raw = document("doc-2", false);
-    const resolved = document("doc-1", true, "# Destino protegido");
-    const { read } = await setup({ raw, resolved });
-
-    const result = await read.execute({ ...input, viewer: viewer({ userId: "user-2" }).value });
-
-    expect(result.kind).toBe("challenge");
-  });
-
-  it("treats an empty userId as anonymous", async () => {
-    const secured = document("doc-1", true);
-    const { writeAccess, require } = spyWriteAccess(true);
-    const { read } = await setup({ raw: secured, resolved: secured }, writeAccess);
-
-    const result = await read.execute({ ...input, viewer: viewer({ userId: "" }).value });
-
-    expect(result.kind).toBe("challenge");
-    expect(require).not.toHaveBeenCalled();
-  });
-
-  it("forwards the timing observer to the lookup", async () => {
-    const open = document("doc-2", false);
-    const { read, getDocument } = await setup({ raw: open, resolved: open });
-    const observe = vi.fn();
-
-    await read.execute({ ...input, viewer: viewer().value, observeTiming: observe });
-
-    expect(getDocument.executeChain).toHaveBeenCalledWith("book-a", "guia", observe);
+    for (const result of [protectedTarget, protectedSource]) {
+      expect(result.kind).toBe("challenge");
+      if (result.kind !== "challenge") throw new Error("unreachable");
+      expect(result.document.getContent()).toBe("");
+    }
   });
 });

@@ -1,45 +1,14 @@
-import type {
-  ContentEntry,
-  DocumentMetadata,
-} from "../types";
-
-import type { DocumentId } from "../DocumentId";
+import type { ContentEntry } from "../types";
 import type { DocumentPath } from "../DocumentPath";
-import type { Document } from "../Document";
 import type { DocumentReference } from "../DocumentReference";
 
-/**
- * Contexto que recibe cada resolutor de referencias.
- */
+/** Contexto que recibe cada resolutor: dónde vive el documento que declara el `ref`. */
 export interface ReferenceResolutionContext {
-  /** Nanobook al que pertenece el documento origen. */
   nanobookId: string;
-  /** ID del documento origen que contiene el `ref`. */
-  sourceId: DocumentId;
   sourcePath: DocumentPath;
-  /** Metadatos del documento origen. */
-  sourceData: DocumentMetadata;
 }
 
-/**
- * Plugin que sabe resolver un tipo concreto de referencia.
- */
-export interface ReferenceResolverPlugin {
-  /** Nombre identificativo del resolutor. */
-  name: string;
-  resolve(
-    ref: DocumentReference,
-    context: ReferenceResolutionContext
-  ): Promise<ContentEntry | null>;
-}
-
-/**
- * Servicio que orquesta los resolutores de referencias.
- */
+/** Sabe resolver un tipo de referencia; devuelve `null` si el `ref` no es suyo o no existe. */
 export interface ReferenceResolver {
-  resolve(
-    ref: DocumentReference,
-    sourceDocument: Document,
-    nanobookId: string,
-  ): Promise<ContentEntry | null>;
+  resolve(ref: DocumentReference, context: ReferenceResolutionContext): Promise<ContentEntry | null>;
 }

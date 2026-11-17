@@ -24,7 +24,7 @@ export class GetDocument {
     return (await this.executeChain(nanobookId, documentPathValue, observeTiming))?.resolved ?? null;
   }
 
-  /** Stored document and its proxy-resolved version, from a single lookup. */
+  /** El documento almacenado y su versión con proxies resueltos, en una sola lectura. */
   async executeChain(
     nanobookId: string,
     documentPathValue: string,
@@ -50,13 +50,7 @@ export class GetDocument {
       publicPath,
       () => this.contentRepository.getByPublicPath(nanobookId, publicPath),
     );
-    if (!documentResult.isSuccess) {
-      return null;
-    }
-
-    const document = documentResult.getValue();
-    if (!document) return null;
-    return document;
+    return documentResult.isSuccess ? documentResult.getValue() : null;
   }
 }
 

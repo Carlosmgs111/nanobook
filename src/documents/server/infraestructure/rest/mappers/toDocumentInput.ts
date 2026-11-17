@@ -2,20 +2,15 @@ import type { CreateDocumentRequest } from "../../../application/dto/CreateDocum
 import type { UpdateDocumentRequest } from "../../../application/dto/UpdateDocumentRequest";
 import type { DocumentInput } from "../../../application/dto/DocumentInput";
 
+/** Copia solo los campos editables; la identidad llega de la ruta y la auditoría la fija el servidor. */
 export function toDocumentInput(
-  request: CreateDocumentRequest | UpdateDocumentRequest
+  id: string,
+  request: CreateDocumentRequest | UpdateDocumentRequest,
 ): DocumentInput {
-  const id = "id" in request ? request.id : undefined;
-  const expectedRevision = "expectedRevision" in request
-    ? request.expectedRevision
-    : undefined;
+  const expectedRevision = "expectedRevision" in request ? request.expectedRevision : undefined;
   return {
-    ...(typeof id === "string"
-      ? { id }
-      : {}),
-    ...(typeof expectedRevision === "number"
-      ? { expectedRevision }
-      : {}),
+    id,
+    ...(typeof expectedRevision === "number" ? { expectedRevision } : {}),
     path: request.path,
     title: request.title,
     description: request.description,

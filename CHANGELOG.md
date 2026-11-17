@@ -7,6 +7,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** se redujo el módulo `documents` por flujos (escritura, lectura, acceso, navegador), sin cambiar la protección:
+  - Desaparecen `DocumentAccessPolicy`, `CompositeReferenceResolver`, los DTO REST de re-export y el código muerto.
+  - Los controllers de mutación comparten `documentMutationRoute` y los casos de uso publican eventos con `publishAll`.
+  - En el navegador, `sameDocument`, la lista de frontmatter protegido, el writer HTTP y el storage quedan sin duplicación.
+  - `GitHubReferenceResolver` ya no intenta resolver referencias que no son de GitHub.
+  - Las mutaciones de documentos responden 401 antes que 400.
+  - Los tests de proceso se sustituyen por una batería reducida de tests de implementación.
+
 - **Fixed:** MCP: `get_document` y `list_documents` ya no devuelven el contenido de documentos protegidos a quien no es dueño del nanobook.
 
 - **Changed:** `documents` expone `readDocument`, que resuelve la protección por sí mismo (`not-found` / `allowed` / `challenge`) y absorbe la composición de `getDocument` + `authorizeDocumentAccess`, que deja de exponerse en `DocumentModule`. La página pública ya no compone la autorización, envía `X-Robots-Tag: noindex, nofollow` en todo acceso a contenido protegido y el desafío muestra el título del documento almacenado, no el del destino de un proxy.

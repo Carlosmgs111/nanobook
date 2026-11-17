@@ -2,13 +2,10 @@ import type { Document } from "../domain/Document";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { WriteAccess } from "../domain/ports/WriteAccess";
 import { securedDocuments } from "./access/AuthorizeDocumentAccess";
+import { canWrite } from "./canWrite";
 import type { ProxyParser } from "./ProxyParser";
 
-/**
- * Lista los documentos de un nanobook para un lector sin desafío posible
- * (por ejemplo un agente): los protegidos se devuelven redactados salvo para
- * quien puede escribir en el nanobook.
- */
+/** Lista los documentos para un lector sin desafío posible (un agente): los protegidos salen redactados salvo para escritores. */
 export class ListReadableDocuments {
   constructor(
     private readonly repository: ContentRepository,
@@ -22,9 +19,7 @@ export class ListReadableDocuments {
 
     const raw = listed.getValue();
     const resolved = await this.proxyParser.parseProxies(nanobookId, raw);
-    // Sin usuario (o vacío) no se consulta el puerto; un fallo del puerto cuenta como «no escritor».
-    const canWrite = Boolean(userId) && (await this.writeAccess.require(nanobookId, userId as string)).isSuccess;
-    if (canWrite) return resolved;
+    if (await canWrite(this.writeAccess, nanobookId, userId)) return resolved;
 
     return resolved.map((document, index) =>
       securedDocuments([raw[index], document]).length > 0 ? raw[index].redacted() : document,

@@ -51,7 +51,7 @@ export class DocumentAccessDeniedError extends Error {
   }
 }
 
-/** El actor no puede escribir en el nanobook. Subclase para que los mapeos 403 existentes la cubran. */
+/** El actor no puede escribir en el nanobook; subclase para que los mapeos 403 existentes la cubran. */
 export class WriteAccessDeniedError extends DocumentAccessDeniedError {
   constructor(public readonly nanobookId: string) {
     super(nanobookId);

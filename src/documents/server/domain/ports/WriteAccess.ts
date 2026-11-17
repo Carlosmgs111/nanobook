@@ -1,10 +1,7 @@
 import type { Result } from "../../../../shared/domain/Result";
 import type { DocumentRepositoryError, WriteAccessDeniedError } from "../errors";
 
-/**
- * Quién puede modificar el contenido de un nanobook. Lo implementa el módulo
- * dueño del nanobook; `documents` solo conoce este contrato.
- */
+/** Quién puede modificar un nanobook; lo implementa el módulo dueño y `documents` solo conoce el contrato. */
 export interface WriteAccess {
   require(
     nanobookId: string,

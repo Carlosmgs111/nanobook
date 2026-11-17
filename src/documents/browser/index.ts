@@ -5,28 +5,14 @@ import { DeleteDocument } from "./application/DeleteDocument";
 import { RenameDocument } from "./application/RenameDocument";
 import { HandleEditorChange } from "./application/HandleEditorChange";
 import { GetRenderedDocument } from "./application/GetRenderedDocument";
+import { CreateDocument } from "./application/CreateDocument";
 import { SessionStorageDocumentStorage } from "./infraestructure/storage/SessionStorageDocumentStorage";
 import { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
 import { HttpDocumentWriter } from "./infraestructure/documentWriter/HttpDocumentWriter";
-import { CreateDocument } from "./application/CreateDocument";
 import { WorkerMarkdownRenderer } from "./infraestructure/renderer/WorkerMarkdownRenderer";
 import { EventTargetEventBus } from "../../shared/infrastructure/EventTargetEventBus";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 
-export { YamlDocumentContentParser } from "./infraestructure/parser/YamlDocumentContentParser";
-export type { DocumentContentParser } from "./domain/ports/DocumentContentParser";
-export type {
-  SerializedEntry,
-  RenderedPreview,
-  CachedPreview,
-} from "./domain/model/StagedDocument";
-export type { DocumentStorage } from "./domain/ports/DocumentStorage";
-export type { PreviewRenderer } from "./domain/ports/PreviewRenderer";
-export {
-  EditionStorageError,
-  EditionRenderError,
-  InvalidDocumentContentError,
-} from "./domain/errors";
 export { DocumentChanged } from "./domain/events/DocumentChanged";
 
 export class EditionModule {
@@ -44,32 +30,18 @@ export class EditionModule {
 
   static create() {
     const storage = new SessionStorageDocumentStorage();
-    const contentParser = new YamlDocumentContentParser();
-    const documentWriter = new HttpDocumentWriter();
-    const workerRenderer = new WorkerMarkdownRenderer();
+    const writer = new HttpDocumentWriter();
     const eventBus = new EventTargetEventBus();
-    const renderPreview = new RenderPreview(
-      storage,
-      workerRenderer,
-      eventBus
-    );
-    const saveDocument = new SaveDocument(storage, documentWriter);
-    const deleteDocument = new DeleteDocument(storage, documentWriter);
-    const renameDocument = new RenameDocument(storage, documentWriter);
-    const createDocument = new CreateDocument(documentWriter);
-    const handleEditorChange = new HandleEditorChange(contentParser, storage);
-    const initializeEditor = new InitializeEditor(storage);
-    const getRenderedDocument = new GetRenderedDocument(storage);
 
     return new EditionModule(
-      renderPreview,
-      initializeEditor,
-      saveDocument,
-      deleteDocument,
-      renameDocument,
-      createDocument,
-      getRenderedDocument,
-      handleEditorChange,
+      new RenderPreview(storage, new WorkerMarkdownRenderer(), eventBus),
+      new InitializeEditor(storage),
+      new SaveDocument(storage, writer),
+      new DeleteDocument(storage, writer),
+      new RenameDocument(storage, writer),
+      new CreateDocument(writer),
+      new GetRenderedDocument(storage),
+      new HandleEditorChange(new YamlDocumentContentParser(), storage),
       eventBus
     );
   }

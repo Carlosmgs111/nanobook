@@ -34,10 +34,6 @@ export interface ContentRepository {
     nanobookId: string,
     path: string
   ): Promise<Result<ContentRepositoryListError, Document | null>>;
-  listChildren(
-    nanobookId: string,
-    parentPath: string | null
-  ): Promise<Result<ContentRepositoryListError, Document[]>>;
   create(nanobookId: string, document: Document): Promise<Result<ContentRepositoryError, void>>;
   updateMany(
     nanobookId: string,

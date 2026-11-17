@@ -11,7 +11,6 @@ export class InvalidateDocumentSourceCache {
   constructor(private readonly sourceCache: DocumentSourceCache) {}
 
   async handle(event: DocumentEvent): Promise<Result<EventBusError, void>> {
-    if (!event.nanobookId) return Result.ok();
     try {
       await this.sourceCache.invalidateNanobook(event.nanobookId);
       return Result.ok();

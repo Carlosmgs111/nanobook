@@ -13,8 +13,8 @@ import type { ContentRepository, ContentRepositoryError } from "../../domain/por
 import type { WriteAccess } from "../../domain/ports/WriteAccess";
 import { loadWritableDocument, type LoadWritableDocumentError } from "./loadWritableDocument";
 
-export const MIN_PASSWORD_LENGTH = 8;
-export const MAX_PASSWORD_LENGTH = 128;
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
 
 export type DocumentAccessAdminError =
   | LoadWritableDocumentError

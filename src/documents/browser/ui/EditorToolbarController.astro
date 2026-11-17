@@ -4,7 +4,8 @@
   import { prefetch } from "astro:prefetch";
 
   const app = getApp();
-  let statusElement: HTMLElement;
+  let statusElement: HTMLElement | null = null;
+
   function showStatus(message: string, isError = false) {
     if (!statusElement) return;
     statusElement.textContent = message;
@@ -16,7 +17,13 @@
     }, 4000);
   }
 
-  function showSaveError(error: unknown) {
+  /**
+   * Muestra el error de una operación. El servidor ya devuelve un mensaje para
+   * 401/403 (sin sesión o sin permiso de escritura), que se muestra tal cual;
+   * 409 es una revisión obsoleta y tiene un texto propio.
+   */
+  function showError(error: unknown, fallback: string) {
+    console.error(error);
     if (error instanceof EditionWriterError && error.status === 409) {
       showStatus(
         "El documento cambió en otra sesión. Tus cambios locales se conservaron; recarga para comparar antes de volver a guardar.",
@@ -24,84 +31,66 @@
       );
       return;
     }
+    showStatus(error instanceof Error ? error.message : fallback, true);
+  }
 
-    showStatus(
-      error instanceof Error ? error.message : "Error al guardar",
-      true
+  /** Reemplaza el botón por un clon (descarta listeners de navegaciones previas) y enlaza el handler. */
+  function bindAction(
+    action: string,
+    handler: (button: HTMLButtonElement) => Promise<void>
+  ) {
+    const original = document.querySelector<HTMLButtonElement>(
+      `[data-action='${action}']`
     );
+    if (!original) return;
+    const button = original.cloneNode(true) as HTMLButtonElement;
+    original.replaceWith(button);
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (button.disabled) return;
+      button.disabled = true;
+      try {
+        await handler(button);
+      } finally {
+        button.disabled = false;
+      }
+    });
   }
 
   document.addEventListener("astro:page-load", () => {
-    statusElement = document.querySelector<HTMLElement>(
-      "[data-edition-result]"
-    ) as HTMLElement;
-    const saveButton = document.querySelector<HTMLButtonElement>(
-      "[data-action='save']"
-    );
-    if (!saveButton) return;
+    statusElement = document.querySelector<HTMLElement>("[data-edition-result]");
 
-    const viewHref = saveButton.dataset.viewHref;
-    const documentId = saveButton.dataset.documentId;
-    const cleanButton = saveButton.cloneNode(true) as HTMLButtonElement;
-    saveButton.replaceWith(cleanButton);
-    cleanButton.addEventListener("click", async (e) => {
-      e.preventDefault();
-      if (cleanButton.disabled) return;
-      cleanButton.disabled = true;
-      try {
-        const result = await app.editionModule.saveDocument.execute(
-          cleanButton.dataset.documentId as string
-        );
-        if (result.isSuccess) {
-          if (viewHref) prefetch(viewHref);
-          showStatus("Guardado correctamente");
-        } else {
-          const error = result.getError();
-          console.error(error);
-          showSaveError(error);
-        }
-      } finally {
-        cleanButton.disabled = false;
-      }
-    });
-
-    const deleteButton = document.querySelector<HTMLButtonElement>(
-      "[data-action='delete']"
-    );
-    if (!deleteButton) return;
-    const cleanDeleteButton = deleteButton.cloneNode(true) as HTMLButtonElement;
-    deleteButton.replaceWith(cleanDeleteButton);
-    cleanDeleteButton.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const isDirectory = cleanDeleteButton.dataset.isDirectory === "true";
-      const message = isDirectory
-        ? "Este documento es un directorio. Se eliminarán también todos los documentos que contiene. Esta acción no se puede deshacer. ¿Deseas continuar?"
-        : "Este documento se eliminará permanentemente. ¿Deseas continuar?";
-      if (!window.confirm(message)) return;
-      const result = await app.editionModule.deleteDocument.execute(
-        cleanDeleteButton.dataset.documentId as string
+    bindAction("save", async (button) => {
+      const result = await app.editionModule.saveDocument.execute(
+        button.dataset.documentId as string
       );
       if (!result.isSuccess) {
-        const error = result.getError();
-        console.error(error);
-        showStatus(
-          error instanceof Error ? error.message : "Error al eliminar",
-          true
-        );
+        showError(result.getError(), "Error al guardar");
         return;
       }
-      window.location.href = cleanDeleteButton.dataset.parentHref || "/";
+      if (button.dataset.viewHref) prefetch(button.dataset.viewHref);
+      showStatus("Guardado correctamente");
     });
 
-    const renameButton = document.querySelector<HTMLButtonElement>(
-      "[data-action='rename']"
-    );
-    if (!renameButton) return;
-    const cleanRenameButton = renameButton.cloneNode(true) as HTMLButtonElement;
-    renameButton.replaceWith(cleanRenameButton);
-    cleanRenameButton.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const currentPath = cleanRenameButton.dataset.documentPath || "";
+    bindAction("delete", async (button) => {
+      const message =
+        button.dataset.isDirectory === "true"
+          ? "Este documento es un directorio. Se eliminarán también todos los documentos que contiene. Esta acción no se puede deshacer. ¿Deseas continuar?"
+          : "Este documento se eliminará permanentemente. ¿Deseas continuar?";
+      if (!window.confirm(message)) return;
+
+      const result = await app.editionModule.deleteDocument.execute(
+        button.dataset.documentId as string
+      );
+      if (!result.isSuccess) {
+        showError(result.getError(), "Error al eliminar");
+        return;
+      }
+      window.location.href = button.dataset.parentHref || "/";
+    });
+
+    bindAction("rename", async (button) => {
+      const currentPath = button.dataset.documentPath || "";
       const nextPath = window.prompt(
         "Nueva ruta interna del documento (usa /index para directorios):",
         currentPath
@@ -109,16 +98,11 @@
       if (nextPath === null || nextPath.trim() === currentPath) return;
 
       const result = await app.editionModule.renameDocument.execute(
-        cleanRenameButton.dataset.documentId as string,
+        button.dataset.documentId as string,
         nextPath
       );
       if (!result.isSuccess) {
-        const error = result.getError();
-        console.error(error);
-        showStatus(
-          error instanceof Error ? error.message : "Error al renombrar",
-          true
-        );
+        showError(result.getError(), "Error al renombrar");
         return;
       }
 

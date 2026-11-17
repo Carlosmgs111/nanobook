@@ -16,7 +16,6 @@ export function createRepository(
     getById: vi.fn().mockResolvedValue(Result.ok(null)),
     getByPath: vi.fn().mockResolvedValue(Result.ok(null)),
     getByPublicPath: vi.fn().mockResolvedValue(Result.ok(null)),
-    listChildren: vi.fn().mockResolvedValue(Result.ok([])),
     create: vi.fn().mockResolvedValue(Result.ok()),
     updateMany: vi.fn().mockResolvedValue(Result.ok()),
     deleteMany: vi.fn().mockResolvedValue(Result.ok()),
@@ -40,7 +39,6 @@ export function buildDocumentInput(
     path: overrides.path ?? "intro",
     title: "Introduction",
     description: "Getting started",
-    createdAt: new Date("2024-01-01"),
     content: "# Intro\n\nHello.",
     ...overrides,
   };

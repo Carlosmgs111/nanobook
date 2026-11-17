@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from "vitest";
-
 import { Result } from "../../../shared/domain/Result";
 import { Document } from "../domain/Document";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
@@ -9,17 +8,8 @@ import type { ProxyParser } from "./ProxyParser";
 import { allowWrites, denyWrites } from "./test/factories";
 
 function doc(id: string, secured: boolean, content: string) {
-  return Document.create(
-    id,
-    {
-      id,
-      title: id,
-      description: "Descripción",
-      secured,
-      createdAt: new Date("2026-01-01"),
-    },
-    content,
-  ).getValue();
+  const date = new Date("2026-01-01");
+  return Document.create(id, { id, title: id, description: "Descripción", secured, createdAt: date, updatedAt: date }, content).getValue();
 }
 
 function setup(raw: Document[], resolved: Document[] = raw, writeAccess: WriteAccess = denyWrites) {
@@ -29,73 +19,40 @@ function setup(raw: Document[], resolved: Document[] = raw, writeAccess: WriteAc
 }
 
 describe("ListReadableDocuments", () => {
-  it("returns every resolved document to a writer of the nanobook", async () => {
-    const open = doc("abierto", false, "# Abierto");
-    const secured = doc("secreto", true, "# Secreto");
+  const open = () => doc("abierto", false, "# Abierto");
+  const secret = () => doc("secreto", true, "# Secreto");
 
-    const result = await setup([open, secured], [open, secured], allowWrites).execute("book-a", { userId: "user-1" });
-
-    expect(result).toEqual([open, secured]);
+  it("returns every resolved document to a writer", async () => {
+    const docs = [open(), secret()];
+    expect(await setup(docs, docs, allowWrites).execute("book", { userId: "user" })).toEqual(docs);
   });
 
-  it("redacts protected documents for everyone else", async () => {
-    const open = doc("abierto", false, "# Abierto");
-    const secured = doc("secreto", true, "# Secreto");
+  it("redacts protected documents for everyone else without asking the write port about anonymous readers", async () => {
+    const docs = [open(), secret()];
+    const require = vi.fn(denyWrites.require);
 
-    const result = await setup([open, secured]).execute("book-a", { userId: "user-2" });
-
-    expect(result[0]).toBe(open);
-    expect(result[1].getContent()).toBe("");
-    expect(result[1].getDescription()).toBe("");
-    expect(result[1].getMetadata().secured).toBe(true);
+    for (const userId of ["user", undefined, ""]) {
+      const result = await setup(docs, docs, { require } as unknown as WriteAccess).execute("book", { userId });
+      expect(result[0]).toBe(docs[0]);
+      expect(result[1].getContent()).toBe("");
+      expect(result[1].getDescription()).toBe("");
+      expect(result[1].getMetadata().secured).toBe(true);
+    }
+    expect(require).toHaveBeenCalledTimes(1);
   });
 
-  it("redacts protected documents for anonymous readers without asking the write port", async () => {
-    const secured = doc("secreto", true, "# Secreto");
-    const require = vi.fn();
+  it("redacts when either link of a proxy is protected", async () => {
+    const protectedTarget = await setup([doc("p", false, "")], [doc("p", true, "# secreto")]).execute("book", { userId: "user" });
+    const protectedSource = await setup([doc("p", true, "")], [doc("p", false, "# destino")]).execute("book", { userId: "user" });
 
-    const result = await setup([secured], [secured], { require } as unknown as WriteAccess).execute("book-a", {
-      userId: undefined,
-    });
-
-    expect(result[0].getContent()).toBe("");
-    expect(require).not.toHaveBeenCalled();
-  });
-
-  it("treats an empty userId as anonymous without asking the write port", async () => {
-    const secured = doc("secreto", true, "# Secreto");
-    const require = vi.fn();
-
-    const result = await setup([secured], [secured], { require } as unknown as WriteAccess).execute("book-a", {
-      userId: "",
-    });
-
-    expect(result[0].getContent()).toBe("");
-    expect(require).not.toHaveBeenCalled();
-  });
-
-  it("redacts when the stored document is open but the resolved one is protected", async () => {
-    const raw = doc("p", false, "");
-    const resolved = doc("p", true, "# secreto");
-
-    const result = await setup([raw], [resolved]).execute("book-a", { userId: "user-2" });
-
-    expect(result[0].getContent()).toBe("");
-  });
-
-  it("redacts when only the stored link of a proxy is protected", async () => {
-    const raw = doc("proxy", true, "");
-    const resolved = doc("proxy", false, "# Contenido del destino");
-
-    const result = await setup([raw], [resolved]).execute("book-a", { userId: "user-2" });
-
-    expect(result[0].getContent()).toBe("");
+    expect(protectedTarget[0].getContent()).toBe("");
+    expect(protectedSource[0].getContent()).toBe("");
   });
 
   it("returns an empty list when the repository fails", async () => {
     const repository = { list: vi.fn().mockResolvedValue(Result.fail(new Error("db"))) } as unknown as ContentRepository;
     const list = new ListReadableDocuments(repository, { parseProxies: vi.fn() } as unknown as ProxyParser, denyWrites);
 
-    expect(await list.execute("book-a", { userId: "user-1" })).toEqual([]);
+    expect(await list.execute("book", { userId: "user" })).toEqual([]);
   });
 });

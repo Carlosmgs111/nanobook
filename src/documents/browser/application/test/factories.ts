@@ -1,52 +1,30 @@
-import { vi } from "vitest";
-import { Result } from "../../../../shared/domain/Result";
-import type { DocumentStorage } from "../../domain/ports/DocumentStorage";
-import type { PreviewRenderer } from "../../domain/ports/PreviewRenderer";
-import type { SerializedEntry, RenderedPreview, CachedPreview } from "../../domain/model/StagedDocument";
+import type { SerializedEntry } from "../../domain/model/StagedDocument";
 
-export function createDocumentStorage(
-  overrides: Partial<DocumentStorage> = {}
-): DocumentStorage {
-  return {
-    loadStagedDocument: vi.fn().mockReturnValue(Result.ok(null)),
-    saveStagedDocument: vi.fn().mockReturnValue(Result.ok()),
-    clearStagedDocument: vi.fn().mockReturnValue(Result.ok()),
-    loadCachedPreview: vi.fn().mockReturnValue(Result.ok(null)),
-    saveCachedPreview: vi.fn().mockReturnValue(Result.ok()),
-    clearCachedPreview: vi.fn().mockReturnValue(Result.ok()),
-    loadConfirmedDocument: vi.fn().mockReturnValue(Result.ok(null)),
-    saveConfirmedDocument: vi.fn().mockReturnValue(Result.ok()),
-    clearConfirmedDocument: vi.fn().mockReturnValue(Result.ok()),
-    clearAll: vi.fn().mockReturnValue(Result.ok()),
-    ...overrides,
-  } as DocumentStorage;
-}
-
-export function createPreviewRenderer(
-  overrides: Partial<PreviewRenderer> = {}
-): PreviewRenderer {
-  return {
-    render: vi.fn().mockResolvedValue(Result.ok({ Content: "<h1>Preview</h1>" })),
-    ...overrides,
-  };
+export class FakeStorage implements Storage {
+  private values = new Map<string, string>();
+  get length() { return this.values.size; }
+  clear() { this.values.clear(); }
+  getItem(key: string) { return this.values.get(key) ?? null; }
+  key(index: number) { return Array.from(this.values.keys())[index] ?? null; }
+  removeItem(key: string) { this.values.delete(key); }
+  setItem(key: string, value: string) { this.values.set(key, value); }
 }
 
 export function buildSerializedEntry(
-  overrides: Partial<SerializedEntry> & { id?: string } = {}
+  overrides: Partial<SerializedEntry> = {}
 ): SerializedEntry {
-  const id = overrides.id ?? "intro";
-  const documentId = overrides.documentId ?? `doc-${id}`;
   return {
-    documentId,
-    id,
-    path: overrides.path ?? id,
-    isIndex: overrides.path === "index" || overrides.path?.endsWith("/index") || false,
+    documentId: "doc-intro",
+    id: "intro",
+    path: "intro",
+    isIndex: false,
+    version: "v1",
     title: "Introduction",
     description: "Getting started",
     content: "# Intro\n\nHello.",
     rawFrontmatter: '---\ntitle: "Introduction"\ndescription: "Getting started"\n---\n',
-    slug: id,
-    parentPath: id === "index" ? undefined : "index",
+    slug: "intro",
+    parentPath: "index",
     position: 0,
     headings: [],
     metadata: {
@@ -55,25 +33,6 @@ export function buildSerializedEntry(
       createdAt: "2024-01-01T00:00:00.000Z",
       updatedAt: "2024-01-01T00:00:00.000Z",
     },
-    ...overrides,
-  };
-}
-
-export function buildRenderedPreview(
-  overrides: Partial<RenderedPreview> = {}
-): RenderedPreview {
-  return {
-    Content: "<h1>Preview</h1>",
-    ...overrides,
-  };
-}
-
-export function buildCachedPreview(
-  overrides: Partial<CachedPreview> = {}
-): CachedPreview {
-  return {
-    rendered: buildRenderedPreview(),
-    source: buildSerializedEntry(),
     ...overrides,
   };
 }
