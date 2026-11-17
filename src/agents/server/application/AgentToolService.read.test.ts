@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Result } from "../../../shared/domain/Result";
 import { Document } from "../../../documents/server/domain/Document";
-import { DocumentAccessDeniedError, DocumentNotFoundError } from "../../../documents/server/domain/errors";
-import type { Authorizer } from "../../../authorization/server";
+import { DocumentNotFoundError } from "../../../documents/server/domain/errors";
+import { AccessCheckFailedError, AccessDeniedError, type Authorizer } from "../../../authorization/server";
 import type { NanobookModule } from "../../../nanobooks/server";
 import { createMarkdownBlockAdvisor } from "../../../application/server/createMarkdownBlockAdvisor";
 import type { AgentActor } from "./dto";
@@ -20,9 +20,9 @@ function secured() {
   ).getValue();
 }
 
-function setup(readResult: unknown) {
+function setup(readResult: unknown, listResult: unknown = []) {
   const readDocument = { execute: vi.fn().mockResolvedValue(readResult) };
-  const listReadableDocuments = { execute: vi.fn().mockResolvedValue([]) };
+  const listReadableDocuments = { execute: vi.fn().mockResolvedValue(listResult) };
   const nanobooks = {
     documentModule: { readDocument, listReadableDocuments },
   } as unknown as NanobookModule;
@@ -38,7 +38,8 @@ describe("AgentToolService reads respect document protection", () => {
     const result = await tools.getDocument(reader, "book-a", "guia");
 
     expect(result.isSuccess).toBe(false);
-    expect(result.getError()).toBeInstanceOf(DocumentAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
+    expect((result.getError() as AccessDeniedError).decision).toEqual({ effect: "deny", reason: "forbidden" });
   });
 
   it("reports a missing document", async () => {
@@ -50,7 +51,7 @@ describe("AgentToolService reads respect document protection", () => {
   });
 
   it("returns the document when access is allowed", async () => {
-    const { tools } = setup({ kind: "allowed", document: secured(), via: "writer" });
+    const { tools } = setup({ kind: "allowed", document: secured(), via: "protected" });
 
     const result = await tools.getDocument(owner, "book-a", "guia");
 
@@ -78,5 +79,41 @@ describe("AgentToolService reads respect document protection", () => {
 
     expect(listReadableDocuments.execute).toHaveBeenNthCalledWith(1, "book-a", { userId: "dueño" });
     expect(listReadableDocuments.execute).toHaveBeenNthCalledWith(2, "book-a", { userId: "visitante" });
+  });
+
+  it("returns an AccessCheckFailedError when reading a document fails the access check", async () => {
+    const { tools, readDocument } = setup({ kind: "not-found" });
+    const failure = new AccessCheckFailedError(new Error("db caída"));
+    readDocument.execute.mockRejectedValue(failure);
+
+    const result = await tools.getDocument(reader, "book-a", "guia");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBe(failure);
+  });
+
+  it("rethrows any other error when reading a document", async () => {
+    const { tools, readDocument } = setup({ kind: "not-found" });
+    readDocument.execute.mockRejectedValue(new Error("otro"));
+
+    await expect(tools.getDocument(reader, "book-a", "guia")).rejects.toThrow("otro");
+  });
+
+  it("returns an AccessCheckFailedError when listing documents fails the access check", async () => {
+    const { tools, listReadableDocuments } = setup({ kind: "not-found" });
+    const failure = new AccessCheckFailedError(new Error("db caída"));
+    listReadableDocuments.execute.mockRejectedValue(failure);
+
+    const result = await tools.listDocuments(reader, "book-a");
+
+    expect(result.isSuccess).toBe(false);
+    expect(result.getError()).toBe(failure);
+  });
+
+  it("rethrows any other error when listing documents", async () => {
+    const { tools, listReadableDocuments } = setup({ kind: "not-found" });
+    listReadableDocuments.execute.mockRejectedValue(new Error("otro"));
+
+    await expect(tools.listDocuments(reader, "book-a")).rejects.toThrow("otro");
   });
 });

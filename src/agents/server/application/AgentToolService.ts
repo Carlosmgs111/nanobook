@@ -1,7 +1,7 @@
 import { Result } from "../../../shared/domain/Result";
-import { Subject, type Authorizer } from "../../../authorization/server";
+import { AccessCheckFailedError, AccessDeniedError, Subject, type Authorizer } from "../../../authorization/server";
 import { serializeEntry } from "../../../documents/server/application/dto/SerializedEntry";
-import { DocumentAccessDeniedError, DocumentNotFoundError } from "../../../documents/server/domain/errors";
+import { DocumentNotFoundError } from "../../../documents/server/domain/errors";
 import type { NanobookModule } from "../../../nanobooks/server";
 import type { CreateNanobookData } from "../../../nanobooks/server/domain/types";
 import type {
@@ -101,29 +101,40 @@ export class AgentToolService {
   async listDocuments(actor: AgentActor, nanobookId: string) {
     const access = await this.require(actor, nanobookId, "read");
     if (!access.isSuccess) return Result.fail(access.getError());
-    const documents = await this.nanobooks.documentModule.listReadableDocuments.execute(nanobookId, {
-      userId: actor.actorId,
-    });
-    return Result.ok(documents.map((document) => serializeEntry(document.parse())));
+    try {
+      const documents = await this.nanobooks.documentModule.listReadableDocuments.execute(nanobookId, {
+        userId: actor.actorId,
+      });
+      return Result.ok(documents.map((document) => serializeEntry(document.parse())));
+    } catch (error) {
+      if (error instanceof AccessCheckFailedError) return Result.fail(error);
+      throw error;
+    }
   }
 
   async getDocument(actor: AgentActor, nanobookId: string, path: string) {
     const access = await this.require(actor, nanobookId, "read");
     if (!access.isSuccess) return Result.fail(access.getError());
-    const read = await this.nanobooks.documentModule.readDocument.execute({
-      nanobookId,
-      path,
-      viewer: {
-        userId: async () => actor.actorId,
-        // Un agente no tiene cómo superar el desafío de contraseña.
-        grantFor: () => undefined,
-      },
-    });
-    if (read.kind === "not-found") return Result.fail(new DocumentNotFoundError(path));
-    if (read.kind === "challenge") {
-      return Result.fail(new DocumentAccessDeniedError(read.document.getDocumentId().getValue()));
+    try {
+      const read = await this.nanobooks.documentModule.readDocument.execute({
+        nanobookId,
+        path,
+        viewer: {
+          userId: async () => actor.actorId,
+          // Un agente no tiene cómo superar el desafío de contraseña.
+          grantFor: () => undefined,
+        },
+      });
+      if (read.kind === "not-found") return Result.fail(new DocumentNotFoundError(path));
+      // Un agente no puede superar la contraseña: se trata como un acceso prohibido.
+      if (read.kind === "challenge") {
+        return Result.fail(new AccessDeniedError({ effect: "deny", reason: "forbidden" }));
+      }
+      return Result.ok(serializeEntry(read.document.parse()));
+    } catch (error) {
+      if (error instanceof AccessCheckFailedError) return Result.fail(error);
+      throw error;
     }
-    return Result.ok(serializeEntry(read.document.parse()));
   }
 
   async createDocument(

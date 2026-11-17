@@ -7,6 +7,7 @@ import type { DocumentInput } from "../dto/DocumentInput";
 import type { DocumentMetadata } from "../../domain/types";
 import { WriteAccessDeniedError } from "../../domain/errors";
 import type { WriteAccess } from "../../domain/ports/WriteAccess";
+import { createAuthorizer, type Authorizer, type Policy } from "../../../../authorization/server";
 
 export function createRepository(
   overrides: Partial<ContentRepository> = {}
@@ -76,3 +77,14 @@ export const allowWrites: WriteAccess = { require: async () => Result.ok() };
 export const denyWrites: WriteAccess = {
   require: async (nanobookId) => Result.fail(new WriteAccessDeniedError(nanobookId)),
 };
+
+const documentPolicy = (effect: "allow" | "deny"): Policy => ({
+  appliesTo: ["document", "nanobook"],
+  evaluate: async () => (effect === "allow" ? { effect: "allow" } : { effect: "deny", reason: "forbidden" }),
+});
+
+/** Autorizador real que concede todo acceso. */
+export const allowAllAuthorizer = (): Authorizer => createAuthorizer([documentPolicy("allow")]);
+
+/** Autorizador real que deniega todo acceso con `deny(forbidden)`. */
+export const denyAllAuthorizer = (): Authorizer => createAuthorizer([documentPolicy("deny")]);

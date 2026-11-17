@@ -13,7 +13,7 @@ import {
   type DocumentRepositoryError,
 } from "../../domain/errors";
 import type { GetDocument } from "../GetDocument";
-import { securedDocuments } from "./AuthorizeDocumentAccess";
+import { securedDocuments } from "./documentResource";
 
 export interface UnlockDocumentInput {
   nanobookId: string;

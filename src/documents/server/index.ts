@@ -1,7 +1,8 @@
 import { BETTER_AUTH_SECRET, GITHUB_TOKEN } from "astro:env/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
-import { AuthorizeDocumentAccess } from "./application/access/AuthorizeDocumentAccess";
+import type { Authorizer, Policy } from "../../authorization/server";
+import { DocumentPasswordPolicy } from "./application/access/DocumentPasswordPolicy";
 import { ClearDocumentPassword } from "./application/access/ClearDocumentPassword";
 import { SetDocumentPassword } from "./application/access/SetDocumentPassword";
 import { UnlockDocument } from "./application/access/UnlockDocument";
@@ -68,7 +69,7 @@ export class DocumentModule {
     public readonly unlockDocumentController: UnlockDocumentController,
   ) {}
 
-  static async create(eventBus: EventBus, writeAccess: WriteAccess) {
+  static async create(eventBus: EventBus, writeAccess: WriteAccess, authorizer: Authorizer, policies: Policy[]) {
     // Persistencia y resolución de referencias entre documentos.
     const contentRepository = new DrizzleContentRepository(db, new UnifiedDocumentParser());
     const referenceResolvers: ReferenceResolver[] = [new InternalReferenceResolver(contentRepository), new LocalFileReferenceResolver()];
@@ -94,7 +95,7 @@ export class DocumentModule {
     const grantCodec = new HmacAccessGrantCodec(BETTER_AUTH_SECRET ?? "nanobook-development-secret");
     const hasher = new ScryptPasswordHasher();
     const unlockLimiter = new DrizzleUnlockAttemptLimiter(db, DEFAULT_ACCESS_GRANT_POLICY);
-    const authorizeDocumentAccess = new AuthorizeDocumentAccess(accessRepository, grantCodec);
+    policies.push(new DocumentPasswordPolicy(accessRepository, grantCodec));
     const unlockDocument = new UnlockDocument(
       getDocument,
       accessRepository,
@@ -103,8 +104,8 @@ export class DocumentModule {
       grantCodec,
       DEFAULT_ACCESS_GRANT_POLICY,
     );
-    const readDocument = new ReadDocument(getDocument, authorizeDocumentAccess, writeAccess);
-    const listReadableDocuments = new ListReadableDocuments(contentRepository, proxyParser, writeAccess);
+    const readDocument = new ReadDocument(getDocument, authorizer);
+    const listReadableDocuments = new ListReadableDocuments(contentRepository, proxyParser, authorizer);
 
     return new DocumentModule(
       createDocument,
