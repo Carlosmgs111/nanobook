@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Added:** módulo `authorization` (`src/authorization/server`) con el contrato de acceso (`Subject`, `Resource`, `Decision`, `Policy`), el motor `createAuthorizer` y la traducción `accessErrorResponse`. Combina políticas registradas por cada módulo y falla cerrado: concede solo con un `allow` explícito y sin `deny` ni `challenge`, y un fallo técnico nunca concede. Todavía no lo usa ningún módulo.
+
 - **Changed:** se redujo el módulo `documents` por flujos (escritura, lectura, acceso, navegador), sin cambiar la protección:
   - Desaparecen `DocumentAccessPolicy`, `CompositeReferenceResolver`, los DTO REST de re-export y el código muerto.
   - Los controllers de mutación comparten `documentMutationRoute` y los casos de uso publican eventos con `publishAll`.
