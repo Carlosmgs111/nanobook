@@ -62,7 +62,7 @@ export class NanobookModule {
     const requireNanobookAccess = new RequireNanobookAccess(repository, authorizeNanobook);
     const documentModule = await DocumentModule.create(
       eventBus,
-      new NanobookWriteAccess(requireNanobookAccess),
+      new NanobookWriteAccess(authorizer),
     );
     const createNanobook = new CreateNanobook(repository, documentModule, readCache);
     const updateNanobook = new UpdateNanobook(repository, readCache, authorizer);

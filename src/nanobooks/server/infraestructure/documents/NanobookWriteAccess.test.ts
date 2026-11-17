@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { createAuthorizer } from "../../../../authorization/server";
 import { DocumentRepositoryError, WriteAccessDeniedError } from "../../../../documents/server";
 import { Result } from "../../../../shared/domain/Result";
-import { NanobookAccessDeniedError } from "../../application/AuthorizeNanobook";
-import { NanobookNotFoundError } from "../../application/errors";
-import type { NanobookAccessRequirement } from "../../application/RequireNanobookAccess";
+import { NanobookAccessPolicy } from "../../application/NanobookAccessPolicy";
+import { Nanobook } from "../../domain/Nanobook";
+import { NanobookRepositoryError } from "../../domain/errors";
+import type { NanobookRepository } from "../../domain/ports/NanobookRepository";
+import { InMemoryNanobookRepository } from "../repository/InMemoryNanobookRepository";
 import { NanobookWriteAccess } from "./NanobookWriteAccess";
 
 vi.mock("../../../../shared/infrastructure/database/drizzleDatabase", () => ({ db: {} }));
@@ -16,41 +19,50 @@ vi.mock("astro:env/server", () => ({
   REDIS_URL: undefined,
 }));
 
-function adapter(result: unknown) {
-  const execute = vi.fn().mockResolvedValue(result);
-  return { writeAccess: new NanobookWriteAccess({ execute } as unknown as NanobookAccessRequirement), execute };
+function adapter(repository: NanobookRepository) {
+  return new NanobookWriteAccess(createAuthorizer([new NanobookAccessPolicy(repository)]));
+}
+
+function book(id: string, visibility: "public" | "private") {
+  return Nanobook.create({ id, ownerId: "owner", slug: id, name: id, visibility }).getValue();
 }
 
 describe("NanobookWriteAccess", () => {
-  it("allows when the nanobook grants write permission", async () => {
-    const { writeAccess, execute } = adapter(Result.ok({}));
+  const repository = new InMemoryNanobookRepository([
+    book("book-a", "public"),
+    book("book-b", "private"),
+  ]);
 
-    const result = await writeAccess.require("book-a", "user-1");
+  it("allows the owner", async () => {
+    const result = await adapter(repository).require("book-a", "owner");
 
     expect(result.isSuccess).toBe(true);
-    expect(execute).toHaveBeenCalledWith("user-1", "book-a", "write");
   });
 
-  it("denies when the nanobook rejects the actor", async () => {
-    const { writeAccess } = adapter(Result.fail(new NanobookAccessDeniedError("book-a", "write")));
+  it("denies a stranger on a public nanobook", async () => {
+    const result = await adapter(repository).require("book-a", "stranger");
 
-    const result = await writeAccess.require("book-a", "user-1");
+    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
+  });
+
+  it("denies a stranger on a private nanobook", async () => {
+    const result = await adapter(repository).require("book-b", "stranger");
 
     expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
   });
 
   it("reports a missing nanobook as denied", async () => {
-    const { writeAccess } = adapter(Result.fail(new NanobookNotFoundError("book-a")));
-
-    const result = await writeAccess.require("book-a", "user-1");
+    const result = await adapter(repository).require("missing", "owner");
 
     expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
   });
 
   it("reports repository failures as DocumentRepositoryError", async () => {
-    const { writeAccess } = adapter(Result.fail(new Error("db down")));
+    const failing = {
+      findById: async () => Result.fail(new NanobookRepositoryError("db caída")),
+    } as unknown as NanobookRepository;
 
-    const result = await writeAccess.require("book-a", "user-1");
+    const result = await adapter(failing).require("book-a", "owner");
 
     expect(result.getError()).toBeInstanceOf(DocumentRepositoryError);
   });

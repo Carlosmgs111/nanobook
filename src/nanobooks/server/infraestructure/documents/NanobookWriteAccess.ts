@@ -1,36 +1,37 @@
 import {
+  AccessCheckFailedError,
+  AccessDeniedError,
+  Subject,
+  type Authorizer,
+} from "../../../../authorization/server";
+import {
   DocumentRepositoryError,
   WriteAccessDeniedError,
   type WriteAccess,
 } from "../../../../documents/server";
 import { Result } from "../../../../shared/domain/Result";
-import { NanobookAccessDeniedError } from "../../application/AuthorizeNanobook";
-import { NanobookNotFoundError } from "../../application/errors";
-import type { NanobookAccessRequirement } from "../../application/RequireNanobookAccess";
 
-/** Puerto de escritura de `documents` respaldado por el permiso `write` del nanobook. */
+/** Puerto de escritura de `documents` respaldado por la política de acceso de nanobooks. */
 export class NanobookWriteAccess implements WriteAccess {
-  constructor(private readonly access: NanobookAccessRequirement) {}
+  constructor(private readonly authorizer: Authorizer) {}
 
   async require(
     nanobookId: string,
-    actorId: string
+    actorId: string,
   ): Promise<Result<WriteAccessDeniedError | DocumentRepositoryError, void>> {
-    const result = await this.access.execute(actorId, nanobookId, "write");
+    const result = await this.authorizer.require({
+      subject: Subject.of(actorId),
+      action: "write",
+      resource: { type: "nanobook", id: nanobookId },
+    });
     if (result.isSuccess) return Result.ok();
 
     const error = result.getError();
-    if (
-      error instanceof NanobookAccessDeniedError ||
-      error instanceof NanobookNotFoundError
-    ) {
-      return Result.fail(new WriteAccessDeniedError(nanobookId));
-    }
+    if (error instanceof AccessDeniedError) return Result.fail(new WriteAccessDeniedError(nanobookId));
     return Result.fail(
-      new DocumentRepositoryError(
-        "No fue posible comprobar el permiso sobre el nanobook",
-        { cause: error }
-      )
+      new DocumentRepositoryError("No fue posible comprobar el permiso sobre el nanobook", {
+        cause: (error as AccessCheckFailedError).cause,
+      }),
     );
   }
 }

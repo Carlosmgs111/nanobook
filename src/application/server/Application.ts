@@ -1,5 +1,5 @@
 import { AuthServerModule } from "../../auth/server";
-import { createAuthorizer, type Policy } from "../../authorization/server";
+import { createAuthorizer, type Authorizer, type Policy } from "../../authorization/server";
 import { createMarkdownExtensions } from "../shared/createMarkdownExtensions";
 import { createMarkdownBlockAdvisor } from "./createMarkdownBlockAdvisor";
 import { ProfileModule } from "../../profiles/server";
@@ -21,6 +21,7 @@ export class Application {
     public readonly publishingModule: PublishingModule,
     public readonly themeModule: ThemeModule,
     public readonly agentModule: AgentModule,
+    public readonly authorizer: Authorizer,
   ) {}
 
   static async create(): Promise<Application> {
@@ -52,6 +53,7 @@ export class Application {
       publishingModule,
       themeModule,
       agentModule,
+      authorizer,
     );
   }
 }
