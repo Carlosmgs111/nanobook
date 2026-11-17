@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** el acceso a nanobooks pasa por completo por el módulo `authorization`: `resolveNanobookRoute`, la página de documento, las herramientas MCP, las rutas de mutación y el adaptador `NanobookWriteAccess` usan `Authorizer`. Se eliminan `AuthorizeNanobook`, `RequireNanobookAccess` y `NanobookAccessDeniedError`. Un usuario ajeno que intenta editar o mutar contenido de un nanobook privado recibe 404 en lugar de 403, igual que si no existiera. Los textos de error de las rutas de mutación cambian ("No tienes permiso sobre este recurso", "Recurso no encontrado"). `canEdit` de la página de documento consulta ahora el nanobook por render para los usuarios con sesión.
+
 - **Changed:** `nanobooks` registra su política de acceso (dueño y visibilidad) en el módulo `authorization` y `UpdateNanobook`, `DeleteNanobook` y `SetNanobookTheme` autorizan a través de `Authorizer`, antes de cargar el nanobook. Un usuario ajeno que intenta modificar un nanobook privado recibe 404 en lugar de 403, igual que si no existiera, para no revelar que existe; sobre uno público sigue recibiendo 403.
 
 - **Added:** módulo `authorization` (`src/authorization/server`) con el contrato de acceso (`Subject`, `Resource`, `Decision`, `Policy`), el motor `createAuthorizer` y la traducción `accessErrorResponse`. Combina políticas registradas por cada módulo y falla cerrado: concede solo con un `allow` explícito y sin `deny` ni `challenge`, y un fallo técnico nunca concede. Todavía no lo usa ningún módulo.
