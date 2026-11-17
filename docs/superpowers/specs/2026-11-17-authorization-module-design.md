@@ -212,6 +212,11 @@ Capa HTTP y páginas:
 
 Cada etapa deja `npm run build` y `npx vitest run` en verde. El código viejo **solo se borra en la etapa 5**, cuando ya no tiene consumidores.
 
+**Iteraciones:**
+
+- **Iteración 1 (alcance actual): solo la etapa 1.** Se crea el módulo `authorization` con su contrato, el motor, los errores, `accessErrorResponse` y los tests del motor. No se registra ninguna política ni se modifica ningún otro módulo.
+- **Iteraciones siguientes: etapas 2 a 5.** Comprenden las políticas, el cableado, la migración de consumidores y la limpieza. Cada iteración tendrá su propio plan.
+
 1. **Módulo `authorization`:** tipos, `createAuthorizer`, errores, `accessErrorResponse` y los tests del motor. No tiene consumidores todavía.
 2. **Política de `nanobooks`:**
    - Crear `NanobookAccessPolicy` y `GetNanobookById`. Registrar la política e inyectar `Authorizer`.
