@@ -1,5 +1,8 @@
 import type { Document } from "../../domain/Document";
 import type { AccessGrantCodec, DocumentAccessRepository } from "../../domain/access/ports";
+import { securedDocuments } from "./documentResource";
+
+export { securedDocuments };
 
 export type AccessDecision = { kind: "allow" } | { kind: "challenge"; method: "password" };
 
@@ -9,20 +12,6 @@ export interface AuthorizeDocumentAccessInput {
   canWrite: boolean;
   /** Token que el lector presentó para un documento, si lo hay. */
   grantFor: (documentId: string) => string | undefined;
-}
-
-/** Los eslabones protegidos de una cadena, sin repetir. */
-export function securedDocuments(documents: Array<Document | null | undefined>): Document[] {
-  const seen = new Set<string>();
-  const secured: Document[] = [];
-  for (const document of documents) {
-    if (!document || document.getMetadata().secured !== true) continue;
-    const id = document.getDocumentId().getValue();
-    if (seen.has(id)) continue;
-    seen.add(id);
-    secured.push(document);
-  }
-  return secured;
 }
 
 export class AuthorizeDocumentAccess {
