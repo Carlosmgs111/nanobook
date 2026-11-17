@@ -1,8 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { Result } from "../../shared/domain/Result";
+import { createAuthorizer } from "../../authorization/server";
+import { NanobookAccessPolicy } from "../../nanobooks/server/application/NanobookAccessPolicy";
 import { Nanobook } from "../../nanobooks/server/domain/Nanobook";
+import { InMemoryNanobookRepository } from "../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { resolveNanobookRoute } from "./resolveNanobookRoute";
+
+function authorizerFor(nanobook: Nanobook) {
+  return createAuthorizer([new NanobookAccessPolicy(new InMemoryNanobookRepository([nanobook]))]);
+}
 
 describe("resolveNanobookRoute", () => {
   const route = async (
@@ -19,6 +26,7 @@ describe("resolveNanobookRoute", () => {
       authServerModule: {
         getSession: vi.fn().mockResolvedValue(session),
       },
+      authorizer: authorizerFor(nanobook),
     } as never;
 
     return resolveNanobookRoute(
@@ -62,6 +70,7 @@ describe("resolveNanobookRoute", () => {
             }),
         },
       },
+      authorizer: authorizerFor(nanobook),
       authServerModule: {
         getSession: () =>
           new Promise<{ id: string }>((resolve) => {
@@ -109,6 +118,7 @@ describe("resolveNanobookRoute", () => {
       authServerModule: {
         getSession: async () => ({ id: "owner-1" }),
       },
+      authorizer: authorizerFor(nanobook),
     } as never;
 
     await resolveNanobookRoute(
@@ -153,6 +163,7 @@ describe("resolveNanobookRoute", () => {
         getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(nanobook)) },
       },
       authServerModule: { getSession },
+      authorizer: authorizerFor(nanobook),
     } as never;
 
     const result = await resolveNanobookRoute(
@@ -193,5 +204,44 @@ describe("resolveNanobookRoute", () => {
 
     expect(result).toBeInstanceOf(Response);
     expect((result as Response).status).toBe(401);
+  });
+
+  it("allows the owner to write", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+    }).getValue();
+    const user = { id: "owner-1", name: "Ada", email: "ada@example.com" };
+
+    expect(await route(nanobook, user, "write")).toEqual({ nanobook, user });
+  });
+
+  it("answers 403 to a non-owner writing on a public nanobook", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+      visibility: "public",
+    }).getValue();
+
+    const result = await route(nanobook, { id: "visitor" }, "write");
+
+    expect((result as Response).status).toBe(403);
+  });
+
+  it("answers 404 to a non-owner writing on a private nanobook", async () => {
+    const nanobook = Nanobook.create({
+      id: "book-1",
+      ownerId: "owner-1",
+      slug: "manual",
+      name: "Manual",
+    }).getValue();
+
+    const result = await route(nanobook, { id: "visitor" }, "write");
+
+    expect((result as Response).status).toBe(404);
   });
 });

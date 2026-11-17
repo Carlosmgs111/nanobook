@@ -31,7 +31,8 @@ describe("navigation shell", () => {
     const editor = read("src/documents/browser/ui/pages/EditPage.astro");
     const action = read("src/documents/browser/ui/components/DocumentActionLink.astro");
 
-    expect(page).toContain("new AuthorizeNanobook().canWrite(nanobook, user?.id)");
+    expect(page).toContain("app.authorizer.authorize");
+    expect(page).toContain('action: "write"');
     expect(page).toContain("session={user}");
     expect(page).toContain("canEdit || deferOwnerActions");
     expect(page).toContain("deferSessionUi={deferOwnerActions}");

@@ -1,4 +1,4 @@
-import { AuthorizeNanobook } from "../../nanobooks/server/application/AuthorizeNanobook";
+import { Subject } from "../../authorization/server";
 import type { Application } from "./Application";
 import type { Nanobook } from "../../nanobooks/server/domain/Nanobook";
 import type { AuthenticatedUser } from "../../auth/shared/AuthSession";
@@ -38,18 +38,19 @@ export async function resolveNanobookRoute(
     app.authServerModule.getSession(request, responseHeaders),
   );
 
-  const authorization = new AuthorizeNanobook();
-  if (permission === "read" && authorization.canRead(nanobook, user?.id)) {
-    return { nanobook, user };
-  }
-  if (permission === "write" && authorization.canWrite(nanobook, user?.id)) {
-    return { nanobook, user };
-  }
+  const decision = await app.authorizer.authorize({
+    subject: Subject.of(user?.id),
+    action: permission,
+    resource: { type: "nanobook", id: nanobook.getId() },
+  });
+  if (decision.effect === "allow") return { nanobook, user };
 
-  return new Response(
-    permission === "read" ? "Nanobook not found" : "Autenticación requerida",
-    { status: permission === "read" ? 404 : user ? 403 : 401 },
-  );
+  const status =
+    permission === "read" || decision.effect !== "deny"
+      ? 404
+      : { unauthenticated: 401, forbidden: 403, "not-found": 404 }[decision.reason];
+  const body = { 401: "Autenticación requerida", 403: "No tienes permiso de edición sobre el nanobook", 404: "Nanobook not found" }[status];
+  return new Response(body, { status });
 }
 
 async function measure<T>(

@@ -2,7 +2,7 @@
 import IndexList from "../../../../navigation/browser/ui/components/IndexList/index.astro";
 import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
-import { AuthorizeNanobook } from "../../../../nanobooks/server";
+import { Subject } from "../../../../authorization/server";
 import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import type { Document } from "../../../server";
 import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
@@ -37,7 +37,12 @@ interface Props {
 const { nanobook, user } = Astro.props;
 const { publishingModule, navigationModule } = app;
 const nanobookId = nanobook.getId();
-const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
+const canEdit =
+  (await app.authorizer.authorize({
+    subject: Subject.of(user?.id),
+    action: "write",
+    resource: { type: "nanobook", id: nanobookId },
+  })).effect === "allow";
 const deferOwnerActions = nanobook.getVisibility() === "public" && !canEdit;
 const navigationContext = {
   section: "read" as const,
