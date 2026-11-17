@@ -17,9 +17,9 @@ const forbidden = (): ResolvedDecision => ({ effect: "deny", reason: "forbidden"
 /** Motor de decisión. Conceder exige al menos un `allow` explícito y ningún `deny` ni `challenge`. */
 export function createAuthorizer(policies: readonly Policy[]): Authorizer {
   const authorize: Authorize = async (request) => {
-    const applicable = policies.filter((policy) => policy.appliesTo.includes(request.resource.type));
     let decisions: Decision[];
     try {
+      const applicable = policies.filter((policy) => policy.appliesTo.includes(request.resource.type));
       decisions = await Promise.all(applicable.map((policy) => policy.evaluate(request, authorize)));
     } catch (cause) {
       throw cause instanceof AccessCheckFailedError ? cause : new AccessCheckFailedError(cause);
@@ -51,7 +51,9 @@ function combine(decisions: readonly Decision[]): ResolvedDecision {
         // Un motivo desconocido se normaliza; nunca llega al borde un `reason` sin traducción.
         return DENY_REASONS.includes(decision.reason) ? { effect: "deny", reason: decision.reason } : forbidden();
       case "challenge":
-        challenge ??= { effect: "challenge", kind: decision.kind };
+        // Solo `password` es un reto válido; cualquier otro kind se trata como deny.
+        if (decision.kind !== "password") return forbidden();
+        challenge ??= { effect: "challenge", kind: "password" };
         break;
       case "allow":
         allowed = true;

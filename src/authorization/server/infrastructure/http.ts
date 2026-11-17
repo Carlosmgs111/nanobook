@@ -21,6 +21,6 @@ export function accessErrorResponse(error: AccessDeniedError | AccessCheckFailed
     );
   }
 
-  const { status, error: message } = DENIED[decision.reason];
+  const { status, error: message } = DENIED[decision.reason] ?? DENIED.forbidden;
   return Response.json({ error: message }, { status });
 }

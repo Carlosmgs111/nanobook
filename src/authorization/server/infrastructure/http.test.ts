@@ -16,6 +16,12 @@ describe("accessErrorResponse", () => {
     expect(typeof (await response.json()).error).toBe("string");
   });
 
+  it("traduce un motivo de deny inválido a 403", () => {
+    const response = accessErrorResponse(new AccessDeniedError({ effect: "deny", reason: "nope" } as never));
+
+    expect(response.status).toBe(403);
+  });
+
   it("traduce challenge a 401 indicando el tipo de reto", async () => {
     const response = accessErrorResponse(new AccessDeniedError({ effect: "challenge", kind: "password" }));
 

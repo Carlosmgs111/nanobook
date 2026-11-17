@@ -93,6 +93,32 @@ describe("createAuthorizer · authorize", () => {
     );
   });
 
+  it("convierte una política mal formada (appliesTo inválido) en AccessCheckFailedError", async () => {
+    const malformed = { appliesTo: undefined as never, evaluate: async () => allow } as Policy;
+
+    await expect(createAuthorizer([malformed]).authorize(request())).rejects.toBeInstanceOf(
+      AccessCheckFailedError,
+    );
+  });
+
+  it("no envuelve dos veces un AccessCheckFailedError lanzado por una política", async () => {
+    const original = new AccessCheckFailedError(new Error("x"));
+    const failing = policy(async () => {
+      throw original;
+    });
+
+    const error = await createAuthorizer([failing]).authorize(request()).catch((e: unknown) => e);
+    expect(error).toBe(original);
+  });
+
+  it("trata un challenge con kind desconocido como deny(forbidden)", async () => {
+    const badChallenge = policy(async () => ({ effect: "challenge", kind: "otp" }) as unknown as Decision);
+
+    expect(await createAuthorizer([policy(allow), badChallenge]).authorize(request())).toEqual(
+      deny("forbidden"),
+    );
+  });
+
   it("permite a una política consultar otra acción sobre el mismo recurso", async () => {
     const writers: Policy = {
       appliesTo: ["thing"],
