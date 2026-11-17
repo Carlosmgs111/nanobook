@@ -7,7 +7,6 @@ import {
   DocumentRevisionConflictError,
   ParentNotFoundError,
 } from "../../../../documents/server/domain/errors";
-import { NanobookAccessDeniedError } from "../../../../nanobooks/server/application/AuthorizeNanobook";
 import { NanobookNotFoundError } from "../../../../nanobooks/server/application/errors";
 import { AgentScopeDeniedError } from "../../application/errors";
 import type { MarkdownBlockIssue } from "../../application/ports/MarkdownBlockAdvisor";
@@ -83,7 +82,6 @@ function toMcpError(error: unknown): McpError {
   }
   if (
     error instanceof AgentScopeDeniedError ||
-    error instanceof NanobookAccessDeniedError ||
     error instanceof DocumentAccessDeniedError
   ) {
     return { code: 403, error: error.message };

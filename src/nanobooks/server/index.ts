@@ -12,8 +12,6 @@ import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
 import { GetNanobookById } from "./application/GetNanobookById";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
-import { RequireNanobookAccess } from "./application/RequireNanobookAccess";
-import { AuthorizeNanobook } from "./application/AuthorizeNanobook";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 import { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
 import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
@@ -26,13 +24,7 @@ export type {
   NanobookSetupStatus,
   NanobookVisibility,
 } from "./domain/types";
-export {
-  AuthorizeNanobook,
-  NanobookAccessDeniedError,
-} from "./application/AuthorizeNanobook";
-export type { NanobookPermission } from "./application/AuthorizeNanobook";
 export { NanobookNotFoundError } from "./application/errors";
-export { RequireNanobookAccess } from "./application/RequireNanobookAccess";
 
 export class NanobookModule {
   private constructor(
@@ -46,7 +38,6 @@ export class NanobookModule {
     public readonly lifecycleController: NanobookLifecycleController,
     public readonly listPublicNanobooks: ListPublicNanobooks,
     public readonly setNanobookTheme: SetNanobookTheme,
-    public readonly requireNanobookAccess: RequireNanobookAccess,
     public readonly getNanobookById: GetNanobookById
   ) {}
 
@@ -60,8 +51,6 @@ export class NanobookModule {
     const readCache = createNanobookReadCache();
     const listNanobooks = new ListNanobooks(repository);
     const getNanobookBySlug = new GetNanobookBySlug(repository, readCache);
-    const authorizeNanobook = new AuthorizeNanobook();
-    const requireNanobookAccess = new RequireNanobookAccess(repository, authorizeNanobook);
     const documentModule = await DocumentModule.create(
       eventBus,
       new NanobookWriteAccess(authorizer),
@@ -81,7 +70,6 @@ export class NanobookModule {
       new NanobookLifecycleController(updateNanobook, deleteNanobook),
       new ListPublicNanobooks(repository),
       new SetNanobookTheme(repository, readCache, authorizer),
-      requireNanobookAccess,
       new GetNanobookById(repository)
     );
   }

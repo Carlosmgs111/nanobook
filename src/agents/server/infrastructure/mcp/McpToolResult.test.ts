@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { Result } from "../../../../shared/domain/Result";
 import { DocumentNotFoundError, DocumentRevisionConflictError } from "../../../../documents/server/domain/errors";
 import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
-import { NanobookAccessDeniedError } from "../../../../nanobooks/server/application/AuthorizeNanobook";
 import { formatBlockIssues, joinNotes, toMcpTextResult, toMcpToolResult } from "./McpToolResult";
 
 describe("toMcpToolResult", () => {
@@ -13,7 +12,7 @@ describe("toMcpToolResult", () => {
   });
 
   it.each([
-    [new NanobookAccessDeniedError("book-1", "write"), 403],
+    [new AccessDeniedError({ effect: "deny", reason: "forbidden" }), 403],
     [new DocumentNotFoundError("doc-1"), 404],
     [new DocumentRevisionConflictError("doc-1", 2, 3), 409],
   ])("maps expected domain failures to a stable code", (error, code) => {

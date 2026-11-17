@@ -80,7 +80,6 @@ function failure(error: Error) {
     return accessErrorResponse(error);
   }
   const statuses: Record<string, number> = {
-    NanobookAccessDeniedError: 403,
     NanobookNotFoundError: 404,
     NanobookSlugAlreadyTakenError: 409,
     InvalidNanobookError: 400,
