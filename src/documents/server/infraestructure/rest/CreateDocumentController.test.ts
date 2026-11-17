@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import { Document } from "../../domain/Document";
-import { DocumentAlreadyExistsError, ParentNotFoundError, WriteAccessDeniedError } from "../../domain/errors";
+import { DocumentAlreadyExistsError, ParentNotFoundError } from "../../domain/errors";
 import { CreateDocumentController } from "./CreateDocumentController";
 
 const created = Document.create("intro", {
@@ -45,10 +46,22 @@ describe("CreateDocumentController", () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
+  it("answers 500 without exposing the cause when the access check fails", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const response = await call(vi.fn().mockResolvedValue(Result.fail(new AccessCheckFailedError(new Error("secret db detail")))));
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(await response.json())).not.toContain("secret db detail");
+    spy.mockRestore();
+  });
+
   it("maps domain errors to HTTP statuses", async () => {
     const statusFor = async (error: Error) => (await call(vi.fn().mockResolvedValue(Result.fail(error)))).status;
 
-    expect(await statusFor(new WriteAccessDeniedError("book-a"))).toBe(403);
+    expect(await statusFor(new AccessDeniedError({ effect: "deny", reason: "forbidden" }))).toBe(403);
+    expect(await statusFor(new AccessDeniedError({ effect: "deny", reason: "not-found" }))).toBe(404);
+    expect(await statusFor(new AccessDeniedError({ effect: "deny", reason: "unauthenticated" }))).toBe(401);
     expect(await statusFor(new DocumentAlreadyExistsError("intro"))).toBe(409);
     expect(await statusFor(new ParentNotFoundError("guide"))).toBe(400);
   });

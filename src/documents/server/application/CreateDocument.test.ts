@@ -5,10 +5,10 @@ import {
   DocumentAlreadyExistsError,
   InvalidDocumentIdError,
   ParentNotFoundError,
-  WriteAccessDeniedError,
 } from "../domain/errors";
+import { AccessCheckFailedError, AccessDeniedError } from "../../../authorization/server";
 import { CreateDocument } from "./CreateDocument";
-import { allowWrites, buildDocumentInput, createDocument, createEventBus, createRepository, denyWrites } from "./test/factories";
+import { allowAllAuthorizer, buildDocumentInput, createDocument, createEventBus, createRepository, denyAllAuthorizer, failingAuthorizer } from "./test/factories";
 
 const published = (bus: ReturnType<typeof createEventBus>) =>
   (bus.publish as Mock).mock.calls.map(([event]) => [event.name, event.documentId, event.nanobookId]);
@@ -18,7 +18,7 @@ describe("CreateDocument", () => {
     const repository = createRepository();
     const bus = createEventBus();
 
-    const result = await new CreateDocument(repository, bus, allowWrites).execute(
+    const result = await new CreateDocument(repository, bus, allowAllAuthorizer()).execute(
       "book-a",
       buildDocumentInput({ id: "doc-1", path: "index" }),
       "author-1",
@@ -37,7 +37,7 @@ describe("CreateDocument", () => {
     });
     const bus = createEventBus();
 
-    await new CreateDocument(repository, bus, allowWrites).execute(
+    await new CreateDocument(repository, bus, allowAllAuthorizer()).execute(
       "book-a",
       buildDocumentInput({ id: "child", path: "intro" }),
       "author-1",
@@ -53,21 +53,51 @@ describe("CreateDocument", () => {
     const repository = createRepository();
     const bus = createEventBus();
 
-    const result = await new CreateDocument(repository, bus, denyWrites).execute(
+    const result = await new CreateDocument(repository, bus, denyAllAuthorizer()).execute(
       "book-a",
       buildDocumentInput({ path: "index" }),
       "intruder",
     );
 
-    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
     expect(repository.getByPath).not.toHaveBeenCalled();
     expect(repository.create).not.toHaveBeenCalled();
     expect(bus.publish).not.toHaveBeenCalled();
   });
 
+  it("reports a technical authorizer failure without side effects", async () => {
+    const repository = createRepository();
+    const bus = createEventBus();
+
+    const result = await new CreateDocument(repository, bus, failingAuthorizer()).execute(
+      "book-a",
+      buildDocumentInput({ path: "index" }),
+      "writer",
+    );
+
+    expect(result.getError()).toBeInstanceOf(AccessCheckFailedError);
+    expect(repository.create).not.toHaveBeenCalled();
+    expect(bus.publish).not.toHaveBeenCalled();
+  });
+
+  it("requires write on the document resource of the nanobook for the actor", async () => {
+    const authorizer = allowAllAuthorizer();
+    const require = vi.spyOn(authorizer, "require");
+
+    await new CreateDocument(createRepository(), createEventBus(), authorizer).execute(
+      "book-a",
+      buildDocumentInput({ path: "guide/intro" }),
+      "author-1",
+    );
+
+    const [request] = require.mock.calls[0];
+    expect(request).toMatchObject({ action: "write", resource: { type: "document", id: "guide/intro", nanobookId: "book-a" } });
+    expect(await request.subject.userId()).toBe("author-1");
+  });
+
   it("rejects an invalid path, a duplicate and a missing parent without persisting", async () => {
     const repository = createRepository();
-    const useCase = new CreateDocument(repository, createEventBus(), allowWrites);
+    const useCase = new CreateDocument(repository, createEventBus(), allowAllAuthorizer());
 
     expect((await useCase.execute("book-a", buildDocumentInput({ path: "" }), "a")).getError())
       .toBeInstanceOf(InvalidDocumentIdError);
@@ -85,7 +115,7 @@ describe("CreateDocument", () => {
   it("ignores audit dates sent by the client", async () => {
     const forged = { ...buildDocumentInput({ path: "index" }), createdAt: new Date("2000-01-01") } as never;
 
-    const result = await new CreateDocument(createRepository(), createEventBus(), allowWrites).execute("book-a", forged, "a");
+    const result = await new CreateDocument(createRepository(), createEventBus(), allowAllAuthorizer()).execute("book-a", forged, "a");
 
     expect(result.getValue().getMetadata().createdAt.getFullYear()).toBeGreaterThan(2020);
   });
@@ -94,7 +124,7 @@ describe("CreateDocument", () => {
     const bus = createEventBus();
     bus.publish = vi.fn().mockResolvedValue(Result.fail(new EventBusError("boom")));
 
-    const result = await new CreateDocument(createRepository(), bus, allowWrites).execute(
+    const result = await new CreateDocument(createRepository(), bus, allowAllAuthorizer()).execute(
       "book-a",
       buildDocumentInput({ path: "index" }),
       "a",

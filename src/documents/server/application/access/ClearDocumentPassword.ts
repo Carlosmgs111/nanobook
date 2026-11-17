@@ -1,9 +1,9 @@
+import type { Authorizer } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import type { EventBus } from "../../../../shared/domain/bus/EventBus";
 import type { DocumentAccessRepository } from "../../domain/access/ports";
 import { DocumentUpdated } from "../../domain/events/DocumentUpdated";
 import type { ContentRepository } from "../../domain/ports/ContentRepository";
-import type { WriteAccess } from "../../domain/ports/WriteAccess";
 import { loadWritableDocument } from "./loadWritableDocument";
 import type { DocumentAccessAdminError } from "./SetDocumentPassword";
 
@@ -12,7 +12,7 @@ export class ClearDocumentPassword {
     private readonly contentRepository: ContentRepository,
     private readonly accessRepository: DocumentAccessRepository,
     private readonly eventBus: EventBus,
-    private readonly writeAccess: WriteAccess,
+    private readonly authorizer: Authorizer,
     private readonly clock: () => Date = () => new Date(),
   ) {}
 
@@ -21,7 +21,7 @@ export class ClearDocumentPassword {
     documentPath: string,
     actorId: string,
   ): Promise<Result<DocumentAccessAdminError, void>> {
-    const loaded = await loadWritableDocument(this.writeAccess, this.contentRepository, nanobookId, documentPath, actorId);
+    const loaded = await loadWritableDocument(this.authorizer, this.contentRepository, nanobookId, documentPath, actorId);
     if (!loaded.isSuccess) return Result.fail(loaded.getError());
     const document = loaded.getValue();
     if (document.getMetadata().secured !== true) return Result.ok();

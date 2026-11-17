@@ -1,7 +1,6 @@
 import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import {
-  DocumentAccessDeniedError,
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
   DocumentRevisionConflictError,
@@ -80,10 +79,7 @@ function toMcpError(error: unknown): McpError {
   if (error instanceof AccessCheckFailedError) {
     return { code: 500, error: "La operación no pudo completarse" };
   }
-  if (
-    error instanceof AgentScopeDeniedError ||
-    error instanceof DocumentAccessDeniedError
-  ) {
+  if (error instanceof AgentScopeDeniedError) {
     return { code: 403, error: error.message };
   }
   if (

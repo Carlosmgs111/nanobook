@@ -1,8 +1,13 @@
+import {
+  Subject,
+  type AccessCheckFailedError,
+  type AccessDeniedError,
+  type Authorizer,
+} from "../../../authorization/server";
 import { Result } from "../../../shared/domain/Result";
 import type { EventBus } from "../../../shared/domain/bus/EventBus";
 import type { EventBusError } from "../../../shared/domain/bus/errors";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
-import type { WriteAccess } from "../domain/ports/WriteAccess";
 import type { DocumentInput } from "./dto/DocumentInput";
 import { DocumentUpdated } from "../domain/events/DocumentUpdated";
 import {
@@ -17,6 +22,8 @@ import { Document } from "../domain/Document";
 import { publishAll } from "./publishAll";
 
 export type UpdateDocumentError =
+  | AccessDeniedError
+  | AccessCheckFailedError
   | DocumentServiceError
   | DocumentRepositoryError
   | DocumentParseError
@@ -26,7 +33,7 @@ export class UpdateDocument {
   constructor(
     private contentRepository: ContentRepository,
     private eventBus: EventBus,
-    private writeAccess: WriteAccess,
+    private authorizer: Authorizer,
   ) {}
 
   async execute(
@@ -34,7 +41,11 @@ export class UpdateDocument {
     input: DocumentInput,
     actorId: string,
   ): Promise<Result<UpdateDocumentError, Document>> {
-    const writable = await this.writeAccess.require(nanobookId, actorId);
+    const writable = await this.authorizer.require({
+      subject: Subject.of(actorId),
+      action: "write",
+      resource: { type: "document", id: input.id ?? "", nanobookId },
+    });
     if (!writable.isSuccess) return Result.fail(writable.getError());
 
     const documentId = input.id;

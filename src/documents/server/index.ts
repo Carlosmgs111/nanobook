@@ -19,7 +19,6 @@ import { DEFAULT_ACCESS_GRANT_POLICY } from "./domain/access/AccessGrantPolicy";
 import { DocumentCreated } from "./domain/events/DocumentCreated";
 import { DocumentDeleted } from "./domain/events/DocumentDeleted";
 import { DocumentUpdated } from "./domain/events/DocumentUpdated";
-import type { WriteAccess } from "./domain/ports/WriteAccess";
 import type { ReferenceResolver } from "./domain/reference/types";
 import { DrizzleDocumentAccessRepository } from "./infraestructure/access/DrizzleDocumentAccessRepository";
 import { DrizzleUnlockAttemptLimiter } from "./infraestructure/access/DrizzleUnlockAttemptLimiter";
@@ -48,8 +47,7 @@ export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentDeleted } from "./domain/events/DocumentDeleted";
 export { grantsFromCookieHeader } from "./infraestructure/rest/GrantCookie";
-export type { WriteAccess } from "./domain/ports/WriteAccess";
-export { WriteAccessDeniedError, DocumentRepositoryError } from "./domain/errors";
+export { DocumentRepositoryError } from "./domain/errors";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
 
@@ -69,7 +67,7 @@ export class DocumentModule {
     public readonly unlockDocumentController: UnlockDocumentController,
   ) {}
 
-  static async create(eventBus: EventBus, writeAccess: WriteAccess, authorizer: Authorizer, policies: Policy[]) {
+  static async create(eventBus: EventBus, authorizer: Authorizer, policies: Policy[]) {
     // Persistencia y resolución de referencias entre documentos.
     const contentRepository = new DrizzleContentRepository(db, new UnifiedDocumentParser());
     const referenceResolvers: ReferenceResolver[] = [new InternalReferenceResolver(contentRepository), new LocalFileReferenceResolver()];
@@ -77,9 +75,9 @@ export class DocumentModule {
     const proxyParser = new ProxyParser(referenceResolvers);
 
     // Escritura: cada caso de uso exige permiso de escritura sobre el nanobook.
-    const createDocument = new CreateDocument(contentRepository, eventBus, writeAccess);
-    const updateDocument = new UpdateDocument(contentRepository, eventBus, writeAccess);
-    const deleteDocument = new DeleteDocument(contentRepository, eventBus, writeAccess);
+    const createDocument = new CreateDocument(contentRepository, eventBus, authorizer);
+    const updateDocument = new UpdateDocument(contentRepository, eventBus, authorizer);
+    const deleteDocument = new DeleteDocument(contentRepository, eventBus, authorizer);
 
     // Lectura sin protección, con la caché de fuentes invalidada por los eventos de documento.
     const sourceCache = createDocumentSourceCache();
@@ -118,8 +116,8 @@ export class DocumentModule {
       new UpdateDocumentController(updateDocument),
       new DeleteDocumentController(deleteDocument),
       new DocumentAccessAdminController(
-        new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, writeAccess),
-        new ClearDocumentPassword(contentRepository, accessRepository, eventBus, writeAccess),
+        new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, authorizer),
+        new ClearDocumentPassword(contentRepository, accessRepository, eventBus, authorizer),
       ),
       new UnlockDocumentController(unlockDocument),
     );

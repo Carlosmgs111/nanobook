@@ -1,3 +1,9 @@
+import {
+  Subject,
+  type AccessCheckFailedError,
+  type AccessDeniedError,
+  type Authorizer,
+} from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import type { Document } from "../../domain/Document";
 import { DocumentPath } from "../../domain/DocumentPath";
@@ -5,13 +11,12 @@ import {
   DocumentNotFoundError,
   type DocumentRepositoryError,
   type InvalidDocumentError,
-  type WriteAccessDeniedError,
 } from "../../domain/errors";
 import type { ContentRepository, ContentRepositoryListError } from "../../domain/ports/ContentRepository";
-import type { WriteAccess } from "../../domain/ports/WriteAccess";
 
 export type LoadWritableDocumentError =
-  | WriteAccessDeniedError
+  | AccessDeniedError
+  | AccessCheckFailedError
   | DocumentRepositoryError
   | ContentRepositoryListError
   | DocumentNotFoundError
@@ -19,13 +24,17 @@ export type LoadWritableDocumentError =
 
 /** Carga un documento por ruta pública exigiendo permiso de escritura sobre su nanobook. */
 export async function loadWritableDocument(
-  writeAccess: WriteAccess,
+  authorizer: Authorizer,
   contentRepository: ContentRepository,
   nanobookId: string,
   documentPath: string,
   actorId: string,
 ): Promise<Result<LoadWritableDocumentError, Document>> {
-  const writable = await writeAccess.require(nanobookId, actorId);
+  const writable = await authorizer.require({
+    subject: Subject.of(actorId),
+    action: "write",
+    resource: { type: "document", id: documentPath, nanobookId },
+  });
   if (!writable.isSuccess) return Result.fail(writable.getError());
 
   const pathResult = DocumentPath.create(documentPath);

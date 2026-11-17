@@ -1,19 +1,25 @@
 import type { APIRoute } from "astro";
 
+import {
+  AccessCheckFailedError,
+  AccessDeniedError,
+  accessErrorResponse,
+} from "../../../../authorization/server";
 import type { ClearDocumentPassword } from "../../application/access/ClearDocumentPassword";
 import type { DocumentAccessAdminError, SetDocumentPassword } from "../../application/access/SetDocumentPassword";
 import {
-  DocumentAccessDeniedError,
   DocumentNotFoundError,
   DocumentRevisionConflictError,
   InvalidDocumentPasswordError,
 } from "../../domain/errors";
 import { jsonResponse } from "./utils";
 
-function toResponse(error: DocumentAccessAdminError): Response {
+function toResponse(error: DocumentAccessAdminError | AccessDeniedError | AccessCheckFailedError): Response {
+  if (error instanceof AccessDeniedError || error instanceof AccessCheckFailedError) {
+    return accessErrorResponse(error);
+  }
   if (error instanceof InvalidDocumentPasswordError) return jsonResponse({ error: error.message }, 400);
   if (error instanceof DocumentNotFoundError) return jsonResponse({ error: error.message }, 404);
-  if (error instanceof DocumentAccessDeniedError) return jsonResponse({ error: error.message }, 403);
   if (error instanceof DocumentRevisionConflictError) return jsonResponse({ error: error.message }, 409);
   console.error(error);
   return jsonResponse({ error: "Error interno del servidor" }, 500);

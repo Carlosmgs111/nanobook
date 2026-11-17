@@ -4,9 +4,9 @@ import { Result } from "../../../../shared/domain/Result";
 import type { EventBus } from "../../../../shared/domain/bus/EventBus";
 import { Document } from "../../domain/Document";
 import type { DocumentAccessRecord, DocumentAccessRepository } from "../../domain/access/ports";
-import { InvalidDocumentPasswordError, WriteAccessDeniedError } from "../../domain/errors";
+import { AccessCheckFailedError, AccessDeniedError, createAuthorizer, type Authorizer } from "../../../../authorization/server";
+import { InvalidDocumentPasswordError } from "../../domain/errors";
 import type { ContentRepository } from "../../domain/ports/ContentRepository";
-import type { WriteAccess } from "../../domain/ports/WriteAccess";
 import { ClearDocumentPassword } from "./ClearDocumentPassword";
 import { SetDocumentPassword } from "./SetDocumentPassword";
 
@@ -24,12 +24,15 @@ function document(secured: boolean) {
   ).getValue();
 }
 
-const writeAccess: WriteAccess = {
-  require: async (_nanobookId, actorId) =>
-    actorId === "owner-1" ? Result.ok() : Result.fail(new WriteAccessDeniedError("book-a")),
-};
+const authorizer: Authorizer = createAuthorizer([
+  {
+    appliesTo: ["document"],
+    evaluate: async ({ subject }) =>
+      (await subject.userId()) === "owner-1" ? { effect: "allow" } : { effect: "deny", reason: "forbidden" },
+  },
+]);
 
-function setup(secured: boolean, existingHash: string | null = null) {
+function setup(secured: boolean, existingHash: string | null = null, access: Authorizer = authorizer) {
   const records = new Map<string, DocumentAccessRecord>();
   if (existingHash) records.set("doc-1", { documentId: "doc-1", passwordHash: existingHash, passwordVersion: 1 });
   const accessRepository: DocumentAccessRepository = {
@@ -50,8 +53,8 @@ function setup(secured: boolean, existingHash: string | null = null) {
     records,
     contentRepository,
     eventBus,
-    set: new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, writeAccess),
-    clear: new ClearDocumentPassword(contentRepository, accessRepository, eventBus, writeAccess),
+    set: new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, access),
+    clear: new ClearDocumentPassword(contentRepository, accessRepository, eventBus, access),
   };
 }
 
@@ -74,9 +77,44 @@ describe("SetDocumentPassword", () => {
 
     const result = await set.execute("book-a", "guia", "una-clave-segura", "intruso");
 
-    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
     expect(records.size).toBe(0);
     expect(contentRepository.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("un ajeno con contraseña inválida recibe acceso denegado, no un error de validación", async () => {
+    const { set, records } = setup(false);
+
+    const result = await set.execute("book-a", "guia", "corta", "intruso");
+
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
+    expect(records.size).toBe(0);
+  });
+
+  it("un fallo técnico del autorizador no guarda nada", async () => {
+    const failing: Authorizer = {
+      authorize: async () => {
+        throw new AccessCheckFailedError(new Error("db caída"));
+      },
+      require: async () => Result.fail(new AccessCheckFailedError(new Error("db caída"))),
+    };
+    const { set, clear, records, contentRepository } = setup(true, "hash:vieja", failing);
+
+    expect((await set.execute("book-a", "guia", "una-clave-segura", "owner-1")).getError()).toBeInstanceOf(AccessCheckFailedError);
+    expect((await clear.execute("book-a", "guia", "owner-1")).getError()).toBeInstanceOf(AccessCheckFailedError);
+    expect(records.get("doc-1")).toMatchObject({ passwordHash: "hash:vieja", passwordVersion: 1 });
+    expect(contentRepository.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("autoriza write sobre el documento del nanobook con el actor como sujeto", async () => {
+    const spied: Authorizer = { ...authorizer, require: vi.fn(authorizer.require) };
+    const { set } = setup(false, null, spied);
+
+    await set.execute("book-a", "guia", "una-clave-segura", "owner-1");
+
+    const [request] = vi.mocked(spied.require).mock.calls[0];
+    expect(request).toMatchObject({ action: "write", resource: { type: "document", id: "guia", nanobookId: "book-a" } });
+    expect(await request.subject.userId()).toBe("owner-1");
   });
 
   it.each(["corta", "x".repeat(129), "        "])("rechaza una contraseña inválida (%j)", async (password) => {
@@ -114,7 +152,7 @@ describe("ClearDocumentPassword", () => {
 
     const result = await clear.execute("book-a", "guia", "intruso");
 
-    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
     expect(records.get("doc-1")).toMatchObject({ passwordHash: "hash:vieja", passwordVersion: 1 });
     expect(contentRepository.updateMany).not.toHaveBeenCalled();
   });

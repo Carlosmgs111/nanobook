@@ -5,10 +5,14 @@ import {
   InvalidDocumentError,
   DocumentNotFoundError,
   DocumentAlreadyExistsError,
-  DocumentAccessDeniedError,
   DocumentRevisionConflictError,
   ParentNotFoundError,
 } from "../../domain/errors";
+import {
+  AccessCheckFailedError,
+  AccessDeniedError,
+  accessErrorResponse,
+} from "../../../../authorization/server";
 import type { InfrastructureError } from "../../../../shared/errors";
 
 export function jsonResponse(body: unknown, status: number): Response {
@@ -19,8 +23,12 @@ export function jsonResponse(body: unknown, status: number): Response {
 }
 
 export function handleServiceError(
-  error: DocumentServiceError | InfrastructureError
+  error: DocumentServiceError | InfrastructureError | AccessDeniedError | AccessCheckFailedError
 ): Response {
+  if (error instanceof AccessDeniedError || error instanceof AccessCheckFailedError) {
+    return accessErrorResponse(error);
+  }
+
   if (
     error instanceof InvalidDocumentIdError ||
     error instanceof InvalidDocumentError ||
@@ -43,10 +51,6 @@ export function handleServiceError(
       expectedRevision: error.expectedRevision,
       actualRevision: error.actualRevision,
     }, 409);
-  }
-
-  if (error instanceof DocumentAccessDeniedError) {
-    return jsonResponse({ error: error.message }, 403);
   }
 
   console.error(error);

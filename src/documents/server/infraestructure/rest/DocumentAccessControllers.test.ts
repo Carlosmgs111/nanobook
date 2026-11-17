@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import type { ClearDocumentPassword } from "../../application/access/ClearDocumentPassword";
 import type { SetDocumentPassword } from "../../application/access/SetDocumentPassword";
@@ -8,7 +9,6 @@ import {
   DocumentNotFoundError,
   DocumentUnlockFailedError,
   DocumentUnlockRateLimitedError,
-  WriteAccessDeniedError,
 } from "../../domain/errors";
 import { DocumentAccessAdminController } from "./DocumentAccessAdminController";
 import { UnlockDocumentController } from "./UnlockDocumentController";
@@ -55,12 +55,25 @@ describe("DocumentAccessAdminController", () => {
     expect(clear).toHaveBeenCalledWith("book-a", "guia", "owner-1");
   });
 
-  it("un actor sin permiso de escritura recibe un error y no una respuesta de éxito", async () => {
-    const set = vi.fn().mockResolvedValue(Result.fail(new WriteAccessDeniedError("book-a")));
+  it.each([
+    [{ effect: "deny", reason: "forbidden" }, 403],
+    [{ effect: "deny", reason: "not-found" }, 404],
+    [{ effect: "deny", reason: "unauthenticated" }, 401],
+  ] as const)("traduce el acceso denegado %j a %i", async (decision, status) => {
+    const set = vi.fn().mockResolvedValue(Result.fail(new AccessDeniedError(decision)));
 
-    const response = await put(controller(set), { currentUserId: "intruso" });
+    expect((await put(controller(set), { currentUserId: "intruso" })).status).toBe(status);
+  });
 
-    expect(response.status).not.toBe(200);
+  it("un fallo técnico de acceso responde 500 sin exponer la causa", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const set = vi.fn().mockResolvedValue(Result.fail(new AccessCheckFailedError(new Error("secret db detail"))));
+
+    const response = await put(controller(set), { currentUserId: "owner-1" });
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(await response.json())).not.toContain("secret db detail");
+    spy.mockRestore();
   });
 });
 

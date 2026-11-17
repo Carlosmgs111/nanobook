@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import { Document } from "../../domain/Document";
-import { DocumentNotFoundError, DocumentRevisionConflictError, WriteAccessDeniedError } from "../../domain/errors";
+import { DocumentNotFoundError, DocumentRevisionConflictError } from "../../domain/errors";
 import { UpdateDocumentController } from "./UpdateDocumentController";
 
 const updated = Document.create("intro", { id: "doc-1", title: "T", description: "D" }, "# T").getValue();
@@ -47,7 +48,12 @@ describe("UpdateDocumentController", () => {
   it("maps 403, 404 and revision conflicts", async () => {
     const respond = (error: Error) => call(vi.fn().mockResolvedValue(Result.fail(error)));
 
-    expect((await respond(new WriteAccessDeniedError("book-a"))).status).toBe(403);
+    expect((await respond(new AccessDeniedError({ effect: "deny", reason: "forbidden" }))).status).toBe(403);
+    expect((await respond(new AccessDeniedError({ effect: "deny", reason: "not-found" }))).status).toBe(404);
+    expect((await respond(new AccessDeniedError({ effect: "deny", reason: "unauthenticated" }))).status).toBe(401);
+    const failed = await respond(new AccessCheckFailedError(new Error("secret db detail")));
+    expect(failed.status).toBe(500);
+    expect(JSON.stringify(await failed.json())).not.toContain("secret db detail");
     expect((await respond(new DocumentNotFoundError("doc-1"))).status).toBe(404);
     const conflict = await respond(new DocumentRevisionConflictError("doc-1", 1, 2));
     expect(conflict.status).toBe(409);

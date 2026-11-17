@@ -44,22 +44,6 @@ export class DocumentRevisionConflictError extends Error {
   }
 }
 
-export class DocumentAccessDeniedError extends Error {
-  constructor(public readonly documentId: string) {
-    super(`No tienes permiso para modificar el documento "${documentId}"`);
-    this.name = "DocumentAccessDeniedError";
-  }
-}
-
-/** El actor no puede escribir en el nanobook; subclase para que los mapeos 403 existentes la cubran. */
-export class WriteAccessDeniedError extends DocumentAccessDeniedError {
-  constructor(public readonly nanobookId: string) {
-    super(nanobookId);
-    this.message = `No tienes permiso de edición sobre el nanobook "${nanobookId}"`;
-    this.name = "WriteAccessDeniedError";
-  }
-}
-
 export class InvalidDocumentIdError extends Error {
   constructor(public readonly documentId: string) {
     super(`Id de documento inválido: ${documentId}`);
@@ -104,7 +88,6 @@ export class DocumentUnlockRateLimitedError extends Error {
 
 export type DocumentServiceError =
   | DocumentAlreadyExistsError
-  | DocumentAccessDeniedError
   | DocumentNotFoundError
   | DocumentRevisionConflictError
   | InvalidDocumentIdError

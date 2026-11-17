@@ -5,11 +5,11 @@ import {
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
   InvalidDocumentIdError,
-  WriteAccessDeniedError,
 } from "../domain/errors";
+import { AccessCheckFailedError, AccessDeniedError } from "../../../authorization/server";
 import { Document } from "../domain/Document";
 import { UpdateDocument } from "./UpdateDocument";
-import { allowWrites, createEventBus, createRepository, denyWrites } from "./test/factories";
+import { allowAllAuthorizer, createEventBus, createRepository, denyAllAuthorizer, failingAuthorizer } from "./test/factories";
 
 function stored(path: string, overrides: Record<string, unknown> = {}) {
   return Document.create(
@@ -51,7 +51,7 @@ describe("UpdateDocument", () => {
     const bus = createEventBus();
     const forged = { ...edit(), author: "forged", ownerId: "forged", secured: false } as never;
 
-    const result = await new UpdateDocument(repository, bus, allowWrites).execute("book-a", forged, "writer");
+    const result = await new UpdateDocument(repository, bus, allowAllAuthorizer()).execute("book-a", forged, "writer");
 
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().getRevision()).toBe(4);
@@ -71,16 +71,43 @@ describe("UpdateDocument", () => {
     const repository = createRepository();
     const bus = createEventBus();
 
-    const result = await new UpdateDocument(repository, bus, denyWrites).execute("book-a", edit(), "intruder");
+    const result = await new UpdateDocument(repository, bus, denyAllAuthorizer()).execute("book-a", edit(), "intruder");
 
-    expect(result.getError()).toBeInstanceOf(WriteAccessDeniedError);
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
     expect(repository.getById).not.toHaveBeenCalled();
     expect(repository.updateMany).not.toHaveBeenCalled();
     expect(bus.publish).not.toHaveBeenCalled();
   });
 
+  it("reports a technical authorizer failure without side effects", async () => {
+    const repository = createRepository();
+    const bus = createEventBus();
+
+    const result = await new UpdateDocument(repository, bus, failingAuthorizer()).execute("book-a", edit(), "w");
+
+    expect(result.getError()).toBeInstanceOf(AccessCheckFailedError);
+    expect(repository.getById).not.toHaveBeenCalled();
+    expect(bus.publish).not.toHaveBeenCalled();
+  });
+
+  it("authorizes before validating the document id, with write on the document resource", async () => {
+    const authorizer = denyAllAuthorizer();
+    const require = vi.spyOn(authorizer, "require");
+
+    const result = await new UpdateDocument(createRepository(), createEventBus(), authorizer).execute(
+      "book-a",
+      edit({ id: undefined }),
+      "intruder",
+    );
+
+    expect(result.getError()).toBeInstanceOf(AccessDeniedError);
+    const [request] = require.mock.calls[0];
+    expect(request).toMatchObject({ action: "write", resource: { type: "document", nanobookId: "book-a" } });
+    expect(await request.subject.userId()).toBe("intruder");
+  });
+
   it("requires an existing document id", async () => {
-    const useCase = new UpdateDocument(createRepository(), createEventBus(), allowWrites);
+    const useCase = new UpdateDocument(createRepository(), createEventBus(), allowAllAuthorizer());
 
     expect((await useCase.execute("book-a", edit({ id: undefined }), "w")).getError()).toBeInstanceOf(InvalidDocumentIdError);
     expect((await useCase.execute("book-a", edit(), "w")).getError()).toBeInstanceOf(DocumentNotFoundError);
@@ -89,7 +116,7 @@ describe("UpdateDocument", () => {
   it("applies the revision the client knew only to the edited document", async () => {
     const repository = createRepository({ getById: vi.fn().mockResolvedValue(Result.ok(stored("intro"))) });
 
-    await new UpdateDocument(repository, createEventBus(), allowWrites).execute("book-a", edit({ expectedRevision: 2 }), "w");
+    await new UpdateDocument(repository, createEventBus(), allowAllAuthorizer()).execute("book-a", edit({ expectedRevision: 2 }), "w");
 
     expect(savedUpdates(repository)[0].expectedRevision).toBe(2);
   });
@@ -104,7 +131,7 @@ describe("UpdateDocument", () => {
     });
     const bus = createEventBus();
 
-    const result = await new UpdateDocument(repository, bus, allowWrites).execute(
+    const result = await new UpdateDocument(repository, bus, allowAllAuthorizer()).execute(
       "book-a",
       edit({ id: "id-guide_index", path: "ref/index", expectedRevision: 3 }),
       "w",
@@ -125,7 +152,7 @@ describe("UpdateDocument", () => {
       list: vi.fn().mockResolvedValue(Result.ok([root, clash])),
     });
 
-    const result = await new UpdateDocument(repository, createEventBus(), allowWrites).execute(
+    const result = await new UpdateDocument(repository, createEventBus(), allowAllAuthorizer()).execute(
       "book-a",
       edit({ id: "id-guide_index", path: "ref/index" }),
       "w",
@@ -140,7 +167,7 @@ describe("UpdateDocument", () => {
     const bus = createEventBus();
     bus.publish = vi.fn().mockResolvedValue(Result.fail(new EventBusError("boom")));
 
-    const result = await new UpdateDocument(repository, bus, allowWrites).execute("book-a", edit(), "w");
+    const result = await new UpdateDocument(repository, bus, allowAllAuthorizer()).execute("book-a", edit(), "w");
 
     expect(result.getError()).toBeInstanceOf(EventBusError);
   });

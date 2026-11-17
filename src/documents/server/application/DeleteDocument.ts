@@ -1,8 +1,13 @@
+import {
+  Subject,
+  type AccessCheckFailedError,
+  type AccessDeniedError,
+  type Authorizer,
+} from "../../../authorization/server";
 import { Result } from "../../../shared/domain/Result";
 import type { EventBus } from "../../../shared/domain/bus/EventBus";
 import type { EventBusError } from "../../../shared/domain/bus/errors";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
-import type { WriteAccess } from "../domain/ports/WriteAccess";
 import { DocumentDeleted } from "../domain/events/DocumentDeleted";
 import {
   DocumentNotFoundError,
@@ -13,6 +18,8 @@ import {
 import { publishAll } from "./publishAll";
 
 export type DeleteDocumentError =
+  | AccessDeniedError
+  | AccessCheckFailedError
   | DocumentServiceError
   | DocumentRepositoryError
   | DocumentParseError
@@ -22,7 +29,7 @@ export class DeleteDocument {
   constructor(
     private repository: ContentRepository,
     private eventBus: EventBus,
-    private writeAccess: WriteAccess,
+    private authorizer: Authorizer,
   ) {}
 
   async execute(
@@ -30,7 +37,11 @@ export class DeleteDocument {
     documentId: string,
     actorId: string,
   ): Promise<Result<DeleteDocumentError, void>> {
-    const writable = await this.writeAccess.require(nanobookId, actorId);
+    const writable = await this.authorizer.require({
+      subject: Subject.of(actorId),
+      action: "write",
+      resource: { type: "document", id: documentId, nanobookId },
+    });
     if (!writable.isSuccess) return Result.fail(writable.getError());
 
     const found = await this.repository.getById(nanobookId, documentId);

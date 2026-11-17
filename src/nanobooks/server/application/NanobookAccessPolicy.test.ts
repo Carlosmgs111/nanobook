@@ -89,6 +89,19 @@ describe("NanobookAccessPolicy · documentos y errores", () => {
     expect(await authorizer.authorize({ subject: subjectOf("other"), action: "write", resource: document("priv") })).toEqual({ effect: "deny", reason: "not-found" });
   });
 
+  it("un ajeno que escribe un document de un nanobook público recibe forbidden", async () => {
+    const authorizer = setup();
+
+    expect(await authorizer.authorize({ subject: subjectOf("other"), action: "write", resource: document("pub") })).toEqual({ effect: "deny", reason: "forbidden" });
+    expect((await authorizer.authorize({ subject: subjectOf("owner"), action: "write", resource: document("pub") })).effect).toBe("allow");
+  });
+
+  it("un document de un nanobook inexistente responde not-found al escribir", async () => {
+    const authorizer = setup();
+
+    expect(await authorizer.authorize({ subject: subjectOf("owner"), action: "write", resource: document("no-existe") })).toEqual({ effect: "deny", reason: "not-found" });
+  });
+
   it("un document sin nanobookId se deniega", async () => {
     const authorizer = setup();
     const resource: Resource = { type: "document", id: "d-1" };

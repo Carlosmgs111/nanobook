@@ -1,10 +1,11 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { EventBusError } from "../../../shared/domain/bus/errors";
-import { DocumentNotFoundError, WriteAccessDeniedError } from "../domain/errors";
+import { DocumentNotFoundError } from "../domain/errors";
+import { AccessCheckFailedError, AccessDeniedError, type Authorizer } from "../../../authorization/server";
 import { Document } from "../domain/Document";
 import { DeleteDocument } from "./DeleteDocument";
-import { allowWrites, createEventBus, createRepository, denyWrites } from "./test/factories";
+import { allowAllAuthorizer, createEventBus, createRepository, denyAllAuthorizer, failingAuthorizer } from "./test/factories";
 
 const stored = (path: string) =>
   Document.create(path, {
@@ -16,13 +17,13 @@ const stored = (path: string) =>
     updatedAt: new Date("2026-01-01"),
   }).getValue();
 
-function setup(documents: Document[], target: Document, writeAccess = allowWrites) {
+function setup(documents: Document[], target: Document, authorizer: Authorizer = allowAllAuthorizer()) {
   const repository = createRepository({
     getById: vi.fn().mockResolvedValue(Result.ok(target)),
     list: vi.fn().mockResolvedValue(Result.ok(documents)),
   });
   const bus = createEventBus();
-  const run = () => new DeleteDocument(repository, bus, writeAccess).execute("book-a", target.getDocumentId().getValue(), "writer");
+  const run = () => new DeleteDocument(repository, bus, authorizer).execute("book-a", target.getDocumentId().getValue(), "writer");
   return { repository, bus, run };
 }
 
@@ -54,16 +55,38 @@ describe("DeleteDocument", () => {
 
   it("rejects an actor without write access before reading anything", async () => {
     const target = stored("intro");
-    const { repository, bus, run } = setup([target], target, denyWrites);
+    const { repository, bus, run } = setup([target], target, denyAllAuthorizer());
 
-    expect((await run()).getError()).toBeInstanceOf(WriteAccessDeniedError);
+    expect((await run()).getError()).toBeInstanceOf(AccessDeniedError);
     expect(repository.getById).not.toHaveBeenCalled();
     expect(repository.deleteMany).not.toHaveBeenCalled();
     expect(bus.publish).not.toHaveBeenCalled();
   });
 
+  it("reports a technical authorizer failure without side effects", async () => {
+    const target = stored("intro");
+    const { repository, bus, run } = setup([target], target, failingAuthorizer());
+
+    expect((await run()).getError()).toBeInstanceOf(AccessCheckFailedError);
+    expect(repository.getById).not.toHaveBeenCalled();
+    expect(repository.deleteMany).not.toHaveBeenCalled();
+    expect(bus.publish).not.toHaveBeenCalled();
+  });
+
+  it("requires write on the document resource of the nanobook for the actor", async () => {
+    const target = stored("intro");
+    const authorizer = allowAllAuthorizer();
+    const require = vi.spyOn(authorizer, "require");
+
+    await setup([target], target, authorizer).run();
+
+    const [request] = require.mock.calls[0];
+    expect(request).toMatchObject({ action: "write", resource: { type: "document", id: "id-intro", nanobookId: "book-a" } });
+    expect(await request.subject.userId()).toBe("writer");
+  });
+
   it("fails when the document does not exist", async () => {
-    const result = await new DeleteDocument(createRepository(), createEventBus(), allowWrites).execute("book-a", "missing", "writer");
+    const result = await new DeleteDocument(createRepository(), createEventBus(), allowAllAuthorizer()).execute("book-a", "missing", "writer");
 
     expect(result.getError()).toBeInstanceOf(DocumentNotFoundError);
   });
