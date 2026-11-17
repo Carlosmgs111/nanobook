@@ -15,7 +15,7 @@ const documentMutations = {
 function dispatch(method: keyof typeof documentMutations): APIRoute {
   return protectNanobookWriteMutation(
     app.routeProtector,
-    app.nanobookModule.requireNanobookAccess,
+    app.authorizer,
     documentMutations[method],
   );
 }

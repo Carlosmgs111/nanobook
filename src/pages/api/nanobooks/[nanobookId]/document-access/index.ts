@@ -10,7 +10,7 @@ const controller = app.nanobookModule.documentModule.documentAccessAdminControll
 function dispatch(handler: APIRoute): APIRoute {
   return protectNanobookWriteMutation(
     app.routeProtector,
-    app.nanobookModule.requireNanobookAccess,
+    app.authorizer,
     handler,
   );
 }

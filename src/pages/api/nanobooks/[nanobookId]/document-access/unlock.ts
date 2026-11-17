@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { Subject } from "../../../../../authorization/server";
 import { getApp } from "../../../../../application/server/Application";
 
 export const prerender = false;
@@ -13,8 +14,12 @@ export const POST: APIRoute = async (context) => {
   const nanobookId = context.params.nanobookId;
   if (!nanobookId) return new Response(null, { status: 404 });
 
-  const access = await app.nanobookModule.requireNanobookAccess.execute(undefined, nanobookId, "read");
-  if (!access.isSuccess) {
+  const decision = await app.authorizer.authorize({
+    subject: Subject.anonymous(),
+    action: "read",
+    resource: { type: "nanobook", id: nanobookId },
+  });
+  if (decision.effect !== "allow") {
     return new Response(JSON.stringify({ error: "Documento no encontrado" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
