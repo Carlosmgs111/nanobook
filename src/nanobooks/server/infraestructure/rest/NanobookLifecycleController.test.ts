@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { createAuthorizer } from "../../../../authorization/server";
 import { Nanobook } from "../../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../repository/InMemoryNanobookRepository";
+import { NanobookAccessPolicy } from "../../application/NanobookAccessPolicy";
 import { UpdateNanobook } from "../../application/UpdateNanobook";
 import { DeleteNanobook } from "../../application/DeleteNanobook";
 import type { NanobookReadCache } from "../../application/NanobookReadCache";
@@ -8,15 +10,19 @@ import { NanobookLifecycleController } from "./NanobookLifecycleController";
 
 describe("NanobookLifecycleController", () => {
   const create = () => {
-    const repository = new InMemoryNanobookRepository([Nanobook.create({ id: "one", ownerId: "owner", slug: "first", name: "First" }).getValue()]);
+    const repository = new InMemoryNanobookRepository([
+      Nanobook.create({ id: "one", ownerId: "owner", slug: "first", name: "First" }).getValue(),
+      Nanobook.create({ id: "pub", ownerId: "owner", slug: "open", name: "Open", visibility: "public" }).getValue(),
+    ]);
+    const authorizer = createAuthorizer([new NanobookAccessPolicy(repository)]);
     const cache: NanobookReadCache = {
       getOrLoad: async (_slug, load) => load(),
       replace: async () => undefined,
       remove: async () => undefined,
     };
     return new NanobookLifecycleController(
-      new UpdateNanobook(repository, cache),
-      new DeleteNanobook(repository, cache),
+      new UpdateNanobook(repository, cache, authorizer),
+      new DeleteNanobook(repository, cache, authorizer),
     );
   };
   const context = (body: string, user = "owner", id = "one", method = "PATCH") => ({
@@ -27,7 +33,8 @@ describe("NanobookLifecycleController", () => {
   it("maps authentication, authorization, missing books and invalid JSON", async () => {
     const controller = create();
     expect((await controller.update(context('{}', ''))).status).toBe(401);
-    expect((await controller.update(context('{"name":"New"}', 'stranger'))).status).toBe(403);
+    expect((await controller.update(context('{"name":"New"}', 'stranger'))).status).toBe(404);
+    expect((await controller.update(context('{"name":"New"}', 'stranger', 'pub'))).status).toBe(403);
     expect((await controller.update(context('{"name":"New"}', 'owner', 'missing'))).status).toBe(404);
     expect((await controller.update(context('{'))).status).toBe(400);
     expect((await controller.update(context('{"slug":"/"}'))).status).toBe(400);

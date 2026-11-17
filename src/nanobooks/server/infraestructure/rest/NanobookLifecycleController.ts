@@ -1,4 +1,9 @@
 import type { APIRoute } from "astro";
+import {
+  AccessCheckFailedError,
+  AccessDeniedError,
+  accessErrorResponse,
+} from "../../../../authorization/server";
 import type { UpdateNanobook } from "../../application/UpdateNanobook";
 import type { DeleteNanobook } from "../../application/DeleteNanobook";
 
@@ -71,6 +76,9 @@ function jsonError(error: string, status: number) {
   return Response.json({ error }, { status });
 }
 function failure(error: Error) {
+  if (error instanceof AccessDeniedError || error instanceof AccessCheckFailedError) {
+    return accessErrorResponse(error);
+  }
   const statuses: Record<string, number> = {
     NanobookAccessDeniedError: 403,
     NanobookNotFoundError: 404,

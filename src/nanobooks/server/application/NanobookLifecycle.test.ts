@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { AccessDeniedError, createAuthorizer } from "../../../authorization/server";
 import { Nanobook } from "../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
+import { NanobookAccessPolicy } from "./NanobookAccessPolicy";
 import { UpdateNanobook } from "./UpdateNanobook";
 import { DeleteNanobook } from "./DeleteNanobook";
 import type { NanobookReadCache } from "./NanobookReadCache";
@@ -14,11 +16,12 @@ function setup() {
     replace: vi.fn(),
     remove: vi.fn(),
   };
+  const authorizer = createAuthorizer([new NanobookAccessPolicy(repository)]);
   return {
     repository,
     cache,
-    update: new UpdateNanobook(repository, cache),
-    remove: new DeleteNanobook(repository, cache),
+    update: new UpdateNanobook(repository, cache, authorizer),
+    remove: new DeleteNanobook(repository, cache, authorizer),
   };
 }
 
@@ -44,9 +47,28 @@ describe("nanobook lifecycle", () => {
   it("allows only the owner to mutate even a public nanobook", async () => {
     const { update, remove, repository } = setup();
     await update.execute("owner", "one", { visibility: "public" });
-    expect((await update.execute("other", "one", { name: "Changed" })).getError().name).toBe("NanobookAccessDeniedError");
-    expect((await remove.execute("other", "one", "First")).getError().name).toBe("NanobookAccessDeniedError");
+    for (const result of [
+      await update.execute("other", "one", { name: "Changed" }),
+      await remove.execute("other", "one", "First"),
+    ]) {
+      expect(result.getError()).toBeInstanceOf(AccessDeniedError);
+      expect((result.getError() as AccessDeniedError).decision).toEqual({ effect: "deny", reason: "forbidden" });
+    }
     expect((await repository.findById("one")).getValue()).not.toBeNull();
+  });
+
+  it("answers not-found to a stranger on a private nanobook, same as for a missing one", async () => {
+    const { update, remove } = setup();
+    const expected = { effect: "deny", reason: "not-found" };
+    for (const result of [
+      await update.execute("other", "one", { name: "Changed" }),
+      await update.execute("other", "missing", { name: "Changed" }),
+      await remove.execute("other", "one", "First"),
+      await remove.execute("other", "missing", "First"),
+    ]) {
+      expect(result.getError()).toBeInstanceOf(AccessDeniedError);
+      expect((result.getError() as AccessDeniedError).decision).toEqual(expected);
+    }
   });
 
   it("requires exact name confirmation and deletes only the requested book", async () => {
@@ -56,6 +78,8 @@ describe("nanobook lifecycle", () => {
     expect((await repository.findById("one")).getValue()).toBeNull();
     expect((await repository.findById("two")).getValue()).not.toBeNull();
     expect(cache.remove).toHaveBeenCalledWith("first");
-    expect((await remove.execute("owner", "one", "First")).getError().name).toBe("NanobookNotFoundError");
+    const again = await remove.execute("owner", "one", "First");
+    expect(again.getError()).toBeInstanceOf(AccessDeniedError);
+    expect((again.getError() as AccessDeniedError).decision).toEqual({ effect: "deny", reason: "not-found" });
   });
 });

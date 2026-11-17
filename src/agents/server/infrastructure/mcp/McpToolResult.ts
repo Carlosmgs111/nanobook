@@ -1,3 +1,4 @@
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import {
   DocumentAccessDeniedError,
@@ -64,6 +65,22 @@ export function joinNotes(...notes: ReadonlyArray<string | undefined>): string |
 }
 
 function toMcpError(error: unknown): McpError {
+  // Mensajes fijos: un `not-found` no debe distinguirse de un nanobook inexistente.
+  if (error instanceof AccessDeniedError) {
+    const decision = error.decision;
+    if (decision.effect === "challenge") return { code: 401, error: "Este recurso requiere contraseña" };
+    switch (decision.reason) {
+      case "unauthenticated":
+        return { code: 401, error: "Autenticación requerida" };
+      case "not-found":
+        return { code: 404, error: "Recurso no encontrado" };
+      default:
+        return { code: 403, error: "No tienes permiso sobre este recurso" };
+    }
+  }
+  if (error instanceof AccessCheckFailedError) {
+    return { code: 500, error: "La operación no pudo completarse" };
+  }
   if (
     error instanceof AgentScopeDeniedError ||
     error instanceof NanobookAccessDeniedError ||

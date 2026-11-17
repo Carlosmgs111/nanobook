@@ -1,4 +1,9 @@
 import type { APIRoute } from "astro";
+import {
+  AccessCheckFailedError,
+  AccessDeniedError,
+  accessErrorResponse,
+} from "../../../../authorization/server";
 import { isThemeReference } from "../../../../shared/theme/ThemeReference";
 import type { AssignNanobookTheme } from "../../application/AssignNanobookTheme";
 
@@ -29,6 +34,9 @@ export class AssignNanobookThemeController {
       if (result.isSuccess) return new Response(null, { status: 204 });
 
       const error = result.getError();
+      if (error instanceof AccessDeniedError || error instanceof AccessCheckFailedError) {
+        return accessErrorResponse(error);
+      }
       const status = error.name.includes("AccessDenied")
         ? 403
         : error.name.includes("NotFound")

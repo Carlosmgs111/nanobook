@@ -1,6 +1,8 @@
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { DocumentModule } from "../../documents/server";
+import type { Authorizer, Policy } from "../../authorization/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
+import { NanobookAccessPolicy } from "./application/NanobookAccessPolicy";
 import { CreateNanobook } from "./application/CreateNanobook";
 import { UpdateNanobook } from "./application/UpdateNanobook";
 import { SetNanobookTheme } from "./application/SetNanobookTheme";
@@ -46,8 +48,13 @@ export class NanobookModule {
     public readonly requireNanobookAccess: RequireNanobookAccess
   ) {}
 
-  static async create(eventBus: EventBus): Promise<NanobookModule> {
+  static async create(
+    eventBus: EventBus,
+    authorizer: Authorizer,
+    policies: Policy[],
+  ): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(db);
+    policies.push(new NanobookAccessPolicy(repository));
     const readCache = createNanobookReadCache();
     const listNanobooks = new ListNanobooks(repository);
     const getNanobookBySlug = new GetNanobookBySlug(repository, readCache);
@@ -58,8 +65,8 @@ export class NanobookModule {
       new NanobookWriteAccess(requireNanobookAccess),
     );
     const createNanobook = new CreateNanobook(repository, documentModule, readCache);
-    const updateNanobook = new UpdateNanobook(repository, readCache);
-    const deleteNanobook = new DeleteNanobook(repository, readCache);
+    const updateNanobook = new UpdateNanobook(repository, readCache, authorizer);
+    const deleteNanobook = new DeleteNanobook(repository, readCache, authorizer);
 
     return new NanobookModule(
       createNanobook,
@@ -71,7 +78,7 @@ export class NanobookModule {
       documentModule,
       new NanobookLifecycleController(updateNanobook, deleteNanobook),
       new ListPublicNanobooks(repository),
-      new SetNanobookTheme(repository, readCache),
+      new SetNanobookTheme(repository, readCache, authorizer),
       requireNanobookAccess
     );
   }
