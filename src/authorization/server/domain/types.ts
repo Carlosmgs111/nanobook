@@ -13,6 +13,18 @@ export const Subject = {
       grantFor: () => undefined,
     };
   },
+  /** Sujeto con el usuario ya conocido o con una resolución perezosa que se ejecuta una sola vez. */
+  of(
+    userId: string | undefined | (() => Promise<string | undefined>),
+    grantFor: (resourceId: string) => string | undefined = () => undefined,
+  ): Subject {
+    let pending: Promise<string | undefined> | undefined;
+    return {
+      userId: () =>
+        (pending ??= typeof userId === "function" ? userId() : Promise.resolve(userId)),
+      grantFor,
+    };
+  },
 };
 
 export type Action = "read" | "write";
