@@ -1,6 +1,6 @@
-import type { Result } from "../../../shared/domain/Result";
-import type { Nanobook } from "../domain/Nanobook";
-import type { NanobookRepositoryFailure } from "../domain/ports/NanobookRepository";
+import type { Result } from "../../../../shared/domain/Result";
+import type { Nanobook } from "../Nanobook";
+import type { NanobookRepositoryFailure } from "./NanobookRepository";
 
 export interface NanobookReadCache {
   getOrLoad(

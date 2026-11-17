@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAuthorizer, type Policy } from "../../authorization/server";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import { NanobookAccessPolicy } from "./application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "./application/access/NanobookAccessPolicy";
 import { NanobookModule } from ".";
 
 vi.mock("../../shared/infrastructure/database/drizzleDatabase", () => ({ db: {} }));

@@ -2,7 +2,7 @@ import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { DocumentModule } from "../../documents/server";
 import type { Authorizer, Policy } from "../../authorization/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
-import { NanobookAccessPolicy } from "./application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "./application/access/NanobookAccessPolicy";
 import { CreateNanobook } from "./application/CreateNanobook";
 import { UpdateNanobook } from "./application/UpdateNanobook";
 import { SetNanobookTheme } from "./application/SetNanobookTheme";
@@ -23,7 +23,7 @@ export type {
   NanobookSetupStatus,
   NanobookVisibility,
 } from "./domain/types";
-export { NanobookNotFoundError } from "./application/errors";
+export { NanobookNotFoundError } from "./domain/errors";
 
 export class NanobookModule {
   private constructor(

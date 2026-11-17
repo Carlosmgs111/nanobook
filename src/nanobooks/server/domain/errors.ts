@@ -12,6 +12,13 @@ export class InvalidNanobookSlugError extends Error {
   }
 }
 
+export class NanobookNotFoundError extends Error {
+  constructor(public readonly identifier: string) {
+    super(`El nanobook "${identifier}" no existe`);
+    this.name = "NanobookNotFoundError";
+  }
+}
+
 export class NanobookRepositoryError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, options);

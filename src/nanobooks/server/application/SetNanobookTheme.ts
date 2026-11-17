@@ -5,10 +5,9 @@ import {
   type ThemeReference,
 } from "../../../shared/theme/ThemeReference";
 import { Nanobook } from "../domain/Nanobook";
-import { InvalidNanobookError } from "../domain/errors";
+import { InvalidNanobookError, NanobookNotFoundError } from "../domain/errors";
 import type { NanobookRepository } from "../domain/ports/NanobookRepository";
-import { NanobookNotFoundError } from "./errors";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 export class SetNanobookTheme {
   constructor(

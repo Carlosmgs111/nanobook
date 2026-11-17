@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AccessCheckFailedError } from "../../../authorization/server";
-import { createAuthorizer, Subject, type Resource } from "../../../authorization/server";
-import { Result } from "../../../shared/domain/Result";
-import { Nanobook } from "../domain/Nanobook";
-import { NanobookRepositoryError } from "../domain/errors";
-import type { NanobookRepository } from "../domain/ports/NanobookRepository";
-import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
+import { AccessCheckFailedError } from "../../../../authorization/server";
+import { createAuthorizer, Subject, type Resource } from "../../../../authorization/server";
+import { Result } from "../../../../shared/domain/Result";
+import { Nanobook } from "../../domain/Nanobook";
+import { NanobookRepositoryError } from "../../domain/errors";
+import type { NanobookRepository } from "../../domain/ports/NanobookRepository";
+import { InMemoryNanobookRepository } from "../../infraestructure/repository/InMemoryNanobookRepository";
 import { NanobookAccessPolicy } from "./NanobookAccessPolicy";
 
 const book = (id: string, ownerId: string, visibility: "public" | "private") =>

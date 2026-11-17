@@ -1,5 +1,5 @@
 import { Result } from "../../../../shared/domain/Result";
-import type { NanobookReadCache } from "../../application/NanobookReadCache";
+import type { NanobookReadCache } from "../../domain/ports/NanobookReadCache";
 import type { Nanobook } from "../../domain/Nanobook";
 import {
   fromNanobookSnapshot,

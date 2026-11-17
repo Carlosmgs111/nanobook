@@ -1,7 +1,7 @@
 import { Result } from "../../../shared/domain/Result";
 import type { Nanobook } from "../domain/Nanobook";
 import type { NanobookRepository, NanobookRepositoryFailure } from "../domain/ports/NanobookRepository";
-import { NanobookNotFoundError } from "./errors";
+import { NanobookNotFoundError } from "../domain/errors";
 
 /**
  * Carga un nanobook por id sin comprobar acceso: quien llama debe haber autorizado antes.

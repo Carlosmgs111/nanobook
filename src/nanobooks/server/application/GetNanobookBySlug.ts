@@ -4,7 +4,7 @@ import type {
   NanobookRepository,
   NanobookRepositoryFailure,
 } from "../domain/ports/NanobookRepository";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 export class GetNanobookBySlug {
   constructor(

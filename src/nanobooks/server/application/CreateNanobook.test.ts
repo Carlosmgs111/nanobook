@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
 import { CreateNanobook } from "./CreateNanobook";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 function createCache(): NanobookReadCache {
   return {

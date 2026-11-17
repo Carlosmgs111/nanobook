@@ -1,4 +1,4 @@
-import type { NanobookReadCache } from "../../application/NanobookReadCache";
+import type { NanobookReadCache } from "../../domain/ports/NanobookReadCache";
 import { InMemoryNanobookReadCache } from "./InMemoryNanobookReadCache";
 import { VercelNanobookReadCache } from "./VercelNanobookReadCache";
 

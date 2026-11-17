@@ -5,7 +5,7 @@ import { createAuthorizer } from "../../../../../authorization/server";
 import { ClearDocumentPassword } from "../../../../../documents/server/application/access/ClearDocumentPassword";
 import { SetDocumentPassword } from "../../../../../documents/server/application/access/SetDocumentPassword";
 import { DocumentAccessAdminController } from "../../../../../documents/server/infraestructure/rest/DocumentAccessAdminController";
-import { NanobookAccessPolicy } from "../../../../../nanobooks/server/application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "../../../../../nanobooks/server/application/access/NanobookAccessPolicy";
 import { Nanobook } from "../../../../../nanobooks/server/domain/Nanobook";
 import { InMemoryNanobookRepository } from "../../../../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { Result } from "../../../../../shared/domain/Result";

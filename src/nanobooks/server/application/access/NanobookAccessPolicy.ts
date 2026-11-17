@@ -1,5 +1,5 @@
-import type { AccessRequest, Decision, Policy } from "../../../authorization/server";
-import type { NanobookRepository } from "../domain/ports/NanobookRepository";
+import type { AccessRequest, Decision, Policy } from "../../../../authorization/server";
+import type { NanobookRepository } from "../../domain/ports/NanobookRepository";
 
 /**
  * Dueño y visibilidad. El dueño y la visibilidad se leen siempre del repositorio:

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { Nanobook } from "../domain/Nanobook";
 import type { NanobookRepository } from "../domain/ports/NanobookRepository";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 import { GetNanobookBySlug } from "./GetNanobookBySlug";
 
 describe("GetNanobookBySlug", () => {

@@ -1,9 +1,8 @@
 import type { Authorizer } from "../../../authorization/server";
 import { Result } from "../../../shared/domain/Result";
-import { InvalidNanobookError } from "../domain/errors";
+import { InvalidNanobookError, NanobookNotFoundError } from "../domain/errors";
 import type { NanobookRepository } from "../domain/ports/NanobookRepository";
-import { NanobookNotFoundError } from "./errors";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 export class DeleteNanobook {
   constructor(

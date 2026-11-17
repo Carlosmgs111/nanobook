@@ -7,7 +7,7 @@ import type {
   NanobookRepositoryFailure,
 } from "../domain/ports/NanobookRepository";
 import type { CreateNanobookData } from "../domain/types";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 export type CreateNanobookError = NanobookRepositoryFailure | Error;
 

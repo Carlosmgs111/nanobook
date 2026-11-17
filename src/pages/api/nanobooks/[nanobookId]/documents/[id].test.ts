@@ -8,7 +8,7 @@ import { UpdateDocument } from "../../../../../documents/server/application/Upda
 import { CreateDocumentController } from "../../../../../documents/server/infraestructure/rest/CreateDocumentController";
 import { DeleteDocumentController } from "../../../../../documents/server/infraestructure/rest/DeleteDocumentController";
 import { UpdateDocumentController } from "../../../../../documents/server/infraestructure/rest/UpdateDocumentController";
-import { NanobookAccessPolicy } from "../../../../../nanobooks/server/application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "../../../../../nanobooks/server/application/access/NanobookAccessPolicy";
 import { Nanobook } from "../../../../../nanobooks/server/domain/Nanobook";
 import { InMemoryNanobookRepository } from "../../../../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { Result } from "../../../../../shared/domain/Result";

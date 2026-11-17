@@ -2,10 +2,9 @@ import { z } from "zod";
 import type { Authorizer } from "../../../authorization/server";
 import { Result } from "../../../shared/domain/Result";
 import { Nanobook } from "../domain/Nanobook";
-import { InvalidNanobookError } from "../domain/errors";
+import { InvalidNanobookError, NanobookNotFoundError } from "../domain/errors";
 import type { NanobookRepository } from "../domain/ports/NanobookRepository";
-import { NanobookNotFoundError } from "./errors";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 const inputSchema = z.object({
   name: z.string().trim().min(1).optional(),

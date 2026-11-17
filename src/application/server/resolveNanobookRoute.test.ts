@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Result } from "../../shared/domain/Result";
 import { createAuthorizer } from "../../authorization/server";
-import { NanobookAccessPolicy } from "../../nanobooks/server/application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "../../nanobooks/server/application/access/NanobookAccessPolicy";
 import { Nanobook } from "../../nanobooks/server/domain/Nanobook";
 import { InMemoryNanobookRepository } from "../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { resolveNanobookRoute } from "./resolveNanobookRoute";

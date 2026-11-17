@@ -6,7 +6,7 @@ import {
   DocumentRevisionConflictError,
   ParentNotFoundError,
 } from "../../../../documents/server/domain/errors";
-import { NanobookNotFoundError } from "../../../../nanobooks/server/application/errors";
+import { NanobookNotFoundError } from "../../../../nanobooks/server/domain/errors";
 import { AgentScopeDeniedError } from "../../application/errors";
 import type { MarkdownBlockIssue } from "../../application/ports/MarkdownBlockAdvisor";
 

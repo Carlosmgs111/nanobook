@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { createAuthorizer } from "../../../../authorization/server";
 import { Nanobook } from "../../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../repository/InMemoryNanobookRepository";
-import { NanobookAccessPolicy } from "../../application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "../../application/access/NanobookAccessPolicy";
 import { UpdateNanobook } from "../../application/UpdateNanobook";
 import { DeleteNanobook } from "../../application/DeleteNanobook";
-import type { NanobookReadCache } from "../../application/NanobookReadCache";
+import type { NanobookReadCache } from "../../domain/ports/NanobookReadCache";
 import { NanobookLifecycleController } from "./NanobookLifecycleController";
 
 describe("NanobookLifecycleController", () => {

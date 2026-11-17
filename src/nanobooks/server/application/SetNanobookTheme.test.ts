@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { AccessDeniedError, createAuthorizer } from "../../../authorization/server";
 import { Nanobook } from "../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
-import { NanobookAccessPolicy } from "./NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "./access/NanobookAccessPolicy";
 import { SetNanobookTheme } from "./SetNanobookTheme";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
 
 const book = () => Nanobook.create({ id: "book-1", ownerId: "owner-1", slug: "book", name: "Book", settings: { theme: { kind: "official", id: "classic" } } }).getValue();
 

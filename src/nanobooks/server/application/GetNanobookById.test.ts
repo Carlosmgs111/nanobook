@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Nanobook } from "../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
 import { GetNanobookById } from "./GetNanobookById";
-import { NanobookNotFoundError } from "./errors";
+import { NanobookNotFoundError } from "../domain/errors";
 
 describe("GetNanobookById", () => {
   const book = Nanobook.create({ id: "one", ownerId: "owner", slug: "one", name: "One" }).getValue();

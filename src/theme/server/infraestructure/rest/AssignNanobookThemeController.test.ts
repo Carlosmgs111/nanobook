@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createAuthorizer } from "../../../../authorization/server";
 import { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
-import { NanobookAccessPolicy } from "../../../../nanobooks/server/application/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "../../../../nanobooks/server/application/access/NanobookAccessPolicy";
 import { SetNanobookTheme } from "../../../../nanobooks/server/application/SetNanobookTheme";
 import { InMemoryNanobookRepository } from "../../../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { Result } from "../../../../shared/domain/Result";
