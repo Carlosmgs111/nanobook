@@ -14,7 +14,13 @@ const DENY_REASONS: readonly string[] = ["unauthenticated", "forbidden", "not-fo
 /** Literal nuevo en cada llamada: un consumidor que mute la decisión no afecta a las siguientes. */
 const forbidden = (): ResolvedDecision => ({ effect: "deny", reason: "forbidden" });
 
-/** Motor de decisión. Conceder exige al menos un `allow` explícito y ningún `deny` ni `challenge`. */
+/**
+ * Motor de decisión. Conceder exige al menos un `allow` explícito y ningún `deny` ni `challenge`.
+ *
+ * El arreglo de políticas se consulta en cada llamada, así que se pueden registrar políticas
+ * después de crear el autorizador (cada módulo añade la suya al componerse). Hasta que una
+ * política se registra no concede nada: falla cerrado.
+ */
 export function createAuthorizer(policies: readonly Policy[]): Authorizer {
   const authorize: Authorize = async (request) => {
     let decisions: Decision[];
