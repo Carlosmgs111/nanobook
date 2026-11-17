@@ -43,7 +43,7 @@ export class Application {
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
-    const agentModule = AgentModule.create(nanobookModule, createMarkdownBlockAdvisor());
+    const agentModule = AgentModule.create(nanobookModule, createMarkdownBlockAdvisor(), authorizer);
     return new Application(
       authServerModule,
       routeProtector,

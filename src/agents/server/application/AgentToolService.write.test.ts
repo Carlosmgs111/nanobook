@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Result } from "../../../shared/domain/Result";
 import { createMarkdownBlockAdvisor } from "../../../application/server/createMarkdownBlockAdvisor";
+import type { Authorizer } from "../../../authorization/server";
 import type { NanobookModule } from "../../../nanobooks/server";
 import type { AgentActor } from "./dto";
 import { AgentToolService } from "./AgentToolService";
@@ -13,10 +14,10 @@ describe("AgentToolService writes", () => {
     const created = { getDocumentId: () => ({ getValue: () => "doc-1" }) };
     const execute = vi.fn().mockResolvedValue(Result.ok(created));
     const nanobooks = {
-      requireNanobookAccess: { execute: vi.fn().mockResolvedValue(Result.ok({})) },
       documentModule: { createDocument: { execute } },
     } as unknown as NanobookModule;
-    const tools = new AgentToolService(nanobooks, { write: vi.fn() }, createMarkdownBlockAdvisor());
+    const authorizer = { require: vi.fn().mockResolvedValue(Result.ok()) } as unknown as Authorizer;
+    const tools = new AgentToolService(nanobooks, { write: vi.fn() }, createMarkdownBlockAdvisor(), authorizer);
 
     await tools.createDocument(actor, "book-a", {
       id: "doc-1", path: "guia", title: "Guía", description: "d", content: "# Guía",

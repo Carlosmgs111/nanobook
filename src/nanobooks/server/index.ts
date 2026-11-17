@@ -9,6 +9,7 @@ import { SetNanobookTheme } from "./application/SetNanobookTheme";
 import { DeleteNanobook } from "./application/DeleteNanobook";
 import { NanobookLifecycleController } from "./infraestructure/rest/NanobookLifecycleController";
 import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
+import { GetNanobookById } from "./application/GetNanobookById";
 import { ListNanobooks } from "./application/ListNanobooks";
 import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
 import { RequireNanobookAccess } from "./application/RequireNanobookAccess";
@@ -45,7 +46,8 @@ export class NanobookModule {
     public readonly lifecycleController: NanobookLifecycleController,
     public readonly listPublicNanobooks: ListPublicNanobooks,
     public readonly setNanobookTheme: SetNanobookTheme,
-    public readonly requireNanobookAccess: RequireNanobookAccess
+    public readonly requireNanobookAccess: RequireNanobookAccess,
+    public readonly getNanobookById: GetNanobookById
   ) {}
 
   static async create(
@@ -79,7 +81,8 @@ export class NanobookModule {
       new NanobookLifecycleController(updateNanobook, deleteNanobook),
       new ListPublicNanobooks(repository),
       new SetNanobookTheme(repository, readCache, authorizer),
-      requireNanobookAccess
+      requireNanobookAccess,
+      new GetNanobookById(repository)
     );
   }
 }

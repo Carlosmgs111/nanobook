@@ -1,3 +1,4 @@
+import type { Authorizer } from "../../authorization/server";
 import type { NanobookModule } from "../../nanobooks/server";
 import { AgentToolService } from "./application/AgentToolService";
 import type { MarkdownBlockAdvisor } from "./application/ports/MarkdownBlockAdvisor";
@@ -21,13 +22,15 @@ export class AgentModule {
 
   static create(
     nanobooks: NanobookModule,
-    blocks: MarkdownBlockAdvisor
+    blocks: MarkdownBlockAdvisor,
+    authorizer: Authorizer
   ): AgentModule {
     return new AgentModule(
       new AgentToolService(
         nanobooks,
         new DrizzleAgentAuditWriter(db),
-        blocks
+        blocks,
+        authorizer
       )
     );
   }

@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { Result } from "../../../shared/domain/Result";
+import { AccessDeniedError, type Authorizer } from "../../../authorization/server";
 import type { NanobookModule } from "../../../nanobooks/server";
 import { AgentToolService } from "./AgentToolService";
+import { AgentScopeDeniedError } from "./errors";
 import type { MarkdownBlockAdvisor } from "./ports/MarkdownBlockAdvisor";
 
 const reader = { actorId: "user-sensitive-id", oauthClientId: "codex-client", scopes: ["nanobooks:read"] };
@@ -11,15 +13,60 @@ function advisor(issues: ReturnType<MarkdownBlockAdvisor["validate"]> = []): Mar
   return { guide: () => "GUÍA", validate: vi.fn().mockReturnValue(issues) };
 }
 
-function service(blocks: MarkdownBlockAdvisor, listNanobooks = vi.fn().mockResolvedValue(Result.ok([]))) {
+function service(
+  blocks: MarkdownBlockAdvisor,
+  listNanobooks = vi.fn().mockResolvedValue(Result.ok([])),
+  authorizer: Authorizer = { require: vi.fn().mockResolvedValue(Result.ok()) } as unknown as Authorizer,
+  getNanobookById = vi.fn().mockResolvedValue(Result.ok({ id: "book" })),
+) {
   return new AgentToolService(
-    { listNanobooks: { execute: listNanobooks } } as unknown as NanobookModule,
+    { listNanobooks: { execute: listNanobooks }, getNanobookById: { execute: getNanobookById } } as unknown as NanobookModule,
     { write: vi.fn() },
     blocks,
+    authorizer,
   );
 }
 
 describe("AgentToolService", () => {
+  describe("getNanobook", () => {
+    it("autoriza la lectura con el autorizador y devuelve el nanobook", async () => {
+      const require = vi.fn().mockResolvedValue(Result.ok());
+      const getNanobookById = vi.fn().mockResolvedValue(Result.ok({ id: "book" }));
+
+      const result = await service(advisor(), undefined, { require } as unknown as Authorizer, getNanobookById)
+        .getNanobook(reader, "book");
+
+      expect(result.getValue()).toEqual({ id: "book" });
+      expect(getNanobookById).toHaveBeenCalledWith("book");
+      const request = require.mock.calls[0][0];
+      expect(request.action).toBe("read");
+      expect(request.resource).toEqual({ type: "nanobook", id: "book" });
+      expect(await request.subject.userId()).toBe("user-sensitive-id");
+    });
+
+    it("no carga el nanobook si el autorizador lo deniega", async () => {
+      const denied = new AccessDeniedError({ effect: "deny", reason: "not-found" });
+      const require = vi.fn().mockResolvedValue(Result.fail(denied));
+      const getNanobookById = vi.fn();
+
+      const result = await service(advisor(), undefined, { require } as unknown as Authorizer, getNanobookById)
+        .getNanobook(reader, "book");
+
+      expect(result.getError()).toBe(denied);
+      expect(getNanobookById).not.toHaveBeenCalled();
+    });
+
+    it("exige el scope antes de consultar el acceso", async () => {
+      const require = vi.fn();
+
+      const result = await service(advisor(), undefined, { require } as unknown as Authorizer)
+        .getNanobook(noScopes, "book");
+
+      expect(result.getError()).toBeInstanceOf(AgentScopeDeniedError);
+      expect(require).not.toHaveBeenCalled();
+    });
+  });
+
   it("lists the actor's nanobooks without logging the delegated identity", async () => {
     const listNanobooks = vi.fn().mockResolvedValue(Result.ok([]));
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);

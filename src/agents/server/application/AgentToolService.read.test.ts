@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { Document } from "../../../documents/server/domain/Document";
 import { DocumentAccessDeniedError, DocumentNotFoundError } from "../../../documents/server/domain/errors";
+import type { Authorizer } from "../../../authorization/server";
 import type { NanobookModule } from "../../../nanobooks/server";
 import { createMarkdownBlockAdvisor } from "../../../application/server/createMarkdownBlockAdvisor";
 import type { AgentActor } from "./dto";
@@ -23,10 +24,10 @@ function setup(readResult: unknown) {
   const readDocument = { execute: vi.fn().mockResolvedValue(readResult) };
   const listReadableDocuments = { execute: vi.fn().mockResolvedValue([]) };
   const nanobooks = {
-    requireNanobookAccess: { execute: vi.fn().mockResolvedValue(Result.ok({})) },
     documentModule: { readDocument, listReadableDocuments },
   } as unknown as NanobookModule;
-  const tools = new AgentToolService(nanobooks, { write: vi.fn() }, createMarkdownBlockAdvisor());
+  const authorizer = { require: vi.fn().mockResolvedValue(Result.ok()) } as unknown as Authorizer;
+  const tools = new AgentToolService(nanobooks, { write: vi.fn() }, createMarkdownBlockAdvisor(), authorizer);
   return { tools, readDocument, listReadableDocuments };
 }
 
