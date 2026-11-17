@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { getApp } from "../../../../../application/server/Application";
-import { protectNanobookWriteMutation } from "../../../../../nanobooks/server/infraestructure/rest/withNanobookWriteAccess";
 
 export const prerender = false;
 
@@ -13,11 +12,7 @@ const documentMutations = {
 };
 
 function dispatch(method: keyof typeof documentMutations): APIRoute {
-  return protectNanobookWriteMutation(
-    app.routeProtector,
-    app.authorizer,
-    documentMutations[method],
-  );
+  return app.routeProtector.protect(documentMutations[method]);
 }
 
 export const POST = dispatch("POST");
