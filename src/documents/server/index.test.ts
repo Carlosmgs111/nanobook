@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAuthorizer, Subject, type Policy } from "../../authorization/server";
 import { InMemoryEventBus } from "../../shared/infrastructure/InMemoryEventBus";
-import { DocumentPasswordPolicy } from "./application/access/DocumentPasswordPolicy";
+import { DocumentPasswordPolicy } from "./infraestructure/access/DocumentPasswordPolicy";
 import { DocumentModule } from ".";
 
 vi.mock("../../shared/infrastructure/database/drizzleDatabase", () => ({ db: {} }));
@@ -14,26 +14,26 @@ const publicReaders: Policy = {
 };
 
 async function compose() {
-  const policies: Policy[] = [];
-  const authorizer = createAuthorizer(policies);
-  await DocumentModule.create(new InMemoryEventBus(), authorizer, policies);
-  return { policies, authorizer };
+  const authorization = createAuthorizer();
+  const register = vi.spyOn(authorization, "register");
+  await DocumentModule.create(new InMemoryEventBus(), authorization);
+  return { authorization, registered: register.mock.calls.map(([policy]) => policy) };
 }
 
 describe("DocumentModule.create", () => {
   it("registra la política de contraseña para documentos", async () => {
-    const { policies } = await compose();
+    const { registered } = await compose();
 
-    const policy = policies.find((candidate) => candidate instanceof DocumentPasswordPolicy);
+    const policy = registered.find((candidate) => candidate instanceof DocumentPasswordPolicy);
     expect(policy).toBeDefined();
     expect(policy?.appliesTo).toContain("document");
   });
 
   it("un documento protegido de un nanobook público exige desafío sin grant", async () => {
-    const { policies, authorizer } = await compose();
-    policies.push(publicReaders);
+    const { authorization } = await compose();
+    authorization.register(publicReaders);
 
-    const decision = await authorizer.authorize({
+    const decision = await authorization.authorize({
       subject: Subject.anonymous(),
       action: "read",
       resource: { type: "document", id: "d1", nanobookId: "nb-1", attributes: { securedIds: ["d1"] } },

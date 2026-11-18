@@ -42,7 +42,7 @@ export async function resolveNanobookRoute(
   }
 
   const result = await measure("route-nanobook", observeTiming, () =>
-    app.nanobookModule.getNanobookBySlug.execute(slug),
+    app.nanobookModule.getNanobookBySlug(slug),
   );
   if (!result.isSuccess) throw result.getError();
   const nanobook = result.getValue();

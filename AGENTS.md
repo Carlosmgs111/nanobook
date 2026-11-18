@@ -68,6 +68,7 @@ Reglas:
 - `server/` contiene lógica y adaptadores de servidor; no depende de APIs del navegador.
 - Los componentes Astro de presentación residen en `browser/ui/`, incluso cuando su frontmatter consulta servicios de servidor: Astro ejecuta ese bloque exclusivamente en SSR. Mantener esas dependencias fuera de los bloques `<script>` cliente. Las rutas en `pages/` delegan en los módulos.
 - `application/` en la raíz de `src/` conserva los puntos de composición global por entorno (y, en `shared/`, la composición idéntica para ambos); no es un módulo de negocio sujeto a las tres capas.
+- `authorization` es un núcleo compartido que decide todo el acceso. Los casos de uso (`application/`) solo lo consumen a través de `Authorizer` y `Subject`. Las políticas que implementan su contrato `Policy` (p. ej. `NanobookAccessPolicy`, `DocumentPasswordPolicy`) son adaptadores: viven en `infraestructure/access/` de su módulo y se registran en el compositor `index.ts` con `Authorization.register(...)`; solo los compositores reciben `Authorization`, los casos de uso reciben `Authorizer`. `authorization` no importa módulos de negocio.
 - Evitar `core` como cajón de sastre; usar nombres que describan la responsabilidad.
 
 ## Documentación de decisiones

@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { createAuthorizer } from "../../../../authorization/server";
 import { Nanobook } from "../../domain/Nanobook";
 import { InMemoryNanobookRepository } from "../repository/InMemoryNanobookRepository";
-import { NanobookAccessPolicy } from "../../application/access/NanobookAccessPolicy";
-import { UpdateNanobook } from "../../application/UpdateNanobook";
-import { DeleteNanobook } from "../../application/DeleteNanobook";
+import { NanobookAccessPolicy } from "../access/NanobookAccessPolicy";
+import { LifeCycle } from "../../application/LifeCycle";
 import type { NanobookReadCache } from "../../domain/ports/NanobookReadCache";
 import { NanobookLifecycleController } from "./NanobookLifecycleController";
 
@@ -20,10 +19,8 @@ describe("NanobookLifecycleController", () => {
       replace: async () => undefined,
       remove: async () => undefined,
     };
-    return new NanobookLifecycleController(
-      new UpdateNanobook(repository, cache, authorizer),
-      new DeleteNanobook(repository, cache, authorizer),
-    );
+    const lifeCycle = new LifeCycle(repository, cache, authorizer);
+    return new NanobookLifecycleController(lifeCycle.update, lifeCycle.delete);
   };
   const context = (body: string, user = "owner", id = "one", method = "PATCH") => ({
     request: new Request("http://localhost/api/nanobooks/one", { method, body, headers: { "Content-Type": "application/json" } }),

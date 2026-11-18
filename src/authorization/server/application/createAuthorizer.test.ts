@@ -35,14 +35,31 @@ describe("createAuthorizer · authorize", () => {
   });
 
   it("considera las políticas registradas después de crear el autorizador", async () => {
-    const policies: Policy[] = [];
-    const authorizer = createAuthorizer(policies);
+    const authorizer = createAuthorizer();
 
     expect(await authorizer.authorize(request())).toEqual(deny("forbidden"));
 
-    policies.push(policy(allow));
+    authorizer.register(policy(allow));
 
     expect(await authorizer.authorize(request())).toEqual(allow);
+  });
+
+  it("copia las políticas iniciales: modificar el arreglo original no altera el autorizador", async () => {
+    const initial: Policy[] = [policy(deny("forbidden"))];
+    const authorizer = createAuthorizer(initial);
+
+    initial.length = 0;
+    initial.push(policy(allow));
+
+    expect(await authorizer.authorize(request())).toEqual(deny("forbidden"));
+  });
+
+  it("combina las políticas iniciales con las registradas después", async () => {
+    const authorizer = createAuthorizer([policy(allow)]);
+
+    authorizer.register(policy(challenge));
+
+    expect(await authorizer.authorize(request())).toEqual(challenge);
   });
 
   it("deny gana sobre challenge y allow; gana el primero registrado", async () => {

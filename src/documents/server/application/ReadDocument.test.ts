@@ -3,7 +3,7 @@ import { AccessCheckFailedError, createAuthorizer, type Authorizer, type Policy 
 import { Result } from "../../../shared/domain/Result";
 import { Document } from "../domain/Document";
 import type { AccessGrantCodec, DocumentAccessRepository } from "../domain/access/ports";
-import { DocumentPasswordPolicy } from "./access/DocumentPasswordPolicy";
+import { DocumentPasswordPolicy } from "../infraestructure/access/DocumentPasswordPolicy";
 import { ReadDocument, type DocumentViewer } from "./ReadDocument";
 
 function document(id: string, secured: boolean, content = "# Secreto") {

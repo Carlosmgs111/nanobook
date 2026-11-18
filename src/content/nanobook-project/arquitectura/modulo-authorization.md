@@ -23,7 +23,7 @@ draft: false
 
 ## Reglas del motor
 
-`createAuthorizer(policies)` evalúa todas las políticas aplicables y combina el resultado así:
+`createAuthorizer()` evalúa todas las políticas aplicables y combina el resultado así:
 
 1. `deny` prevalece sobre todo.
 2. Sin `deny`, un `challenge` prevalece sobre `allow`.
@@ -31,7 +31,7 @@ draft: false
 4. Una decisión malformada o un motivo desconocido nunca concede.
 5. Un fallo técnico de una política lanza `AccessCheckFailedError` y nunca concede. `Authorizer.require` lo devuelve como `Result.fail`.
 
-El arreglo de políticas se consulta en cada llamada: cada módulo añade la suya al componerse, después de crear el autorizador.
+Las políticas se guardan dentro del autorizador y se consultan en cada llamada: cada módulo añade la suya con `register(policy)` al componerse, después de crear el autorizador. `createAuthorizer(initialPolicies?)` copia el arreglo inicial, así que nadie puede alterar las políticas desde fuera. El autorizador tiene dos vistas: `Authorization` (con `register`) la reciben solo los compositores de módulo; `Authorizer` (solo `authorize` y `require`) la reciben los casos de uso, que no pueden registrar políticas.
 
 ## Las políticas actuales
 
@@ -40,7 +40,7 @@ El arreglo de políticas se consulta en cada llamada: cada módulo añade la suy
 
 ## Cómo añadir una política
 
-Implementar `Policy` en el módulo dueño del recurso y registrarla con `policies.push(...)` en su compositor `server/index.ts`, sobre el arreglo compartido que recibe `create(eventBus, authorizer, policies)`. Una política no concede lo que decide otra: para conceder, la del módulo dueño devuelve `allow`; las restricciones transversales (como la contraseña) solo restringen.
+Implementar `Policy` en el módulo dueño del recurso y registrarla con `authorization.register(...)` en su compositor `server/index.ts`, sobre la `Authorization` que recibe `create(eventBus, authorization)`. Una política no concede lo que decide otra: para conceder, la del módulo dueño devuelve `allow`; las restricciones transversales (como la contraseña) solo restringen.
 
 ## Errores HTTP
 

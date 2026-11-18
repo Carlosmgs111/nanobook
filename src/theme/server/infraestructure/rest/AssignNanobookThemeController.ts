@@ -11,9 +11,10 @@ export class AssignNanobookThemeController {
   constructor(private readonly assign: AssignNanobookTheme) {}
 
   handle: APIRoute = async ({ request, locals, params }) => {
+    console.log({ locals, params });
     if (!locals.currentUserId) return json("Autenticación requerida", 401);
     if (!params.nanobookId) return json("Nanobook inválido", 400);
-
+    console.log("setting up theme");
     try {
       const body = await request.json();
       if (
@@ -29,23 +30,30 @@ export class AssignNanobookThemeController {
       const result = await this.assign.execute(
         locals.currentUserId,
         params.nanobookId,
-        body.reference,
+        body.reference
       );
       if (result.isSuccess) return new Response(null, { status: 204 });
 
       const error = result.getError();
-      if (error instanceof AccessDeniedError || error instanceof AccessCheckFailedError) {
+      if (
+        error instanceof AccessDeniedError ||
+        error instanceof AccessCheckFailedError
+      ) {
         return accessErrorResponse(error);
       }
       const status = error.name.includes("AccessDenied")
         ? 403
         : error.name.includes("NotFound")
-          ? 404
-          : error.name.includes("Invalid")
-            ? 400
-            : 500;
-      return json(status === 500 ? "No fue posible asignar el tema" : error.message, status);
-    } catch {
+        ? 404
+        : error.name.includes("Invalid")
+        ? 400
+        : 500;
+      return json(
+        status === 500 ? "No fue posible asignar el tema" : error.message,
+        status
+      );
+    } catch (e) {
+      console.log({ e });
       return json("JSON inválido", 400);
     }
   };

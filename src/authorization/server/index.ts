@@ -1,4 +1,4 @@
-export { createAuthorizer, type Authorizer } from "./application/createAuthorizer";
+export { createAuthorizer, type Authorization, type Authorizer } from "./application/createAuthorizer";
 export { AccessCheckFailedError, AccessDeniedError } from "./domain/errors";
 export {
   Subject,
