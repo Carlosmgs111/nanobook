@@ -47,7 +47,7 @@ export class AgentToolService {
   async listNanobooks(actor: AgentActor) {
     if (!this.has(actor, "nanobooks:read"))
       return Result.fail(new AgentScopeDeniedError("nanobooks:read"));
-    return this.nanobooks.listNanobooks.execute(actor.actorId);
+    return this.nanobooks.listNanobooks(actor.actorId);
   }
 
   async getNanobook(actor: AgentActor, nanobookId: string) {
@@ -55,7 +55,7 @@ export class AgentToolService {
       return Result.fail(new AgentScopeDeniedError("nanobooks:read"));
     const access = await this.access(actor, nanobookId, "read");
     if (!access.isSuccess) return Result.fail(access.getError());
-    return this.nanobooks.getNanobookById.execute(nanobookId);
+    return this.nanobooks.getNanobookById(nanobookId);
   }
 
   async createNanobook(
@@ -82,7 +82,7 @@ export class AgentToolService {
   async updateNanobook(actor: AgentActor, nanobookId: string, input: unknown) {
     if (!this.has(actor, "nanobooks:write"))
       return Result.fail(new AgentScopeDeniedError("nanobooks:write"));
-    const result = await this.nanobooks.updateNanobook.execute(
+    const result = await this.nanobooks.updateNanobook(
       actor.actorId,
       nanobookId,
       input

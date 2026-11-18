@@ -1,17 +1,12 @@
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
 import { DocumentModule } from "../../documents/server";
-import type { Authorizer, Policy } from "../../authorization/server";
+import type { Authorization } from "../../authorization/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
-import { NanobookAccessPolicy } from "./application/access/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "./infraestructure/access/NanobookAccessPolicy";
 import { CreateNanobook } from "./application/CreateNanobook";
-import { UpdateNanobook } from "./application/UpdateNanobook";
-import { SetNanobookTheme } from "./application/SetNanobookTheme";
-import { DeleteNanobook } from "./application/DeleteNanobook";
+import { LifeCycle } from "./application/LifeCycle";
 import { NanobookLifecycleController } from "./infraestructure/rest/NanobookLifecycleController";
-import { GetNanobookBySlug } from "./application/GetNanobookBySlug";
-import { GetNanobookById } from "./application/GetNanobookById";
-import { ListNanobooks } from "./application/ListNanobooks";
-import { ListPublicNanobooks } from "./application/ListPublicNanobooks";
+import { Reading } from "./application/Reading";
 import { CreateNanobookController } from "./infraestructure/rest/CreateNanobookController";
 import { ListNanobooksController } from "./infraestructure/rest/ListNanobooksController";
 import { DrizzleNanobookRepository } from "./infraestructure/repository/DrizzleNanobookRepository";
@@ -29,49 +24,46 @@ export { NanobookNotFoundError } from "./domain/errors";
 export class NanobookModule {
   private constructor(
     public readonly createNanobook: CreateNanobook,
-    public readonly updateNanobook: UpdateNanobook,
+    public readonly updateNanobook: LifeCycle["update"],
     public readonly createNanobookController: CreateNanobookController,
-    public readonly getNanobookBySlug: GetNanobookBySlug,
-    public readonly listNanobooks: ListNanobooks,
+    public readonly getNanobookBySlug: Reading["getNanobookBySlug"],
+    public readonly listNanobooks: Reading["listNanobooks"],
     public readonly listNanobooksController: ListNanobooksController,
     public readonly documentModule: DocumentModule,
     public readonly lifecycleController: NanobookLifecycleController,
-    public readonly listPublicNanobooks: ListPublicNanobooks,
-    public readonly setNanobookTheme: SetNanobookTheme,
-    public readonly getNanobookById: GetNanobookById
+    public readonly listPublicNanobooks: Reading["listPublicNanobooks"],
+    public readonly setNanobookTheme: LifeCycle["setNanobookTheme"],
+    public readonly getNanobookById: Reading["getNanobookById"]
   ) {}
 
   static async create(
     eventBus: EventBus,
-    authorizer: Authorizer,
-    policies: Policy[],
+    authorization: Authorization
   ): Promise<NanobookModule> {
     const repository = new DrizzleNanobookRepository(db);
-    policies.push(new NanobookAccessPolicy(repository));
+    authorization.register(new NanobookAccessPolicy(repository));
     const readCache = createNanobookReadCache();
-    const listNanobooks = new ListNanobooks(repository);
-    const getNanobookBySlug = new GetNanobookBySlug(repository, readCache);
-    const documentModule = await DocumentModule.create(eventBus, authorizer, policies);
+    const documentModule = await DocumentModule.create(eventBus, authorization);
+    const lifeCycle = new LifeCycle(repository, readCache, authorization);
+    const reading = new Reading(repository, readCache);
     const createNanobook = new CreateNanobook(
       repository,
       new DocumentModuleRootDocument(documentModule),
-      readCache,
+      readCache
     );
-    const updateNanobook = new UpdateNanobook(repository, readCache, authorizer);
-    const deleteNanobook = new DeleteNanobook(repository, readCache, authorizer);
 
     return new NanobookModule(
       createNanobook,
-      updateNanobook,
+      lifeCycle.update,
       new CreateNanobookController(createNanobook),
-      getNanobookBySlug,
-      listNanobooks,
-      new ListNanobooksController(listNanobooks),
+      reading.getNanobookBySlug,
+      reading.listNanobooks,
+      new ListNanobooksController(reading.listNanobooks),
       documentModule,
-      new NanobookLifecycleController(updateNanobook, deleteNanobook),
-      new ListPublicNanobooks(repository),
-      new SetNanobookTheme(repository, readCache, authorizer),
-      new GetNanobookById(repository)
+      new NanobookLifecycleController(lifeCycle.update, lifeCycle.delete),
+      reading.listPublicNanobooks,
+      lifeCycle.setNanobookTheme,
+      reading.getNanobookById
     );
   }
 }

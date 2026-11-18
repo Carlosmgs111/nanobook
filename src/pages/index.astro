@@ -7,7 +7,7 @@ Astro.response.headers.set("Cache-Control", "private, no-store");
 const app = await getApp();
 const [session, catalog] = await Promise.all([
   app.authServerModule.getSession(Astro.request, Astro.response.headers),
-  app.nanobookModule.listPublicNanobooks.execute(),
+  app.nanobookModule.listPublicNanobooks(),
 ]);
 if (!catalog.isSuccess) Astro.response.status = 503;
 ---

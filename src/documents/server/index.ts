@@ -1,8 +1,8 @@
 import { BETTER_AUTH_SECRET, GITHUB_TOKEN } from "astro:env/server";
 import type { EventBus } from "../../shared/domain/bus/EventBus";
 import { db } from "../../shared/infrastructure/database/drizzleDatabase";
-import type { Authorizer, Policy } from "../../authorization/server";
-import { DocumentPasswordPolicy } from "./application/access/DocumentPasswordPolicy";
+import type { Authorization } from "../../authorization/server";
+import { DocumentPasswordPolicy } from "./infraestructure/access/DocumentPasswordPolicy";
 import { ClearDocumentPassword } from "./application/access/ClearDocumentPassword";
 import { SetDocumentPassword } from "./application/access/SetDocumentPassword";
 import { UnlockDocument } from "./application/access/UnlockDocument";
@@ -68,11 +68,11 @@ export class DocumentModule {
   ) {}
 
   /**
-   * Compone el módulo y registra en `policies` la política de contraseña. Esa política es una
+   * Compone el módulo y registra en `authorization` la política de contraseña. Esa política es una
    * restricción (nunca concede): sin registrarla, la protección de lectura no se aplica y un documento
    * protegido de un nanobook público se serviría sin desafío; por eso `create` la registra siempre.
    */
-  static async create(eventBus: EventBus, authorizer: Authorizer, policies: Policy[]) {
+  static async create(eventBus: EventBus, authorization: Authorization) {
     // Persistencia y resolución de referencias entre documentos.
     const contentRepository = new DrizzleContentRepository(db, new UnifiedDocumentParser());
     const referenceResolvers: ReferenceResolver[] = [new InternalReferenceResolver(contentRepository), new LocalFileReferenceResolver()];
@@ -80,9 +80,9 @@ export class DocumentModule {
     const proxyParser = new ProxyParser(referenceResolvers);
 
     // Escritura: cada caso de uso exige permiso de escritura sobre el nanobook.
-    const createDocument = new CreateDocument(contentRepository, eventBus, authorizer);
-    const updateDocument = new UpdateDocument(contentRepository, eventBus, authorizer);
-    const deleteDocument = new DeleteDocument(contentRepository, eventBus, authorizer);
+    const createDocument = new CreateDocument(contentRepository, eventBus, authorization);
+    const updateDocument = new UpdateDocument(contentRepository, eventBus, authorization);
+    const deleteDocument = new DeleteDocument(contentRepository, eventBus, authorization);
 
     // Lectura sin protección, con la caché de fuentes invalidada por los eventos de documento.
     const sourceCache = createDocumentSourceCache();
@@ -98,7 +98,7 @@ export class DocumentModule {
     const grantCodec = new HmacAccessGrantCodec(BETTER_AUTH_SECRET ?? "nanobook-development-secret");
     const hasher = new ScryptPasswordHasher();
     const unlockLimiter = new DrizzleUnlockAttemptLimiter(db, DEFAULT_ACCESS_GRANT_POLICY);
-    policies.push(new DocumentPasswordPolicy(accessRepository, grantCodec));
+    authorization.register(new DocumentPasswordPolicy(accessRepository, grantCodec));
     const unlockDocument = new UnlockDocument(
       getDocument,
       accessRepository,
@@ -107,8 +107,8 @@ export class DocumentModule {
       grantCodec,
       DEFAULT_ACCESS_GRANT_POLICY,
     );
-    const readDocument = new ReadDocument(getDocument, authorizer);
-    const listReadableDocuments = new ListReadableDocuments(contentRepository, proxyParser, authorizer);
+    const readDocument = new ReadDocument(getDocument, authorization);
+    const listReadableDocuments = new ListReadableDocuments(contentRepository, proxyParser, authorization);
 
     return new DocumentModule(
       createDocument,
@@ -121,8 +121,8 @@ export class DocumentModule {
       new UpdateDocumentController(updateDocument),
       new DeleteDocumentController(deleteDocument),
       new DocumentAccessAdminController(
-        new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, authorizer),
-        new ClearDocumentPassword(contentRepository, accessRepository, eventBus, authorizer),
+        new SetDocumentPassword(contentRepository, accessRepository, hasher, eventBus, authorization),
+        new ClearDocumentPassword(contentRepository, accessRepository, eventBus, authorization),
       ),
       new UnlockDocumentController(unlockDocument),
     );

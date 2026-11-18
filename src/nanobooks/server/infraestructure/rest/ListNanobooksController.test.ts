@@ -14,7 +14,7 @@ describe("ListNanobooksController", () => {
       visibility: "public",
     }).getValue();
     const execute = vi.fn().mockResolvedValue(Result.ok([nanobook]));
-    const controller = new ListNanobooksController({ execute } as never);
+    const controller = new ListNanobooksController(execute as never);
 
     const response = await controller.handle({
       locals: { currentUserId: "owner-1" },
@@ -32,7 +32,7 @@ describe("ListNanobooksController", () => {
   });
 
   it("rejects an anonymous request", async () => {
-    const controller = new ListNanobooksController({ execute: vi.fn() } as never);
+    const controller = new ListNanobooksController(vi.fn() as never);
 
     const response = await controller.handle({ locals: {} } as never);
 

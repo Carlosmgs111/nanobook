@@ -21,7 +21,7 @@ La lectura de contenido protegido pasa siempre por `ReadDocument` (documento) y 
 
 ## Escritura
 
-`documents` no importa `nanobooks`, que es quien construye `DocumentModule` (habría un ciclo). Recibe el `Authorizer` y el arreglo de políticas en `DocumentModule.create(eventBus, authorizer, policies)`, registra `DocumentPasswordPolicy` y llama a `authorizer.require({ action: "write", resource: { type: "document", ... } })`; decide `NanobookAccessPolicy`, que evalúa los recursos `document` por su `nanobookId`. Las versiones anteriores usaban un puerto de escritura propio con su adaptador en `nanobooks` y un guard HTTP; todo eso se retiró.
+`documents` no importa `nanobooks`, que es quien construye `DocumentModule` (habría un ciclo). Recibe la `Authorization` en `DocumentModule.create(eventBus, authorization)`, registra `DocumentPasswordPolicy` con `authorization.register(...)` y sus casos de uso llaman a `authorizer.require({ action: "write", resource: { type: "document", ... } })`; decide `NanobookAccessPolicy`, que evalúa los recursos `document` por su `nanobookId`. Las versiones anteriores usaban un puerto de escritura propio con su adaptador en `nanobooks` y un guard HTTP; todo eso se retiró.
 
 Crear, actualizar, borrar y fijar o quitar contraseña autorizan por el permiso `write` del nanobook dentro de cada caso de uso, antes de cargar o validar nada (`SetDocumentPassword` valida la contraseña después de autorizar). Los controladores traducen los errores con `accessErrorResponse`: ajeno sobre nanobook privado o inexistente, 404 idéntico; sobre uno público, 403; sin sesión, 401. El `ownerId` del documento es solo metadato de auditoría (lo estampa `CreateDocument` con el actor); los documentos sin dueño ya no quedan bloqueados para su escritor.
 

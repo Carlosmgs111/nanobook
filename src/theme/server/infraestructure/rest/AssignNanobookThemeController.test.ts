@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createAuthorizer } from "../../../../authorization/server";
 import { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
-import { NanobookAccessPolicy } from "../../../../nanobooks/server/application/access/NanobookAccessPolicy";
-import { SetNanobookTheme } from "../../../../nanobooks/server/application/SetNanobookTheme";
+import { NanobookAccessPolicy } from "../../../../nanobooks/server/infraestructure/access/NanobookAccessPolicy";
+import { LifeCycle } from "../../../../nanobooks/server/application/LifeCycle";
 import { InMemoryNanobookRepository } from "../../../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { Result } from "../../../../shared/domain/Result";
 import { AssignNanobookTheme } from "../../application/AssignNanobookTheme";
@@ -16,9 +16,9 @@ function setup() {
     Nanobook.create({ id: "pub", ownerId: "owner", slug: "pub", name: "Pub", visibility: "public" }).getValue(),
   ]);
   const cache = { getOrLoad: async (_s: string, load: () => any) => load(), replace: async () => undefined, remove: async () => undefined };
-  const setTheme = new SetNanobookTheme(repository, cache as any, createAuthorizer([new NanobookAccessPolicy(repository)]));
+  const { setNanobookTheme } = new LifeCycle(repository, cache as any, createAuthorizer([new NanobookAccessPolicy(repository)]));
   const themes = { execute: async (_user: string, ref: typeof reference) => Result.ok(ref) };
-  return new AssignNanobookThemeController(new AssignNanobookTheme(themes as any, setTheme));
+  return new AssignNanobookThemeController(new AssignNanobookTheme(themes as any, setNanobookTheme));
 }
 
 const context = (user: string, nanobookId: string) => ({

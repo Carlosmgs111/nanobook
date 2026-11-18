@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Result } from "../../shared/domain/Result";
 import { createAuthorizer } from "../../authorization/server";
-import { NanobookAccessPolicy } from "../../nanobooks/server/application/access/NanobookAccessPolicy";
+import { NanobookAccessPolicy } from "../../nanobooks/server/infraestructure/access/NanobookAccessPolicy";
 import { Nanobook } from "../../nanobooks/server/domain/Nanobook";
 import { InMemoryNanobookRepository } from "../../nanobooks/server/infraestructure/repository/InMemoryNanobookRepository";
 import { resolveNanobookRoute } from "./resolveNanobookRoute";
@@ -19,9 +19,7 @@ describe("resolveNanobookRoute", () => {
   ) => {
     const app = {
       nanobookModule: {
-        getNanobookBySlug: {
-          execute: vi.fn().mockResolvedValue(Result.ok(nanobook)),
-        },
+        getNanobookBySlug: vi.fn().mockResolvedValue(Result.ok(nanobook)),
       },
       authServerModule: {
         getSession: vi.fn().mockResolvedValue(session),
@@ -62,13 +60,11 @@ describe("resolveNanobookRoute", () => {
     let resolveSession: ((session: { id: string }) => void) | undefined;
     const app = {
       nanobookModule: {
-        getNanobookBySlug: {
-          execute: () =>
-            new Promise<Result<never, Nanobook>>((resolve) => {
-              started.push("nanobook");
-              resolveNanobook = resolve;
-            }),
-        },
+        getNanobookBySlug: () =>
+          new Promise<Result<never, Nanobook>>((resolve) => {
+            started.push("nanobook");
+            resolveNanobook = resolve;
+          }),
       },
       authorizer: authorizerFor(nanobook),
       authServerModule: {
@@ -111,9 +107,7 @@ describe("resolveNanobookRoute", () => {
     const timings: Record<string, number> = {};
     const app = {
       nanobookModule: {
-        getNanobookBySlug: {
-          execute: async () => Result.ok(nanobook),
-        },
+        getNanobookBySlug: async () => Result.ok(nanobook),
       },
       authServerModule: {
         getSession: async () => ({ id: "owner-1" }),
@@ -160,7 +154,7 @@ describe("resolveNanobookRoute", () => {
     const getSession = vi.fn().mockResolvedValue({ id: "owner-1" });
     const app = {
       nanobookModule: {
-        getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(nanobook)) },
+        getNanobookBySlug: vi.fn().mockResolvedValue(Result.ok(nanobook)),
       },
       authServerModule: { getSession },
       authorizer: authorizerFor(nanobook),
@@ -256,7 +250,7 @@ describe("resolveNanobookRoute", () => {
       const getSession = vi.fn().mockResolvedValue(null);
       const app = {
         nanobookModule: {
-          getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(found)) },
+          getNanobookBySlug: vi.fn().mockResolvedValue(Result.ok(found)),
         },
         authServerModule: { getSession },
         authorizer: authorizerFor(nanobook),
@@ -289,7 +283,7 @@ describe("resolveNanobookRoute", () => {
     const getSession = vi.fn().mockResolvedValue(user);
     const app = {
       nanobookModule: {
-        getNanobookBySlug: { execute: vi.fn().mockResolvedValue(Result.ok(nanobook)) },
+        getNanobookBySlug: vi.fn().mockResolvedValue(Result.ok(nanobook)),
       },
       authServerModule: { getSession },
       authorizer: authorizerFor(nanobook),

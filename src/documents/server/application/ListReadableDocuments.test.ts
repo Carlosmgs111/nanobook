@@ -4,7 +4,7 @@ import { Result } from "../../../shared/domain/Result";
 import { Document } from "../domain/Document";
 import type { AccessGrantCodec, DocumentAccessRepository } from "../domain/access/ports";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
-import { DocumentPasswordPolicy } from "./access/DocumentPasswordPolicy";
+import { DocumentPasswordPolicy } from "../infraestructure/access/DocumentPasswordPolicy";
 import { ListReadableDocuments } from "./ListReadableDocuments";
 import type { ProxyParser } from "./ProxyParser";
 

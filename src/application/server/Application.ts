@@ -1,5 +1,5 @@
 import { AuthServerModule } from "../../auth/server";
-import { createAuthorizer, type Authorizer, type Policy } from "../../authorization/server";
+import { createAuthorizer, type Authorizer } from "../../authorization/server";
 import { createMarkdownExtensions } from "../shared/createMarkdownExtensions";
 import { createMarkdownBlockAdvisor } from "./createMarkdownBlockAdvisor";
 import { ProfileModule } from "../../profiles/server";
@@ -29,10 +29,10 @@ export class Application {
     const routeProtector: RouteProtector = authServerModule;
     const profileModule = ProfileModule.create(routeProtector);
     const eventBus = new InMemoryEventBus();
-    // Las políticas las registra cada módulo al crearse; el autorizador las consulta en cada petición.
-    const policies: Policy[] = [];
-    const authorizer = createAuthorizer(policies);
-    const nanobookModule = await NanobookModule.create(eventBus, authorizer, policies);
+    // Cada módulo registra su política en el autorizador al crearse.
+    const authorization = createAuthorizer();
+    const authorizer: Authorizer = authorization;
+    const nanobookModule = await NanobookModule.create(eventBus, authorization);
     const navigationModule = await NavigationModule.create(
       nanobookModule.documentModule,
       eventBus,
