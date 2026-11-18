@@ -22,6 +22,7 @@ function documentApiUrl(identifier: string): string {
     : `/api/me/documents/${path}`;
 }
 
+/** Solo viajan los campos editables; identidad, auditoría y protección las gestiona el servidor. */
 function toUpdateDocumentRequest(
   document: SerializedEntry
 ): UpdateDocumentRequest {
@@ -64,68 +65,56 @@ async function toWriterError(
   });
 }
 
+/** Ejecuta la petición y traduce respuestas no-2xx (401, 403, 409...) y fallos de red a `EditionWriterError`. */
+async function send<T>(
+  url: string,
+  init: RequestInit,
+  fallbackMessage: string,
+  parse: (response: Response) => Promise<T>
+): Promise<Result<EditionWriterError, T>> {
+  try {
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      return Result.fail(await toWriterError(response, fallbackMessage));
+    }
+    return Result.ok(await parse(response));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return Result.fail(new EditionWriterError(message, { cause: error }));
+  }
+}
+
+const jsonBody = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+
 export class HttpDocumentWriter implements DocumentWriter {
-  async createDocument(
-    document: CreateDocumentRequest
-  ): Promise<Result<EditionWriterError, SerializedEntry>> {
-    try {
-      const response = await fetch(documentApiUrl(document.id), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(document),
-      });
-
-      if (!response.ok) {
-        return Result.fail(
-          await toWriterError(response, "Error al crear el documento")
-        );
-      }
-
-      return Result.ok(await response.json());
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return Result.fail(new EditionWriterError(message, { cause: error }));
-    }
+  createDocument(document: CreateDocumentRequest) {
+    return send<SerializedEntry>(
+      documentApiUrl(document.id),
+      jsonBody("POST", document),
+      "Error al crear el documento",
+      (response) => response.json()
+    );
   }
 
-  async updateDocument(
-    documentId: string,
-    document: SerializedEntry
-  ): Promise<Result<EditionWriterError, SerializedEntry>> {
-    try {
-      const response = await fetch(documentApiUrl(documentId), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toUpdateDocumentRequest(document)),
-      });
-
-      if (!response.ok) {
-        return Result.fail(await toWriterError(response, "Error al actualizar"));
-      }
-
-      return Result.ok(await response.json());
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return Result.fail(new EditionWriterError(message, { cause: error }));
-    }
+  updateDocument(documentId: string, document: SerializedEntry) {
+    return send<SerializedEntry>(
+      documentApiUrl(documentId),
+      jsonBody("PATCH", toUpdateDocumentRequest(document)),
+      "Error al actualizar",
+      (response) => response.json()
+    );
   }
 
-  async deleteDocument(
-    documentId: string
-  ): Promise<Result<EditionWriterError, void>> {
-    try {
-      const response = await fetch(documentApiUrl(documentId), {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        return Result.fail(
-          await toWriterError(response, "Error al eliminar")
-        );
-      }
-      return Result.ok();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return Result.fail(new EditionWriterError(message, { cause: error }));
-    }
+  deleteDocument(documentId: string) {
+    return send<void>(
+      documentApiUrl(documentId),
+      { method: "DELETE" },
+      "Error al eliminar",
+      async () => undefined
+    );
   }
 }

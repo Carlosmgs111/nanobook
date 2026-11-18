@@ -11,7 +11,7 @@ export function grantCookieName(documentId: string): string {
 }
 
 /** Lee el valor de una cookie desde una cabecera `Cookie`. */
-export function readCookie(header: string | null | undefined, name: string): string | undefined {
+function readCookie(header: string | null | undefined, name: string): string | undefined {
   if (!header) return undefined;
   for (const part of header.split(";")) {
     const separator = part.indexOf("=");

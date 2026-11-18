@@ -215,6 +215,32 @@ export class Document {
       this.revision,
     );
   }
+
+  /**
+   * Copia apta para mostrarse a quien aún no superó el desafío: conserva
+   * identidad, path, título, revisión y el candado; nada que describa el
+   * contenido ni a su autor.
+   */
+  redacted(): Document {
+    return Document.create(
+      this.getPath(),
+      {
+        id: this.documentId.getValue(),
+        title: this.title,
+        description: "",
+        createdAt: this.metadata.createdAt,
+        updatedAt: this.metadata.updatedAt,
+        secured: this.metadata.secured,
+        position: this.position,
+        nanobook: this.metadata.nanobook,
+      },
+      "",
+      null,
+      undefined,
+      this.documentId.getValue(),
+      this.revision,
+    ).getValue();
+  }
   getTitle(): string {
     return this.title;
   }

@@ -21,15 +21,23 @@ export class GetDocument {
     documentPathValue: string,
     observeTiming?: DocumentTimingObserver,
   ): Promise<Document | null> {
-    const document = await measure("document-lookup", observeTiming, () =>
+    return (await this.executeChain(nanobookId, documentPathValue, observeTiming))?.resolved ?? null;
+  }
+
+  /** El documento almacenado y su versión con proxies resueltos, en una sola lectura. */
+  async executeChain(
+    nanobookId: string,
+    documentPathValue: string,
+    observeTiming?: DocumentTimingObserver,
+  ): Promise<{ raw: Document; resolved: Document } | null> {
+    const raw = await measure("document-lookup", observeTiming, () =>
       this.executeRaw(nanobookId, documentPathValue),
     );
-    if (!document) return null;
-    return (
-      await measure("document-proxy", observeTiming, () =>
-        this.parseProxy.parseProxies(nanobookId, [document]),
-      )
-    )[0];
+    if (!raw) return null;
+    const [resolved] = await measure("document-proxy", observeTiming, () =>
+      this.parseProxy.parseProxies(nanobookId, [raw]),
+    );
+    return { raw, resolved };
   }
 
   async executeRaw(nanobookId: string, documentPathValue: string): Promise<Document | null> {
@@ -42,13 +50,7 @@ export class GetDocument {
       publicPath,
       () => this.contentRepository.getByPublicPath(nanobookId, publicPath),
     );
-    if (!documentResult.isSuccess) {
-      return null;
-    }
-
-    const document = documentResult.getValue();
-    if (!document) return null;
-    return document;
+    return documentResult.isSuccess ? documentResult.getValue() : null;
   }
 }
 

@@ -1,19 +1,21 @@
 import { Result } from "../../../shared/domain/Result";
 import { DocumentChanged } from "../domain/events/DocumentChanged";
-import type { SerializedEntry } from "../domain/model/StagedDocument";
-import type { RenderedPreview } from "../domain/model/StagedDocument";
+import {
+  sameDocument,
+  type RenderedPreview,
+  type SerializedEntry,
+} from "../domain/model/StagedDocument";
 import type { DocumentStorage } from "../domain/ports/DocumentStorage";
 import type { PreviewRenderer } from "../domain/ports/PreviewRenderer";
 import type { EditionStorageError, EditionRenderError } from "../domain/errors";
 import type { EventBus } from "../../../shared/domain/bus/EventBus";
 
 export type RenderPreviewError = EditionStorageError | EditionRenderError;
+type RenderOutcome = Result<RenderPreviewError, RenderedPreview | null>;
 
 export class RenderPreview {
-  private activeRenders = new Map<
-    string,
-    Promise<Result<RenderPreviewError, RenderedPreview | null>>
-  >();
+  /** Renders en curso por documento y versión: las llamadas concurrentes los comparten. */
+  private activeRenders = new Map<string, Promise<RenderOutcome>>();
 
   constructor(
     private storage: DocumentStorage,
@@ -21,9 +23,7 @@ export class RenderPreview {
     private eventBus: EventBus
   ) {}
 
-  async execute(
-    documentId: string
-  ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
+  async execute(documentId: string): Promise<RenderOutcome> {
     const stagedResult = this.storage.loadStagedDocument(documentId);
     if (!stagedResult.isSuccess) return Result.fail(stagedResult.getError());
     const staged = stagedResult.getValue();
@@ -48,60 +48,31 @@ export class RenderPreview {
   private async renderPipeline(
     documentId: string,
     staged: SerializedEntry
-  ): Promise<Result<RenderPreviewError, RenderedPreview | null>> {
-    const cachedResult = this.loadCachedPreview(documentId, staged);
-    if (!cachedResult.isSuccess) {
-      return Result.fail(cachedResult.getError());
+  ): Promise<RenderOutcome> {
+    const cachedResult = this.storage.loadCachedPreview(documentId);
+    if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
+    const cached = cachedResult.getValue();
+    if (cached && sameDocument(cached.source, staged)) {
+      return Result.ok(cached.rendered);
     }
-    if (cachedResult.getValue()) {
-      return Result.ok(cachedResult.getValue());
-    }
+
     const renderResult = await this.renderer.render(staged.content);
-    if (!renderResult.isSuccess) {
-      return Result.fail(renderResult.getError());
-    }
+    if (!renderResult.isSuccess) return Result.fail(renderResult.getError());
     const rendered = renderResult.getValue();
 
-    const currentStagedResult = this.storage.loadStagedDocument(documentId);
-    if (!currentStagedResult.isSuccess) {
-      return Result.fail(currentStagedResult.getError());
-    }
-    const currentStaged = currentStagedResult.getValue();
-    if (currentStaged && !sameDocument(currentStaged, staged)) {
-      return Result.ok(null);
-    }
+    // Si el borrador cambió mientras se renderizaba, el resultado está obsoleto.
+    const currentResult = this.storage.loadStagedDocument(documentId);
+    if (!currentResult.isSuccess) return Result.fail(currentResult.getError());
+    const current = currentResult.getValue();
+    if (current && !sameDocument(current, staged)) return Result.ok(null);
 
-    const saveCachedResult = this.storage.saveCachedPreview(documentId, {
+    const saveResult = this.storage.saveCachedPreview(documentId, {
       rendered,
       source: staged,
     });
-    if (!saveCachedResult.isSuccess) {
-      return Result.fail(saveCachedResult.getError());
-    }
+    if (!saveResult.isSuccess) return Result.fail(saveResult.getError());
     this.eventBus.publish(new DocumentChanged(documentId));
 
     return Result.ok(rendered);
   }
-
-  private loadCachedPreview(
-    documentId: string,
-    document: SerializedEntry
-  ): Result<EditionStorageError, RenderedPreview | null> {
-    const cachedResult = this.storage.loadCachedPreview(documentId);
-    if (!cachedResult.isSuccess) return Result.fail(cachedResult.getError());
-
-    const cached = cachedResult.getValue();
-    if (cached && sameDocument(cached.source, document)) {
-      return Result.ok(cached.rendered);
-    }
-
-    return Result.ok(null);
-  }
-}
-
-function sameDocument(
-  a: SerializedEntry,
-  b: SerializedEntry
-): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
 }

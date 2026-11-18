@@ -14,19 +14,16 @@ function runtimeCache(): RuntimeCache {
   };
 }
 
-function document(path = "guide") {
-  return Document.create(path, {
-    id: "doc-1", title: "Guide", description: "Guide",
-    createdAt: new Date("2026-11-01T12:00:00.000Z"),
-    updatedAt: new Date("2026-11-01T12:00:00.000Z"),
-  }, "# Guide").getValue();
+function document(path: string, content = "# Guide") {
+  const date = new Date("2026-11-01T12:00:00.000Z");
+  return Document.create(path, { id: path, title: path, description: path, createdAt: date, updatedAt: date }, content).getValue();
 }
 
 describe("VercelDocumentSourceCache", () => {
   it("uses the same versioned source entry until a document event changes the nanobook version", async () => {
     const runtime = runtimeCache();
     const cache = new VercelDocumentSourceCache(runtime);
-    const load = vi.fn(async () => Result.ok(document()));
+    const load = vi.fn(async () => Result.ok(document("guide")));
 
     await cache.getOrLoad("book-a", "guide", load);
     await cache.getOrLoad("book-a", "guide", load);
@@ -44,17 +41,11 @@ describe("VercelDocumentSourceCache", () => {
   it("returns an oversized source without storing its document entry", async () => {
     const runtime = runtimeCache();
     const cache = new VercelDocumentSourceCache(runtime);
-    const large = Document.create("large", {
-      id: "large", title: "Large", description: "Large",
-      createdAt: new Date("2026-11-01T12:00:00.000Z"),
-      updatedAt: new Date("2026-11-01T12:00:00.000Z"),
-    }, "x".repeat(2 * 1024 * 1024)).getValue();
+    const large = document("large", "x".repeat(2 * 1024 * 1024));
 
     const result = await cache.getOrLoad("book-a", "large", async () => Result.ok(large));
 
     expect(result.getValue()).toBe(large);
-    expect(runtime.set).not.toHaveBeenCalledWith(
-      expect.stringMatching(/:large$/), expect.anything(), expect.anything(),
-    );
+    expect(runtime.set).not.toHaveBeenCalledWith(expect.stringMatching(/:large$/), expect.anything(), expect.anything());
   });
 });

@@ -1,13 +1,12 @@
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import {
-  DocumentAccessDeniedError,
   DocumentAlreadyExistsError,
   DocumentNotFoundError,
   DocumentRevisionConflictError,
   ParentNotFoundError,
 } from "../../../../documents/server/domain/errors";
-import { NanobookAccessDeniedError } from "../../../../nanobooks/server/application/AuthorizeNanobook";
-import { NanobookNotFoundError } from "../../../../nanobooks/server/application/errors";
+import { NanobookNotFoundError } from "../../../../nanobooks/server/domain/errors";
 import { AgentScopeDeniedError } from "../../application/errors";
 import type { MarkdownBlockIssue } from "../../application/ports/MarkdownBlockAdvisor";
 
@@ -64,11 +63,23 @@ export function joinNotes(...notes: ReadonlyArray<string | undefined>): string |
 }
 
 function toMcpError(error: unknown): McpError {
-  if (
-    error instanceof AgentScopeDeniedError ||
-    error instanceof NanobookAccessDeniedError ||
-    error instanceof DocumentAccessDeniedError
-  ) {
+  // Mensajes fijos: un `not-found` no debe distinguirse de un nanobook inexistente.
+  if (error instanceof AccessDeniedError) {
+    const decision = error.decision;
+    if (decision.effect === "challenge") return { code: 401, error: "Este recurso requiere contraseña" };
+    switch (decision.reason) {
+      case "unauthenticated":
+        return { code: 401, error: "Autenticación requerida" };
+      case "not-found":
+        return { code: 404, error: "Recurso no encontrado" };
+      default:
+        return { code: 403, error: "No tienes permiso sobre este recurso" };
+    }
+  }
+  if (error instanceof AccessCheckFailedError) {
+    return { code: 500, error: "La operación no pudo completarse" };
+  }
+  if (error instanceof AgentScopeDeniedError) {
     return { code: 403, error: error.message };
   }
   if (

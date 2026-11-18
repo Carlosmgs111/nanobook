@@ -1,21 +1,29 @@
+import {
+  Subject,
+  type AccessCheckFailedError,
+  type AccessDeniedError,
+  type Authorizer,
+} from "../../../authorization/server";
 import { Result } from "../../../shared/domain/Result";
 import type { EventBus } from "../../../shared/domain/bus/EventBus";
+import type { EventBusError } from "../../../shared/domain/bus/errors";
 import type { ContentRepository } from "../domain/ports/ContentRepository";
 import type { DocumentInput } from "./dto/DocumentInput";
 import { DocumentUpdated } from "../domain/events/DocumentUpdated";
 import {
   DocumentNotFoundError,
   DocumentAlreadyExistsError,
-  DocumentRepositoryError,
-  DocumentParseError,
-  DocumentAccessDeniedError,
   InvalidDocumentIdError,
   type DocumentServiceError,
+  type DocumentRepositoryError,
+  type DocumentParseError,
 } from "../domain/errors";
 import { Document } from "../domain/Document";
-import type { EventBusError } from "../../../shared/domain/bus/errors";
+import { publishAll } from "./publishAll";
 
 export type UpdateDocumentError =
+  | AccessDeniedError
+  | AccessCheckFailedError
   | DocumentServiceError
   | DocumentRepositoryError
   | DocumentParseError
@@ -24,155 +32,116 @@ export type UpdateDocumentError =
 export class UpdateDocument {
   constructor(
     private contentRepository: ContentRepository,
-    private eventBus: EventBus
+    private eventBus: EventBus,
+    private authorizer: Authorizer,
   ) {}
 
   async execute(
     nanobookId: string,
-    documentDelta: DocumentInput,
+    input: DocumentInput,
     actorId: string,
   ): Promise<Result<UpdateDocumentError, Document>> {
-    const documentId = documentDelta.id;
-    if (!documentId) {
-      return Result.fail(new InvalidDocumentIdError(documentId ?? ""));
-    }
+    const writable = await this.authorizer.require({
+      subject: Subject.of(actorId),
+      action: "write",
+      resource: { type: "document", id: input.id ?? "", nanobookId },
+    });
+    if (!writable.isSuccess) return Result.fail(writable.getError());
 
-    const documentResult = await this.contentRepository.getById(
-      nanobookId,
-      documentId,
-    );
-    if (!documentResult.isSuccess) {
-      return Result.fail(documentResult.getError());
-    }
+    const documentId = input.id;
+    if (!documentId) return Result.fail(new InvalidDocumentIdError(""));
 
-    const existingDocument = documentResult.getValue();
-    if (!existingDocument) {
-      return Result.fail(new DocumentNotFoundError(documentId));
-    }
-    if (existingDocument.getMetadata().ownerId !== actorId) {
-      return Result.fail(new DocumentAccessDeniedError(documentId));
-    }
+    const found = await this.contentRepository.getById(nanobookId, documentId);
+    if (!found.isSuccess) return Result.fail(found.getError());
+    const existing = found.getValue();
+    if (!existing) return Result.fail(new DocumentNotFoundError(documentId));
 
-    const { id, expectedRevision, path, content } = documentDelta;
-    const existingMetadata = existingDocument.getMetadata();
-
-    const updatedDocumentResult = Document.create(
-      path,
+    const existingMetadata = existing.getMetadata();
+    const updatedResult = Document.create(
+      input.path,
       {
-        title: documentDelta.title,
-        description: documentDelta.description,
-        cover: documentDelta.cover,
-        tags: documentDelta.tags,
-        draft: documentDelta.draft,
-        position: documentDelta.position,
-        ref: documentDelta.ref,
-        // Identity and audit metadata are owned by the existing entity.
-        id: existingDocument.getDocumentId().getValue(),
+        title: input.title,
+        description: input.description,
+        cover: input.cover,
+        tags: input.tags,
+        draft: input.draft,
+        position: input.position,
+        ref: input.ref,
+        // Identidad, auditoría y protección son del servidor: el cliente no las cambia.
+        id: documentId,
         author: existingMetadata.author,
         ownerId: existingMetadata.ownerId,
-        // Server-managed: clients can never change the protection flag.
         secured: existingMetadata.secured,
         createdAt: existingMetadata.createdAt,
         updatedAt: new Date(),
       },
-      content,
+      input.content,
       undefined,
       undefined,
       documentId,
-      existingDocument.getRevision(),
+      existing.getRevision(),
     );
-    if (!updatedDocumentResult.isSuccess) {
-      return Result.fail(updatedDocumentResult.getError());
-    }
-    const updatedDocument = updatedDocumentResult.getValue();
+    if (!updatedResult.isSuccess) return Result.fail(updatedResult.getError());
+    const updated = updatedResult.getValue();
 
-    const documentsToUpdate = await this.buildMoveSet(
+    const moveSet = await this.buildMoveSet(nanobookId, existing, updated);
+    if (!moveSet.isSuccess) return Result.fail(moveSet.getError());
+    const documents = moveSet.getValue();
+
+    // Solo el documento editado (el primero) lleva la revisión que el cliente conocía.
+    const saved = await this.contentRepository.updateMany(
       nanobookId,
-      existingDocument,
-      updatedDocument
+      documents.map((document, index) => ({
+        document,
+        expectedRevision: index === 0 ? input.expectedRevision : undefined,
+      })),
     );
-    if (!documentsToUpdate.isSuccess) return Result.fail(documentsToUpdate.getError());
+    if (!saved.isSuccess) return Result.fail(saved.getError());
 
-    const unauthorizedDocument = documentsToUpdate
-      .getValue()
-      .find((document) => document.getMetadata().ownerId !== actorId);
-    if (unauthorizedDocument) {
-      return Result.fail(
-        new DocumentAccessDeniedError(
-          unauthorizedDocument.getDocumentId().getValue()
-        )
-      );
-    }
-
-    const updates = documentsToUpdate.getValue().map((document, index) => ({
-      document,
-      expectedRevision: expectedRevision !== undefined && index === 0
-        ? expectedRevision
-        : undefined,
-    }));
-    const updateResult = await this.contentRepository.updateMany(
-      nanobookId,
-      updates,
+    const published = await publishAll(
+      this.eventBus,
+      documents.map((document) => new DocumentUpdated(document.getDocumentId().getValue(), nanobookId)),
     );
-    if (!updateResult.isSuccess) return Result.fail(updateResult.getError());
+    if (!published.isSuccess) return Result.fail(published.getError());
 
-    for (const document of documentsToUpdate.getValue()) {
-      const eventResult = await this.eventBus.publish(
-        new DocumentUpdated(document.getDocumentId().getValue(), nanobookId)
-      );
-      if (!eventResult.isSuccess) return Result.fail(eventResult.getError());
-    }
-
-    const persistedResult = documentsToUpdate.getValue()[0].withRevision(
-      documentsToUpdate.getValue()[0].getRevision() + 1,
-    );
-    if (!persistedResult.isSuccess) return Result.fail(persistedResult.getError());
-    return Result.ok(persistedResult.getValue());
+    return documents[0].withRevision(documents[0].getRevision() + 1);
   }
 
+  /** Renombrar un índice arrastra a todos sus descendientes; cualquier otro cambio afecta solo al documento. */
   private async buildMoveSet(
     nanobookId: string,
-    existingDocument: Document,
-    updatedDocument: Document
+    existing: Document,
+    updated: Document,
   ): Promise<Result<UpdateDocumentError, Document[]>> {
-    const rootChanged = existingDocument.getPath() !== updatedDocument.getPath();
-    if (!rootChanged || !existingDocument.isIndex() || !updatedDocument.isIndex()) {
-      return Result.ok([updatedDocument]);
+    const pathChanged = existing.getPath() !== updated.getPath();
+    if (!pathChanged || !existing.isIndex() || !updated.isIndex()) {
+      return Result.ok([updated]);
     }
 
-    const documentsResult = await this.contentRepository.list(nanobookId);
-    if (!documentsResult.isSuccess) return Result.fail(documentsResult.getError());
+    const listed = await this.contentRepository.list(nanobookId);
+    if (!listed.isSuccess) return Result.fail(listed.getError());
 
-    const oldPublicPath = existingDocument.getPublicPath();
-    const newPublicPath = updatedDocument.getPublicPath();
-    const documents = documentsResult.getValue();
+    const oldPublicPath = existing.getPublicPath();
+    const newPublicPath = updated.getPublicPath();
+    const documents = listed.getValue();
     const descendants = documents.filter((document) =>
-      document.getPublicPath().startsWith(`${oldPublicPath}/`)
+      document.getPublicPath().startsWith(`${oldPublicPath}/`),
     );
-    const movingIds = new Set([
-      existingDocument.getDocumentId().getValue(),
-      ...descendants.map((document) => document.getDocumentId().getValue()),
-    ]);
-    const targetPaths = new Set<string>([updatedDocument.getPath()]);
-    const moveSet: Document[] = [updatedDocument];
 
+    const moveSet: Document[] = [updated];
     for (const descendant of descendants) {
       const nextPath = `${newPublicPath}${descendant.getPath().slice(oldPublicPath.length)}`;
-      const movedResult = descendant.moveTo(nextPath);
-      if (!movedResult.isSuccess) return Result.fail(movedResult.getError());
-      const moved = movedResult.getValue();
-      targetPaths.add(moved.getPath());
-      moveSet.push(moved);
+      const moved = descendant.moveTo(nextPath);
+      if (!moved.isSuccess) return Result.fail(moved.getError());
+      moveSet.push(moved.getValue());
     }
 
+    const movingIds = new Set([existing, ...descendants].map((document) => document.getDocumentId().getValue()));
+    const targetPaths = new Set(moveSet.map((document) => document.getPath()));
     const collision = documents.find(
-      (document) =>
-        !movingIds.has(document.getDocumentId().getValue()) &&
-        targetPaths.has(document.getPath())
+      (document) => !movingIds.has(document.getDocumentId().getValue()) && targetPaths.has(document.getPath()),
     );
-    if (collision) {
-      return Result.fail(new DocumentAlreadyExistsError(collision.getPath()));
-    }
+    if (collision) return Result.fail(new DocumentAlreadyExistsError(collision.getPath()));
 
     return Result.ok(moveSet);
   }

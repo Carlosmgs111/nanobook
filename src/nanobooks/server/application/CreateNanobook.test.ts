@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Result } from "../../../shared/domain/Result";
 import { InMemoryNanobookRepository } from "../infraestructure/repository/InMemoryNanobookRepository";
+import type { Nanobook } from "../domain/Nanobook";
 import { CreateNanobook } from "./CreateNanobook";
-import type { NanobookReadCache } from "./NanobookReadCache";
+import type { NanobookReadCache } from "../domain/ports/NanobookReadCache";
+import type { NanobookRootDocument } from "../domain/ports/NanobookRootDocument";
 
 function createCache(): NanobookReadCache {
   return {
@@ -12,28 +14,18 @@ function createCache(): NanobookReadCache {
   };
 }
 
-function setupDocumentModule(options: { failFirstRoot?: boolean } = {}) {
-  let rootExists = false;
+function setupRootDocument(options: { failFirstRoot?: boolean } = {}) {
   let failFirstRoot = options.failFirstRoot ?? false;
 
-  const executeRaw = vi.fn(async () => (rootExists ? {} : null));
-  const create = vi.fn(async () => {
-    if (failFirstRoot) {
-      failFirstRoot = false;
-      return Result.fail(new Error("root unavailable"));
-    }
-    rootExists = true;
-    return Result.ok({});
-  });
-
   return {
-    getDocument: {
-      executeRaw,
-    },
-    createDocument: {
-      execute: create,
-    },
-  } as any;
+    ensure: vi.fn(async (_nanobook: Nanobook): Promise<Result<Error, void>> => {
+      if (failFirstRoot) {
+        failFirstRoot = false;
+        return Result.fail(new Error("root unavailable"));
+      }
+      return Result.ok();
+    }),
+  } satisfies NanobookRootDocument;
 }
 
 describe("CreateNanobook", () => {
@@ -42,10 +34,10 @@ describe("CreateNanobook", () => {
   });
 
   it("creates the nanobook and its root document", async () => {
-    const documentModule = setupDocumentModule();
+    const rootDocument = setupRootDocument();
     const repository = new InMemoryNanobookRepository();
 
-    const result = await new CreateNanobook(repository, documentModule, createCache()).execute(
+    const result = await new CreateNanobook(repository, rootDocument, createCache()).execute(
       "owner-1",
       {
         slug: "architecture",
@@ -59,13 +51,9 @@ describe("CreateNanobook", () => {
     expect(result.getValue().getSettings()).toEqual({
       theme: { kind: "official", id: "monocromo" },
     });
-    expect(documentModule.getDocument.executeRaw).toHaveBeenCalledWith(
+    expect(rootDocument.ensure).toHaveBeenCalledTimes(1);
+    expect(rootDocument.ensure.mock.calls[0]![0].getId()).toBe(
       result.getValue().getId(),
-      "index",
-    );
-    expect(documentModule.createDocument.execute).toHaveBeenCalledWith(
-      result.getValue().getId(),
-      expect.objectContaining({ path: "index" }),
     );
     expect(
       (await repository.findBySlug("architecture")).getValue()?.getSetupStatus(),
@@ -73,7 +61,7 @@ describe("CreateNanobook", () => {
   });
 
   it("caches only the ready nanobook after its root document exists", async () => {
-    const documentModule = setupDocumentModule();
+    const rootDocument = setupRootDocument();
     const repository = new InMemoryNanobookRepository();
     const cache: NanobookReadCache = {
       getOrLoad: async (_slug, load) => load(),
@@ -81,7 +69,7 @@ describe("CreateNanobook", () => {
       remove: vi.fn(),
     };
 
-    const result = await new CreateNanobook(repository, documentModule, cache).execute(
+    const result = await new CreateNanobook(repository, rootDocument, cache).execute(
       "owner-1",
       { slug: "architecture", name: "Architecture", visibility: "private" },
     );
@@ -92,9 +80,9 @@ describe("CreateNanobook", () => {
   });
 
   it("resumes a failed root creation on retry", async () => {
-    const documentModule = setupDocumentModule({ failFirstRoot: true });
+    const rootDocument = setupRootDocument({ failFirstRoot: true });
     const repository = new InMemoryNanobookRepository();
-    const create = new CreateNanobook(repository, documentModule, createCache());
+    const create = new CreateNanobook(repository, rootDocument, createCache());
 
     const first = await create.execute("owner-1", {
       slug: "architecture",
@@ -115,7 +103,7 @@ describe("CreateNanobook", () => {
   });
 
   it("propagates repository failures before creating a nanobook", async () => {
-    const documentModule = setupDocumentModule();
+    const rootDocument = setupRootDocument();
     const failure = new Error("lookup failed");
     const repository = {
       findBySlug: vi.fn().mockResolvedValue(Result.fail(failure)),
@@ -123,7 +111,7 @@ describe("CreateNanobook", () => {
       updateSetupStatus: vi.fn(),
     };
 
-    const result = await new CreateNanobook(repository, documentModule, createCache()).execute(
+    const result = await new CreateNanobook(repository, rootDocument, createCache()).execute(
       "owner-1",
       {
         slug: "atomic",

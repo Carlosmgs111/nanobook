@@ -1,131 +1,71 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { HttpDocumentWriter } from "./HttpDocumentWriter";
-import type { CreateDocumentRequest, SerializedEntry } from "../../../server";
+import { EditionWriterError } from "../../domain/errors";
+import { buildSerializedEntry } from "../../application/test/factories";
 
-const documentRequest: CreateDocumentRequest = {
-  id: "doc-new",
-  path: "new-dir/new file",
-  title: "New file",
-  description: "A new document",
-  content: "# New file",
-};
+const createRequest = { id: "doc-new", path: "dir/new", title: "New", description: "", content: "# New" };
+
+function respondWith(status: number, body?: unknown) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+    new Response(body === undefined ? null : JSON.stringify(body), { status })
+  );
+}
 
 describe("HttpDocumentWriter", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
+  afterEach(() => vi.restoreAllMocks());
+
+  it("crea y borra por id estable con el método HTTP correcto", async () => {
+    const fetchMock = respondWith(201, { documentId: "doc-new" });
+    const writer = new HttpDocumentWriter();
+
+    expect((await writer.createDocument(createRequest)).isSuccess).toBe(true);
+    expect((await writer.deleteDocument("doc-new")).isSuccess).toBe(true);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/me/documents/doc-new", expect.objectContaining({ method: "POST" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/me/documents/doc-new", expect.objectContaining({ method: "DELETE" }));
   });
 
-  it("creates a document through its stable id parameter", async () => {
-    const responseDocument = { documentId: documentRequest.id, path: documentRequest.path };
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(JSON.stringify(responseDocument), { status: 201 }));
-
-    const result = await new HttpDocumentWriter().createDocument(documentRequest);
-
-    expect(result.isSuccess).toBe(true);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/me/documents/doc-new",
-      expect.objectContaining({ method: "POST" })
-    );
-  });
-
-  it("does not send identity or audit fields in an update payload", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
-    const entry = {
-      documentId: "doc-immutable",
-      id: "doc-immutable",
-      path: "guide/intro",
-      isIndex: false,
-      version: "version",
-      title: "Intro",
-      description: "Intro",
-      position: 0,
-      rawFrontmatter: "",
-      content: "# Intro",
-      slug: "intro",
-      headings: [],
-      metadata: {
-        id: "doc-immutable",
-        title: "Intro",
-        description: "Intro",
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-02T00:00:00.000Z",
-        author: "Author",
-      },
-    } as SerializedEntry;
-
-    await new HttpDocumentWriter().updateDocument("doc-immutable", entry);
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/me/documents/doc-immutable",
-      expect.objectContaining({ method: "PATCH" })
-    );
-    const request = vi.mocked(fetchMock).mock.calls[0][1];
-    const payload = JSON.parse(String(request?.body));
-    expect(payload).not.toHaveProperty("id");
-    expect(payload).not.toHaveProperty("author");
-    expect(payload).not.toHaveProperty("createdAt");
-    expect(payload).not.toHaveProperty("updatedAt");
-    expect(payload).not.toHaveProperty("nanobook");
-  });
-
-  it("deletes a document through the protected documents endpoint", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(null, { status: 200 }));
-
-    const result = await new HttpDocumentWriter().deleteDocument("doc-delete");
-
-    expect(result.isSuccess).toBe(true);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/me/documents/doc-delete",
-      expect.objectContaining({ method: "DELETE" })
-    );
-  });
-
-  it("preserves revision details when the API rejects a stale update", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          error: "El documento cambió desde la revisión 3",
-          expectedRevision: 3,
-          actualRevision: 4,
-        }),
-        { status: 409 }
-      )
-    );
-
-    const entry = {
-      ...documentRequest,
-      documentId: "doc-stale",
-      id: "doc-stale",
-      isIndex: false,
-      version: "version",
-      slug: "stale",
-      position: 0,
-      rawFrontmatter: "",
-      headings: [],
-      metadata: {
-        title: "Stale",
-        description: "Stale",
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-02T00:00:00.000Z",
-      },
+  it("al actualizar solo envía campos editables y la revisión esperada", async () => {
+    const fetchMock = respondWith(200, {});
+    const entry = buildSerializedEntry({
       revision: 3,
-    } as SerializedEntry;
+      metadata: {
+        id: "x", author: "A", ownerId: "u1", secured: true, tags: ["t"],
+        createdAt: "2024-01-01T00:00:00.000Z", updatedAt: "2024-01-02T00:00:00.000Z",
+      } as never,
+    });
 
-    const result = await new HttpDocumentWriter().updateDocument(
-      "doc-stale",
-      entry
-    );
+    await new HttpDocumentWriter().updateDocument(entry.documentId, entry);
 
-    expect(result.isSuccess).toBe(false);
-    const error = result.getError();
-    expect(error.status).toBe(409);
-    expect(error.expectedRevision).toBe(3);
-    expect(error.actualRevision).toBe(4);
+    const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    expect(body).toMatchObject({ expectedRevision: 3, path: "intro", tags: ["t"] });
+    for (const field of ["id", "author", "ownerId", "secured", "createdAt", "updatedAt", "metadata"]) {
+      expect(body).not.toHaveProperty(field);
+    }
+  });
+
+  it.each([401, 403, 409])("traduce la respuesta %i a EditionWriterError con status y mensaje", async (status) => {
+    respondWith(status, { error: `rechazado ${status}`, expectedRevision: 3, actualRevision: 4 });
+    const writer = new HttpDocumentWriter();
+
+    for (const result of [
+      await writer.createDocument(createRequest),
+      await writer.updateDocument("doc-new", buildSerializedEntry()),
+      await writer.deleteDocument("doc-new"),
+    ]) {
+      const error = result.getError();
+      expect(error).toBeInstanceOf(EditionWriterError);
+      expect(error).toMatchObject({ status, message: `rechazado ${status}`, expectedRevision: 3, actualRevision: 4 });
+    }
+  });
+
+  it("usa un mensaje genérico sin cuerpo JSON y captura fallos de red", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("nope", { status: 403 }));
+    const forbidden = await new HttpDocumentWriter().deleteDocument("doc-x");
+    expect(forbidden.getError()).toMatchObject({ status: 403, message: "Error al eliminar" });
+
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("offline"));
+    const offline = await new HttpDocumentWriter().deleteDocument("doc-x");
+    expect(offline.getError()).toMatchObject({ message: "offline", status: undefined });
   });
 });

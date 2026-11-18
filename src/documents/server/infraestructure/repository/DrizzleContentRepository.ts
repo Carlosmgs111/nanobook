@@ -29,11 +29,18 @@ export class DrizzleContentRepository implements ContentRepository {
   async list(
     nanobookId: string
   ): Promise<Result<ContentRepositoryListError, Document[]>> {
-    return this.listWhere(
-      nanobookId,
-      undefined,
-      "No fue posible listar los documentos"
-    );
+    try {
+      const rows = await this.database
+        .select()
+        .from(document)
+        .where(this.scope(nanobookId))
+        .orderBy(asc(document.path));
+      return this.mapRows(rows);
+    } catch (error) {
+      return Result.fail(
+        this.repositoryError("No fue posible listar los documentos", error)
+      );
+    }
   }
 
   async getById(nanobookId: string, id: string) {
@@ -46,18 +53,6 @@ export class DrizzleContentRepository implements ContentRepository {
 
   async getByPublicPath(nanobookId: string, path: string) {
     return this.findOne(nanobookId, eq(document.publicPath, path));
-  }
-
-  async listChildren(nanobookId: string, parentPath: string | null) {
-    const condition =
-      parentPath === null
-        ? isNull(document.parentPath)
-        : eq(document.parentPath, parentPath);
-    return this.listWhere(
-      nanobookId,
-      condition,
-      "No fue posible listar los hijos"
-    );
   }
 
   async create(nanobookId: string, value: Document) {
@@ -91,32 +86,18 @@ export class DrizzleContentRepository implements ContentRepository {
             item.document,
             expectedRevision + 1
           );
-          const result = await transaction
-            .update(document)
-            .set(row)
-            .where(
-              this.scope(
-                nanobookId,
-                eq(document.id, item.document.getDocumentId().getValue()),
-                eq(document.revision, expectedRevision)
-              )
-            );
-          const rowsAffected = Number(
-            (result as { rowsAffected?: number }).rowsAffected ?? 0
+          await this.updateAtRevision(
+            transaction,
+            nanobookId,
+            item.document.getDocumentId().getValue(),
+            expectedRevision,
+            row
           );
-          if (rowsAffected === 0) {
-            throw new DocumentRevisionConflictError(
-              item.document.getDocumentId().getValue(),
-              expectedRevision
-            );
-          }
         }
       });
       return Result.ok();
     } catch (error) {
       if (error instanceof DocumentRevisionConflictError)
-        return Result.fail(error);
-      if (error instanceof DocumentAlreadyExistsError)
         return Result.fail(error);
       return Result.fail(
         this.repositoryError(
@@ -132,7 +113,17 @@ export class DrizzleContentRepository implements ContentRepository {
     try {
       await this.database.transaction(async (transaction) => {
         for (const value of values) {
-          await this.markDeleted(transaction, nanobookId, value);
+          await this.updateAtRevision(
+            transaction,
+            nanobookId,
+            value.getDocumentId().getValue(),
+            value.getRevision(),
+            {
+              deletedAt: new Date(),
+              updatedAt: new Date(),
+              revision: value.getRevision() + 1,
+            }
+          );
         }
       });
       return Result.ok();
@@ -232,33 +223,29 @@ export class DrizzleContentRepository implements ContentRepository {
     };
   }
 
-  private async markDeleted(
+  /** Escribe la fila solo si sigue en la revisión esperada; si no, otro cambio se adelantó. */
+  private async updateAtRevision(
     executor: Transaction,
     nanobookId: string,
-    value: Document
+    id: string,
+    expectedRevision: number,
+    values: Partial<typeof document.$inferInsert>
   ): Promise<void> {
     const result = await executor
       .update(document)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-        revision: value.getRevision() + 1,
-      })
+      .set(values)
       .where(
         this.scope(
           nanobookId,
-          eq(document.id, value.getDocumentId().getValue()),
-          eq(document.revision, value.getRevision())
+          eq(document.id, id),
+          eq(document.revision, expectedRevision)
         )
       );
     const rowsAffected = Number(
       (result as { rowsAffected?: number }).rowsAffected ?? 0
     );
     if (rowsAffected === 0) {
-      throw new DocumentRevisionConflictError(
-        value.getDocumentId().getValue(),
-        value.getRevision()
-      );
+      throw new DocumentRevisionConflictError(id, expectedRevision);
     }
   }
 
@@ -272,19 +259,6 @@ export class DrizzleContentRepository implements ContentRepository {
       isNull(document.deletedAt),
       ...conditions
     );
-  }
-
-  private async listWhere(nanobookId: string, condition: any, message: string) {
-    try {
-      const rows = await this.database
-        .select()
-        .from(document)
-        .where(this.scope(nanobookId, ...(condition ? [condition] : [])))
-        .orderBy(asc(document.path));
-      return this.mapRows(rows);
-    } catch (error) {
-      return Result.fail(this.repositoryError(message, error));
-    }
   }
 }
 

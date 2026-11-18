@@ -13,16 +13,8 @@ import { ThemeItemController } from "./infraestructure/rest/ThemeItemController"
 import { AssignNanobookTheme } from "./application/AssignNanobookTheme";
 import { AssignNanobookThemeController } from "./infraestructure/rest/AssignNanobookThemeController";
 import { CompileTheme } from "./application/CompileTheme";
-import type { Result } from "../../shared/domain/Result";
-import type { ThemeReference } from "../../shared/theme/ThemeReference";
 
-interface NanobookThemeWriter {
-  execute(
-    userId: string,
-    nanobookId: string,
-    reference: ThemeReference
-  ): Promise<Result<Error, unknown>>;
-}
+import type { NanobookThemeWriter } from "./application/AssignNanobookTheme";
 
 export type { AppliedTheme, ThemeReference } from "./application/ResolveTheme";
 export type { ThemeInstallation } from "./application/CompileTheme";
@@ -52,7 +44,7 @@ export class ThemeModule {
 
   static create(
     routeProtector: RouteProtector,
-    nanobookThemeWriter: NanobookThemeWriter
+    nanobookThemeWriter:NanobookThemeWriter 
   ): ThemeModule {
     const repository = new DrizzleThemeRepository(db);
     const createTheme = new CreateTheme(repository);

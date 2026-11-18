@@ -3,7 +3,6 @@ import DocumentPage from "../../../../documents/browser/ui/pages/DocumentPage.as
 import { getApp } from "../../../../application/server/Application";
 import { resolveNanobookRoute } from "../../../../application/server/resolveNanobookRoute";
 import { grantsFromCookieHeader } from "../../../../documents/server";
-import { AuthorizeNanobook } from "../../../../nanobooks/server";
 import { formatServerTiming } from "../../../../shared/server/http/ServerTiming";
 
 export const prerender = false;
@@ -39,41 +38,33 @@ const nanobookId = nanobook.getId();
 const slug = Astro.params.slug || "index";
 const documentModule = app.nanobookModule.documentModule;
 
-const document = await measure("document", () =>
-  documentModule.getDocument.execute(nanobookId, slug, (name, duration) => {
-    timings[name] = duration;
+const read = await measure("document", () =>
+  documentModule.readDocument.execute({
+    nanobookId,
+    path: slug,
+    observeTiming: (name, duration) => {
+      timings[name] = duration;
+    },
+    viewer: {
+      // Public nanobooks skip the session read; it is resolved only when a link is protected.
+      userId: async () =>
+        user?.id ?? (await app.authServerModule.getSession(Astro.request, Astro.response.headers))?.id,
+      grantFor: grantsFromCookieHeader(Astro.request.headers.get("cookie")),
+    },
   })
 );
-if (!document) return new Response("Document not found", { status: 404 });
+if (read.kind === "not-found") return new Response("Document not found", { status: 404 });
 
-// A proxy takes its target's identity, so protection is checked on the whole
-// chain: the stored document and the resolved one.
-const rawDocument = await measure("document-raw", () =>
-  documentModule.getDocument.executeRaw(nanobookId, slug)
-);
-const hasSecuredLink = [rawDocument, document].some((item) => item?.getMetadata().secured === true);
-// Public nanobooks skip the session read; resolve it only when a link is protected.
-const accessViewer =
-  hasSecuredLink && !user
-    ? await measure("access-session", () =>
-        app.authServerModule.getSession(Astro.request, Astro.response.headers)
-      )
-    : user;
-const accessDecision = await measure("access", () =>
-  documentModule.authorizeDocumentAccess.execute({
-    documents: [rawDocument, document],
-    canWrite: new AuthorizeNanobook().canWrite(nanobook, accessViewer?.id),
-    grantFor: grantsFromCookieHeader(Astro.request.headers.get("cookie")),
-  })
-);
-const challenged = accessDecision.kind === "challenge";
-
+const challenged = read.kind === "challenge";
 if (challenged) {
   Astro.response.status = 401;
   Astro.response.headers.set("Cache-Control", "no-store");
+}
+// Protected content is never indexed, whether it is shown or only challenged.
+if (challenged || (read.kind === "allowed" && read.via !== "open")) {
   Astro.response.headers.set("X-Robots-Tag", "noindex, nofollow");
 }
 Astro.response.headers.set("Server-Timing", formatServerTiming(timings));
 ---
 
-<DocumentPage nanobook={nanobook} user={user} document={document} challenged={challenged} />
+<DocumentPage nanobook={nanobook} user={user} document={read.document} challenged={challenged} />

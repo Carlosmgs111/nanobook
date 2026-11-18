@@ -3,7 +3,10 @@ import IndexList from "../../../../navigation/browser/ui/components/IndexList/in
 import Layout from "../../../../layouts/Layout.astro";
 import { getApp } from "../../../../application/server/Application";
 import RenderedDocument from "../../../../rendering/browser/ui/RenderedDocument.astro";
-import { AuthorizeNanobook } from "../../../../nanobooks/server";
+import { Subject } from "../../../../authorization/server";
+import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
+import type { Document } from "../../../server";
+import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
 import DocumentPageController from "../DocumentPageController.astro";
 import DocumentUnlockForm from "../components/DocumentUnlockForm.astro";
@@ -26,10 +29,24 @@ async function measure<T>(
 
 const app = await measure("app", getApp);
 
+interface Props {
+  nanobook: Nanobook;
+  user: AuthenticatedUser | null;
+  /** The proxy-resolved document, or the stored one redacted when challenged. */
+  document: Document;
+  /** The viewer must pass the password challenge before seeing any content. */
+  challenged: boolean;
+}
+
 const { nanobook, user } = Astro.props;
 const { navigationModule, themeModule, renderingModule } = app;
 const nanobookId = nanobook.getId();
-const canEdit = new AuthorizeNanobook().canWrite(nanobook, user?.id);
+const canEdit =
+  (await app.authorizer.authorize({
+    subject: Subject.of(user?.id),
+    action: "write",
+    resource: { type: "nanobook", id: nanobookId },
+  })).effect === "allow";
 const deferOwnerActions = nanobook.getVisibility() === "public" && !canEdit;
 const navigationContext = {
   section: "read" as const,

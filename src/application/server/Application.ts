@@ -1,5 +1,6 @@
 import { AuthServerModule } from "../../auth/server";
 import { counterDemoBlock } from "../browser/components/CounterDemo/counterDemoBlock";
+import { createAuthorizer, type Authorizer } from "../../authorization/server";
 import { FinancialContentModule } from "../../financial-content/browser";
 import { SpreadsheetsModule } from "../../spreadsheets/browser";
 import { RenderingModule } from "../../rendering/server";
@@ -21,6 +22,7 @@ export class Application {
     public readonly themeModule: ThemeModule,
     public readonly agentModule: AgentModule,
     public readonly renderingModule: RenderingModule,
+    public readonly authorizer: Authorizer,
   ) {}
 
   static async create(): Promise<Application> {
@@ -28,7 +30,10 @@ export class Application {
     const routeProtector: RouteProtector = authServerModule;
     const profileModule = ProfileModule.create(routeProtector);
     const eventBus = new InMemoryEventBus();
-    const nanobookModule = await NanobookModule.create(eventBus);
+    // Cada módulo registra su política en el autorizador al crearse.
+    const authorization = createAuthorizer();
+    const authorizer: Authorizer = authorization;
+    const nanobookModule = await NanobookModule.create(eventBus, authorization);
     const navigationModule = await NavigationModule.create(
       nanobookModule.documentModule,
       eventBus,
@@ -41,7 +46,7 @@ export class Application {
       routeProtector,
       nanobookModule.setNanobookTheme,
     );
-    const agentModule = AgentModule.create(nanobookModule, financialContentModule.markdownBlockAdvisor);
+    const agentModule = AgentModule.create(nanobookModule, financialContentModule.markdownBlockAdvisor, authorizer);
     return new Application(
       authServerModule,
       routeProtector,
@@ -51,6 +56,7 @@ export class Application {
       themeModule,
       agentModule,
       renderingModule,
+      authorizer,
     );
   }
 }

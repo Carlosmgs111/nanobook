@@ -1,6 +1,6 @@
 import { createHmac, hkdfSync, timingSafeEqual } from "node:crypto";
 
-import type { AccessGrantCodec, IssuedGrant } from "../../domain/access/ports";
+import type { AccessGrantCodec } from "../../domain/access/ports";
 
 interface GrantPayload {
   d: string;
@@ -19,12 +19,12 @@ export class HmacAccessGrantCodec implements AccessGrantCodec {
     this.key = Buffer.from(hkdfSync("sha256", secret, "nanobook", "document-access-grant:v1", 32));
   }
 
-  issue(input: { documentId: string; passwordVersion: number; now: Date; ttlSeconds: number }): IssuedGrant {
+  issue(input: { documentId: string; passwordVersion: number; now: Date; ttlSeconds: number }): string {
     const exp = Math.floor(input.now.getTime() / 1000) + input.ttlSeconds;
     const payload = Buffer.from(
       JSON.stringify({ d: input.documentId, v: input.passwordVersion, exp } satisfies GrantPayload),
     ).toString("base64url");
-    return { token: `${payload}.${this.sign(payload)}`, expiresAt: new Date(exp * 1000) };
+    return `${payload}.${this.sign(payload)}`;
   }
 
   verify(token: string, input: { documentId: string; passwordVersion: number; now: Date }): boolean {

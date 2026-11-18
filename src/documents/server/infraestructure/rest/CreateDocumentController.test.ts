@@ -1,38 +1,68 @@
 import { describe, expect, it, vi } from "vitest";
-
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
-import { DocumentAlreadyExistsError } from "../../domain/errors";
-import type { CreateDocument } from "../../application/CreateDocument";
+import { Document } from "../../domain/Document";
+import { DocumentAlreadyExistsError, ParentNotFoundError } from "../../domain/errors";
 import { CreateDocumentController } from "./CreateDocumentController";
 
+const created = Document.create("intro", {
+  id: "doc-1",
+  title: "T",
+  description: "D",
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+}, "# T").getValue();
+
+const payload = { id: "doc-1", path: "intro", title: "T", description: "D", content: "# T" };
+
+function call(execute: unknown, { params = { id: "doc-1", nanobookId: "book-a" }, locals = { currentUserId: "u1" }, body = payload } = {}) {
+  return new CreateDocumentController({ execute } as never).handle({
+    params,
+    locals,
+    request: new Request("https://nanobook.test/api", { method: "POST", body: JSON.stringify(body) }),
+  } as never) as Promise<Response>;
+}
+
 describe("CreateDocumentController", () => {
-  it("assigns the authenticated actor as owner instead of trusting the request", async () => {
-    const execute = vi
-      .fn()
-      .mockResolvedValue(Result.fail(new DocumentAlreadyExistsError("new-doc")));
-    const controller = new CreateDocumentController({ execute } as unknown as CreateDocument);
+  it("answers 201 with the serialized document and forwards only editable fields and the session actor", async () => {
+    const execute = vi.fn().mockResolvedValue(Result.ok(created));
 
-    await controller.handle({
-      params: { id: "new-doc", nanobookId: "book-a" },
-      request: new Request("https://nanobook.test/api/me/documents/new-doc", {
-        method: "POST",
-        body: JSON.stringify({
-          id: "new-doc",
-          path: "new-doc",
-          title: "New document",
-          description: "Created from UI",
-          content: "# New document",
-          ownerId: "forged-owner",
-        }),
-      }),
-      locals: { currentUserId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv" },
-    } as never);
+    const response = await call(execute, { body: { ...payload, ownerId: "forged", createdAt: "2000-01-01" } as never });
 
-    expect(execute).toHaveBeenCalledWith(
-      "book-a",
-      expect.objectContaining({
-        ownerId: "toK9gRckXueNJVDO03YsBJA8Qwjjp3Zv",
-      }),
-    );
+    expect(response.status).toBe(201);
+    expect((await response.json()).metadata.createdAt).toBe("2026-01-01T00:00:00.000Z");
+    const [nanobookId, input, actorId] = execute.mock.calls[0];
+    expect([nanobookId, actorId]).toEqual(["book-a", "u1"]);
+    expect(input).toMatchObject({ id: "doc-1", path: "intro" });
+    expect(input).not.toHaveProperty("ownerId");
+    expect(input.createdAt).toBeUndefined();
+  });
+
+  it("rejects an anonymous request and an id that differs from the route", async () => {
+    const execute = vi.fn();
+
+    expect((await call(execute, { locals: {} as never })).status).toBe(401);
+    expect((await call(execute, { body: { ...payload, id: "other" } })).status).toBe(400);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("answers 500 without exposing the cause when the access check fails", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const response = await call(vi.fn().mockResolvedValue(Result.fail(new AccessCheckFailedError(new Error("secret db detail")))));
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(await response.json())).not.toContain("secret db detail");
+    spy.mockRestore();
+  });
+
+  it("maps domain errors to HTTP statuses", async () => {
+    const statusFor = async (error: Error) => (await call(vi.fn().mockResolvedValue(Result.fail(error)))).status;
+
+    expect(await statusFor(new AccessDeniedError({ effect: "deny", reason: "forbidden" }))).toBe(403);
+    expect(await statusFor(new AccessDeniedError({ effect: "deny", reason: "not-found" }))).toBe(404);
+    expect(await statusFor(new AccessDeniedError({ effect: "deny", reason: "unauthenticated" }))).toBe(401);
+    expect(await statusFor(new DocumentAlreadyExistsError("intro"))).toBe(409);
+    expect(await statusFor(new ParentNotFoundError("guide"))).toBe(400);
   });
 });

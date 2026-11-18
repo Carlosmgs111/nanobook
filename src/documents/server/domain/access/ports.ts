@@ -24,18 +24,13 @@ export interface PasswordHasher {
   verify(password: string, stored: string): Promise<boolean>;
 }
 
-export interface IssuedGrant {
-  token: string;
-  expiresAt: Date;
-}
-
 export interface AccessGrantCodec {
   issue(input: {
     documentId: string;
     passwordVersion: number;
     now: Date;
     ttlSeconds: number;
-  }): IssuedGrant;
+  }): string;
   verify(
     token: string,
     input: { documentId: string; passwordVersion: number; now: Date },

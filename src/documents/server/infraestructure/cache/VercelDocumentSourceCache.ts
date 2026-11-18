@@ -91,6 +91,6 @@ export class VercelDocumentSourceCache implements DocumentSourceCache {
   }
 
   private documentKey(nanobookId: string, version: string, path: string): string {
-    return `${nanobookId}:${version}:${path.trim().replace(/^\/+|\/+$/g, "")}`;
+    return `${nanobookId}:${version}:${path}`;
   }
 }

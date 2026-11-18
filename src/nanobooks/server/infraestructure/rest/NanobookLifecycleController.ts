@@ -1,12 +1,15 @@
 import type { APIRoute } from "astro";
-import type { UpdateNanobook } from "../../application/UpdateNanobook";
-import type { DeleteNanobook } from "../../application/DeleteNanobook";
-
+import {
+  AccessCheckFailedError,
+  AccessDeniedError,
+  accessErrorResponse,
+} from "../../../../authorization/server";
+import type { LifeCycle } from "../../application/LifeCycle";
 
 export class NanobookLifecycleController {
   constructor(
-    private readonly updateNanobook: UpdateNanobook,
-    private readonly deleteNanobook: DeleteNanobook
+    private readonly updateNanobook: LifeCycle["update"],
+    private readonly deleteNanobook: LifeCycle["delete"]
   ) {}
 
   update: APIRoute = async ({ request, locals, params }) => {
@@ -18,7 +21,7 @@ export class NanobookLifecycleController {
       return jsonError("JSON inválido", 400);
     }
     try {
-      const result = await this.updateNanobook.execute(
+      const result = await this.updateNanobook(
         locals.currentUserId,
         params.nanobookId ?? "",
         body
@@ -31,7 +34,8 @@ export class NanobookLifecycleController {
         slug: book.getSlug(),
         visibility: book.getVisibility(),
       });
-    } catch {
+    } catch (e){
+      console.log({e})
       return jsonError("No fue posible editar el nanobook", 500);
     }
   };
@@ -53,7 +57,7 @@ export class NanobookLifecycleController {
       return jsonError("Solicitud inválida", 400);
     }
     try {
-      const result = await this.deleteNanobook.execute(
+      const result = await this.deleteNanobook(
         locals.currentUserId,
         params.nanobookId ?? "",
         (body as { confirmationName?: unknown }).confirmationName
@@ -71,8 +75,13 @@ function jsonError(error: string, status: number) {
   return Response.json({ error }, { status });
 }
 function failure(error: Error) {
+  if (
+    error instanceof AccessDeniedError ||
+    error instanceof AccessCheckFailedError
+  ) {
+    return accessErrorResponse(error);
+  }
   const statuses: Record<string, number> = {
-    NanobookAccessDeniedError: 403,
     NanobookNotFoundError: 404,
     NanobookSlugAlreadyTakenError: 409,
     InvalidNanobookError: 400,

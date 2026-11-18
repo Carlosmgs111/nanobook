@@ -3,7 +3,7 @@
   import { getApp } from "../../../application/browser/Application";
   import { DocumentChanged } from "../index";
 
-  const app = await getApp();
+  const app = getApp();
   const MAX_RENDER_ATTEMPTS = 3;
 
   async function renderPreview() {

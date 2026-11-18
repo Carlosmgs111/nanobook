@@ -5,92 +5,78 @@ import { EditionStorageError } from "../../domain/errors";
 
 const KEY_PREFIX = "nanobook:edition";
 
-function key(kind: "staged" | "preview" | "confirmed", documentId: string): string {
-  const key = `${KEY_PREFIX}:${encodeURIComponent(documentId)}:${kind}`;
-  return key;
+type Kind = "staged" | "preview" | "confirmed";
+type StorageResult<T> = Result<EditionStorageError, T>;
+
+function key(kind: Kind, documentId: string): string {
+  return `${KEY_PREFIX}:${encodeURIComponent(documentId)}:${kind}`;
 }
 
-function read<T>(storage: Storage, key: string): Result<EditionStorageError, T | null> {
+function attempt<T>(action: string, key: string, run: () => T): StorageResult<T> {
   try {
-    const raw = storage.getItem(key);
-    return Result.ok(raw ? (JSON.parse(raw) as T) : null);
+    return Result.ok(run());
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return Result.fail(new EditionStorageError(`Failed to read "${key}": ${message}`));
+    return Result.fail(new EditionStorageError(`Failed to ${action} "${key}": ${message}`));
   }
 }
 
-function write(
-  storage: Storage,
-  key: string,
-  value: unknown
-): Result<EditionStorageError, void> {
-  try {
-    storage.setItem(key, JSON.stringify(value));
-    return Result.ok();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return Result.fail(new EditionStorageError(`Failed to write "${key}": ${message}`));
-  }
-}
-
-function remove(storage: Storage, key: string): Result<EditionStorageError, void> {
-  try {
-    storage.removeItem(key);
-    return Result.ok();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return Result.fail(new EditionStorageError(`Failed to remove "${key}": ${message}`));
-  }
-}
-
+/**
+ * Persiste en sessionStorage únicamente documentos serializados y previews
+ * renderizados; nunca contraseñas ni credenciales de desbloqueo.
+ */
 export class SessionStorageDocumentStorage implements DocumentStorage {
   constructor(private storage: Storage = globalThis.sessionStorage) {}
 
-  loadStagedDocument(documentId: string): Result<EditionStorageError, SerializedEntry | null> {
-    return read<SerializedEntry>(this.storage, key("staged", documentId));
+  private read<T>(kind: Kind, documentId: string): StorageResult<T | null> {
+    const k = key(kind, documentId);
+    return attempt("read", k, () => {
+      const raw = this.storage.getItem(k);
+      return raw ? (JSON.parse(raw) as T) : null;
+    });
   }
 
-  saveStagedDocument(documentId: string, document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, key("staged", documentId), document);
+  private write(kind: Kind, documentId: string, value: unknown): StorageResult<void> {
+    const k = key(kind, documentId);
+    return attempt("write", k, () => this.storage.setItem(k, JSON.stringify(value)));
   }
 
-  clearStagedDocument(documentId: string): Result<EditionStorageError, void> {
-    return remove(this.storage, key("staged", documentId));
+  private remove(kind: Kind, documentId: string): StorageResult<void> {
+    const k = key(kind, documentId);
+    return attempt("remove", k, () => this.storage.removeItem(k));
   }
 
-  loadCachedPreview(documentId: string): Result<EditionStorageError, CachedPreview | null> {
-    return read<CachedPreview>(this.storage, key("preview", documentId));
+  loadStagedDocument(documentId: string) {
+    return this.read<SerializedEntry>("staged", documentId);
   }
 
-  saveCachedPreview(documentId: string, cached: CachedPreview): Result<EditionStorageError, void> {
-    return write(this.storage, key("preview", documentId), cached);
+  saveStagedDocument(documentId: string, document: SerializedEntry) {
+    return this.write("staged", documentId, document);
   }
 
-  clearCachedPreview(documentId: string): Result<EditionStorageError, void> {
-    return remove(this.storage, key("preview", documentId));
+  loadCachedPreview(documentId: string) {
+    return this.read<CachedPreview>("preview", documentId);
   }
 
-  loadConfirmedDocument(documentId: string): Result<EditionStorageError, SerializedEntry | null> {
-    return read<SerializedEntry>(this.storage, key("confirmed", documentId));
+  saveCachedPreview(documentId: string, cached: CachedPreview) {
+    return this.write("preview", documentId, cached);
   }
 
-  saveConfirmedDocument(documentId: string, document: SerializedEntry): Result<EditionStorageError, void> {
-    return write(this.storage, key("confirmed", documentId), document);
+  loadConfirmedDocument(documentId: string) {
+    return this.read<SerializedEntry>("confirmed", documentId);
   }
 
-  clearConfirmedDocument(documentId: string): Result<EditionStorageError, void> {
-    return remove(this.storage, key("confirmed", documentId));
+  saveConfirmedDocument(documentId: string, document: SerializedEntry) {
+    return this.write("confirmed", documentId, document);
   }
 
-  clearAll(documentId?: string): Result<EditionStorageError, void> {
-    if (!documentId) return Result.ok();
-    const results: Result<EditionStorageError, void>[] = [
-      this.clearStagedDocument(documentId),
-      this.clearCachedPreview(documentId),
-      this.clearConfirmedDocument(documentId),
-    ];
-    for (const result of results) {
+  clearConfirmedDocument(documentId: string) {
+    return this.remove("confirmed", documentId);
+  }
+
+  clearAll(documentId: string): StorageResult<void> {
+    for (const kind of ["staged", "preview", "confirmed"] as const) {
+      const result = this.remove(kind, documentId);
       if (!result.isSuccess) return result;
     }
     return Result.ok();

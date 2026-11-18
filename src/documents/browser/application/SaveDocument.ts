@@ -1,5 +1,5 @@
 import { Result } from "../../../shared/domain/Result";
-import type { SerializedEntry } from "../domain/model/StagedDocument";
+import { sameDocument, type SerializedEntry } from "../domain/model/StagedDocument";
 import type { EditionStorageError, EditionWriterError } from "../domain/errors";
 import type { DocumentStorage } from "../domain/ports/DocumentStorage";
 import type { DocumentWriter } from "./ports/DocumentWriter";
@@ -14,21 +14,18 @@ export class SaveDocument {
 
   async execute(documentId: string): Promise<Result<SaveDocumentError, SerializedEntry>> {
     const stageResult = this.storage.loadStagedDocument(documentId);
-    if (!stageResult.isSuccess) {
-      return Result.fail(stageResult.getError());
-    }
+    if (!stageResult.isSuccess) return Result.fail(stageResult.getError());
     const staged = stageResult.getValue();
     if (!staged) return Result.fail(new Error("Staged document not found"));
 
     const writeResult = await this.writer.updateDocument(staged.documentId, staged);
-    if (!writeResult.isSuccess) {
-      return Result.fail(writeResult.getError());
-    }
+    if (!writeResult.isSuccess) return Result.fail(writeResult.getError());
     const saved = writeResult.getValue();
 
-    const currentStageResult = this.storage.loadStagedDocument(documentId);
-    if (!currentStageResult.isSuccess) return Result.fail(currentStageResult.getError());
-    if (!sameDocument(currentStageResult.getValue(), staged)) return Result.ok(staged);
+    // Si el editor siguió cambiando durante el guardado, el borrador más nuevo manda.
+    const currentResult = this.storage.loadStagedDocument(documentId);
+    if (!currentResult.isSuccess) return Result.fail(currentResult.getError());
+    if (!sameDocument(currentResult.getValue(), staged)) return Result.ok(staged);
 
     const stagedResult = this.storage.saveStagedDocument(documentId, saved);
     if (!stagedResult.isSuccess) return Result.fail(stagedResult.getError());
@@ -36,11 +33,4 @@ export class SaveDocument {
     if (!confirmationResult.isSuccess) return Result.fail(confirmationResult.getError());
     return Result.ok(saved);
   }
-}
-
-function sameDocument(
-  current: SerializedEntry | null,
-  saved: SerializedEntry
-): boolean {
-  return JSON.stringify(current) === JSON.stringify(saved);
 }

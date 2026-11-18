@@ -4,6 +4,7 @@ import { FinancialContentModule } from "../../../../financial-content/browser";
 import { createBlockRegistry } from "../../../../rendering/shared";
 import { financialGuideExamples } from "../../../../financial-content/shared/guide/financialAuthoringGuide";
 import { Result } from "../../../../shared/domain/Result";
+import type { Authorizer } from "../../../../authorization/server";
 import type { NanobookModule } from "../../../../nanobooks/server";
 import { AgentToolService } from "../../application/AgentToolService";
 import type { AgentActor } from "../../application/dto";
@@ -23,13 +24,14 @@ function connect(scopes: readonly string[] = actor.scopes) {
   const createDocument = vi.fn().mockResolvedValue(Result.ok(createdDocument()));
   const updateDocument = vi.fn().mockResolvedValue(Result.ok(createdDocument()));
   const nanobooks = {
-    requireNanobookAccess: { execute: vi.fn().mockResolvedValue(Result.ok({})) },
+    getNanobookById: { execute: vi.fn().mockResolvedValue(Result.ok({})) },
     documentModule: {
       createDocument: { execute: createDocument },
       updateDocument: { execute: updateDocument },
     },
   } as unknown as NanobookModule;
-  const tools = new AgentToolService(nanobooks, { write: vi.fn() }, FinancialContentModule.create(createBlockRegistry()).markdownBlockAdvisor);
+  const authorizer = { require: vi.fn().mockResolvedValue(Result.ok()) } as unknown as Authorizer;
+  const tools = new AgentToolService(nanobooks, { write: vi.fn() }, FinancialContentModule.create(createBlockRegistry()).markdownBlockAdvisor, authorizer);
   const handler = createMcpHandler(
     () => createNanobookMcpServer({ ...actor, scopes }, tools),
     { legacy: "stateless", responseMode: "json" },

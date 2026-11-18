@@ -1,38 +1,39 @@
 import { describe, expect, it, vi } from "vitest";
-import { DeleteDocument } from "./DeleteDocument";
 import { Result } from "../../../shared/domain/Result";
+import { DeleteDocument } from "./DeleteDocument";
+import { SessionStorageDocumentStorage } from "../infraestructure/storage/SessionStorageDocumentStorage";
 import { EditionWriterError } from "../domain/errors";
-import { buildSerializedEntry, createDocumentStorage } from "./test/factories";
+import { buildSerializedEntry, FakeStorage } from "./test/factories";
 
-describe("Edition DeleteDocument", () => {
-  it("deletes the staged document and clears its local state", async () => {
-    const staged = buildSerializedEntry({ path: "guides/index" });
-    const storage = createDocumentStorage({
-      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(staged)),
-    });
+function setup() {
+  const entry = buildSerializedEntry();
+  const storage = new SessionStorageDocumentStorage(new FakeStorage());
+  storage.saveStagedDocument(entry.documentId, entry);
+  storage.saveConfirmedDocument(entry.documentId, entry);
+  return { storage, entry };
+}
+
+describe("DeleteDocument", () => {
+  it("borra en el servidor y limpia el estado local", async () => {
+    const { storage, entry } = setup();
     const writer = { deleteDocument: vi.fn().mockResolvedValue(Result.ok()) };
 
-    const result = await new DeleteDocument(storage, writer).execute(staged.documentId);
+    const result = await new DeleteDocument(storage, writer as never).execute(entry.documentId);
 
     expect(result.isSuccess).toBe(true);
-    expect(writer.deleteDocument).toHaveBeenCalledWith(staged.documentId);
-    expect(storage.clearAll).toHaveBeenCalledWith(staged.documentId);
+    expect(writer.deleteDocument).toHaveBeenCalledWith(entry.documentId);
+    expect(storage.loadStagedDocument(entry.documentId).getValue()).toBeNull();
+    expect(storage.loadConfirmedDocument(entry.documentId).getValue()).toBeNull();
   });
 
-  it("does not clear local state when the remote delete fails", async () => {
-    const staged = buildSerializedEntry();
-    const storage = createDocumentStorage({
-      loadStagedDocument: vi.fn().mockReturnValue(Result.ok(staged)),
-    });
-    const writer = {
-      deleteDocument: vi.fn().mockResolvedValue(
-        Result.fail(new EditionWriterError("network error"))
-      ),
-    };
+  it("conserva el estado local si el servidor rechaza el borrado (403)", async () => {
+    const { storage, entry } = setup();
+    const error = new EditionWriterError("sin permiso", { status: 403 });
+    const writer = { deleteDocument: vi.fn().mockResolvedValue(Result.fail(error)) };
 
-    const result = await new DeleteDocument(storage, writer).execute(staged.documentId);
+    const result = await new DeleteDocument(storage, writer as never).execute(entry.documentId);
 
-    expect(result.isSuccess).toBe(false);
-    expect(storage.clearAll).not.toHaveBeenCalled();
+    expect(result.getError()).toBe(error);
+    expect(storage.loadStagedDocument(entry.documentId).getValue()).toEqual(entry);
   });
 });

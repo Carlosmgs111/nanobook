@@ -87,21 +87,14 @@
     },
     basePath: string
   ): Promise<string> {
-    const base = basePath ? `${basePath.replace(/\/$/, "")}` : "";
-    const prefix = base ? `${base}/` : "";
-    let path: string | null = null;
-    if (type === "document") {
-      path = `${prefix}${name}`;
-    }
-    if (type === "directory") {
-      path = `${prefix}${name}/index`;
-    }
-    if (!path) {
+    if (type !== "document" && type !== "directory") {
       throw new Error("Ruta no válida");
     }
-    const id = crypto.randomUUID();
+    const base = basePath.replace(/\/$/, "");
+    const prefix = base ? `${base}/` : "";
+    const path = type === "directory" ? `${prefix}${name}/index` : `${prefix}${name}`;
     const result = await app.editionModule.createDocument.execute({
-      id,
+      id: crypto.randomUUID(),
       path,
       ...metadata,
       content: "",

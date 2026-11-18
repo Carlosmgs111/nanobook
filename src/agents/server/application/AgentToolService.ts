@@ -1,4 +1,5 @@
 import { Result } from "../../../shared/domain/Result";
+import { AccessCheckFailedError, AccessDeniedError, Subject, type Authorizer } from "../../../authorization/server";
 import { serializeEntry } from "../../../documents/server/application/dto/SerializedEntry";
 import { DocumentNotFoundError } from "../../../documents/server/domain/errors";
 import type { NanobookModule } from "../../../nanobooks/server";
@@ -16,7 +17,8 @@ export class AgentToolService {
   constructor(
     private readonly nanobooks: NanobookModule,
     private readonly audit: AgentAuditWriter,
-    private readonly blocks: MarkdownBlockAdvisor
+    private readonly blocks: MarkdownBlockAdvisor,
+    private readonly authorizer: Authorizer
   ) {}
 
   /** Guía de autoría de bloques; texto estático, solo exige poder leer. */
@@ -51,11 +53,9 @@ export class AgentToolService {
   async getNanobook(actor: AgentActor, nanobookId: string) {
     if (!this.has(actor, "nanobooks:read"))
       return Result.fail(new AgentScopeDeniedError("nanobooks:read"));
-    return this.nanobooks.requireNanobookAccess.execute(
-      actor.actorId,
-      nanobookId,
-      "read"
-    );
+    const access = await this.access(actor, nanobookId, "read");
+    if (!access.isSuccess) return Result.fail(access.getError());
+    return this.nanobooks.getNanobookById.execute(nanobookId);
   }
 
   async createNanobook(
@@ -100,24 +100,41 @@ export class AgentToolService {
 
   async listDocuments(actor: AgentActor, nanobookId: string) {
     const access = await this.require(actor, nanobookId, "read");
-    if (!access.isSuccess) return access;
-    return Result.ok(
-      (
-        await this.nanobooks.documentModule.getAllDocuments.execute(nanobookId)
-      ).map((document) => serializeEntry(document.parse()))
-    );
+    if (!access.isSuccess) return Result.fail(access.getError());
+    try {
+      const documents = await this.nanobooks.documentModule.listReadableDocuments.execute(nanobookId, {
+        userId: actor.actorId,
+      });
+      return Result.ok(documents.map((document) => serializeEntry(document.parse())));
+    } catch (error) {
+      if (error instanceof AccessCheckFailedError) return Result.fail(error);
+      throw error;
+    }
   }
 
   async getDocument(actor: AgentActor, nanobookId: string, path: string) {
     const access = await this.require(actor, nanobookId, "read");
-    if (!access.isSuccess) return access;
-    const document = await this.nanobooks.documentModule.getDocument.execute(
-      nanobookId,
-      path
-    );
-    return document
-      ? Result.ok(serializeEntry(document.parse()))
-      : Result.fail(new DocumentNotFoundError(path));
+    if (!access.isSuccess) return Result.fail(access.getError());
+    try {
+      const read = await this.nanobooks.documentModule.readDocument.execute({
+        nanobookId,
+        path,
+        viewer: {
+          userId: async () => actor.actorId,
+          // Un agente no tiene cómo superar el desafío de contraseña.
+          grantFor: () => undefined,
+        },
+      });
+      if (read.kind === "not-found") return Result.fail(new DocumentNotFoundError(path));
+      // Un agente no puede superar la contraseña: se trata como un acceso prohibido.
+      if (read.kind === "challenge") {
+        return Result.fail(new AccessDeniedError({ effect: "deny", reason: "forbidden" }));
+      }
+      return Result.ok(serializeEntry(read.document.parse()));
+    } catch (error) {
+      if (error instanceof AccessCheckFailedError) return Result.fail(error);
+      throw error;
+    }
   }
 
   async createDocument(
@@ -126,14 +143,11 @@ export class AgentToolService {
     input: CreateDocumentInput
   ) {
     const access = await this.require(actor, nanobookId, "write");
-    if (!access.isSuccess) return access;
+    if (!access.isSuccess) return Result.fail(access.getError());
     const result = await this.nanobooks.documentModule.createDocument.execute(
       nanobookId,
-      {
-        ...input,
-        ownerId: actor.actorId,
-        author: input.author ?? actor.actorId,
-      }
+      { ...input, author: input.author ?? actor.actorId },
+      actor.actorId,
     );
     if (result.isSuccess)
       await this.audit.write({
@@ -153,7 +167,7 @@ export class AgentToolService {
     input: UpdateDocumentInput
   ) {
     const access = await this.require(actor, nanobookId, "write");
-    if (!access.isSuccess) return access;
+    if (!access.isSuccess) return Result.fail(access.getError());
     const result = await this.nanobooks.documentModule.updateDocument.execute(
       nanobookId,
       input,
@@ -182,10 +196,14 @@ export class AgentToolService {
     const scope = permission === "read" ? "nanobooks:read" : "nanobooks:write";
     if (!this.has(actor, scope))
       return Result.fail(new AgentScopeDeniedError(scope));
-    return this.nanobooks.requireNanobookAccess.execute(
-      actor.actorId,
-      nanobookId,
-      permission
-    );
+    return this.access(actor, nanobookId, permission);
+  }
+
+  private access(actor: AgentActor, nanobookId: string, action: "read" | "write") {
+    return this.authorizer.require({
+      subject: Subject.of(actor.actorId),
+      action,
+      resource: { type: "nanobook", id: nanobookId },
+    });
   }
 }

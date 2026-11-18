@@ -21,6 +21,8 @@ nanobook: true
 - [Contrato y aplicación de temas](./contrato-aplicacion-temas): opciones para que `theme` sea propietario de los roles semánticos, la compilación CSS y la instalación del tema.
 - [Autenticación del servidor y decorador de capacidades](./autenticacion-servidor-decorador-capacidades): frontera de servidor del módulo `auth`, composición única y protección reutilizable de rutas HTTP.
 - [Autorización de escritura por nanobook](./autorizacion-escritura-nanobook): las mutaciones de documentos validan el permiso del actor sobre la colección antes de delegar en el módulo documental.
+- [Protección de lectura y escritura desde documents](./proteccion-lectura-escritura-documentos): `ReadDocument`, `ListReadableDocuments` y `DocumentPasswordPolicy`; escritura autorizada con `Authorizer`; limitaciones conocidas.
+- [Módulo authorization](./modulo-authorization): una sola decisión de acceso, contrato, reglas del motor, políticas y códigos HTTP.
 - [Acceso de agentes mediante MCP y OAuth](./mcp-agentes-oauth): frontera MCP, identidad delegada de Codex, scopes y operación segura.
 - [Operación local de Nanobook MCP con Codex](./operacion-local-mcp-codex): migraciones, conexión, pruebas y diagnóstico del primer cliente MCP.
 - [Composición raíz modular](./composicion-raiz-modular): por qué se introdujo `src/Application.ts` y los módulos `DocumentModule`, `NavigationModule` y `PublishingModule`.

@@ -2,15 +2,8 @@ import { resolve, sep } from "node:path";
 import { readFile } from "node:fs/promises";
 import { FrontmatterParser } from "../parse/FrontmatterParser";
 import type { ContentEntry } from "../../domain/types";
-import { DocumentReference } from "../../domain/DocumentReference";
-import type {
-  ReferenceResolutionContext,
-  ReferenceResolverPlugin,
-} from "../../domain/reference/types";
-
-function getPath(ref: string): string {
-  return ref.replace(/^\//, "");
-}
+import type { DocumentReference } from "../../domain/DocumentReference";
+import type { ReferenceResolver } from "../../domain/reference/types";
 
 function assertWithinProject(filePath: string): void {
   const resolved = resolve(process.cwd(), filePath);
@@ -27,23 +20,14 @@ function assertWithinProject(filePath: string): void {
  * - Forma corta: `ref: /README.md` (relativo a la raíz del proyecto).
  * - Forma estructurada: `ref: { source: "local", path: "README.md" }`.
  */
-export class LocalFileReferenceResolver implements ReferenceResolverPlugin {
-  name = "local";
-  async resolve(
-    ref: DocumentReference,
-    context: ReferenceResolutionContext
-  ): Promise<ContentEntry | null> {
+export class LocalFileReferenceResolver implements ReferenceResolver {
+  async resolve(ref: DocumentReference): Promise<ContentEntry | null> {
     if (ref.getRef().source !== "local") return null;
-    const relativePath = getPath(ref.getValue());
+    const relativePath = ref.getValue().replace(/^\//, "");
     assertWithinProject(relativePath);
 
     const raw = await readFile(relativePath, "utf-8");
     const { data, body } = FrontmatterParser.parseFrontmatter(raw);
-    return {
-      id: context.sourceId,
-      data,
-      body,
-      rawFrontmatter: FrontmatterParser.extractFrontmatter(raw),
-    };
+    return { data, body };
   }
 }

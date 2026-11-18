@@ -17,29 +17,26 @@ import EditorToolbarController from "./EditorToolbarController.astro";
   let view: EditorView | undefined;
   const debouncedHandleEditorChange = debounce(
     async (document, content, preserveSourceBody) => {
-      if (app.editionModule.handleEditorChange) {
-        const result = await app.editionModule.handleEditorChange.execute(
-          document,
-          content,
-          preserveSourceBody
-        );
-        if (!result.isSuccess) {
-          console.error(result.getError());
-          return;
-        }
-        app.editionModule.renderPreview.execute(result.getValue().documentId);
+      const result = await app.editionModule.handleEditorChange.execute(
+        document,
+        content,
+        preserveSourceBody
+      );
+      if (!result.isSuccess) {
+        console.error(result.getError());
+        return;
       }
+      app.editionModule.renderPreview.execute(result.getValue().documentId);
     },
     1000
   );
 
   document.addEventListener("astro:page-load", () => {
-    let container = document.querySelector<HTMLElement>(
+    const container = document.querySelector<HTMLElement>(
       "[data-editor-container]"
     );
-    if (!container) {
-      return;
-    }
+    if (!container) return;
+
     let initialContent = container.dataset.initialContent;
     const frontmatterOnly = container.dataset.frontmatterOnly === "true";
     const baseDocument = container.dataset.document;
@@ -102,20 +99,19 @@ import EditorToolbarController from "./EditorToolbarController.astro";
         parent: container,
       });
     }
-    const stagedDocument = app.editionModule.initializeEditor
-      .execute(JSON.parse(baseDocument))
-      .getValue();
-    if (stagedDocument) {
+    const initialized = app.editionModule.initializeEditor.execute(
+      JSON.parse(baseDocument)
+    );
+    // Si sessionStorage falla se edita el contenido que entregó el servidor.
+    if (initialized.isSuccess) {
+      const staged = initialized.getValue();
       initialContent =
-        hideProtectedFrontmatter(stagedDocument.rawFrontmatter) +
-        (frontmatterOnly ? "" : stagedDocument.content);
+        hideProtectedFrontmatter(staged.rawFrontmatter) +
+        (frontmatterOnly ? "" : staged.content);
     }
     initializeCodeMirror(container);
   });
-  document.addEventListener("astro:before-swap", () => {
-    view?.destroy();
-    // view = undefined;
-  });
+  document.addEventListener("astro:before-swap", () => view?.destroy());
 
   function extractBody(content: string): string {
     return content.replace(/^---[\s\S]*?---\n?/, "");

@@ -1,3 +1,4 @@
+import type { Authorizer } from "../../../../authorization/server";
 import { Result } from "../../../../shared/domain/Result";
 import type { EventBus } from "../../../../shared/domain/bus/EventBus";
 import type { EventBusError } from "../../../../shared/domain/bus/errors";
@@ -10,13 +11,13 @@ import {
 } from "../../domain/errors";
 import { DocumentUpdated } from "../../domain/events/DocumentUpdated";
 import type { ContentRepository, ContentRepositoryError } from "../../domain/ports/ContentRepository";
-import { loadOwnedDocument, type LoadOwnedDocumentError } from "./loadOwnedDocument";
+import { loadWritableDocument, type LoadWritableDocumentError } from "./loadWritableDocument";
 
-export const MIN_PASSWORD_LENGTH = 8;
-export const MAX_PASSWORD_LENGTH = 128;
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
 
 export type DocumentAccessAdminError =
-  | LoadOwnedDocumentError
+  | LoadWritableDocumentError
   | InvalidDocumentPasswordError
   | DocumentRepositoryError
   | ContentRepositoryError
@@ -30,6 +31,7 @@ export class SetDocumentPassword {
     private readonly accessRepository: DocumentAccessRepository,
     private readonly hasher: PasswordHasher,
     private readonly eventBus: EventBus,
+    private readonly authorizer: Authorizer,
     private readonly clock: () => Date = () => new Date(),
   ) {}
 
@@ -39,6 +41,10 @@ export class SetDocumentPassword {
     password: string,
     actorId: string,
   ): Promise<Result<DocumentAccessAdminError, void>> {
+    const loaded = await loadWritableDocument(this.authorizer, this.contentRepository, nanobookId, documentPath, actorId);
+    if (!loaded.isSuccess) return Result.fail(loaded.getError());
+
+    // Primero se autoriza (loadWritableDocument); solo entonces se valida la contraseña.
     if (
       password.trim().length === 0 ||
       password.length < MIN_PASSWORD_LENGTH ||
@@ -51,8 +57,6 @@ export class SetDocumentPassword {
       );
     }
 
-    const loaded = await loadOwnedDocument(this.contentRepository, nanobookId, documentPath, actorId);
-    if (!loaded.isSuccess) return Result.fail(loaded.getError());
     const document = loaded.getValue();
     const documentId = document.getDocumentId().getValue();
     const now = this.clock();

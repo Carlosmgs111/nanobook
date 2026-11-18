@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Result } from "../../../../shared/domain/Result";
 import { DocumentNotFoundError, DocumentRevisionConflictError } from "../../../../documents/server/domain/errors";
-import { NanobookAccessDeniedError } from "../../../../nanobooks/server/application/AuthorizeNanobook";
+import { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
 import { formatBlockIssues, joinNotes, toMcpTextResult, toMcpToolResult } from "./McpToolResult";
 
 describe("toMcpToolResult", () => {
@@ -12,13 +12,25 @@ describe("toMcpToolResult", () => {
   });
 
   it.each([
-    [new NanobookAccessDeniedError("book-1", "write"), 403],
+    [new AccessDeniedError({ effect: "deny", reason: "forbidden" }), 403],
     [new DocumentNotFoundError("doc-1"), 404],
     [new DocumentRevisionConflictError("doc-1", 2, 3), 409],
   ])("maps expected domain failures to a stable code", (error, code) => {
     const response = toMcpToolResult(Result.fail(error));
     expect(response.isError).toBe(true);
     expect(JSON.parse(response.content[0].text)).toMatchObject({ code });
+  });
+
+  it.each([
+    [new AccessDeniedError({ effect: "deny", reason: "forbidden" }), 403, "No tienes permiso sobre este recurso"],
+    [new AccessDeniedError({ effect: "deny", reason: "not-found" }), 404, "Recurso no encontrado"],
+    [new AccessDeniedError({ effect: "deny", reason: "unauthenticated" }), 401, "Autenticación requerida"],
+    [new AccessDeniedError({ effect: "challenge", kind: "password" }), 401, "Este recurso requiere contraseña"],
+    [new AccessCheckFailedError(new Error("db caída")), 500, "La operación no pudo completarse"],
+  ])("maps authorization errors to fixed messages", (error, code, message) => {
+    const response = toMcpToolResult(Result.fail(error));
+    expect(response.isError).toBe(true);
+    expect(JSON.parse(response.content[0].text)).toEqual({ code, error: message });
   });
 
   it("does not expose an unexpected internal error", () => {

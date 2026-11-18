@@ -37,6 +37,31 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 - **Changed:** la extensión de bloques de componentes rodea con marcadores (`nb:block-start` / `nb:block-end`, props en base64url) los bloques que son hijos directos de la raíz del documento, y `splitComponentBlocks` parte con ellos el HTML cacheado. `DocumentPage` pinta el cuerpo mediante `RenderedDocument`, que conserva el HTML tal cual y convierte en isla solo los bloques de framework válidos; `price-chart`, los bloques anidados y los inválidos conservan su salida anterior. `financial-components` sube a la versión `2`, por lo que se invalida la caché de páginas renderizadas.
 
+- **Changed:** los casos de uso de `nanobooks` se agrupan en dos gestores, `LifeCycle` (actualizar, borrar y cambiar tema) y `Reading` (lecturas y listados), con un archivo de tests por gestor. Las políticas `NanobookAccessPolicy` y `DocumentPasswordPolicy` pasan a `infraestructure/access/` de su módulo, por ser adaptadores del contrato `Policy`. El módulo `authorization` expone `Authorization.register(policy)`: los compositores de módulo registran su política sin compartir un arreglo, y los casos de uso solo reciben `Authorizer`. `AGENTS.md` documenta la regla.
+
+- **Changed:** se reorganiza la capa `application` de `nanobooks` sin cambiar su comportamiento. El puerto `NanobookReadCache` y el error `NanobookNotFoundError` pasan a `domain`, `NanobookAccessPolicy` a `application/access`, y `UpdateNanobook`, `DeleteNanobook` y `SetNanobookTheme` comparten `loadWritableNanobook` (que autoriza antes de cargar) y `saveNanobook`. `CreateNanobook` deja de depender del `DocumentModule` y usa el puerto `NanobookRootDocument`.
+
+- **Changed:** `documents` decide todo acceso a través del módulo `authorization`: la protección por contraseña es la política `DocumentPasswordPolicy` (solo restringe lecturas) y las mutaciones y la administración de contraseñas autorizan con `Authorizer`. Se eliminan el puerto `WriteAccess`, `NanobookWriteAccess`, `canWrite`, `AuthorizeDocumentAccess`, `withNanobookWriteAccess` y los errores `WriteAccessDeniedError` y `DocumentAccessDeniedError`. Las rutas de mutación de documentos y de contraseña responden con los códigos de `accessErrorResponse`: un ajeno sobre un nanobook privado, o uno inexistente, recibe 404 idéntico; sobre uno público, 403. `ReadDocumentResult.via` pasa a `"open" | "protected"`.
+
+- **Changed:** el acceso a nanobooks pasa por completo por el módulo `authorization`: `resolveNanobookRoute`, la página de documento, las herramientas MCP, las rutas de mutación y el adaptador `NanobookWriteAccess` usan `Authorizer`. Se eliminan `AuthorizeNanobook`, `RequireNanobookAccess` y `NanobookAccessDeniedError`. Un usuario ajeno que intenta editar o mutar contenido de un nanobook privado recibe 404 en lugar de 403, igual que si no existiera. Los textos de error de las rutas de mutación cambian ("No tienes permiso sobre este recurso", "Recurso no encontrado"). `canEdit` de la página de documento consulta ahora el nanobook por render para los usuarios con sesión.
+
+- **Changed:** `nanobooks` registra su política de acceso (dueño y visibilidad) en el módulo `authorization` y `UpdateNanobook`, `DeleteNanobook` y `SetNanobookTheme` autorizan a través de `Authorizer`, antes de cargar el nanobook. Un usuario ajeno que intenta modificar un nanobook privado recibe 404 en lugar de 403, igual que si no existiera, para no revelar que existe; sobre uno público sigue recibiendo 403.
+
+- **Added:** módulo `authorization` (`src/authorization/server`) con el contrato de acceso (`Subject`, `Resource`, `Decision`, `Policy`), el motor `createAuthorizer` y la traducción `accessErrorResponse`. Combina políticas registradas por cada módulo y falla cerrado: concede solo con un `allow` explícito y sin `deny` ni `challenge`, y un fallo técnico nunca concede. Todavía no lo usa ningún módulo.
+
+- **Changed:** se redujo el módulo `documents` por flujos (escritura, lectura, acceso, navegador), sin cambiar la protección:
+  - Desaparecen `DocumentAccessPolicy`, `CompositeReferenceResolver`, los DTO REST de re-export y el código muerto.
+  - Los controllers de mutación comparten `documentMutationRoute` y los casos de uso publican eventos con `publishAll`.
+  - En el navegador, `sameDocument`, la lista de frontmatter protegido, el writer HTTP y el storage quedan sin duplicación.
+  - `GitHubReferenceResolver` ya no intenta resolver referencias que no son de GitHub.
+  - Las mutaciones de documentos responden 401 antes que 400.
+  - Los tests de proceso se sustituyen por una batería reducida de tests de implementación.
+
+- **Fixed:** MCP: `get_document` y `list_documents` ya no devuelven el contenido de documentos protegidos a quien no es dueño del nanobook.
+
+- **Changed:** `documents` expone `readDocument`, que resuelve la protección por sí mismo (`not-found` / `allowed` / `challenge`) y absorbe la composición de `getDocument` + `authorizeDocumentAccess`, que deja de exponerse en `DocumentModule`. La página pública ya no compone la autorización, envía `X-Robots-Tag: noindex, nofollow` en todo acceso a contenido protegido y el desafío muestra el título del documento almacenado, no el del destino de un proxy.
+
+- **Changed:** las mutaciones de documentos (crear, actualizar, borrar, fijar o quitar contraseña) comprueban el permiso de escritura del nanobook dentro del propio módulo, mediante el puerto `WriteAccess`. Ya no se autoriza por el `ownerId` del documento: los documentos sin dueño dejan de quedar bloqueados para su escritor. `CreateDocument` estampa `ownerId` con el actor y `DocumentInput.ownerId` desaparece.
 
 - **Changed:** las instrucciones del servidor MCP aclaran que el documento índice (`index` y cualquier `…/index`) no muestra su cuerpo, solo título, descripción y la lista de sus documentos, y que al crear un nanobook se debe crear siempre además un documento propio con la información. La regla figura también en las descripciones de `create_nanobook`, `list_documents`, `create_document` y `update_document`, y en la guía de bloques.
 
