@@ -47,7 +47,7 @@ export { DocumentCreated } from "./domain/events/DocumentCreated";
 export { DocumentUpdated } from "./domain/events/DocumentUpdated";
 export { DocumentDeleted } from "./domain/events/DocumentDeleted";
 export { grantsFromCookieHeader } from "./infraestructure/rest/GrantCookie";
-export { DocumentRepositoryError } from "./domain/errors";
+export { DocumentRepositoryError, DocumentRevisionConflictError } from "./domain/errors";
 export { DocumentId } from "./domain/DocumentId";
 export { DocumentPath } from "./domain/DocumentPath";
 
