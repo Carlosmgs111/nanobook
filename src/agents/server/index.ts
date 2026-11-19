@@ -17,6 +17,8 @@ export type {
   MarkdownBlockIssue,
 } from "./application/ports/MarkdownBlockAdvisor";
 
+// TODO exponer capacidades que permitan a otros modulos resgistrar y definir tools
+
 export class AgentModule {
   private constructor(public readonly tools: AgentToolService) {}
 
