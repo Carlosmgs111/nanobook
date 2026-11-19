@@ -5,11 +5,14 @@ interface Props {
   /** Ruta del .astro registrado para el bloque. */
   component: string;
   props: Record<string, unknown>;
+  /** Datos opacos que la página entrega a todos los bloques (p. ej. el permiso de escritura); `rendering` no los interpreta. */
+  context?: Record<string, unknown>;
 }
 
 // Etiqueta dinámica: la directiva client:*, si el bloque se hidrata, la declara
 // el propio componente registrado, no este host.
 const Block = await loadBlockComponent(Astro.props.component);
+const { context } = Astro.props;
 ---
 
-<Block {...Astro.props.props} />
+<Block {...Astro.props.props} {...(context ? { context } : {})} />

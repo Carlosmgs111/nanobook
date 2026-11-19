@@ -7,11 +7,13 @@ const app = await getApp();
 interface Props {
   /** HTML renderizado del documento (con los marcadores de bloque). */
   html: string;
+  /** Datos opacos para los bloques; se reenvían tal cual. */
+  context?: Record<string, unknown>;
   /** El resto de atributos (id, data-*) va al contenedor. */
   [attribute: string]: unknown;
 }
 
-const { html, ...attributes } = Astro.props;
+const { html, context, ...attributes } = Astro.props;
 
 // Los segmentos de HTML se inyectan tal cual y los bloques se pintan con Astro
 // (solo servidor o isla), en el orden del documento.
@@ -27,7 +29,7 @@ const hasBlocks = pieces.some((piece) => piece.kind === "island");
   {
     pieces.map((piece) =>
       piece.kind === "island" ? (
-        <BlockHost component={piece.component} props={piece.props} />
+        <BlockHost component={piece.component} props={piece.props} context={context} />
       ) : (
         <Fragment set:html={piece.html} />
       )
