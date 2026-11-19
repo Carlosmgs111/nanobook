@@ -5,8 +5,9 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { columnLabel, compareCells, parseCellInput, sheetWidth, type Cell } from "../../../shared/sheet";
+import { canSaveSpreadsheet } from "../../canSaveSpreadsheet";
 import { saveSpreadsheet, type SpreadsheetContext } from "../../saveSpreadsheet";
 import type { SpreadsheetProps } from "./Spreadsheet.schema";
 
@@ -49,6 +50,18 @@ export default function SpreadsheetIsland({
   // Lo último que el servidor tiene guardado; identifica la hoja en el documento al guardar.
   const [saved, setSaved] = useState<Cell[][]>(() => pad(rows));
   const [status, setStatus] = useState<SaveStatus>("idle");
+  // Con `ownerId` la sesión se comprueba en el cliente: hasta entonces no se muestra la barra.
+  const [allowed, setAllowed] = useState(Boolean(context) && !context?.ownerId);
+  useEffect(() => {
+    if (!context?.ownerId) return;
+    let active = true;
+    void canSaveSpreadsheet(context).then((ok) => {
+      if (active) setAllowed(ok);
+    });
+    return () => {
+      active = false;
+    };
+  }, [context]);
   // Texto que el lector está escribiendo, por celda (`fila:columna`); se convierte en valor al salir de la celda.
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const withDrafts = (source: Cell[][], pending: Record<string, string>) =>
@@ -148,7 +161,7 @@ export default function SpreadsheetIsland({
           </tbody>
         </table>
       </div>
-      {context && !readOnly && (
+      {allowed && !readOnly && (
         <div className="sheet-actions">
           <button type="button" onClick={save} disabled={!dirty || status === "saving"}>
             Guardar cambios

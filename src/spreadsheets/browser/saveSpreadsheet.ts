@@ -5,6 +5,11 @@ import type { Cell } from "../shared/sheet";
 export interface SpreadsheetContext {
   nanobookId: string;
   documentPath: string;
+  /**
+   * Presente cuando la página no conocía la sesión: solo ese usuario ve el botón
+   * de guardar (el servidor sigue exigiendo el permiso al guardar).
+   */
+  ownerId?: string;
 }
 
 export type SaveOutcome = "saved" | "stale" | "error";
