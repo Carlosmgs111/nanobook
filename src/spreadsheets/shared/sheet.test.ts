@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { columnLabel, columnTotal, compareCells, sheetWidth } from "./sheet";
+import { columnLabel, columnTotal, compareCells, parseCellInput, sheetWidth } from "./sheet";
 
 const rows = [
   ["Norte", 10, null],
@@ -41,5 +41,27 @@ describe("compareCells", () => {
     const cells = ["b", null, 10, "a", 2, ""];
 
     expect([...cells].sort(compareCells)).toEqual([2, 10, "a", "b", null, ""]);
+  });
+});
+
+describe("parseCellInput", () => {
+  it("turns empty or blank text into an empty cell", () => {
+    expect(parseCellInput("")).toBeNull();
+    expect(parseCellInput("  ")).toBeNull();
+  });
+
+  it("converts only plain decimal numbers", () => {
+    expect(parseCellInput("12.5")).toBe(12.5);
+    expect(parseCellInput("-3")).toBe(-3);
+    expect(parseCellInput("0")).toBe(0);
+    expect(parseCellInput(" 42 ")).toBe(42);
+  });
+
+  it("keeps anything else as typed", () => {
+    expect(parseCellInput("007")).toBe("007");
+    expect(parseCellInput("0x1F")).toBe("0x1F");
+    expect(parseCellInput("1e3")).toBe("1e3");
+    expect(parseCellInput("1.")).toBe("1.");
+    expect(parseCellInput("abc")).toBe("abc");
   });
 });

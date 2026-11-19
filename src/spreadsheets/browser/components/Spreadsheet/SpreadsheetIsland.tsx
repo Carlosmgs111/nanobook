@@ -6,7 +6,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { columnLabel, compareCells, sheetWidth, type Cell } from "../../../shared/sheet";
+import { columnLabel, compareCells, parseCellInput, sheetWidth, type Cell } from "../../../shared/sheet";
 import { saveSpreadsheet, type SpreadsheetContext } from "../../saveSpreadsheet";
 import type { SpreadsheetProps } from "./Spreadsheet.schema";
 
@@ -49,7 +49,14 @@ export default function SpreadsheetIsland({
   // Lo último que el servidor tiene guardado; identifica la hoja en el documento al guardar.
   const [saved, setSaved] = useState<Cell[][]>(() => pad(rows));
   const [status, setStatus] = useState<SaveStatus>("idle");
-  const dirty = JSON.stringify(data) !== JSON.stringify(saved);
+  // Texto que el lector está escribiendo, por celda (`fila:columna`); se convierte en valor al salir de la celda.
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const withDrafts = (source: Cell[][], pending: Record<string, string>) =>
+    source.map((row, rowIndex) => row.map((cell, columnIndex) => {
+      const draft = pending[`${rowIndex}:${columnIndex}`];
+      return draft === undefined ? cell : parseCellInput(draft);
+    }));
+  const dirty = JSON.stringify(withDrafts(data, drafts)) !== JSON.stringify(saved);
 
   const columnDefs = useMemo(
     () =>
@@ -70,15 +77,19 @@ export default function SpreadsheetIsland({
 
   const table = useTable({ features, columns: columnDefs, data });
 
-  function edit(rowIndex: number, columnIndex: number, text: string) {
-    const value: Cell = text.trim() !== "" && Number.isFinite(Number(text)) ? Number(text) : text;
-    setData((current) => current.map((row, index) => (index === rowIndex ? row.map((cell, i) => (i === columnIndex ? value : cell)) : row)));
+  function commit(key: string) {
+    const draft = drafts[key];
+    if (draft === undefined) return;
+    setData((current) => withDrafts(current, { [key]: draft }));
+    setDrafts(({ [key]: _done, ...rest }) => rest);
     setStatus("idle");
   }
 
   async function save() {
     if (!context) return;
-    const next = data;
+    const next = withDrafts(data, drafts);
+    setData(next);
+    setDrafts({});
     setStatus("saving");
     const outcome = await saveSpreadsheet(context, saved, next);
     if (outcome === "saved") setSaved(next);
@@ -112,15 +123,21 @@ export default function SpreadsheetIsland({
               <tr key={row.id}>
                 {row.getAllCells().map((cell, columnIndex) => {
                   const value = (cell.getValue() ?? null) as Cell;
+                  const key = `${row.index}:${columnIndex}`;
                   return (
                     <td key={cell.id} className={typeof value === "number" ? "sheet-number" : undefined}>
                       {readOnly ? (
                         value ?? ""
                       ) : (
                         <input
-                          value={value ?? ""}
+                          value={drafts[key] ?? value ?? ""}
                           aria-label={`${columns?.[columnIndex] ?? columnLabel(columnIndex)}, fila ${row.index + 1}`}
-                          onChange={(event) => edit(row.index, columnIndex, event.target.value)}
+                          onChange={(event) => {
+                            const text = event.target.value;
+                            setDrafts((current) => ({ ...current, [key]: text }));
+                            setStatus("idle");
+                          }}
+                          onBlur={() => commit(key)}
                         />
                       )}
                     </td>

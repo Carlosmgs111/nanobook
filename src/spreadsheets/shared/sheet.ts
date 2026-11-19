@@ -51,3 +51,10 @@ export function columnTotal(
       return Math.max(...numbers);
   }
 }
+
+/** Texto escrito en una celda a su valor: vacío es `null`, un decimal simple es número y el resto se conserva tal cual. */
+export function parseCellInput(text: string): Cell {
+  const trimmed = text.trim();
+  if (trimmed === "") return null;
+  return /^-?(0|[1-9]\d*)(\.\d+)?$/.test(trimmed) ? Number(trimmed) : text;
+}
