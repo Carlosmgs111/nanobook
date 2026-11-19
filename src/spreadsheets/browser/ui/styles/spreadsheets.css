@@ -69,3 +69,29 @@
 .sheet-totals :is(thead th:first-child, tbody th) {
   text-align: start;
 }
+
+.sheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-start: 0.5rem;
+}
+
+.sheet-actions button {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-panel-radius);
+  background: var(--theme-surface-bg);
+  color: var(--theme-content-primary);
+  cursor: pointer;
+}
+
+.sheet-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sheet-actions button:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
