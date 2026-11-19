@@ -28,9 +28,14 @@ puede escribir en el documento, un botón **Guardar cambios** persiste las celda
 - **Permisos y concurrencia.** `SaveSpreadsheet` pide permiso de escritura a `Authorizer` antes de leer, y guarda
   con la revisión leída (`expectedRevision`): un conflicto de revisión también responde 409. Si el contenido no
   cambia, no escribe.
-- **Quién ve el botón.** `DocumentPage` pasa a `RenderedDocument` un `context` (`nanobookId`, `documentPath`) solo
-  si `canEdit`; `rendering` lo reenvía opaco a los bloques. Quien no escribe sigue editando solo en su pantalla.
-- **Límites conocidos.** Una hoja idéntica a otra en el mismo documento: se edita la primera. Un fence con sangría
+- **Quién ve el botón.** `DocumentPage` pasa a `RenderedDocument` un `context` (`nanobookId`, `documentPath`) si
+  `canEdit`; `rendering` lo reenvía opaco a los bloques. Quien no escribe sigue editando solo en su pantalla. En
+  nanobooks públicos el servidor renderiza sin conocer la sesión (`deferOwnerActions`, `canEdit` es falso), así que
+  el `context` incluye también `ownerId`: la isla no muestra la barra al renderizar, consulta `/api/auth/get-session`
+  y la revela solo si el id de la sesión coincide con `ownerId`, igual que el enlace "Editar" (`AuthStatusController`).
+  Con `canEdit` conocido no hay `ownerId` y la barra se muestra directamente.
+- **Límites conocidos.** En nanobooks públicos un escritor que no es el propietario no ve el botón (limitación
+  heredada: tampoco ve "Editar" hasta que el servidor conozca su sesión). Una hoja idéntica a otra en el mismo documento: se edita la primera. Un fence con sangría
   no se reescribe, y uno que nunca se cierra tampoco coincide: ambos responden 409.
 - **Páginas con `ref`.** No ofrecen guardar: la hoja mostrada pertenece al documento destino (`ProxyParser` sustituye
   el cuerpo pero conserva `ref`, y `entry.ref` lo expone), no al cuerpo almacenado del proxy. Se edita en el destino.

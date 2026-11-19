@@ -12,7 +12,7 @@ No se crean capacidades nuevas en otros módulos. `spreadsheets` recibe por inye
 
 ## Flujo
 
-1. La hoja se pinta como hoy. Si el visitante puede escribir (`canEdit`) y la hoja es `readOnly: false`, las celdas son editables.
+1. La hoja se pinta como hoy. Si la hoja es `readOnly: false`, las celdas son editables; el botón de guardar aparece si el visitante puede escribir (`canEdit`) o, en páginas públicas donde el servidor no conoce la sesión, si la isla comprueba que la sesión es la del propietario (`ownerId`).
 2. Cada edición queda como cambio pendiente en la isla; aparece **Guardar cambios**.
 3. Al pulsarlo, la isla envía `PATCH /api/nanobooks/:nanobookId/spreadsheets` con `{ documentPath, original, next }`:
    - `original`: las filas tal como se cargaron.
@@ -52,7 +52,7 @@ Quien no puede escribir sigue editando solo en su pantalla (sin botón), como ho
 
 ### Único cruce con `rendering`
 
-La isla necesita `nanobookId` y la ruta del documento. `DocumentPage.astro` ya los conoce y ya calcula `canEdit` con el autorizador. Pasa un `context` a `RenderedDocument`, solo si `canEdit`; `RenderedDocument` y `BlockHost` lo reenvían a cada bloque como una prop opaca (se añade después de validar las props, así no choca con el esquema estricto). `rendering` no interpreta su contenido ni importa otros módulos (`boundary.test.ts` sigue verde).
+La isla necesita `nanobookId` y la ruta del documento. `DocumentPage.astro` ya los conoce y ya calcula `canEdit` con el autorizador. Pasa un `context` a `RenderedDocument` si `canEdit` o, en páginas públicas sin sesión conocida (`deferOwnerActions`), con el `ownerId` para que la isla compare con la sesión del navegador (como el enlace "Editar"); `RenderedDocument` y `BlockHost` lo reenvían a cada bloque como una prop opaca (se añade después de validar las props, así no choca con el esquema estricto). `rendering` no interpreta su contenido ni importa otros módulos (`boundary.test.ts` sigue verde).
 
 ## Errores
 

@@ -5,6 +5,8 @@ import { Result } from "../../../shared/domain/Result";
 import { sheetRows, type Cell } from "../../shared/sheet";
 import { InvalidSheetError, SheetNotFoundError } from "./errors";
 
+// TODO rendering deberia exponer una capacidad que permita capturar las `fences`
+
 type Rows = readonly (readonly Cell[])[];
 export type SheetEditError = SheetNotFoundError | InvalidSheetError;
 

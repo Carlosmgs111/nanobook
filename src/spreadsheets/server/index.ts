@@ -8,11 +8,20 @@ import { SaveSpreadsheetController } from "./infraestructure/rest/SaveSpreadshee
 export class SpreadsheetsServerModule {
   private constructor(
     public readonly saveSpreadsheet: SaveSpreadsheet,
-    public readonly saveSpreadsheetController: SaveSpreadsheetController,
+    public readonly saveSpreadsheetController: SaveSpreadsheetController
   ) {}
 
-  static create(documents: Pick<DocumentModule, "getDocument" | "updateDocument">, authorizer: Authorizer): SpreadsheetsServerModule {
-    const saveSpreadsheet = new SaveSpreadsheet(authorizer, new DocumentModuleSpreadsheetDocuments(documents));
-    return new SpreadsheetsServerModule(saveSpreadsheet, new SaveSpreadsheetController(saveSpreadsheet));
+  static create(
+    documents: Pick<DocumentModule, "getDocument" | "updateDocument">,
+    authorizer: Authorizer
+  ): SpreadsheetsServerModule {
+    const saveSpreadsheet = new SaveSpreadsheet(
+      authorizer,
+      new DocumentModuleSpreadsheetDocuments(documents)
+    );
+    return new SpreadsheetsServerModule(
+      saveSpreadsheet,
+      new SaveSpreadsheetController(saveSpreadsheet)
+    );
   }
 }

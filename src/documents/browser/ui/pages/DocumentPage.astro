@@ -174,7 +174,7 @@ Astro.response.headers.set(
           data-document-id={entry.documentId}
           data-document-ref={entry.ref ?? ""}
           html={renderedBody}
-          context={canEdit && !entry.ref ? { nanobookId, documentPath: slug } : undefined}
+          context={(canEdit || deferOwnerActions) && !entry.ref ? { nanobookId, documentPath: slug, ...(deferOwnerActions ? { ownerId: nanobook.getOwnerId() } : {}) } : undefined}
         />
       </Fragment>
     )
