@@ -74,6 +74,15 @@ describe("SaveSpreadsheet", () => {
     expect(documents.write).not.toHaveBeenCalled();
   });
 
+  it("does not write when nothing changed", async () => {
+    const { documents, useCase } = setup();
+
+    const result = await useCase.execute({ ...command, next: command.original });
+
+    expect(result.isSuccess).toBe(true);
+    expect(documents.write).not.toHaveBeenCalled();
+  });
+
   it("returns the write failure", async () => {
     const { useCase } = setup("allow", { write: vi.fn().mockResolvedValue(Result.fail(new SheetRevisionConflictError())) });
 

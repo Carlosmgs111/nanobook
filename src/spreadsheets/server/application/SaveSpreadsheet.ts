@@ -54,6 +54,8 @@ export class SaveSpreadsheet {
 
     const replaced = replaceSheetCells(document.content, original, next);
     if (!replaced.isSuccess) return Result.fail(replaced.getError());
+    // Sin cambios no hay nada que guardar: evita subir la revisión y publicar DocumentUpdated en balde.
+    if (replaced.getValue() === document.content) return Result.ok();
 
     return this.documents.write(nanobookId, { ...document, content: replaced.getValue() }, actorId);
   }
