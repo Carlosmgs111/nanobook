@@ -8,7 +8,7 @@ import type { Nanobook } from "../../../../nanobooks/server/domain/Nanobook";
 import type { Document } from "../../../server";
 import type { AuthenticatedUser } from "../../../../auth/shared/AuthSession";
 import DocumentActionLink from "../components/DocumentActionLink.astro";
-import DocumentPageController from "../DocumentPageController.astro";
+import DocumentPageController from "./DocumentPageController.astro";
 import DocumentUnlockForm from "../components/DocumentUnlockForm.astro";
 import { restrictSecuredNavigation } from "../../../../navigation/server";
 import { appendServerTiming } from "../../../../shared/server/http/ServerTiming";
