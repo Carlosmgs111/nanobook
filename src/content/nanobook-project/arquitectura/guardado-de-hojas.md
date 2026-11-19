@@ -31,4 +31,8 @@ puede escribir en el documento, un botón **Guardar cambios** persiste las celda
 - **Quién ve el botón.** `DocumentPage` pasa a `RenderedDocument` un `context` (`nanobookId`, `documentPath`) solo
   si `canEdit`; `rendering` lo reenvía opaco a los bloques. Quien no escribe sigue editando solo en su pantalla.
 - **Límites conocidos.** Una hoja idéntica a otra en el mismo documento: se edita la primera. Un fence con sangría
-  no se reescribe.
+  no se reescribe, y uno que nunca se cierra tampoco coincide: ambos responden 409.
+- **Páginas con `ref`.** No ofrecen guardar: la hoja mostrada pertenece al documento destino (`ProxyParser` sustituye
+  el cuerpo pero conserva `ref`, y `entry.ref` lo expone), no al cuerpo almacenado del proxy. Se edita en el destino.
+- **Valores de celda.** La isla conserva el texto tecleado hasta que la celda pierde el foco y solo los decimales
+  simples pasan a número ("007", "1e3" y "0x1F" siguen siendo texto); una celda vacía pasa a `null`.
