@@ -86,6 +86,22 @@ describe("replaceSheetCells", () => {
     expect(result.getError()).toBeInstanceOf(InvalidSheetError);
   });
 
+  it("does not throw when a row is a YAML alias", () => {
+    const source = "```spreadsheet\nrows:\n  - &r [a, 1]\n  - *r\n```\n";
+
+    const result = replaceSheetCells(source, [["a", 1], ["a", 1]], [["a", 1], ["a", 2]]);
+
+    expect(result.getError()).toBeInstanceOf(InvalidSheetError);
+  });
+
+  it("returns the markdown untouched when nothing changed", () => {
+    const source = "```spreadsheet\nrows:\n  - [ a ,1 ]\n```\n";
+
+    const result = replaceSheetCells(source, [["a", 1]], [["a", 1, null]]);
+
+    expect(result.getValue()).toBe(source);
+  });
+
   it("keeps CRLF line endings", () => {
     const crlf = sample.replaceAll("\n", "\r\n");
 

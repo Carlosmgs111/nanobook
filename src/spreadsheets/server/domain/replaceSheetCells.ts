@@ -73,27 +73,32 @@ const sameRows = (a: Rows, b: Rows) => JSON.stringify(withoutTrailingNulls(a)) =
 function patch({ body, rows }: SheetFence, next: Rows): Result<InvalidSheetError, string> {
   if (next.length !== rows.length) return Result.fail(new InvalidSheetError("No se pueden añadir ni quitar filas."));
 
-  const document = parseDocument(body);
-  next.forEach((after, r) => {
-    const before = rows[r];
-    const cell = (index: number) => after[index] ?? null;
-    let lastChanged = -1;
-    after.forEach((_, c) => {
-      if (cell(c) !== (before[c] ?? null)) lastChanged = c;
+  try {
+    const document = parseDocument(body);
+    next.forEach((after, r) => {
+      const before = rows[r];
+      const cell = (index: number) => after[index] ?? null;
+      let lastChanged = -1;
+      after.forEach((_, c) => {
+        if (cell(c) !== (before[c] ?? null)) lastChanged = c;
+      });
+      // Las celdas más allá del final de la fila se rellenan con null hasta la última editada.
+      for (let c = 0; c < Math.max(before.length, lastChanged + 1); c++) {
+        if (c >= before.length || cell(c) !== before[c]) document.setIn(["rows", r, c], cell(c));
+      }
     });
-    // Las celdas más allá del final de la fila se rellenan con null hasta la última editada.
-    for (let c = 0; c < Math.max(before.length, lastChanged + 1); c++) {
-      if (c >= before.length || cell(c) !== before[c]) document.setIn(["rows", r, c], cell(c));
-    }
-  });
 
-  const valid = sheetRows.safeParse((document.toJS() as { rows?: unknown }).rows);
-  if (!valid.success) return Result.fail(new InvalidSheetError(valid.error.issues.map((issue) => issue.message).join("; ")));
+    const valid = sheetRows.safeParse((document.toJS() as { rows?: unknown }).rows);
+    if (!valid.success) return Result.fail(new InvalidSheetError(valid.error.issues.map((issue) => issue.message).join("; ")));
 
-  const text = document
-    .toString({ lineWidth: 0, flowCollectionPadding: false, indentSeq: !/^rows:[ \t]*\r?\n-/m.test(body) })
-    .replace(/\n$/, "");
-  return Result.ok(body.includes("\r\n") ? text.replaceAll("\n", "\r\n") : text);
+    const text = document
+      .toString({ lineWidth: 0, flowCollectionPadding: false, indentSeq: !/^rows:[ \t]*\r?\n-/m.test(body) })
+      .replace(/\n$/, "");
+    return Result.ok(body.includes("\r\n") ? text.replaceAll("\n", "\r\n") : text);
+  } catch {
+    // Por ejemplo, filas que son alias YAML: el Document API no puede editarlas.
+    return Result.fail(new InvalidSheetError("No se pudo aplicar el cambio a la hoja."));
+  }
 }
 
 /**
@@ -103,6 +108,8 @@ function patch({ body, rows }: SheetFence, next: Rows): Result<InvalidSheetError
 export function replaceSheetCells(markdown: string, original: Rows, next: Rows): Result<SheetEditError, string> {
   const fence = sheetFences(markdown).find(({ rows }) => sameRows(rows, original));
   if (!fence) return Result.fail(new SheetNotFoundError());
+
+  if (sameRows(fence.rows, next)) return Result.ok(markdown);
 
   const patched = patch(fence, next);
   if (!patched.isSuccess) return Result.fail(patched.getError());
