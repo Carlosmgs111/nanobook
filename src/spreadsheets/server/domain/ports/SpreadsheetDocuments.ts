@@ -1,6 +1,10 @@
 import type { AccessCheckFailedError, AccessDeniedError } from "../../../../authorization/server";
+import type { DocumentModule } from "../../../../documents/server";
 import type { Result } from "../../../../shared/domain/Result";
 import type { SheetRevisionConflictError, SheetWriteError } from "../errors";
+
+/** Mismo tipo que acepta `updateDocument` para `ref` (`Ref | string`), derivado sin exportar nada nuevo de `documents`. */
+export type SheetRef = Parameters<DocumentModule["updateDocument"]["execute"]>[1]["ref"];
 
 /** Un documento tal como lo necesita `spreadsheets` para leerlo y volver a guardarlo. */
 export interface SheetDocument {
@@ -15,7 +19,7 @@ export interface SheetDocument {
   tags?: string[];
   draft?: boolean;
   position?: number;
-  ref?: string;
+  ref?: SheetRef;
 }
 
 export type SheetWriteFailure =

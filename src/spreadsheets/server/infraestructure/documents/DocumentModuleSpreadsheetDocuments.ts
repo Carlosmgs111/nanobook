@@ -26,7 +26,8 @@ export class DocumentModuleSpreadsheetDocuments implements SpreadsheetDocuments 
       tags: metadata.tags,
       draft: metadata.draft,
       position: document.getPosition(),
-      ref: document.getReference()?.getValue(),
+      // Tal cual: aplanar un ref github/url a string lo convertiría en un ref local al guardar.
+      ref: metadata.ref,
     };
   }
 

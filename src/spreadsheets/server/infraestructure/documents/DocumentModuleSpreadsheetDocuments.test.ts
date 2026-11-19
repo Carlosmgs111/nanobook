@@ -8,6 +8,8 @@ import { DocumentModuleSpreadsheetDocuments } from "./DocumentModuleSpreadsheetD
 vi.mock("../../../../shared/infrastructure/database/drizzleDatabase", () => ({ db: {} }));
 vi.mock("astro:env/server", () => ({ GITHUB_TOKEN: undefined, BETTER_AUTH_SECRET: undefined }));
 
+const githubRef = { source: "github", owner: "acme", repo: "datos", path: "ventas.md", branch: "dev" };
+
 const stored = {
   getDocumentId: () => ({ getValue: () => "doc-1" }),
   getPath: () => "ventas",
@@ -16,8 +18,8 @@ const stored = {
   getContent: () => "cuerpo",
   getRevision: () => 4,
   getPosition: () => 2,
-  getReference: () => null,
-  getMetadata: () => ({ author: "Autora", cover: "c.png", tags: ["a"], draft: false }),
+  getReference: () => ({ getValue: () => "https://github.com/acme/datos/blob/dev/ventas.md" }),
+  getMetadata: () => ({ author: "Autora", cover: "c.png", tags: ["a"], draft: false, ref: githubRef }),
 };
 
 function setup(update: unknown = Result.ok(stored)) {
@@ -47,7 +49,7 @@ describe("DocumentModuleSpreadsheetDocuments", () => {
       tags: ["a"],
       draft: false,
       position: 2,
-      ref: undefined,
+      ref: githubRef,
     });
   });
 
@@ -67,7 +69,7 @@ describe("DocumentModuleSpreadsheetDocuments", () => {
     expect(result.isSuccess).toBe(true);
     expect(documents.updateDocument.execute).toHaveBeenCalledWith(
       "book-a",
-      expect.objectContaining({ id: "doc-1", path: "ventas", content: "nuevo", expectedRevision: 4 }),
+      expect.objectContaining({ id: "doc-1", path: "ventas", content: "nuevo", expectedRevision: 4, ref: githubRef }),
       "writer",
     );
     expect(documents.updateDocument.execute.mock.calls[0][1]).not.toHaveProperty("revision");
