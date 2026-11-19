@@ -28,11 +28,17 @@ describe("MCP OAuth configuration", () => {
     );
   });
 
-  it.each([
-    ["https://nanobook.example.com", "https://nanobook.example.com"],
-    ["http://127.0.0.1:4322", "http://127.0.0.1:4322"],
-  ])("uses only the canonical origin as a Better Auth trusted origin", (baseURL, expectedOrigin) => {
-    expect(getTrustedApplicationOrigins(baseURL)).toEqual([expectedOrigin]);
+  it("uses only the canonical origin as a Better Auth trusted origin in production", () => {
+    expect(getTrustedApplicationOrigins("https://nanobook.example.com")).toEqual([
+      "https://nanobook.example.com",
+    ]);
+  });
+
+  it("allows the local HTTPS client origin during loopback development", () => {
+    expect(getTrustedApplicationOrigins("http://127.0.0.1:4322")).toEqual([
+      "http://127.0.0.1:4322",
+      "https://localhost:3000",
+    ]);
   });
 
   it.each([

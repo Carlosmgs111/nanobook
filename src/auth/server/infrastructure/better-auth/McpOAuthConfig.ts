@@ -3,6 +3,7 @@ const CODEX_CIMD_PATH =
   /^\/oauth\/(?:client\.json|[^/]+\/client\.json|codex\/[^/]+\/client\.json)$/;
 
 const CLAUDE_CIMD_URL = "https://claude.ai/oauth/mcp-oauth-client-metadata";
+const LOCAL_HTTPS_CLIENT_ORIGIN = "https://localhost:3000";
 
 export interface McpOAuthConfig {
   resource: string;
@@ -28,8 +29,12 @@ export function getMcpOAuthConfig(baseURL: string): McpOAuthConfig {
 
 export function getTrustedApplicationOrigins(
   baseURL: string,
-): readonly [string] {
-  return [parseOrigin(baseURL).origin];
+): readonly string[] {
+  const origin = parseOrigin(baseURL);
+
+  return isLoopback(origin.hostname)
+    ? [origin.origin, LOCAL_HTTPS_CLIENT_ORIGIN]
+    : [origin.origin];
 }
 
 export function isAgentClientMetadataUrlAllowed(clientId: string): boolean {

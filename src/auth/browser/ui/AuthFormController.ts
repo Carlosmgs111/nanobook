@@ -13,7 +13,10 @@ export interface AuthFormControllerOptions {
 }
 
 class AuthFormModeCapability {
-  isVisible(fieldMode: string | undefined, selectedMode: AuthFormMode): boolean {
+  isVisible(
+    fieldMode: string | undefined,
+    selectedMode: AuthFormMode
+  ): boolean {
     return fieldMode === selectedMode;
   }
 }
@@ -53,18 +56,20 @@ export class AuthFormController {
     if (!root || root.dataset.authFormReady === "true") return;
     root.dataset.authFormReady = "true";
 
-    root.querySelectorAll<HTMLButtonElement>("[data-auth-mode]").forEach((button) => {
-      button.addEventListener("click", () => {
-        this.setMode(this.readMode(button.dataset.authMode));
+    root
+      .querySelectorAll<HTMLButtonElement>("[data-auth-mode]")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          this.setMode(this.readMode(button.dataset.authMode));
+        });
       });
-    });
 
     root
       .querySelector<HTMLFormElement>(".auth-form__fields")
       ?.addEventListener("submit", (event) => void this.submit(event));
 
     const githubButton = root.querySelector<HTMLButtonElement>(
-      '[data-auth-provider="github"]',
+      '[data-auth-provider="github"]'
     );
     githubButton?.addEventListener("click", () => {
       void this.submitGitHub(githubButton);
@@ -86,7 +91,10 @@ export class AuthFormController {
     root.dataset.mode = mode;
 
     root.querySelectorAll<HTMLElement>("[data-auth-mode]").forEach((button) => {
-      button.setAttribute("aria-pressed", String(button.dataset.authMode === mode));
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.authMode === mode)
+      );
     });
 
     root.querySelectorAll<HTMLElement>("[data-auth-only]").forEach((field) => {
@@ -105,7 +113,8 @@ export class AuthFormController {
 
     const password = root.querySelector<HTMLInputElement>("#auth-password");
     if (password) {
-      password.autocomplete = mode === "signup" ? "new-password" : "current-password";
+      password.autocomplete =
+        mode === "signup" ? "new-password" : "current-password";
     }
   }
 
@@ -128,13 +137,16 @@ export class AuthFormController {
     this.setSubmitting(true);
     this.options.notifier.show(
       mode === "signup" ? "Creando tu cuenta…" : "Ingresando…",
-      "loading",
+      "loading"
     );
 
     try {
       if (mode === "signup") {
         await this.options.authApi.signUp({ name, email, password });
-        this.options.notifier.show("Revisa tu correo para activar tu cuenta.", "success");
+        this.options.notifier.show(
+          "Revisa tu correo para activar tu cuenta.",
+          "success"
+        );
         this.navigate("/verify-email");
         return;
       }
@@ -149,8 +161,10 @@ export class AuthFormController {
     } catch (error) {
       console.error(error);
       this.options.notifier.show(
-        error instanceof Error ? error.message : "No fue posible autenticarte. 🙃",
-        "error",
+        error instanceof Error
+          ? error.message
+          : "No fue posible autenticarte. 🙃",
+        "error"
       );
     } finally {
       this.setSubmitting(false);
@@ -162,19 +176,23 @@ export class AuthFormController {
     this.options.notifier.show("Conectando con GitHub…", "loading");
 
     try {
-      const { authorizationUrl } = await this.options.authApi.signInWithGitHub();
+      const { authorizationUrl } =
+        await this.options.authApi.signInWithGitHub();
       this.navigate(authorizationUrl);
     } catch (error) {
       this.options.notifier.show(
         error instanceof Error ? error.message : "No fue posible autenticarte.",
-        "error",
+        "error"
       );
       button.disabled = false;
     }
   }
 
   private readValue(selector: string): string {
-    return this.getRoot()?.querySelector<HTMLInputElement>(selector)?.value.trim() ?? "";
+    return (
+      this.getRoot()?.querySelector<HTMLInputElement>(selector)?.value.trim() ??
+      ""
+    );
   }
 
   private readMode(mode: string | undefined): AuthFormMode {
