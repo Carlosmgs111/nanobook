@@ -3,6 +3,7 @@ import { counterDemoBlock } from "../browser/components/CounterDemo/counterDemoB
 import { createAuthorizer, type Authorizer } from "../../authorization/server";
 import { FinancialContentModule } from "../../financial-content/browser";
 import { SpreadsheetsModule } from "../../spreadsheets/browser";
+import { SpreadsheetsServerModule } from "../../spreadsheets/server";
 import { RenderingModule } from "../../rendering/server";
 import { ProfileModule } from "../../profiles/server";
 import { NanobookModule } from "../../nanobooks/server";
@@ -23,6 +24,7 @@ export class Application {
     public readonly agentModule: AgentModule,
     public readonly renderingModule: RenderingModule,
     public readonly authorizer: Authorizer,
+    public readonly spreadsheetsServerModule: SpreadsheetsServerModule,
   ) {}
 
   static async create(): Promise<Application> {
@@ -42,6 +44,7 @@ export class Application {
     const financialContentModule = FinancialContentModule.create(renderingModule.blocks);
     SpreadsheetsModule.create(renderingModule.blocks);
     renderingModule.blocks.register([counterDemoBlock]);
+    const spreadsheetsServerModule = SpreadsheetsServerModule.create(nanobookModule.documentModule, authorizer);
     const themeModule = ThemeModule.create(
       routeProtector,
       nanobookModule.setNanobookTheme,
@@ -57,6 +60,7 @@ export class Application {
       agentModule,
       renderingModule,
       authorizer,
+      spreadsheetsServerModule,
     );
   }
 }

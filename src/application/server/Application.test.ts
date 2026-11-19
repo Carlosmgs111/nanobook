@@ -71,6 +71,12 @@ describe("Application", () => {
     expect("createNanobookCapabilities" in app).toBe(false);
   });
 
+  it("composes the spreadsheets server module with the documents capabilities", async () => {
+    const app = await Application.create();
+
+    expect(app.spreadsheetsServerModule.saveSpreadsheetController.handle).toBeTypeOf("function");
+  });
+
   it("keeps nanobook persistence composition inside the nanobook module", async () => {
     const app = await Application.create();
 
