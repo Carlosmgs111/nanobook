@@ -56,3 +56,6 @@ pnpm-debug.log*
 
 .vercel
 .env*
+
+# local TLS certificates / keys
+*.pem
