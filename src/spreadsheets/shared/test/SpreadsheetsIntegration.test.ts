@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
 import { Application } from "../../../application/server/Application";
+import { replaceSheetCells } from "../../server/domain/replaceSheetCells";
 import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../../documents/browser/infraestructure/renderer/UnifiedMarkdownRenderer";
 
 vi.mock("astro:env/server", () => ({
@@ -67,3 +68,20 @@ it("renders the cases fixture: valid blocks, inline errors, near-miss fences and
   expect(published.match(/data-component="spreadsheet"/g)).toHaveLength(5); // 4 de raíz + 1 anidado como respaldo
   expect(published).toContain("Fin del documento");
 }, 15_000);
+
+it("saves an edited cell leaving the rest of the document byte for byte", () => {
+  const source = document.replaceAll("\r\n", "\n");
+  const rows = [
+    ["Norte", 120, 135, 128, 150, 162, 171],
+    ["Sur", 98, 101, 110, 108, 115, 124],
+    ["Este", 76, 80, null, 91, 95, 99],
+    ["Oeste", 143, 139, 150, 158, 166, 180],
+  ];
+  const next = rows.map((row) => [...row]);
+  next[2][3] = 90;
+
+  const result = replaceSheetCells(source, rows, next);
+
+  expect(result.isSuccess).toBe(true);
+  expect(result.getValue()).toBe(source.replace("  - [Este, 76, 80, null, 91, 95, 99]", "  - [Este, 76, 80, 90, 91, 95, 99]"));
+});
