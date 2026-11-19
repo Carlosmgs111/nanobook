@@ -3,14 +3,14 @@ import EditorToolbarController from "./EditorToolbarController.astro";
 ---
 
 <script>
-  import { getApp } from "../../../application/browser/Application";
-  import { hideProtectedFrontmatter } from "../application/protectedFrontmatter";
+  import { getApp } from "../../../../application/browser/Application";
+  import { hideProtectedFrontmatter } from "../../application/protectedFrontmatter";
   import { basicSetup } from "codemirror";
   import { EditorView, keymap } from "@codemirror/view";
   import { EditorState } from "@codemirror/state";
   import { markdown } from "@codemirror/lang-markdown";
   import { indentWithTab } from "@codemirror/commands";
-  import { debounce } from "../../../shared/utils/debounce";
+  import { debounce } from "../../../../shared/utils/debounce";
 
   const app = getApp();
 
