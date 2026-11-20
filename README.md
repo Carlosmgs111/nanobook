@@ -1,238 +1,176 @@
 # Nanobook
 
-![Versión](https://img.shields.io/badge/version-0.2.0--alpha.1-BC52EE?style=plastic)
+![Versión](https://img.shields.io/badge/version-0.5.1-BC52EE?style=plastic)
 ![Astro](https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white&style=plastic)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white&style=plastic)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=plastic)
 ![Node.js](https://img.shields.io/badge/Node.js-22+-339933?logo=nodedotjs&logoColor=white&style=plastic)
 ![Markdown](https://img.shields.io/badge/Markdown-000000?logo=markdown&logoColor=white&style=plastic)
 
-Nanobook es un sitio de documentación técnica construido con Astro. Organiza el contenido en libros, capítulos, guías, artículos y proyectos a partir de archivos Markdown con frontmatter, generando automáticamente índices, navegación y tablas de contenidos.
+Nanobook es una plataforma de documentación y publicación en Markdown. Cada usuario crea **nanobooks** (colecciones con slug, visibilidad y tema propios) que contienen **documentos** Markdown. Los documentos se editan en el navegador, se renderizan en el servidor con un pipeline extensible y pueden incluir bloques especiales (contenido financiero, hojas de cálculo). Los agentes de IA pueden gestionar nanobooks y documentos a través de un servidor MCP con OAuth.
 
-> **Estado**: `v0.3.0`. El proyecto es funcional pero aún en fase alpha. La API de contenido, URLs y componentes puede cambiar hasta llegar a `v1.0.0`.
+> **Estado:** `v0.5.1`, fase alpha. Las URLs, la API y los componentes pueden cambiar hasta `v1.0.0`.
 
-## Características
+## Qué incluye
 
-### Contenido y navegación
-
-- **Índices jerárquicos** generados automáticamente a partir de la estructura de carpetas en `src/content/`.
-- **Sidebar navegable** con modo expandido/colapsado, tooltips y drawer en mobile.
-- **Breadcrumbs** automáticos según la posición del documento en el árbol.
-- **Tabla de contenidos (TOC)** con scroll spy, indicador visual y modos estándar/compacto.
-- **Ordenamiento configurable** de documentos mediante el campo `position` en frontmatter.
-- **Soporte para borradores**: los documentos con `draft: true` no se generan.
-- **Etiquetas (`tags`)** y metadatos (`title`, `description`, `createdAt`, `updatedAt`, `author`, `cover`).
-
-### Lectura y experiencia de usuario
-
-- **Temas claro y oscuro** con toggle y persistencia en `localStorage`.
-- **Ancho de contenido ajustable** (`constrained` / `full`) con persistencia.
-- **Diseño responsive** con header sticky y adaptación mobile.
-- **Renderizado Markdown** con soporte para GitHub Flavored Markdown, anclas en headings y resaltado de sintaxis con Shiki.
-- **Navegación fluida** mediante `ClientRouter` de Astro.
-
-### Edición y preview
-
-- **Editor integrado en desarrollo** accesible desde `/{slug}/edit`, basado en CodeMirror 6.
-- **Preview sin guardar** en `/{slug}/preview`: renderiza el borrador en el navegador usando un Web Worker.
-- **Renderizado en worker** con `markdown-it` + Shiki para no bloquear la UI del editor.
-- **Persistencia efímera** del borrador en `sessionStorage`, limpiada al salir del flujo edit/preview.
-
-### Arquitectura y despliegue
-
-- **SSR puro con Astro**: todas las rutas se renderizan bajo demanda (`output: "server"`) y se cachean con `Cache-Control`.
-- **Persistencia SQL aislada por nanobook**: cada operación delimita el repositorio de documentos mediante el `nanobookId`, evitando mezclar contenido entre colecciones.
-- **Capa de dominio desacoplada** en `src/document/`, `src/navigation/`, `src/rendering/`, `src/edition/` y `src/theme/`.
-- **Renderizado Markdown compartido** en `src/rendering/shared` (Unified + extensiones): publicación y vista previa del editor lo usan mediante sus propios adaptadores `UnifiedMarkdownRenderer`.
+- **Nanobooks y documentos** con ciclo de vida completo, rutas jerárquicas, borrado, movimiento y protección de lectura con contraseña.
+- **Editor integrado** (CodeMirror 6) con vista previa sin guardar renderizada en un Web Worker.
+- **Renderizado Markdown compartido** servidor/navegador (`unified`, GFM, Shiki) con caché de páginas y huella de versión del motor.
+- **Navegación** automática: sidebar, breadcrumbs, índices y tabla de contenidos.
+- **Temas** oficiales y personalizados por usuario, compilados a variables CSS (`--theme-*`).
+- **Autenticación** con correo verificado y GitHub OAuth opcional (Better Auth).
+- **Autorización** única y centralizada (`Authorizer` + políticas registradas por cada módulo).
+- **Perfiles públicos** con `username` único.
+- **Acceso para agentes** mediante servidor MCP (`POST /mcp`), OAuth 2.1 + PKCE y scopes `nanobooks:read` / `nanobooks:write`.
+- **Bloques opcionales:** contenido financiero (6 bloques con gráficos) y hojas de cálculo editables.
 
 ## Stack
 
-- **Framework**: Astro 7
-- **Estilos**: Tailwind CSS 4 + `@tailwindcss/typography`
-- **Lenguaje**: TypeScript
-- **Runtime**: Node.js >= 22.12.0
-- **Editor**: CodeMirror 6
-- **Renderizado Markdown**: markdown-it, @shikijs/markdown-it, markdown-it-anchor
-- **Syntax highlighting**: Shiki con motor de regex JavaScript
+Astro 7 (`output: "server"`) · TypeScript · Tailwind CSS 4 · Drizzle ORM + libSQL (SQLite) · Better Auth · CodeMirror 6 · unified/remark/rehype + Shiki · nanostores · Vitest. Despliegue: Vercel (`@astrojs/vercel`) o Node (`@astrojs/node`).
 
-## Requisitos
+## Ejecutar en local
 
-- Node.js >= 22.12.0
-- npm
+### Requisitos
 
-## Instalación
+- **Node.js ≥ 22.12** (probado con 24).
+- **pnpm** (el repositorio incluye `pnpm-lock.yaml`; no hay `package-lock.json`). Actívalo con `corepack enable` o `npm i -g pnpm`.
+- No necesitas Redis, Resend, GitHub ni Vercel para trabajar en local.
+
+### Pasos
 
 ```bash
-npm install
-npm run dev
+git clone <url-del-repo> nanobook
+cd nanobook
+pnpm install --frozen-lockfile
+cp .env.example .env          # opcional; ver variables más abajo
+pnpm run database:migrate     # crea ./data/nanobook.db (y la carpeta data/) con todas las tablas
+pnpm run dev                  # http://localhost:4322
 ```
 
-### Autenticación con GitHub
+`npm install` también funciona, pero no respeta el lockfile y las versiones pueden variar. `npm ci` **no** funciona.
 
-Nanobook mantiene el acceso con correo y contraseña y puede añadir inicio de
-sesión con GitHub mediante una GitHub OAuth App. Configura estas variables solo
-en el entorno de servidor:
+La primera carga en desarrollo tarda unos 7 s mientras Vite optimiza dependencias.
+
+### Variables de entorno
+
+Ninguna es obligatoria en local. Copia [`.env.example`](.env.example) a `.env` (ignorado por git) y ajusta lo recomendado:
 
 ```text
 BETTER_AUTH_URL=http://localhost:4322
-GITHUB_OAUTH_CLIENT_ID=your-github-oauth-client-id
-GITHUB_OAUTH_CLIENT_SECRET=your-github-oauth-client-secret
+BETTER_AUTH_SECRET=<32 o más caracteres aleatorios>
 ```
 
-Registra una URL de callback por entorno en la OAuth App:
+Genera el secreto con `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
+
+> **Importante:** `BETTER_AUTH_URL` debe coincidir exactamente con el origen que usas en el navegador. Por defecto es `http://127.0.0.1:4322`; si abres `localhost:4322` o cambias de puerto sin definirla, las llamadas a `/api/auth/*` responden `403 INVALID_ORIGIN`.
+
+| Variable | Cuándo | Para qué |
+|---|---|---|
+| `BETTER_AUTH_URL` | Recomendada; obligatoria en Vercel (HTTPS) | Origen base de auth y origen de confianza |
+| `BETTER_AUTH_SECRET` | Recomendada; obligatoria en Vercel (≥ 32 caracteres) | Firma de sesión y de accesos a documentos protegidos |
+| `DATABASE_URL` | Opcional; obligatoria en Vercel (`libsql://…`) | Por defecto `file:./data/nanobook.db` |
+| `DATABASE_AUTH_TOKEN` | Opcional | Token de una base libSQL/Turso remota |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Opcional; obligatorias en Vercel | Envío del correo de verificación |
+| `GITHUB_OAUTH_CLIENT_ID`, `GITHUB_OAUTH_CLIENT_SECRET` | Opcionales (ambas o ninguna) | Inicio de sesión con GitHub |
+| `GITHUB_TOKEN` | Opcional | Documentos con `ref` a archivos de GitHub |
+| `REDIS_URL` | Opcional | Cliente Redis; sin él todo funciona |
+| `VERCEL`, `VERCEL_DEPLOY` | **No definir en local** | Activan el modo y el adaptador de Vercel |
+
+### Primer uso
+
+1. Abre `http://localhost:4322/login` y regístrate (el registro es un modo de la pantalla de login).
+2. **Verifica el correo.** Sin `RESEND_API_KEY`, en `pnpm dev` el enlace de verificación se imprime en la consola del servidor: ábrelo en el navegador. (En `build`/`start` sin Resend el correo no sale y el login responde `403 EMAIL_NOT_VERIFIED`; configura `RESEND_API_KEY` y `EMAIL_FROM`.)
+3. Inicia sesión y crea tu primer nanobook desde `/nanobooks`. La base empieza vacía: no hay datos iniciales.
+
+### Build y producción local
+
+```bash
+pnpm run build        # usa el adaptador Node salvo que VERCEL=1 o VERCEL_DEPLOY=true
+pnpm run start        # http://localhost:4320 (ajusta BETTER_AUTH_URL a ese origen)
+```
+
+### Scripts
+
+| Script | Descripción |
+|---|---|
+| `dev` | Servidor de desarrollo (puerto 4322) |
+| `build` | Genera `dist/` |
+| `preview` / `dev:preview` | Previsualiza el build (puerto 4320) |
+| `start` | Ejecuta `dist/server/entry.mjs` (requiere build) |
+| `test` / `test:watch` | Vitest (suite principal + suite de componentes Astro) |
+| `database:migrate` | Aplica las migraciones de `drizzle/` (una migración inicial `0000_initial`) |
+| `profile:change-username` | Cambia el username de un perfil (`--email --expected-username --username [--database-url]`) |
+
+### Problemas conocidos al clonar
+
+- **`.env.local` de otros entornos:** si copias uno que defina `VERCEL_DEPLOY=true` o un `DATABASE_URL` remoto, compilarás para Vercel y escribirás en esa base.
+- **Windows:** `CLAUDE.md` es un symlink a `AGENTS.md`; sin `core.symlinks` se materializa como archivo de texto. No afecta a la ejecución.
+
+## Arquitectura
+
+El código de `src/` se organiza por **módulo** y, dentro, por **entorno de ejecución** (`browser/`, `server/`, `shared/`). Los módulos de negocio del servidor siguen tres capas: `domain/`, `application/` e infraestructura, con un compositor `index.ts`. `application/` es la raíz de composición global (`getApp()`), y `pages/` solo adapta HTTP y delega en los módulos. Convenciones completas en [AGENTS.md](AGENTS.md).
+
+### Módulos
+
+Cada módulo tiene su propio `README.md` con qué hace, cómo está construido, cómo se usa y sus dependencias.
+
+**Núcleo** (sin ellos no hay producto)
+
+| Módulo | Qué es |
+|---|---|
+| [shared](src/shared/README.md) | Tipos base, bus de eventos, conexión a BD, guardas HTTP, estilos globales |
+| [application](src/application/README.md) | Raíz de composición por entorno (`getApp()`) |
+| [authorization](src/authorization/README.md) | Motor único de decisión de acceso (`Authorizer`, `Policy`) |
+| [auth](src/auth/README.md) | Identidad y sesión sobre Better Auth, GitHub OAuth, proveedor OAuth/MCP |
+| [documents](src/documents/README.md) | Ciclo de vida de documentos, editor y vista previa |
+| [nanobooks](src/nanobooks/README.md) | Agregado raíz: la colección que contiene los documentos |
+| [rendering](src/rendering/README.md) | Pipeline Markdown → HTML, bloques de componentes y caché de páginas |
+| [layouts](src/layouts/README.md) | Layouts y shell visual de Astro |
+| [pages](src/pages/README.md) | Rutas y adaptadores HTTP; middleware |
+
+**Capa superior** (funcionalidad adicional sobre el núcleo)
+
+| Módulo | Qué añade |
+|---|---|
+| [navigation](src/navigation/README.md) | Grafo de documentos, sidebar, breadcrumbs, índices |
+| [profiles](src/profiles/README.md) | Perfiles públicos y username |
+| [theme](src/theme/README.md) | Temas oficiales y personalizados |
+| [agents](src/agents/README.md) | Servidor MCP con OAuth para agentes de IA |
+
+**Opcionales**
+
+| Módulo | Qué añade |
+|---|---|
+| [financial-content](src/financial-content/README.md) | Bloques financieros en Markdown (6 fences) |
+| [spreadsheets](src/spreadsheets/README.md) | Hojas de cálculo editables en Markdown |
+| [toast](src/toast/README.md) | Notificaciones efímeras en el navegador |
+
+
+### Documentación
+
+La documentación vive junto al código: el README de cada módulo describe su estado actual (qué hace, cómo está construido, cómo se usa, dependencias y límites conocidos), y [AGENTS.md](AGENTS.md) recoge las convenciones. El historial está en git y en [CHANGELOG.md](CHANGELOG.md).
+
+## Acceso desde agentes (MCP)
+
+Nanobook expone un servidor MCP remoto en `POST /mcp` con diez herramientas (`list_nanobooks`, `get_nanobook`, `create_nanobook`, `update_nanobook`, `list_documents`, `get_document`, `create_document`, `update_document`, `get_markdown_blocks_guide`, `validate_markdown_blocks`). La conexión usa OAuth 2.1 con PKCE y los scopes `nanobooks:read` y `nanobooks:write`; no comparte cookies con el agente. Detalle en [src/agents](src/agents/README.md).
+
+## Autenticación con GitHub (opcional)
+
+Crea una GitHub OAuth App con el scope `user:email` y define `GITHUB_OAUTH_CLIENT_ID` y `GITHUB_OAUTH_CLIENT_SECRET` (si solo defines una, la app falla al iniciar). Callback por entorno:
 
 ```text
 Local:      http://localhost:4322/api/auth/callback/github
-Producción: https://<your-domain>/api/auth/callback/github
+Producción: https://<tu-dominio>/api/auth/callback/github
 ```
 
-La aplicación de GitHub debe solicitar el scope `user:email`. En producción,
-usa HTTPS y mantén alineados `BETTER_AUTH_URL`, el origen desde el que se abre
-Nanobook y el host configurado en la callback. Si solo se configura una de las
-dos credenciales de GitHub, Nanobook falla al iniciar para evitar publicar un
-botón de acceso que no pueda completarse.
+## Despliegue
 
-### Verificación de correo
-
-Los registros por correo y contraseña requieren verificación antes de crear una
-sesión. Nanobook entrega los enlaces generados por Better Auth mediante Resend.
-Configura estas variables de servidor:
-
-```text
-RESEND_API_KEY=re_...
-EMAIL_FROM=Nanobook <no-reply@your-verified-domain.example>
-```
-
-Para una prueba local inicial puedes omitir `EMAIL_FROM`; se utilizará el
-remitente de prueba `Nanobook <onboarding@resend.dev>`. Antes de producción,
-verifica un dominio en Resend y define explícitamente `EMAIL_FROM` con ese
-dominio.
-
-## Scripts
-
-- `npm run dev` — Inicia el servidor de desarrollo.
-- `npm run build` — Genera el sitio SSR en `dist/`.
-- `npm run preview` — Previsualiza el sitio generado.
-- `npm run start` — Inicia el servidor Node.js (requiere build previo).
-
-### Persistencia de contenido
-
-El contenido publicado y editado se almacena en la base de datos SQL de la
-instancia. Cada nanobook delimita el alcance de sus documentos mediante su
-`nanobookId`; no se configura un repositorio de archivos ni una fuente remota
-por nanobook.
-
-### Acceso desde agentes
-
-Nanobook expone un servidor MCP remoto en `POST /mcp` para gestionar nanobooks y documentos con la identidad delegada del usuario. La conexión usa OAuth 2.1, PKCE y los scopes `nanobooks:read` y `nanobooks:write`; no comparte cookies de sesión con el agente. Antes de desplegar una versión con MCP, aplica las migraciones con `npm run database:migrate` y configura `BETTER_AUTH_URL` con el origen HTTPS canónico. La guía de arquitectura incluye el flujo de Codex, los límites de autorización y la auditoría de operaciones en [MCP y OAuth](src/content/nanobook-project/arquitectura/mcp-agentes-oauth.md).
-
-## Estructura de contenido
-
-El contenido se ubica en `src/content/` y sigue una jerarquía basada en carpetas:
-
-```text
-src/content/
-├── index.md                              → /
-├── blog/
-│   ├── index.md                          → /blog/
-│   └── overthinking.md                   → /blog/overthinking/
-├── books/
-│   ├── index.md                          → /books/
-│   └── responsive-development/
-│       ├── index.md                      → /books/responsive-development/
-│       ├── overview.md                   → /books/responsive-development/overview/
-│       └── chapter-1.md                  → /books/responsive-development/chapter-1/
-├── guias/
-│   ├── index.md                          → /guias/
-│   └── markdown.md                       → /guias/markdown/
-├── nanobook-project/
-│   ├── index.md                          → /nanobook-project/
-│   ├── meta/                             → /nanobook-project/meta/
-│   ├── arquitectura/                     → /nanobook-project/arquitectura/
-│   ├── interfaz/                         → /nanobook-project/interfaz/
-│   ├── editor/                           → /nanobook-project/editor/
-│   └── flujo-de-trabajo/                 → /nanobook-project/flujo-de-trabajo/
-├── portfolio/
-│   ├── index.md                          → /portfolio/
-│   └── carlos-munoz.md                   → /portfolio/carlos-munoz/
-└── proyectos/
-    ├── index.md                          → /proyectos/
-    └── generador-demos.md                → /proyectos/generador-demos/
-```
-
-## Convenciones de frontmatter
-
-```md
----
-title: "Título del documento"
-description: "Breve descripción del contenido"
-createdAt: 2026-07-30
-updatedAt: 2026-07-30
-author: "Autor"
-tags: ["tag1", "tag2"]
-draft: false
-index: true
-position: 0
-cover: "/images/portada.png"
----
-```
-
-Campos:
-
-- `title` (obligatorio): Título del documento o carpeta.
-- `description` (obligatorio): Descripción corta.
-- `createdAt` (obligatorio): Fecha de creación.
-- `updatedAt` (obligatorio): Fecha de última actualización.
-- `author` (obligatorio): Autor del contenido.
-- `tags` (obligatorio): Lista de etiquetas.
-- `draft` (opcional): Si es `true`, el documento no se genera.
-- `index` (obligatorio para `index.md`): Marca el archivo como representación de una carpeta.
-- `position` (opcional): Orden del documento dentro de su índice. Menor número = primero.
-- `cover` (opcional): URL de imagen de portada para índices visuales.
-
-## Reglas de indexado
-
-- Cada carpeta que quiera aparecer en la navegación debe contener un archivo `index.md` con `index: true`.
-- Las carpetas sin `index.md` no son visibles en los índices superiores.
-- Los archivos que no son `index.md` se renderizan como documentos finales.
-- Los documentos se listan en el índice de su carpeta padre inmediata.
-
-## Arquitectura del proyecto
-
-- `src/content/` — Contenido en Markdown.
-- `src/pages/[...slug]/index.astro` — Ruta dinámica universal para documentos e índices.
-- `src/pages/[...slug]/edit.astro` — Vista de edición integrada.
-- `src/pages/[...slug]/preview.astro` — Vista de preview del borrador.
-- `src/documents/` — Dominio de documentos, repositorio SQL y adaptadores de persistencia.
-- `src/document/components/IndexList/` — Listado de índices jerárquicos.
-- `src/document/components/TableOfContents/` — Componentes y lógica de la tabla de contenidos.
-- `src/navigation/` — Construcción del árbol de navegación, breadcrumbs, sidebar e índices.
-- `src/rendering/` — Capa de renderizado de Markdown con múltiples adapters y Web Worker.
-- `src/edition/` — Componentes y lógica del editor integrado (CodeMirror, stage, save).
-- `src/theme/` — Componentes relacionados con el tema claro/oscuro.
-- `src/layouts/` — Layouts base, incluyendo control de ancho de contenido.
-- `src/shared/` — Utilidades compartidas entre módulos.
-- `src/content.config.ts` — Configuración de la colección de contenido.
-
-## Extensibilidad
-
-El sistema usa `ContentRepository` como contrato. En producción, el compositor
-de `DocumentModule` crea la implementación SQL y cada operación recibe el
-`nanobookId` que delimita su colección.
+Pensado para Vercel: define `VERCEL_DEPLOY=true` o `VERCEL=1`, `DATABASE_URL` (libSQL/Turso) con `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_URL` (origen HTTPS canónico), `BETTER_AUTH_SECRET`, `RESEND_API_KEY` y `EMAIL_FROM` (con dominio verificado). Aplica las migraciones con `database:migrate` antes de publicar.
 
 ## Versionado
 
-El proyecto sigue [Semantic Versioning](https://semver.org/lang/es/) y [Conventional Commits](https://www.conventionalcommits.org/). Consulta `CHANGELOG.md` y `src/content/nanobook-project/flujo-de-trabajo/versionado.md` para más detalles.
+[Semantic Versioning](https://semver.org/lang/es/) y [Conventional Commits](https://www.conventionalcommits.org/) (`tipo(alcance): descripción`). Cambios en [CHANGELOG.md](CHANGELOG.md). Antes de commitear o etiquetar, `npm run build` debe pasar.
 
 ## Licencia
 
-Nanobook se distribuye bajo la [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).
-
-Esto significa que:
-
-- El código fuente está disponible públicamente y puede estudiarse, modificarse y redistribuirse.
-- Cualquier versión modificada que se distribuya o ponga a disposición del público como servicio web debe publicar su código fuente bajo la misma licencia.
-- Se preserva la atribución al autor original.
-- No se permite convertir el proyecto o derivados en software propietario cerrado.
-
-Para más detalles, consulta el archivo [LICENSE](LICENSE) o <https://www.gnu.org/licenses/agpl-3.0.html>.
+[GNU Affero General Public License v3.0](LICENSE). El código puede estudiarse, modificarse y redistribuirse; las versiones modificadas ofrecidas como servicio web deben publicar su código fuente bajo la misma licencia y conservar la atribución.
