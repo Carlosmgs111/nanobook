@@ -86,4 +86,22 @@ describe("ResendEmailSender", () => {
       }),
     ).rejects.toThrow("RESEND_API_KEY must be configured to send verification emails.");
   });
+
+  it("prints the verification link instead of failing when local development has no API key", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const sender = new ResendEmailSender({
+      from: "Nanobook <no-reply@nanobook.test>",
+      logLinkWithoutApiKey: true,
+    });
+
+    await expect(
+      sender.sendVerificationEmail({
+        to: "ada@example.com",
+        url: "http://localhost:4322/api/auth/verify-email?token=dev-token",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(info).toHaveBeenCalledWith(expect.stringContaining("dev-token"));
+    info.mockRestore();
+  });
 });

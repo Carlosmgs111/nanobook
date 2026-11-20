@@ -51,6 +51,7 @@ export function createBetterAuth() {
   const emailSender = new ResendEmailSender({
     apiKey: RESEND_API_KEY,
     from: EMAIL_FROM ?? "Nanobook <onboarding@resend.dev>",
+    logLinkWithoutApiKey: process.env.NODE_ENV === "development" && process.env.VERCEL !== "1",
   });
 
   return betterAuth({

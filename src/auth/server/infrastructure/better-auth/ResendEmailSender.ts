@@ -1,6 +1,8 @@
 export interface ResendEmailSenderOptions {
   apiKey?: string;
   from: string;
+  /** Local development only: print the verification link instead of failing when there is no API key. */
+  logLinkWithoutApiKey?: boolean;
 }
 
 export interface VerificationEmail {
@@ -12,6 +14,10 @@ export class ResendEmailSender {
   constructor(private readonly options: ResendEmailSenderOptions) {}
 
   async sendVerificationEmail({ to, url }: VerificationEmail): Promise<void> {
+    if (!this.options.apiKey && this.options.logLinkWithoutApiKey) {
+      console.info(`[auth] RESEND_API_KEY no configurada; enlace de verificación para ${to}:\n${url}`);
+      return;
+    }
     if (!this.options.apiKey) {
       throw new Error(
         "RESEND_API_KEY must be configured to send verification emails.",
