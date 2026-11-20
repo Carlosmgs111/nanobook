@@ -42,20 +42,9 @@ pnpm-debug.log*
 !.env.example
 
 .vercel
-# Content is local by default; keep the Codex project record versioned.
-/src/content/*
-!/src/content/nanobook-project/
-/src/content/nanobook-project/*
-!/src/content/nanobook-project/index.md
-!/src/content/nanobook-project/production-readiness.md
-!/src/content/nanobook-project/meta/
-/src/content/nanobook-project/meta/*
-!/src/content/nanobook-project/meta/index.md
-!/src/content/nanobook-project/historial-codex/
 .superpowers
 
 .vercel
-.env*
 
 # local TLS certificates / keys
 *.pem

@@ -40,12 +40,6 @@ export default defineConfig({
       // primera carga en dev falla con 504 "Outdated Optimize Dep".
       include: ["lightweight-charts"],
     },
-    server: {
-      watch: {
-        // Reemplaza 'nombre-de-tu-carpeta' por la carpeta real
-        ignored: ["**/content/**"],
-      },
-    },
   },
   server: ({ command }) => ({
     port: command === "dev" ? 4322 : 4320,

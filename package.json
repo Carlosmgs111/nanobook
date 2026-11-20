@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.5.1",
   "license": "AGPL-3.0",
+  "packageManager": "pnpm@11.18.0",
   "engines": {
     "node": ">=22.12.0"
   },
