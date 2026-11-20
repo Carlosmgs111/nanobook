@@ -1,6 +1,6 @@
 # Agentes
 
-> Herramientas de agente sobre nanobooks y documentos, expuestas como servidor MCP remoto (`POST /mcp`, OAuth delegado) o local por STDIO, con auditoría de escrituras.
+> Herramientas de agente sobre nanobooks y documentos, expuestas como servidor MCP remoto (`POST /mcp`) con identidad OAuth delegada y auditoría de escrituras.
 
 **Nivel:** Capa superior  ·  **Entornos:** server
 
@@ -25,7 +25,6 @@ src/agents/server/
   infrastructure/
     mcp/                     # createNanobookMcpServer, McpToolResult (toMcpToolResult, toMcpTextResult, formatBlockIssues, joinNotes)
     oauth/                   # McpActorReader (readMcpActor, InvalidMcpActorClaimsError)
-    stdio/                   # startStdioMcpServer, createStdioActor (canal local por STDIO)
     audit/                   # DrizzleAgentAuditWriter
     database/                # DrizzleAgentAuditSchema (tabla agent_operation_audit)
   index.ts                   # AgentModule (compositor)
@@ -73,37 +72,12 @@ Servidor `nanobook` (versión `0.5.1`, igual a `package.json`, pero fijada a man
 - OAuth/CIMD (configurado en `src/auth/server/infrastructure/better-auth/BetterAuth.ts`, no en este módulo): plugins `jwt()`, `mcp()` con scopes `nanobooks:read`, `nanobooks:write`, `offline_access` (access token 15 min, refresh 30 días, `refreshTokenReuseInterval: 0`) y `cimd()` con `metadataProfile: "mcp-2026-07-28"`. Solo se admiten como `client_id` los metadatos CIMD de Claude (`https://claude.ai/oauth/mcp-oauth-client-metadata`) y de Codex (`https://chatgpt.com/oauth/client.json`, `/oauth/<x>/client.json` o `/oauth/codex/<x>/client.json`, sin puerto, query ni fragmento), según `isAgentClientMetadataUrlAllowed`. Fuera de loopback el recurso MCP exige HTTPS.
 - Claims requeridos del token (`readMcpActor`): `sub` (string), `client_id` (string) y `scope` (string separado por espacios); si falta alguno lanza `InvalidMcpActorClaimsError`.
 
-### Canal STDIO (local)
-Mismo servidor y mismas diez herramientas, pero el cliente lanza el proceso en la propia máquina y habla por la entrada/salida estándar: sin HTTP ni OAuth. Lo compone `scripts/mcp-stdio.ts` (raíz de composición propia, sin Astro: usa `tsconfig.mcp.json` y un *shim* de `astro:env/server`).
-
-- Identidad: el usuario local cuyo correo indica `NANOBOOK_MCP_USER_EMAIL` (debe existir en la base). Actúa con `nanobooks:read` y `nanobooks:write`; el `Authorizer` se aplica igual, y las escrituras quedan auditadas con `oauth_client_id = "stdio-local"`.
-- Base de datos: la de `DATABASE_URL` (`.env`) o, con `mcp:stdio:staging`, la de `.env.staging`. El destino se imprime por stderr al arrancar.
-- stdout es el canal del protocolo: el script redirige `console.log/info/debug/warn` a stderr, y hay que lanzarlo con `pnpm --silent` para que pnpm no escriba su cabecera.
-- Cliente (ejemplos; ajusta la ruta del repositorio y el correo):
-
-```powershell
-# Claude Code
-claude mcp add nanobook-local --env NANOBOOK_MCP_USER_EMAIL=tu@correo.com -- pnpm --silent --dir D:utaa
-anobook run mcp:stdio
-# Codex
-codex mcp add nanobook-local --env NANOBOOK_MCP_USER_EMAIL=tu@correo.com -- pnpm --silent --dir D:utaa
-anobook run mcp:stdio
-```
-
-```json
-{ "mcpServers": { "nanobook-local": {
-  "command": "pnpm",
-  "args": ["--silent", "--dir", "D:\ruta\a\nanobook", "run", "mcp:stdio"],
-  "env": { "NANOBOOK_MCP_USER_EMAIL": "tu@correo.com" } } } }
-```
-
 ## Dependencias
 - **Depende de:** `nanobooks` (`NanobookModule`: listar/crear/actualizar nanobooks y `documentModule`), `documents` (`serializeEntry`, `DocumentNotFoundError`, `DocumentPath`), `authorization` (`Authorizer`, `Subject`, `AccessDeniedError`, `AccessCheckFailedError`), `shared` (`Result`, `db`), `auth` (solo en `pages/mcp.ts`: `requireMcpAuth`, `McpOAuthConfig`), `financial-content` (indirecto, vía el puerto `MarkdownBlockAdvisor` inyectado por `application`).
 - **Lo usan:** `application` (compone `AgentModule`) y `pages/mcp.ts`.
 - Acoplamientos a vigilar: `AgentToolService` importa tipos concretos de `documents/server/...` y `nanobooks/server/domain/types` (no solo contratos públicos); `pages/mcp.ts` importa directamente de `agents/.../infrastructure/` y de `auth/.../infrastructure/better-auth/`. Comentario `TODO` en `index.ts`: falta un mecanismo para que otros módulos registren sus propias tools.
 
 ## Seguridad y autorización
-- Canal STDIO: no hay autenticación propia; la confianza es la del sistema operativo (quien puede lanzar el proceso actúa como el usuario configurado). Úsalo solo en tu máquina; para accesos remotos está el canal HTTP con OAuth.
 - Capa 1, scopes: `AgentToolService.has/require` falla con `AgentScopeDeniedError` si el token no incluye `nanobooks:read` o `nanobooks:write`.
 - Capa 2, recurso: `authorizer.require({ subject: Subject.of(actorId), action: "read"|"write", resource: { type: "nanobook", id } })`; las políticas (`NanobookAccessPolicy`, `DocumentPasswordPolicy`) las registra `nanobooks`/`documents`, no este módulo. `agents` solo consume `Authorizer` y `Subject`, conforme a AGENTS.md.
 - `get_document` usa un `viewer` sin grants: un documento protegido por contraseña se trata como acceso prohibido (`challenge` -> `AccessDeniedError`).
