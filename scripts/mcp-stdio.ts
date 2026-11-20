@@ -11,12 +11,6 @@ for (const method of ["log", "info", "debug", "warn"] as const) {
   console[method] = (...args: unknown[]) => console.error(...args);
 }
 
-const { selectMcpTransport } = await import("../src/agents/server/infrastructure/mcp/selectMcpTransport");
-if (selectMcpTransport(process.env) !== "stdio") {
-  console.error("El canal STDIO es solo para uso local; un despliegue (VERCEL=1) sirve el MCP por HTTP en /mcp.");
-  process.exit(1);
-}
-
 const email = process.env.NANOBOOK_MCP_USER_EMAIL?.trim();
 if (!email) {
   console.error("Define NANOBOOK_MCP_USER_EMAIL con el correo de un usuario existente de la base.");

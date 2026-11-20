@@ -22,7 +22,8 @@
     "profile:change-username": "tsx --env-file-if-exists=.env scripts/change-profile-username.ts",
     "profile:change-username:staging": "tsx --env-file=.env.staging scripts/change-profile-username.ts",
     "test:astro": "vitest run --config vitest.astro.config.ts",
-    "mcp:stdio": "tsx --tsconfig tsconfig.mcp.json --env-file-if-exists=.env scripts/mcp-stdio.ts"
+    "mcp:stdio": "tsx --tsconfig tsconfig.mcp.json --env-file-if-exists=.env scripts/mcp-stdio.ts",
+    "mcp:stdio:staging": "tsx --tsconfig tsconfig.mcp.json --env-file-if-exists=.env --env-file=.env.staging scripts/mcp-stdio.ts"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.2",

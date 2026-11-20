@@ -112,7 +112,7 @@ pnpm run start        # http://localhost:4320 (ajusta BETTER_AUTH_URL a ese orig
 | `test` / `test:watch` | Vitest (suite principal + suite de componentes Astro) |
 | `dev:staging` | Desarrollo cargando `.env` y encima `.env.staging` (`node --env-file`) |
 | `database:migrate` / `database:migrate:staging` | Aplica las migraciones de `drizzle/` a la base de `.env` / `.env.staging` |
-| `mcp:stdio` | MCP local por STDIO (mismo servidor que `/mcp`; usa `.env`) |
+| `mcp:stdio` / `mcp:stdio:staging` | Servidor MCP local por STDIO (usa `.env` / `.env` + `.env.staging`) |
 | `profile:change-username` / `…:staging` | Cambia el username de un perfil (`--email --expected-username --username [--database-url]`) |
 
 ### Problemas conocidos al clonar
@@ -168,7 +168,7 @@ La documentación vive junto al código: el README de cada módulo describe su e
 
 Nanobook expone un servidor MCP remoto en `POST /mcp` con diez herramientas (`list_nanobooks`, `get_nanobook`, `create_nanobook`, `update_nanobook`, `list_documents`, `get_document`, `create_document`, `update_document`, `get_markdown_blocks_guide`, `validate_markdown_blocks`). La conexión usa OAuth 2.1 con PKCE y los scopes `nanobooks:read` y `nanobooks:write`; no comparte cookies con el agente. Detalle en [src/agents](src/agents/README.md).
 
-**En local, por STDIO:** el transporte depende del entorno: desplegado (`VERCEL=1`) sirve HTTP en `/mcp` con OAuth; en local el cliente lanza el mismo servidor por STDIO (`pnpm --silent run mcp:stdio`) con `NANOBOOK_MCP_USER_EMAIL` (correo de un usuario existente en la base). Ejemplo para Claude Code: `claude mcp add nanobook-local --env NANOBOOK_MCP_USER_EMAIL=tu@correo.com -- pnpm --silent --dir <ruta-del-repo> run mcp:stdio`. Detalles y configuración JSON en [src/agents](src/agents/README.md).
+**En local, por STDIO:** el cliente lanza el servidor en tu máquina, sin HTTP ni OAuth, con `pnpm --silent run mcp:stdio` y la variable `NANOBOOK_MCP_USER_EMAIL` (correo de un usuario existente en la base). Con `pnpm run mcp:stdio:staging` usa la base de `.env.staging`. Ejemplo para Claude Code: `claude mcp add nanobook-local --env NANOBOOK_MCP_USER_EMAIL=tu@correo.com -- pnpm --silent --dir <ruta-del-repo> run mcp:stdio`. Detalles y configuración JSON en [src/agents](src/agents/README.md).
 
 ## Autenticación con GitHub (opcional)
 
