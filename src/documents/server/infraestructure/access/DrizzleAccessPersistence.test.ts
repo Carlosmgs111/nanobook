@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { readFileSync } from "node:fs";
+import { migrate } from "drizzle-orm/libsql/migrator";
 
 import { createDatabase } from "../../../../shared/infrastructure/database/createDatabase";
 import { DEFAULT_ACCESS_GRANT_POLICY } from "../../domain/access/AccessGrantPolicy";
@@ -16,12 +16,10 @@ describe("document access persistence", () => {
   beforeEach(async () => {
     connection = createDatabase({ url: ":memory:" });
     await connection.db.run(sql`PRAGMA foreign_keys = ON`);
-    await connection.db.run(sql`CREATE TABLE document (id TEXT PRIMARY KEY)`);
-    const migration = readFileSync("drizzle/0016_document_access.sql", "utf8");
-    for (const statement of migration.split("--> statement-breakpoint")) {
-      if (statement.trim()) await connection.client.execute(statement.trim());
-    }
-    await connection.db.run(sql`INSERT INTO document (id) VALUES ('doc-1'), ('doc-2')`);
+    await migrate(connection.db, { migrationsFolder: "./drizzle" });
+    await connection.db.run(sql`INSERT INTO user (id, name, email) VALUES ('owner', 'Owner', 'owner@example.com')`);
+    await connection.db.run(sql`INSERT INTO nanobook (id, owner_id, slug, name, created_at, updated_at) VALUES ('book', 'owner', 'book', 'Book', 0, 0)`);
+    await connection.db.run(sql`INSERT INTO document (id, nanobook_id, path, public_path, title, description, body, metadata_json, raw_frontmatter, content_hash, created_at, updated_at) VALUES ('doc-1', 'book', 'one', 'one', 'One', 'd', 'b', '{}', '', 'h1', 0, 0), ('doc-2', 'book', 'two', 'two', 'Two', 'd', 'b', '{}', '', 'h2', 0, 0)`);
     repository = new DrizzleDocumentAccessRepository(connection.db);
     limiter = new DrizzleUnlockAttemptLimiter(connection.db, DEFAULT_ACCESS_GRANT_POLICY);
   });

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { readFileSync } from "node:fs";
+import { migrate } from "drizzle-orm/libsql/migrator";
 
 import { createDatabase } from "../../../../shared/infrastructure/database/createDatabase";
 import { Document } from "../../domain/Document";
@@ -26,14 +26,7 @@ describe("DrizzleContentRepository write paths", () => {
     connection = createDatabase({ url: ":memory:" });
     const { db } = connection;
     await db.run(sql`PRAGMA foreign_keys = ON`);
-    await db.run(sql`CREATE TABLE user (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, email_verified INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL DEFAULT 0)`);
-    await db.run(sql`CREATE TABLE nanobook (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, visibility TEXT NOT NULL DEFAULT 'private', settings_json TEXT NOT NULL DEFAULT '{}', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
-    await db.run(sql`CREATE TABLE document (id TEXT PRIMARY KEY, nanobook_id TEXT NOT NULL REFERENCES nanobook(id) ON DELETE RESTRICT, path TEXT NOT NULL, public_path TEXT NOT NULL, parent_path TEXT, title TEXT NOT NULL, description TEXT NOT NULL, body TEXT NOT NULL, metadata_json TEXT NOT NULL, raw_frontmatter TEXT NOT NULL, owner_id TEXT REFERENCES user(id) ON DELETE RESTRICT, revision INTEGER NOT NULL DEFAULT 1, content_hash TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted_at INTEGER)`);
-    await db.run(sql`CREATE UNIQUE INDEX document_live_path_unique ON document (nanobook_id, path)`);
-    await db.run(sql`CREATE UNIQUE INDEX document_live_public_path_unique ON document (nanobook_id, public_path)`);
-    for (const statement of readFileSync("drizzle/0007_live_document_paths.sql", "utf8").split("--> statement-breakpoint")) {
-      await connection.client.execute(statement.trim());
-    }
+    await migrate(db, { migrationsFolder: "./drizzle" });
     await db.run(sql`INSERT INTO user (id, name, email) VALUES ('owner-1', 'Owner', 'owner@example.com')`);
     await db.run(sql`INSERT INTO nanobook (id, owner_id, slug, name, created_at, updated_at) VALUES ('book-a', 'owner-1', 'a', 'A', 0, 0)`);
     await db.run(sql`INSERT INTO nanobook (id, owner_id, slug, name, created_at, updated_at) VALUES ('book-b', 'owner-1', 'b', 'B', 0, 0)`);
