@@ -48,3 +48,6 @@ pnpm-debug.log*
 
 # local TLS certificates / keys
 *.pem
+
+# design-direction tool output (archived outside the repo)
+.taste-skill/
