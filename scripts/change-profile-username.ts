@@ -1,6 +1,7 @@
 import { createClient, type Client } from "@libsql/client";
 
 import { Username } from "../src/profiles/server/domain/Username";
+import { describeDatabaseTarget } from "./describeDatabaseTarget";
 
 export interface ChangeProfileUsernameInput {
   email: string;
@@ -79,9 +80,12 @@ async function main(): Promise<void> {
     expectedUsername: requiredArgument("--expected-username"),
     username: requiredArgument("--username"),
   };
+  const url = argument("--database-url") ?? process.env.DATABASE_URL?.trim() ?? "file:./data/nanobook.db";
   const client = createClient({
-    url: argument("--database-url") ?? "file:./data/nanobook.db",
+    url,
+    authToken: process.env.DATABASE_AUTH_TOKEN || undefined,
   });
+  console.log(`Base de datos: ${describeDatabaseTarget(url)}`);
 
   try {
     const result = await changeProfileUsername(client, input);
