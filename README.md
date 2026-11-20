@@ -73,7 +73,6 @@ Genera el secreto con `node -e "console.log(require('crypto').randomBytes(32).to
 | `RESEND_API_KEY`, `EMAIL_FROM` | Opcional; obligatorias en Vercel | Envío del correo de verificación |
 | `GITHUB_OAUTH_CLIENT_ID`, `GITHUB_OAUTH_CLIENT_SECRET` | Opcionales (ambas o ninguna) | Inicio de sesión con GitHub |
 | `GITHUB_TOKEN` | Opcional | Documentos con `ref` a archivos de GitHub |
-| `REDIS_URL` | Opcional | Cliente Redis; sin él todo funciona |
 | `VERCEL`, `VERCEL_DEPLOY` | **No definir en local** | Activan el modo y el adaptador de Vercel |
 
 ### Entornos: local y staging

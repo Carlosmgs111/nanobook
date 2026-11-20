@@ -99,21 +99,6 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
-      REDIS_URL: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
-      CACHE_BACKEND: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
-      INVALIDATE_TOKEN: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
     },
   },
 });

@@ -5,9 +5,6 @@ import { UnifiedMarkdownRenderer as PreviewRenderer } from "../../../documents/b
 
 vi.mock("astro:env/server", () => ({
   GITHUB_TOKEN: undefined,
-  CACHE_BACKEND: "memory",
-  REDIS_URL: undefined,
-  INVALIDATE_TOKEN: undefined,
   GITHUB_OAUTH_CLIENT_ID: undefined,
   GITHUB_OAUTH_CLIENT_SECRET: undefined,
   BETTER_AUTH_URL: undefined,
