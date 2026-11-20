@@ -4,6 +4,14 @@ import node from "@astrojs/node";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
+import { loadEnv } from "vite";
+
+// Astro evalúa este archivo antes de cargar los .env y el servidor lee process.env (p. ej. DATABASE_URL),
+// así que se vuelcan aquí .env y .env.local. Lo ya definido (shell o `node --env-file`, como en `dev:staging`) gana.
+const mode = process.argv.includes("build") ? "production" : "development";
+for (const [key, value] of Object.entries(loadEnv(mode, process.cwd(), ""))) {
+  if (process.env[key] === undefined) process.env[key] = value;
+}
 
 const isVercelDeploy = process.env.VERCEL === "1" || process.env.VERCEL_DEPLOY === "true";
 
