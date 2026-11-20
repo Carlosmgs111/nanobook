@@ -8,7 +8,7 @@ Guía de ejecución local y visión general en [README.md](README.md). Cada mód
 - Node `>= 22.12`.
 - `pnpm run dev` (4322) · `pnpm run build` · `pnpm run start` (4320) · `pnpm test` (Vitest + `vitest.astro.config.ts`) · `pnpm run database:migrate`.
 - La base local es `./data/nanobook.db` (libSQL/SQLite). Las tablas **no se crean al arrancar**: hay que ejecutar `database:migrate`. `drizzle/` contiene una migración inicial única (`0000_initial`) cuyo `when` en `meta/_journal.json` se fijó al de la última migración histórica, de modo que las bases ya migradas la omiten y las nuevas la ejecutan. Para cambios de esquema, `drizzle-kit generate` crea una migración nueva encima (con fecha posterior); versionarla. El historial anterior está archivado fuera del repo.
-- Variables de entorno: copiar `.env.example` a `.env`. Nunca definir `VERCEL` ni `VERCEL_DEPLOY` en local, y no ejecutar `dev` ni scripts de base de datos con un `.env.local` que apunte a una base remota sin saberlo.
+- Variables de entorno: dos archivos ignorados por git. `.env` (local, SQLite; se crea copiando `.env.example`) y `.env.staging` (servicios remotos y una base de pruebas; se usa con `pnpm dev:staging`, `database:migrate:staging` y `profile:change-username:staging`). `.env.staging` se carga encima de `.env`; el shell gana sobre ambos. No usar `.env.local`. Nunca poner la base de producción en archivos locales (vive solo en Vercel) ni definir `VERCEL`/`VERCEL_DEPLOY` en local. Los scripts de base de datos imprimen el destino antes de actuar: comprobarlo.
 - Sin `RESEND_API_KEY`, en `dev` el enlace de verificación de correo se imprime en la consola del servidor (`astro dev logs` si el servidor corre en segundo plano).
 
 ## Versionado

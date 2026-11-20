@@ -76,6 +76,19 @@ Genera el secreto con `node -e "console.log(require('crypto').randomBytes(32).to
 | `REDIS_URL` | Opcional | Cliente Redis; sin él todo funciona |
 | `VERCEL`, `VERCEL_DEPLOY` | **No definir en local** | Activan el modo y el adaptador de Vercel |
 
+### Entornos: local y staging
+
+Se usan dos archivos, ambos ignorados por git:
+
+| Archivo | Cómo se usa | Base de datos |
+|---|---|---|
+| `.env` | `pnpm dev`, `pnpm build`, `database:migrate` | Local (`file:./data/nanobook.db`) |
+| `.env.staging` | `pnpm dev:staging`, `database:migrate:staging`, `profile:change-username:staging` | Una base libSQL/Turso **de pruebas** |
+
+`.env.staging` se carga encima de `.env` (lo que no defina se hereda), y las variables ya presentes en el shell ganan sobre ambos. Los scripts de base de datos imprimen el destino (archivo o host remoto, sin credenciales) antes de actuar. La base de producción vive solo en el panel de Vercel, nunca en archivos locales.
+
+Para probar el despliegue real antes de mergear, empuja la rama y usa el *Preview Deployment* de Vercel, con las variables del ámbito *Preview* apuntando a la base de pruebas. Ojo: `pnpm dev:staging` no reproduce el modo Vercel (`VERCEL=1` exige HTTPS).
+
 ### Primer uso
 
 1. Abre `http://localhost:4322/login` y regístrate (el registro es un modo de la pantalla de login).
@@ -98,8 +111,9 @@ pnpm run start        # http://localhost:4320 (ajusta BETTER_AUTH_URL a ese orig
 | `preview` / `dev:preview` | Previsualiza el build (puerto 4320) |
 | `start` | Ejecuta `dist/server/entry.mjs` (requiere build) |
 | `test` / `test:watch` | Vitest (suite principal + suite de componentes Astro) |
-| `database:migrate` | Aplica las migraciones de `drizzle/` (una migración inicial `0000_initial`) |
-| `profile:change-username` | Cambia el username de un perfil (`--email --expected-username --username [--database-url]`) |
+| `dev:staging` | Desarrollo cargando `.env` y encima `.env.staging` (`node --env-file`) |
+| `database:migrate` / `database:migrate:staging` | Aplica las migraciones de `drizzle/` a la base de `.env` / `.env.staging` |
+| `profile:change-username` / `…:staging` | Cambia el username de un perfil (`--email --expected-username --username [--database-url]`) |
 
 ### Problemas conocidos al clonar
 
