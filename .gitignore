@@ -10,7 +10,7 @@ dist/
 .nanobook/
 
 # local development database
-/data/nanobook.db
+/data/
 
 # dependencies
 node_modules/
