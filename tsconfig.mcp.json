@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "astro:env/server": ["./scripts/shims/astro-env-server.ts"]
+    }
+  }
+}
