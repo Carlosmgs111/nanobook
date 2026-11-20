@@ -2,7 +2,7 @@
 
 > Código compartido por varios módulos: tipos base (`Result`, eventos de dominio, bus), conexión a base de datos, guardas HTTP, cliente de GitHub, estilos globales e iconos.
 
-**Nivel:** Núcleo transversal (no es un módulo de negocio)  ·  **Entornos:** mixto: `domain/`, `errors.ts`, `theme/`, `icons/`, `styles/` son agnósticos; `infrastructure/`, `server/`, `github/` y `utils/redis.ts` son solo servidor; `utils/debounce.ts` y `utils/scroll-spy.ts` son de navegador
+**Nivel:** Núcleo transversal (no es un módulo de negocio)  ·  **Entornos:** mixto: `domain/`, `errors.ts`, `theme/`, `icons/`, `styles/` son agnósticos; `infrastructure/`, `server/`, y `github/` son solo servidor; `utils/debounce.ts` y `utils/scroll-spy.ts` son de navegador
 
 ## Qué hace
 - Ofrece los contratos puros que usan todos los módulos: `Result`, `DomainEvent`, `EventBus`, `InfrastructureError`, `ThemeReference`.
@@ -38,15 +38,14 @@ src/shared/
     debounce.ts                     # debounce(callback, delay)
     scroll-spy.ts                   # findActiveIndex(scrollY, offsets, offset=120) por búsqueda binaria
     documentPath.ts                 # toDocumentId(filePath, { basePath, lowercase })
-    redis.ts                        # getRedisClient / withRedisClient (REDIS_URL)
   icons/                            # SVG (chevrons, file, folder, home, list, lock, maximize, menu, moon, sun, x...)
   styles/                           # global.css importa base.css, utilities.css, prose.css y components/hatch.css; components/index-card.css se importa aparte
 ```
 
 - Puertos definidos: `EventBus`/`EventHandler` (`domain/bus`) y `RouteProtector` (`server/capabilities`). Implementan `EventBus`: `InMemoryEventBus` y `EventTargetEventBus`. `RouteProtector` lo implementa `AuthServerModule` (módulo `auth`).
 - Eventos: define solo la base `DomainEvent`; los eventos concretos viven en cada módulo.
-- Persistencia/servicios externos: libSQL/Turso (`DATABASE_URL`, `DATABASE_AUTH_TOKEN`), GitHub (`api.github.com` / `raw.githubusercontent.com`), Redis (`redis`, `astro:env/server`).
-- Librerías: `@libsql/client`, `drizzle-orm`, `redis`, `astro` (tipos `APIRoute`).
+- Persistencia/servicios externos: libSQL/Turso (`DATABASE_URL`, `DATABASE_AUTH_TOKEN`), GitHub (`api.github.com` / `raw.githubusercontent.com`).
+- Librerías: `@libsql/client`, `drizzle-orm`, `astro` (tipos `APIRoute`).
 
 ## Cómo se usa
 - Resultado tipado en casos de uso: `return Result.fail(new MyError())` / `Result.ok(value)`; el consumidor comprueba `isSuccess` antes de `getValue()`/`getError()`.
@@ -71,13 +70,13 @@ src/shared/
 | `github/api` | `documents/server/infraestructure/reference/GitHubReferenceResolver` |
 | `theme/ThemeReference` | `theme`, `nanobooks` |
 | `utils/debounce`, `utils/scroll-spy` | `documents/browser/ui/components` (editor, `TableOfContents`) |
-| `utils/redis`, `utils/documentPath` | Sin importadores en `src/` (solo mencionados en documentación) |
+| `utils/documentPath` | Sin importadores en `src/` (solo mencionados en documentación) |
 | `icons`, `styles` | `layouts`, `navigation/browser`, `theme/browser`, `documents/browser`, `financial-content/browser` |
 
 ## Dependencias
-- **Depende de:** librerías externas (`@libsql/client`, `drizzle-orm`, `redis`, `astro`); `utils/redis.ts` usa `astro:env/server`. Dentro de `src/` solo se referencian entre sí (`domain/bus` -> `errors.ts`, `infrastructure` -> `domain`, `database` -> `databaseConfig`).
+- **Depende de:** librerías externas (`@libsql/client`, `drizzle-orm`, `astro`). Dentro de `src/` solo se referencian entre sí (`domain/bus` -> `errors.ts`, `infrastructure` -> `domain`, `database` -> `databaseConfig`).
 - **Lo usan:** casi todos los módulos (tabla anterior).
-- Acoplamiento a vigilar: `shared/server/` y `shared/infrastructure/database` cargan I/O y APIs de Node: no importarlos desde `browser/`. `shared/utils/redis.ts` y `shared/utils/documentPath.ts` no tienen uso actual (posible código muerto).
+- Acoplamiento a vigilar: `shared/server/` y `shared/infrastructure/database` cargan I/O y APIs de Node: no importarlos desde `browser/`. `shared/utils/documentPath.ts` no tiene uso actual (posible código muerto).
 
 ## Seguridad y autorización
 - `RouteProtector` es el único contrato de autenticación de rutas; el módulo `shared` no decide acceso ni importa `authorization`.
@@ -90,5 +89,5 @@ src/shared/
 - Ejecutar: `npx vitest run src/shared`. `Result`, buses, `github`, `utils` y `ThemeReference` no tienen pruebas propias en esta carpeta.
 
 ## Decisiones y límites conocidos
-- Persistencia: el contenido vive en SQL (libSQL); GitHub solo lo usa `GitHubReferenceResolver` para documentos con `ref`. `utils/redis.ts` y `utils/documentPath.ts` no tienen importadores en `src/` (posible código muerto).
+- Persistencia: el contenido vive en SQL (libSQL); GitHub solo lo usa `GitHubReferenceResolver` para documentos con `ref`. `utils/documentPath.ts` no tiene importadores en `src/` (posible código muerto).
 - Diferencia de comportamiento: `InMemoryEventBus` agrega todos los fallos en un único `EventBusError`; `EventTargetEventBus` devuelve solo el primer resultado fallido.
