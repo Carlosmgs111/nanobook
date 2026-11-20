@@ -14,7 +14,7 @@ const businessPresentationFiles = [
   "src/profiles/browser/ui/ProfilePage.astro",
   "src/nanobooks/browser/ui/NanobookCard.astro",
   "src/nanobooks/browser/ui/NanobooksPage.astro",
-  "src/documents/browser/ui/EditorController.astro",
+  "src/documents/browser/ui/components/EditorController.astro",
   "src/documents/browser/ui/components/DocumentEditor.astro",
   "src/documents/browser/ui/components/EditorStatus.astro",
   "src/documents/browser/ui/components/EditorToolbar.astro",
