@@ -1,10 +1,10 @@
 ---
-import { getApp } from "../../../application/server/Application";
+import type { DocumentPieceResolver } from "../../server";
 import BlockHost from "./BlockHost.astro";
 
-const app = await getApp();
-
 interface Props {
+  /** Resolvedor de piezas del módulo (lo entrega la página que compone la aplicación). */
+  pieceResolver: DocumentPieceResolver;
   /** HTML renderizado del documento (con los marcadores de bloque). */
   html: string;
   /** Datos opacos para los bloques; se reenvían tal cual. */
@@ -13,11 +13,11 @@ interface Props {
   [attribute: string]: unknown;
 }
 
-const { html, context, ...attributes } = Astro.props;
+const { html, context, pieceResolver, ...attributes } = Astro.props;
 
 // Los segmentos de HTML se inyectan tal cual y los bloques se pintan con Astro
 // (solo servidor o isla), en el orden del documento.
-const pieces = app.renderingModule.pieceResolver.resolve(html, (name) =>
+const pieces = pieceResolver.resolve(html, (name) =>
   console.warn(
     `Bloque "${name}": las props ya no validan al servir; se muestra el contenido alternativo.`
   )
