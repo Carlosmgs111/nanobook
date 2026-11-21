@@ -165,7 +165,7 @@ La documentación vive junto al código: el README de cada módulo describe su e
 
 ## Acceso desde agentes (MCP)
 
-Nanobook expone un servidor MCP remoto en `POST /mcp` con diez herramientas (`list_nanobooks`, `get_nanobook`, `create_nanobook`, `update_nanobook`, `list_documents`, `get_document`, `create_document`, `update_document`, `get_markdown_blocks_guide`, `validate_markdown_blocks`). La conexión usa OAuth 2.1 con PKCE y los scopes `nanobooks:read` y `nanobooks:write`; no comparte cookies con el agente. Detalle en [src/agents](src/agents/README.md).
+Nanobook expone un servidor MCP remoto en `POST /mcp` con diez herramientas (`list_nanobooks`, `get_nanobook`, `create_nanobook`, `update_nanobook`, `list_documents`, `get_document`, `create_document`, `update_document`, `get_markdown_blocks_guide`, `validate_markdown_blocks`). La conexión usa OAuth 2.1 con PKCE y los scopes `nanobooks:read` y `nanobooks:write`; no comparte cookies con el agente. Para conectar Codex en local, paso a paso, ver [Conectar un agente en local](src/agents/README.md#conectar-un-agente-en-local-codex--chatgpt).
 
 ## Autenticación con GitHub (opcional)
 

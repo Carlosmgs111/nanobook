@@ -72,6 +72,26 @@ Servidor `nanobook` (versión `0.5.1`, igual a `package.json`, pero fijada a man
 - OAuth/CIMD (configurado en `src/auth/server/infrastructure/better-auth/BetterAuth.ts`, no en este módulo): plugins `jwt()`, `mcp()` con scopes `nanobooks:read`, `nanobooks:write`, `offline_access` (access token 15 min, refresh 30 días, `refreshTokenReuseInterval: 0`) y `cimd()` con `metadataProfile: "mcp-2026-07-28"`. Solo se admiten como `client_id` los metadatos CIMD de Claude (`https://claude.ai/oauth/mcp-oauth-client-metadata`) y de Codex (`https://chatgpt.com/oauth/client.json`, `/oauth/<x>/client.json` o `/oauth/codex/<x>/client.json`, sin puerto, query ni fragmento), según `isAgentClientMetadataUrlAllowed`. Fuera de loopback el recurso MCP exige HTTPS.
 - Claims requeridos del token (`readMcpActor`): `sub` (string), `client_id` (string) y `scope` (string separado por espacios); si falta alguno lanza `InvalidMcpActorClaimsError`.
 
+### Conectar un agente en local (Codex / ChatGPT)
+Caso de uso soportado en local: Codex por HTTP contra el servidor de desarrollo, con OAuth.
+
+1. Prepara la base y arranca: `pnpm run database:migrate` y `pnpm run dev`. En `.env`, `BETTER_AUTH_URL=http://localhost:4322` (el mismo origen que usarás en el navegador).
+2. Ten un usuario con el correo verificado (regístrate en `http://localhost:4322/login`). Sin `RESEND_API_KEY`, el enlace de verificación se imprime en la consola del servidor (`astro dev logs`).
+3. Registra el servidor y entra con OAuth (CIMD) desde una terminal:
+
+```powershell
+codex mcp add nanobook-local --url http://localhost:4322/mcp
+codex mcp login nanobook-local --oauth-client-registration CIMD --scopes nanobooks:read,nanobooks:write,offline_access
+```
+
+4. Se abre el navegador: inicia sesión en Nanobook y aprueba el consentimiento. Debe terminar con «Successfully logged in…» y `/mcp` en Codex mostrará `nanobook-local` conectado, con las diez herramientas.
+
+Límites y problemas conocidos:
+- El formulario «Agregar servidor MCP personalizado» de la app de escritorio rechaza `http://localhost…`; usa el CLI (arriba) o un túnel HTTPS (en ese caso `BETTER_AUTH_URL` debe ser la URL del túnel).
+- Solo están permitidos los clientes de Codex (`chatgpt.com`) y de Claude.ai; Claude.ai necesita URL HTTPS pública. Otros clientes (Claude Code, etc.) no se aceptan hasta añadirlos en `McpOAuthConfig.ts`.
+- `403 INVALID_ORIGIN`: `BETTER_AUTH_URL` no coincide con el origen usado.
+- Tras cambiar `BETTER_AUTH_SECRET`, el login falla con «Failed to decrypt private key»: borra la tabla `jwks` de la base local.
+
 ## Dependencias
 - **Depende de:** `nanobooks` (`NanobookModule`: listar/crear/actualizar nanobooks y `documentModule`), `documents` (`serializeEntry`, `DocumentNotFoundError`, `DocumentPath`), `authorization` (`Authorizer`, `Subject`, `AccessDeniedError`, `AccessCheckFailedError`), `shared` (`Result`, `db`), `auth` (solo en `pages/mcp.ts`: `requireMcpAuth`, `McpOAuthConfig`), `financial-content` (indirecto, vía el puerto `MarkdownBlockAdvisor` inyectado por `application`).
 - **Lo usan:** `application` (compone `AgentModule`) y `pages/mcp.ts`.
