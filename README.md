@@ -180,6 +180,8 @@ Producción: https://<tu-dominio>/api/auth/callback/github
 
 Pensado para Vercel: define `VERCEL_DEPLOY=true` o `VERCEL=1`, `DATABASE_URL` (libSQL/Turso) con `DATABASE_AUTH_TOKEN`, `BETTER_AUTH_URL` (origen HTTPS canónico), `BETTER_AUTH_SECRET`, `RESEND_API_KEY` y `EMAIL_FROM` (con dominio verificado). Aplica las migraciones con `database:migrate` antes de publicar.
 
+`vercel.json` fija las funciones en `pdx1` (Oregón), junto a la base de producción (`aws-us-west-2`): cada consulta cruza la red, así que función y base deben estar en la misma región. Si cambias la región de la base, cambia también `regions`. La base de pruebas del *Preview* está en `aws-sa-east-1`, por lo que esos despliegues pagan una latencia mayor por consulta.
+
 ## Versionado
 
 [Semantic Versioning](https://semver.org/lang/es/) y [Conventional Commits](https://www.conventionalcommits.org/) (`tipo(alcance): descripción`). Cambios en [CHANGELOG.md](CHANGELOG.md). Antes de commitear o etiquetar, `npm run build` debe pasar.

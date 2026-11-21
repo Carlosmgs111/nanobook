@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** las funciones de Vercel se fijan en `pdx1` (Oregón) con `vercel.json`, la región de la base de producción (`aws-us-west-2`); antes corrían en `iad1` (Virginia) y cada consulta pagaba ~74 ms de trayecto. Los *Preview*, cuya base está en `aws-sa-east-1`, pasan a pagar más latencia por consulta.
+
 - **Changed:** `VercelDocumentSourceCache` (`documents`) deja de usar una clave de versión por nanobook y guarda cada documento como `nanobookId:publicPath` con la etiqueta `nanobook:<id>`; `invalidateNanobook` expira esa etiqueta. Leer un documento cacheado pasa de 2 consultas secuenciales a la caché a 1 (un fallo, de hasta 5 llamadas de red a 2 más la lectura a la base), y el TTL sube de 300 s a 3600 s porque la invalidación ya no depende del tiempo. El namespace pasa a `document:v2`, así que las entradas anteriores se descartan solas.
 
 - **Added:** los escritores pueden guardar en el documento las ediciones de un bloque `spreadsheet` con `readOnly: false` (botón **Guardar cambios**). `spreadsheets/server` usa las capacidades de `documents` y `authorization` por inyección, reescribe solo las celdas cambiadas conservando los comentarios del fence y responde 409 si el documento cambió. `rendering` reenvía a los bloques un `context` opaco que entrega la página solo si el visitante puede escribir.
