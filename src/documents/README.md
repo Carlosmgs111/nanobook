@@ -86,7 +86,7 @@ documents/
 
 **Persistencia / caché / externos**
 - Tablas `document`, `document_access`, `document_unlock_attempt` (`DrizzleDocumentSchema.ts`; referencian `nanobook` y `user`).
-- Caché de fuente: clave `nanobookId:versión:publicPath`; invalidar un nanobook rota su versión. Vercel: TTL 300 s, máx. 2 MB por entrada, fallos de caché tolerados.
+- Caché de fuente: clave `nanobookId:publicPath`. En memoria, invalidar un nanobook rota su versión; en Vercel (namespace `document:v2`) cada entrada lleva la etiqueta `nanobook:<id>` e invalidar expira esa etiqueta. Leer un documento cacheado cuesta una consulta a la caché; un fallo, una lectura más y una escritura. Vercel: TTL 3600 s como tope (la invalidación real es por etiqueta), máx. 2 MB por entrada, fallos de caché tolerados.
 - Referencias externas: archivos locales dentro de `process.cwd()` y GitHub.
 - Navegador: `sessionStorage` (documentos serializados y previews; nunca contraseñas) y un Web Worker.
 

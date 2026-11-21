@@ -7,13 +7,23 @@ import type { ContentRepositoryListError } from "../../domain/ports/ContentRepos
 import type { DocumentParser } from "../../domain/ports/DocumentParser";
 import { UnifiedDocumentParser } from "../parse/DocumentParser";
 
-const CACHE_TTL_SECONDS = 300;
+/** Tope de seguridad: la invalidación real la hace la etiqueta del nanobook, no el tiempo. */
+const CACHE_TTL_SECONDS = 3600;
 const MAX_ITEM_BYTES = 2 * 1024 * 1024;
 
+const nanobookTag = (nanobookId: string) => `nanobook:${nanobookId}`;
+
+/**
+ * Caché de fuentes de documento sobre la Runtime Cache de Vercel.
+ *
+ * Cada documento se guarda bajo `nanobookId:publicPath` y se etiqueta con su nanobook, así que
+ * leer cuesta una sola consulta a la caché y un fallo, una lectura más y una escritura.
+ * Invalidar un nanobook expira su etiqueta y todos sus documentos caducan juntos.
+ */
 export class VercelDocumentSourceCache implements DocumentSourceCache {
   constructor(
     private readonly runtimeCache: RuntimeCache = getCache({
-      namespace: "document:v1",
+      namespace: "document:v2",
       namespaceSeparator: ":",
     }),
     private readonly parser: DocumentParser = new UnifiedDocumentParser(),
@@ -24,40 +34,17 @@ export class VercelDocumentSourceCache implements DocumentSourceCache {
     publicPath: string,
     load: () => Promise<Result<ContentRepositoryListError, Document | null>>,
   ): Promise<Result<ContentRepositoryListError, Document | null>> {
-    const version = await this.getVersion(nanobookId);
-    if (version) {
-      const key = this.documentKey(nanobookId, version, publicPath);
-      const cached = await this.read(key);
-      if (cached) return Result.ok(cached);
+    const key = this.documentKey(nanobookId, publicPath);
+    const cached = await this.read(key);
+    if (cached) return Result.ok(cached);
 
-      const loaded = await load();
-      if (loaded.isSuccess && loaded.getValue()) await this.store(key, loaded.getValue());
-      return loaded;
-    }
-    return load();
+    const loaded = await load();
+    if (loaded.isSuccess && loaded.getValue()) await this.store(nanobookId, key, loaded.getValue());
+    return loaded;
   }
 
-  invalidateNanobook(nanobookId: string): Promise<void> {
-    return this.runtimeCache.set(this.versionKey(nanobookId), crypto.randomUUID(), {
-      name: `document-version:${nanobookId}`,
-      ttl: CACHE_TTL_SECONDS,
-    });
-  }
-
-  private async getVersion(nanobookId: string): Promise<string | null> {
-    const key = this.versionKey(nanobookId);
-    try {
-      const cached = await this.runtimeCache.get(key);
-      if (typeof cached === "string" && cached) return cached;
-      const version = crypto.randomUUID();
-      await this.runtimeCache.set(key, version, {
-        name: `document-version:${nanobookId}`,
-        ttl: CACHE_TTL_SECONDS,
-      });
-      return version;
-    } catch {
-      return null;
-    }
+  async invalidateNanobook(nanobookId: string): Promise<void> {
+    await this.runtimeCache.expireTag(nanobookTag(nanobookId));
   }
 
   private async read(key: string): Promise<Document | null> {
@@ -73,12 +60,13 @@ export class VercelDocumentSourceCache implements DocumentSourceCache {
     return null;
   }
 
-  private async store(key: string, document: Document): Promise<void> {
+  private async store(nanobookId: string, key: string, document: Document): Promise<void> {
     const snapshot = toDocumentSnapshot(document);
     if (new TextEncoder().encode(JSON.stringify(snapshot)).byteLength >= MAX_ITEM_BYTES) return;
     try {
       await this.runtimeCache.set(key, snapshot, {
         name: `document:${document.getDocumentId().getValue()}`,
+        tags: [nanobookTag(nanobookId)],
         ttl: CACHE_TTL_SECONDS,
       });
     } catch {
@@ -86,11 +74,7 @@ export class VercelDocumentSourceCache implements DocumentSourceCache {
     }
   }
 
-  private versionKey(nanobookId: string): string {
-    return `version:${nanobookId}`;
-  }
-
-  private documentKey(nanobookId: string, version: string, path: string): string {
-    return `${nanobookId}:${version}:${path}`;
+  private documentKey(nanobookId: string, path: string): string {
+    return `${nanobookId}:${path}`;
   }
 }
