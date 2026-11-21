@@ -7,6 +7,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- **Changed:** `rendering` carga los lenguajes de Shiki bajo demanda (`rehypeShikiLazy`, en lugar de `@shikijs/rehype` con todos los lenguajes empaquetados). El primer render de cada instancia bajaba de ~4 s locales (~6 s en Vercel) a ~50 ms; el HTML generado es idéntico, por lo que `RENDERER_VERSION` y la caché de páginas no cambian. **Added:** `shiki` como dependencia directa, fijada a la misma versión que usa `@shikijs/rehype`.
+
 - **Changed:** las funciones de Vercel se fijan en `pdx1` (Oregón) con `vercel.json`, la región de la base de producción (`aws-us-west-2`); antes corrían en `iad1` (Virginia) y cada consulta pagaba ~74 ms de trayecto. Los *Preview*, cuya base está en `aws-sa-east-1`, pasan a pagar más latencia por consulta.
 
 - **Changed:** `VercelDocumentSourceCache` (`documents`) deja de usar una clave de versión por nanobook y guarda cada documento como `nanobookId:publicPath` con la etiqueta `nanobook:<id>`; `invalidateNanobook` expira esa etiqueta. Leer un documento cacheado pasa de 2 consultas secuenciales a la caché a 1 (un fallo, de hasta 5 llamadas de red a 2 más la lectura a la base), y el TTL sube de 300 s a 3600 s porque la invalidación ya no depende del tiempo. El namespace pasa a `document:v2`, así que las entradas anteriores se descartan solas.

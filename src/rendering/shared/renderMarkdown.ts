@@ -1,4 +1,3 @@
-import rehypeShiki from "@shikijs/rehype";
 import type { Root } from "hast";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
@@ -7,6 +6,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { assertUniqueExtensionIds, type MarkdownExtension } from "./MarkdownExtension";
+import { rehypeShikiLazy } from "./rehypeShikiLazy";
 
 const defaultExtensions: readonly MarkdownExtension[] = [];
 const processors = new WeakMap<readonly MarkdownExtension[], ReturnType<typeof createProcessor>>();
@@ -22,7 +22,7 @@ function createProcessor(extensions: readonly MarkdownExtension[]) {
       };
     })
     .use(rehypeSlug)
-    .use(rehypeShiki, { theme: "github-dark" })
+    .use(rehypeShikiLazy)
     .use(rehypeStringify)
     .freeze();
 }

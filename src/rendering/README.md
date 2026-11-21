@@ -5,7 +5,7 @@
 **Nivel:** Núcleo  ·  **Entornos:** shared / server / browser
 
 ## Qué hace
-- Define el pipeline único Markdown → HTML (`remark-parse`, `remark-gfm`, `remark-rehype`, extensiones, `rehype-slug`, Shiki `github-dark`, `rehype-stringify`).
+- Define el pipeline único Markdown → HTML (`remark-parse`, `remark-gfm`, `remark-rehype`, extensiones, `rehype-slug`, Shiki `github-dark` con carga perezosa de lenguajes, `rehype-stringify`).
 - Define el contrato de extensión `MarkdownExtension` (`id`, `version`, `transform(tree)` sobre hast) y falla si dos extensiones repiten `id`.
 - Aporta la extensión `component-blocks`: convierte fences cuyo lenguaje está en el `BlockRegistry` en puntos de montaje `<div data-component data-props>`, validando el contenido (YAML/JSON) con el esquema zod del bloque.
 - Mantiene el registro de bloques (`BlockRegistry`); cada módulo registra los suyos al componerse, de modo que solo existen los de los módulos que la aplicación incluye.
@@ -21,6 +21,7 @@ rendering/
     index.ts                    # API pública del entorno
     createMarkdownEngine.ts     # MarkdownEngine { fingerprint, render } (congela las extensiones)
     renderMarkdown.ts           # processor unified (cacheado por arreglo de extensiones en un WeakMap)
+    rehypeShikiLazy.ts          # resaltado Shiki que carga solo los lenguajes de las fences del documento
     rendererFingerprint.ts      # RENDERER_VERSION ("2") y createRendererFingerprint
     MarkdownExtension.ts        # contrato + assertUniqueExtensionIds
     componentBlocks/
@@ -47,7 +48,7 @@ rendering/
 - **Eventos que consume:** `document.created`, `document.updated`, `document.deleted` (por nombre; el evento trae `documentId`). No emite eventos.
 - **Paridad browser/server:** no hay un registro global; cada raíz de composición construye su motor con las mismas extensiones: `application/server/Application.ts` y `documents/browser/infraestructure/renderer/WorkerMarkdownRenderer/worker-entry.ts`. `application/shared/MarkdownRendererParity.test.ts` verifica HTML idéntico.
 - **Marcadores:** solo los bloques hijos directos de la raíz llevan comentarios de bloque; los anidados (listas, citas) quedan como punto de montaje sin marcador y se muestran con su contenido alternativo.
-- **Librerías:** `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-slug`, `rehype-stringify`, `@shikijs/rehype`, `yaml`, `zod`, `@vercel/functions`.
+- **Librerías:** `unified`, `remark-parse`, `remark-gfm`, `remark-rehype`, `rehype-slug`, `rehype-stringify`, `@shikijs/rehype` (solo `core`), `shiki` (misma versión que usa `@shikijs/rehype`), `yaml`, `zod`, `@vercel/functions`.
 
 ## Cómo se usa
 Punto de entrada: `rendering/shared` (`createMarkdownEngine`, `createBlockRegistry`, `createComponentBlocksExtension`, `RENDERER_VERSION`, tipos `MarkdownExtension`, `BlockRegistry`, `ComponentBlockDefinition`) y `rendering/server` (`RenderingModule` y tipos `PageRenderer`, `DocumentPieceResolver`, `RenderedPageCache`). Los `.astro` de `rendering/browser/ui/` se importan por su ruta. Fuera del módulo no se permite ninguna otra ruta interna.
@@ -84,4 +85,5 @@ No aplica: no decide acceso. Las props se validan con zod al renderizar y de nue
 Junto al código: `shared/*.test.ts`, `shared/componentBlocks/*.test.ts`, `server/RenderingModule.test.ts`, `server/application/*.test.ts`, `server/infraestructure/cache/VercelRenderedPageCache.test.ts` y `boundary.test.ts` (solo se entra por `rendering/shared`, `rendering/server` o `rendering/browser/ui/*.astro`, y no se importan otros módulos). Paridad en `application/shared/MarkdownRendererParity.test.ts`. Ejecutar: `npx vitest run src/rendering`.
 
 ## Decisiones y límites conocidos
+- **Shiki carga los lenguajes bajo demanda** (`rehypeShikiLazy`). `@shikijs/rehype` sin `langs` carga los ~300 lenguajes empaquetados al inicializar: ~4 s locales y ~6 s en una función fría de Vercel en el primer render de cada instancia, incluso sin código en el documento. Ahora el resaltador nace sin lenguajes y cada uno se carga al aparecer en una fence (decenas de ms en total); un lenguaje no empaquetado queda como código sin resaltar, igual que antes. El HTML es idéntico al anterior (lo verifica `rehypeShikiLazy.test.ts`), así que `RENDERER_VERSION` no cambia y la caché de páginas sigue vigente.
 - `RenderedDocument.astro` recibe `pieceResolver` por props (antes llamaba a `getApp()`, lo que rompía `boundary.test.ts`). No existen en el código `mountComponentBlocks` ni `componentRegistry`: no hay montaje cliente propio; los bloques se pintan en servidor con Astro y, si procede, el propio `.astro` los hidrata.
